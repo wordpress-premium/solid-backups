@@ -1,0 +1,1987 @@
+** See history_archived.txt for older version history. Most recent updates at bottom.
+
+
+6.0.0.0 - 2015-05-04 - Dustin Bolton
+	Deployment
+		New "BackupBuddy Deployment" remote destination allowing pushing or pulling your entire site to or from another existing site, in as few as two clicks.
+		See differences in site server settings, active plugins, theme, versions, and media prior to deploying.
+		Options to transfer the database (all tables, some, or none), plugins, theme, and/or media.
+		Automatic migration of URLs, paths, and other settings just like manual migrations.
+		Watch the deployment progress just like a normal backup, displaying a continuous status including a detailed advanced status log of the entire process, all in one place.
+		Ability to undo the database changes with one click if something goes wrong prior to confirming the deployment once you're satisfied.
+		Automatic chunking of data transferred between servers to support large files or slow servers.
+		Swaps databases only after the entire database and all files have been transferred to attempt to minimize site downtime to mere seconds (or less!).
+		Perfect for developing your site in a different location from the live site.  Use staging best practices.
+	Google Drive Destination
+		Intelligent hybrid of chunking & bursting for better handling large files & server performance fluctuations by automatically scaling as needed. Automatic "smart" adjustment during transfers to handle your specific server's speeds and abilities.
+		Directory selector for easily finding where to store files or creating new folders.
+		Per-backup archive limits based on the backup type.
+		List, delete, and download remote backups (remote management may be disabled when creating new destination).
+	Finer Grain Archive Limit Controls for local backup
+		limit by total number of backups all together or by type (full, database, or files)
+		limit by size
+		limit by age
+		Improved limit controls for most destinations
+	Performance & Reliability
+		Significantly improved javascript performance during backups, rollbacks, and deployments for slower computers.
+		Improved server-side performance for slower servers.
+		Timed out scheduled backups are now automatically detected & trigger an email notification.
+		New option added to receive an email notification if no backups succeed in a certain number of days.
+		BETA "Alternative zip system" adds support for chunking zip file creation for supporting large sites and/or slow servers.
+	Troubleshooting & Security
+		Improved Status Log with more descriptive errors, colors highlighting errors, improved preflight checks to detect problems before backups begin, and more.
+		Status Log options added to download it as a text file, stop automatically scrolling, or limit it to the last 100 lines being displayed. These can help with troubleshooting & performance.
+		Enhanced security checks to further ensure you, and only you, have access to BackupBuddy's features and data.
+	Misc
+		Added new S3 region "Frankfurt".
+		Added support for migrating nested data structures used by some plugins.
+		Database backup step regularly displays how much has been backed up of the current database table to help see it progress.
+		Added support for JetPack security.
+		Improved Sync integration.
+		Misc UI improvements.
+		Misc bug fixes.
+		Misc minor features.
+		Fixed stray </span> in localization tooltip.
+		Updated plugin description to note Deployment feature.
+	Official release of quick release updates:
+		Added new backup page Status Log checkbox to toggle auto-scrolling of the status log contents.
+		Amazon S3 destination now displays error message indicating lack of curl when adding destination if curl is not available on this server.
+		Remote Destination advanced options now not displayed by default. Click 'Advanced Options' to display them.
+		Added new alternative zip method supporting bursted chunked zip creation for handling very large sites. - Jeremy Trask
+		Added backup status log option to limit to the last 100 lines displayed. Useful for sites generating extremely long status logs resulting in browser issues (eg out of memory).
+		State data is now only output to browser javascript console when full logging mode is enabled.
+		Debugging backup process data only sent to browser javascript console when in development mode.
+		Fileoptions storage of the backup state now clears step arguments for finished functions to prevent buildup of state data once a function has passed (eg for deployment state or new alternate zip method state) to prevent rapid uncontrolled fileoptions file growth.
+		Performance increases to backup page javascript when logging or displaying loading indicator.
+		Removed Stash directory name from displaying in the Stash remote file listing.
+		All remote destinations: Fixed 'Select all' button for selecting all files stored in a remote destination.
+		Fixed possible javascript error when running in classic mode based on timing.
+		Database chunking is now fully disabled when running in classic mode.
+		Fixed inability to set ImportBuddy password back to the prior password after having cleared it to blank.
+		Fixed ImportBuddy's hash remaining in database after clearing it.
+		Fixed ImportBuddy hash confirmation being populated in plugin options when saving Advanced page.
+		Change of locked archive directory (high security mode) now takes place immediately by running periodic cleanup function to validate the new setting is applied as expected.
+		Server Tools page latest BackupBuddy version now always shows latest, ignoring cached version data.
+		Fixed remote send log not being sent in error email went remote send failed.
+		Fixed loadingIndicator potential javascript error when in Classic mode.
+		Fixed typo on Settings page.
+		When backing up is unavailable due to inability to write to backup or temporary directory then the message "Backing up disabled due to errors listed above. This often caused by permission problems on files/directories. Please correct the errors above and refresh to try again." will be displayed in place of the backup buttons to prevent attempts which will certainly fail.
+		Improved security for all AJAX calls.
+		Alternative zip method options are now displayed automatically when changing its setting without requiring refreshing the page.
+		Compatibility Fix: Updated plugin and theme update data format to match changes in WordPress 4.2.
+		Improved remote destination tests.
+		Fixed selecting to Add a new destination from the Schedules page and then adding a new destination within the thickbox resulting in the tabbed display of destinations and having to re-select to add a destination.
+		In progress remote send status now changed to "running".
+		Each time a remote send status is updated now updates "time_updated" entry with current timestamp.
+		Remote destination sends that have not been updated after a period of time are now marked as timed out and send notification email.
+		Old status logs will now be removed after 10 days rather than 2 days.
+		Fixed "File destination send finished email recipient(s)" feature not sending notification emails.
+		Fixed issue 'Manual Backup With Send and Delete After Reports ZIP File Not Found at End' by no longer wiping send_remote_destination step information from fileoptions after function finish.
+		Fixed timing issue / race condition where _getBackupStatus.php retrieving fileoptions could possibly retrieve the file mid-write, resulting in an incomplete serialized array being returned and a fatal error #9031b.  If this happens then it will sleep for 1 second, up to 10 times, re-checking the fileoptions file for valid contents prior to proceeding.
+		Classic mode: Fixed possible javascript error when running under Classic Mode due to retrieving scrollHeight of non-existant status box.
+6.0.0.1 - 2015-05-05 - Dustin Bolton
+	Google Drive: Fixed bug where selecting 'Delete file after remote send' during a manual backup resulted in remote file being deleted as well in addition to the expected deletion of the local file.
+6.0.0.2 - 2015-05-07 - Dustin Bolton
+	Deployment: Remote API calls now pass referer as the remote site URL to help prevent falsely triggering host-basted security.
+6.0.0.3 - 2015-05-08 - Dustin Bolton
+	Deployment: Added additional instructions for enabling the remote API to specify where in the wp-config.php to add the line.
+	Deployment: Added additional instructions when unable to reach remote API on verifying the line enabling the API in the wp-config.php has been placed in the properly location.
+6.0.0.4 - 2015-05-11 - Dustin Bolton
+	Changed time before a backup or remote transfer is considered timed out if there is no update to progress in 24 hours.
+	Remote destination failures now include the remote destination name and type in the error details. Includes send failures & detected timeouts.
+	Removed debugging data from displaying when running the periodic cleanup.
+6.0.0.5 - 2015-05-12 - Dustin Bolton
+	Changed Error #8483974 to Error #8002. Added additional information on potential causes.
+6.0.1.0 - 2015-05-13 - Dustin Bolton
+	Deployment: Added support for deploying Child Themes.
+	Deployment: Fixed minor bug causing inactive plugin files to be deployed. Note: If database is not deployed then it may still shows plugin files as needing transferred as only active plugins on both side are compared.
+	Deployment: Fixed minor bug causing BackupBuddy plugin files to be deployed.
+	mysqlbuddy: Database default charset is now set to match that within $wpdb->charset for commandline based dumping or importing.
+	DAT file now stores $wpdb->charset (in db_charset) and $wpdb->collate (in db_collate) for use by ImportBuddy for setting default charset details prior to executing SQL.
+	ImportBuddy: Fixed inability to import database rows containing utf8mb4 characters.
+	Better support for utf8mb4 (utf8mb4 encoding added in WordPRess v4.2).
+	Official release of all quick release updates 6.0.0.1-6.0.0.5.
+6.0.1.1 - 2015-05-16 - Dustin Bolton
+	Temporary database table name prefixes for rollback or deployment now use bbnew- and bbold- instead of BBnew- and BBold- for some systems that convert uppercase characters in table names to all lowercase, breaking various replacements.
+6.0.1.2 - 2015-05-18 - Dustin Bolton
+	filesystem class deepglob() now checks if glob responds with false and changes to empty array to prevent invalid argument warning. This could be caused if a directory is unreadable.
+6.0.1.4 - 2015-05-21 - Dustin Bolton
+	ENHANCEMENT:
+		Server Tools page: Directory size listing now displays number of children for each directory (files + directories within the directory and all chidlren) for both total site and taking into account exclusions. Total counts are also displayed at the bottom.
+	ENHANCEMENT:
+		Multiple browser performance enhancements during backup and deployment.
+	ENHANCEMENT:
+		Better handling of smaller screen sizes for improved usability, especially on mobile or other small devices.
+	Periodica cleanup: If temp directory exists (it should normally only be transient) we verify anti directory browsing files exist. Normally this directory will be deleted on cleanup but this helps to insure it's secure in case it cannot be removed for some reason.
+	Improved backup page performance by removing some CSS animations including box-shadow animations which did not receive GPU acceleration.
+	Improved backup page styling when browser window is small but not so small as to reflow to mobile layout.
+	Improved mobile friendliness of remote destinations by making destination pages scrollable horizontally.
+	Added charcode logging to deployment confirmation failure alert to detect possible character encoding issue with confirming response of "1".
+6.0.1.5 - 2015-05-22 - Dustin Bolton
+	Fixed typo in DE translations.
+	Deployment Pull: Fixed "Visit Deployed Site" link pointing to the source site rather than the destination. Pull direction only.
+	Deployment: Fixed active plugin list always displaying BackupBuddy version as that of the remote site. All other plugin versions were correct for their respective site.
+	ENHANCEMENT:
+		Deployment: Added indicator displaying the numerical count of tables selected for deployment.
+	Deployment: Added text saying to confirm deployment after satisfaction.
+6.0.1.7 - 2015-06-03 - Dustin Bolton
+	Added Error #9038 for loopback issues. Updated codex with more instructions on troubleshooting loopback problems.
+	FEATURE:
+		Deployment: You may now selectively choose which plugins to transfer in deployment rather than just all or none.
+		Deployment: Not deploying the wp_options table no longer results in an error message as deploying only some tables is permitted (for advanced users).
+	ImportBuddy: If _options table was not backed up (its tables_sizes entry is non-existant) then we no longer attempt to modify the options table since it either does not exist or has alreasy been migrated.
+	Deployment: Misc minor bug fixes.
+	Deployment: Minor UI improvements and wording clarifications.
+	Deployment: Some performance improvements for users with large numbers of files.
+	FEATURE:
+		New option (enabled by default) to attempt to re-send transfers officially detected as 'timed out' once per file. An attempt is either the entire file send or a single chunk resend.
+	FEATURE:
+		Remote Destinations: New option under "View recently sent files" to force a retry attempt now for any transfer not marked as a 'success'.
+6.0.1.8 - 2015-06-03 - Dustin Bolton
+	Deployment troubleshooting: BACKUPBUDDY_DEV enabled now stores additional debug filename information in returned media data to troubleshoot null value for filenames in some instance.
+6.0.1.9 - 2015-06-05 - Dustin Bolton
+	Further debugging enhancements similar to v6.0.1.8.
+6.1.0.0 - 2015-06-08- Dustin Bolton
+	Updated cron uptime monitoring text to also mention iThemes Sync Uptime Monitoring as a possible solution to triggering schedules. See https://ithemes.com/sync-pro/uptime-monitoring/
+	Misc minor bug fixes.
+	Removal of deprecated RepairBuddy script.
+	FEATURE:
+		New 'Recent Activity' tab on Settings page to help track some recent site activity.
+	Fixed remote destination 'delete local file after send' not working for succesfull multipart sends.
+	Official release of quick release items 6.0.1.1-6.0.1.9.
+		Temporary database table name prefixes for rollback or deployment now use bbnew- and bbold- instead of BBnew- and BBold- for some systems that convert uppercase characters in table names to all lowercase, breaking various replacements.
+		filesystem class deepglob() now checks if glob responds with false and changes to empty array to prevent invalid argument warning. This could be caused if a directory is unreadable.
+		ENHANCEMENT:
+			Server Tools page: Directory size listing now displays number of children for each directory (files + directories within the directory and all chidlren) for both total site and taking into account exclusions. Total counts are also displayed at the bottom.
+		ENHANCEMENT:
+			Multiple browser performance enhancements during backup and deployment.
+		ENHANCEMENT:
+			Better handling of smaller screen sizes for improved usability, especially on mobile or other small devices.
+		Periodica cleanup: If temp directory exists (it should normally only be transient) we verify anti directory browsing files exist. Normally this directory will be deleted on cleanup but this helps to insure it's secure in case it cannot be removed for some reason.
+		Improved backup page performance by removing some CSS animations including box-shadow animations which did not receive GPU acceleration.
+		Improved backup page styling when browser window is small but not so small as to reflow to mobile layout.
+		Improved mobile friendliness of remote destinations by making destination pages scrollable horizontally.
+		Added charcode logging to deployment confirmation failure alert to detect possible character encoding issue with confirming response of "1".
+		Fixed typo in DE translations.
+		Deployment Pull: Fixed "Visit Deployed Site" link pointing to the source site rather than the destination. Pull direction only.
+		Deployment: Fixed active plugin list always displaying BackupBuddy version as that of the remote site. All other plugin versions were correct for their respective site.
+		ENHANCEMENT:
+			Deployment: Added indicator displaying the numerical count of tables selected for deployment.
+		Deployment: Added text saying to confirm deployment after satisfaction.
+		Added Error #9038 for loopback issues. Updated codex with more instructions on troubleshooting loopback problems.
+		FEATURE:
+			Deployment: You may now selectively choose which plugins to transfer in deployment rather than just all or none.
+			Deployment: Not deploying the wp_options table no longer results in an error message as deploying only some tables is permitted (for advanced users).
+		ImportBuddy: If _options table was not backed up (its tables_sizes entry is non-existant) then we no longer attempt to modify the options table since it either does not exist or has alreasy been migrated.
+		Deployment: Misc minor bug fixes.
+		Deployment: Minor UI improvements and wording clarifications.
+		Deployment: Some performance improvements for users with large numbers of files.
+		FEATURE:
+			New option (enabled by default) to attempt to re-send transfers officially detected as 'timed out' once per file. An attempt is either the entire file send or a single chunk resend.
+		FEATURE:
+			Remote Destinations: New option under "View recently sent files" to force a retry attempt now for any transfer not marked as a 'success'.
+		Deployment troubleshooting: BACKUPBUDDY_DEV enabled now stores additional debug filename information in returned media data to troubleshoot null value for filenames in some instance.
+		Further debugging enhancements similar to v6.0.1.8.
+6.1.0.1 - 2015-06-12 - Dustin Bolton
+	Fixed file size warning when sending to a remote destination an used had selected to delete file after send.
+	Destination send function deprecates sending an array of files to a destination.
+6.1.0.2 - 2015-06-12 - Dustin Bolton
+	ImportBuddy: Now checking that importbuddy is not being attempted to be ran inside of the plugin directory.
+	ImportBuddy: Now checking importbuddy file integrity prior to deleting any existing importbuddy subdirectory.
+6.1.0.3 - 2015-06-20 - Dustin Bolton
+	Deployment Pull: Fixed Deployment validation url pointing to source site instead of destination.
+	Remote Destinations: Fixed failed multipart sends not being updates to the status of "Failed" upon immediate error. Only got updated after detected as timeout.
+	Dropbox (v2) Destination: Changed default chunk size to 80mb instead of chunking being disabled by default.
+6.1.0.4 - 2015-06-22 - Dustin Bolton
+	S3 Destination: Fixed missing file error when chunking sends to Amazon S3.
+	S3 Destination: Added link to codex for help creating S3 destination & finding credentials to enter.
+	Fixed 'Cleanup temporary files now' button changing to the 'Recent activity' tab.
+	Renamed 'Cleanup temporary files now' button to "Cleanup OLD temporary files, logs, & data" to be more precise.
+	Added new "Delete ALL temporary files & logs regardless of age" button to Settings: Other tab. This recursively deletes all temporary file directories including the log directory, all fileoptions files, cached integrity scans, etc. This does NOT run the periodic cleanup function which also cleans up any internal data.
+	Fixed "Extraneous Log" not loading on Settings: Other tab.
+	Fixed redundant 'status-' prefixed extraneous log file. No longer exists. Any existing files will be culled in ~10 days by housekeeping cleanup function.
+	ENHANCEMENT:
+		Added new Advanced setting "Temporarily save full backup status logs". Defaults to enabled. Saves a complete copy of the backup status log in a _sum_ file so users may always view the backup status log for a backup. Periodically trimmed by existing log culling functions in periodic cleanup. Current erasure time is 10 days. View logs on Backups page by hovering backup and selecting "View Log".
+	Orphaned fileoptions file for cached integrity scan that did not have an existing fileoptions file (eg remote backup copied local) was missing archive_file key and thus never deleted. Now deleting old orphaned fileoptions files missing this key if their backup file has been missing for ~10 days. Manual deletion of backup file will delete all their fileoptions files regardless.
+6.1.0.5 - 2015-06-23 - Dustin Bolton
+	Fixed ImportBuddy javascript error when restoring and setting database settings. Introduced in yesterday's 6.1.0.4 update.
+6.1.0.6 - 2015-07-14 - Packaging Bot (lib/updater)
+	Enhancement: Updated link to iThemes support.
+6.2.0.0 - 2015-07-16 - Dustin Bolton
+	Reliability release. Improved reliability, improved troubleshooting, improved logging.
+	ImportBuddy: Fixed import of Google fonts to use https instead of http.
+	Fixed BackupBuddy Deployment button showing "Beta" on it when adding a new destination despite being out of beta.
+	ENHANCEMENT:
+		Scheduled backup timeout email now notes backup zip filename that reported failure.
+	Fixed cleanup of temp DAT file from get file contents hanging in temp directory.
+	Added HTML comments to backup listing page in various locations to debug it stopping.
+	Schedule editing: Fixed saving schedule momentarily hiding list of destinations this schedule is sending to until refresh.
+	Multisite Import: Fixed missing files error #9004 if wp-config.php of course site was in a parent directory.
+	DAT file now includes WP_CONTENT_DIR and WP_CONTENT_URL values.
+	FEATURE:
+		ImportBuddy now migrates custom wp-config.php defines of WP_CONTENT_DIR and WP_CONTENT_URL.
+	Remote send errors in Recently sent files list now are limited in size in a scrollable container as to not make table unreadable.
+	Many misc bug fixes.
+	Improved S3 chunking reliability.
+	Improved remote destination send troubleshooting.
+6.2.0.1 - 2015-07-16 - Dustin Bolton
+	Automatic resends of failed remote destination sends will hold off on sending error email until the resend also fails to prevent too many emails from being sent if sends are always timing out.
+6.2.0.2 - 2015-07-16 - Dustin Bolton
+	Fixed 'File destination send finished email' notifications being sent to Scheduled backup start email recipient rather than this recipient.
+6.2.0.3 - 2015-07-16 - Dustin Bolton
+	Added additional logging details when passing between steps in status log to note the function name of the next step expected to run when in modern mode.
+6.2.1.0 - 2015-07-17 - Dustin Bolton
+	Hotfix: Fixed issue where s32 destination error would occur if running earlier than PHP 5.4 when loading some pages. Side effect: Currently this results in unsupported destinations being hidden rather than grayed out.
+6.2.1.1 - 2015-07-20 - Dustin Bolton
+	ENHANCEMENT:
+		Active plugins listing during backup now lists total count as well.
+	Deployment: Removed remaining beta terminology.
+	Deployment: Added additional logging for troubleshooting problems getting remote logs.
+	Deployment: Fixed Deployment bug where Deployment was appearing to hang / get stuck trying to finish despite it actually completely finishing.
+	Light status() function cleanup for more clarity.
+6.2.1.2 - 2015-07-21 - Dustin Bolton
+	Fixed support for multiple serials in status().
+6.2.1.4 - 2015-07-21 - Dustin Bolton
+	Added additional dropbox2 logging on size mismatch between local and remote upon send completition (chunked mode).
+	Remote Destination send logs now include the BackupBuddy version in the first line to aid in support. First line logged looks like: ----- Initiating master send function for BackupBuddy v6.2.1.2. ...
+6.2.1.5 - 2015-07-22 - Dustin Bolton
+	Scheduling: If a destination no longer exists when visiting Scheduling page a notice is displayed.  Typically this should not happen as BB cleans up schedules on destination deletions.
+	anti_directory_browsing() no longer creates .htaccess files when running as ImportBuddy to prevent problems with disabling indexes being unsupported on new server. - Glenn Ansley
+6.2.1.6 - 2015-07-22 - Dustin Bolton
+	Added additional logging to help troubleshoot when cron runs yet no more steps were found.
+6.2.1.7 - 2015-07-23 - Dustin Bolton
+	Changed all backup class instances to be unique instances instead of sharing the same instance.  Prevents multiple backups running during the same cron load from having race conditions. Symptoms involve unrun steps showing in steps array logged followed by "No more steps remain." message. fileoptions will show the steps did not run.
+6.2.2.0 - 2015-07-29 - Dustin Bolton
+	Multisite: Updated menu title for subsites to BackupBuddy for consistency across areas & future expansion.
+	Fixed Settings page Other tab Clear Log button from taking you to wrong tab on submit.
+	Rackspace Cloud Files: Renamed destination title from "Rackspace" to "Rackspace Cloud Files".
+	ENHANCEMENT:
+		Rackspace Cloud Files: Added improved authentication error handling. Now provides more details on why it auth failed.
+		Rackspace Cloud Files: Added new option to "Use internal service net" to modify the storage URL to prefix with "snet-" so that external data charges may not apply if site is also hosted within Rackspace.
+	Deployment (Pull mode): Fixed not being able to Pull a site when no database tables were selected for pulling. Now skips remote backup & importbuddy steps as expected. Note: Pushing without any tables selected already worked.
+6.2.2.1 - 2015-07-29 - Dustin Bolton
+	ENHANCEMENT:
+		Settings: Added new "Force cancel of all backups & transfers" button to Other page.
+	Settings: Hid extraneous log behind a button (click to show) to discourage posting to support as it is almost never needed or desired.
+	ImportBuddy: Made Error #3292373 non-fatal since it may be a result of the user excluding certain tables such as for working around database import issues.
+	Deployment: Fixed issue where pulling/pushing database tables except the wp_options table resulted in a fatal error.
+	ImportBuddy: Fixed bug where on import the _migrate_database.php verifyDatabase() function always thought the options table was not imported so URLs were not verified.
+6.2.2.2 - 2015-07-30 - Dustin Bolton
+	Deployment: Now maintains iThemes Licensing data on push/pull from being overwritten by the incoming site when importing options table so that licenses won't need to be re-entered.
+6.2.2.3 - 2015-08-10 - Dustin Bolton
+	Fixed global $wp_version being too late during rollback resulting in version not being shown in the status box correctly. - Glenn Ansley
+	Multisite: Fixed Licensing tab on Settings page pointing to wrong URL. - Glenn Ansley
+	Added escaping to remote destination titles. - Glenn Ansley
+	Remote Destinations: Fixed remote archive limiting for files type backups being limited to the full limit count in some destinations.
+	ENHANCEMENT:
+		Added shutdown function logging for remote sends to aid troubleshooting due to PHP errors such as lack of memory.
+	ENHANCEMENT:
+		When viewing backup or remote send logs, the log filename and last modified time (absolute & relative) are displayed below the log.
+	ENHANCEMENT:
+		Schedules: Added new Quarterly interval.
+		Schedules: Added new Twice Yearly interval.
+	Google Drive: Fixed backup limits per type not properly limiting based on the correct type, thinking all remote backups were of the current type being sent.
+	Dropbox2 destination: Updated chunking recommendation to suggest 80mb rather than 0.  Default was already 80mb though.
+	ENHANCEMENT:
+		Added new 'Details' link when viewing Recently Sent Files on Remote Destinations page.
+	Fixed PHP warning when cancelling all in progress backups or transfers if there is an unfinished remote send in progress. - Glenn Ansley
+	Updated cron suggestion text on Servers Tools -> Cron page providing information about ways to improve cron reliability. - Glenn Ansley
+	FEATURE:
+		Added new beta s32 destination (Amazon S3 version 2).
+			Supports BURSTING in addition to chunking. Handles variations in server speeds better, uses less memory. Handles server timeouts better.
+			Supports new s3 regions previously unsupported due to new authentication method.
+			Requires PHP v5.3 or newer to be available.
+			Better than previous s3 destination which will become legacy on release from beta.
+		s32 destination supports WordPress proxy set with WP_PROXY_HOST, WP_PROXY_PORT, WP_PROXY_USERNAME, and WP_PROXY_PASSWORD.  Only WP_PROXY_HOST is required.
+	Misc bug fixes, UI tweaks.
+6.2.2.4 - 2015-08-10 - Dustin Bolton
+	s32 destination: Added support for custom WordPress proxy.
+6.2.2.6 - 2015-08-12 - Dustin Bolton
+	Fixed deploy_sendWait() identifier being set too late for logging. - Glenn Ansley
+	Now storing mysql version in backup DAT file. (via $wpdb->db_version()).
+	ImportBuddy: If importing a backup created with mysql < 5.1 and the new server is 5.1+ then a warning #7001 will be logged indicating that there may be SQL syntax problems due to mysql syntax change of TYPE= changing to ENGINE=. Handled in restore.php connectDatabase().
+	ImportBuddy: If above warning #7001 is thrown then mysqlbuddy will implement hotfix #7001 which replaced TYPE= with ENGINE= in table CREATE statements with PHP-based imports.
+6.3.0.0 - 2015-08-17 - Dustin Bolton
+	Remote destinations:
+		New Amazon S3 v2 remote destination.
+			Supports BURSTING in addition to chunking. Handles variations in server speeds better, uses less memory. Handles server timeouts better.
+			Supports new s3 regions previously unsupported due to new authentication method.
+			Requires PHP v5.3 or newer to be available.
+			Better than previous s3 destination which will become legacy on release from beta.
+			Supports WordPress proxy settings.
+		Amazon S3 v1
+			Improved S3 chunking reliability.
+		Rackspace Cloud Files
+			Added new option to "Use internal service net" to modify the storage URL to prefix with "snet-" so that external data charges may not apply if site is also hosted within Rackspace.
+			Added improved authentication error handling. Now provides more details on why it authentication may have failed.
+		Multiple small bug fixes & UI improvements.
+		Significantly increased troubleshooting capabilities with enhanced error emails, better logging, and PHP error detection and logging.
+		Added new "View Details" option when viewing recently sent files to see more details about the transfer.
+		New option under "View recently sent files" to force a retry attempt now for any transfer not marked as a 'success'.
+		Remote Sends will by default attempt to resend a timed out file transfer ONCE if it fails.
+		Stash, S3, and S32 destinations now display a progress bar under View Recently Sent Files section of Remote Destinations page when a multipart send is currently in progress.
+	Backups:
+		More information now provided within Backup Details including time of last update to the status log.
+		Better handling of multiple backups running at the same time.
+		Active plugins listing during backup now lists total count as well.
+		Multiple browser performance enhancements.
+	Deployment:
+		You may now selectively choose which plugins to transfer in deployment rather than just all or none.
+		Performance improvements for users with large numbers of files.
+		Multiple small bug fixes & UI improvements.
+		Added indicator displaying the numerical count of tables selected for deployment.
+	Scheduling:
+		Added new Quarterly interval.
+		Added new Twice Yearly interval.
+		Scheduled backup timeout email now notes backup zip filename that reported failure to help match error emails to the backup that failed to send.
+	Settings:
+		New "Force cancel of all backups & transfers" button to Settings page's Other tab.
+		Added new "Delete ALL temporary files & logs regardless of age" button to Settings: Other tab.
+		New option (enabled by default) to attempt to re-send transfers officially detected as 'timed out' once per file. An attempt is either the entire file send or a single chunk resend.
+	ImportBuddy:
+		ImportBuddy now migrates custom wp-config.php defines of WP_CONTENT_DIR and WP_CONTENT_URL.
+		Options table is no longer required for restoring a database.
+		ImportBuddy cookie expiration increased from 1 hour to 24 hours.
+	Overall:
+		New 'Recent Activity' tab on Settings page to help track some recent BackupBuddy activity.
+		Better handling of smaller screen sizes for improved usability, especially on mobile or other small devices.
+		By default BackupBuddy no longer attempts to increase maximum PHP execution time by overriding it as this typically is blocked by hosts and prevents detecting available execution time. New Advanced Settings option "Attempt to override PHP max execution time" which when enabled results in functionality as before this update.
+6.3.1.0 - 2015-08-19 - Dustin Bolton
+	FEATURE:
+		All destinations now have an Advanced Option to disable the destination. When disabled the destination cannot be sent to and remote files cannot be viewed until re-enabling.
+	Updated changed Google Drive destination setup instructions due to Goggle updating API configuration process.
+	Amazon S2 v2 destination: Fixed issue where backups sent to a folder would appear in the root of the bucket.
+6.3.1.1 - 2015-08-20 - Dustin Bolton
+	Fixed remote send retries failing due to blank filename. Caused by trying to load filenames from 'files' key instead of new 'file' key in remoteSendRetry().
+	Added more details to error messages when forcing a retry of send fails.
+	Added logging to note when a remote send step is triggered due by the automatic retry system.
+	Fixed retry count not incrementing when manually resending a failed remote send.
+	Added a failsafe for remote sends that began over one month ago. Sends started over a month ago will bail rather than attempting to send.  This is a failsafe to prevent any potential runaway sends.
+	Added s32 multipart cleanup for any 'hanging' multipart uploads to periodic cleanup function.
+6.3.1.2 - 2015-08-21 - Dustin Bolton
+	dropbox2: Removed 64-bit integer requirement from blocking destination from running.
+6.3.1.3 - 2015-08-25 - Dustin Bolton
+	Removed redundant saving/loading indicator when saving remote destination changes.
+	Fixed log size trim email incorrectly specifying the log size in KB.
+	ImportBuddy: Fixed issue where chunked imports of tables could result in skipping import of some file portions, resulting in import issues.
+	ImportBuddy: Fixed premature output of greedy script limit logging prior to log function declaration in JS.
+	FEATURE:
+		ImportBuddy: Added button to download Status Log as a .txt file.
+	set_greedy_script_limits() now logs detected execution times even if not modifying them.
+	ImportBuddy: Status log container is now resizable by dragging the lower left handle.
+6.3.2.0 - 2015-08-31 - Dustin Bolton
+	ImportBuddy: Prior database settings input form items now set to readonly instead of disabled to prevent some browsers from blocking highlighting and copying.
+	S32 destination: Fixed bucket information retreival not containing error details.
+	Stash destination: Updated manage URL to improved Sync Stash panel: https://sync.ithemes.com/stash/
+	Server Tools page: Fixed plugins directory calculation. - Glenn Ansley
+	S3 v2 destination: Better verification that a deleted file was actually deleted.
+	Misc minor fixes.
+	Full release of 6.3.1.1-6.3.1.3.
+6.3.2.2 - 2015-09-07 - Dustin Bolton
+	Fixed additional text showing in S3 v2 test alert.
+	S3 v2 Destination: Fixed problems sending files to new regisions such as Frankfurt in some cases.
+	S3 v2 Destination: Fixed problem with using buckets with periods in the name.
+	S3 v2 Destination: Bucket is no longer an Advanced Option as it is now reguired to be correct; no longer guessing region. New v4 signature regions require the region be encoded in the signature so it must be known.
+	S3 v2 Destination: Fixed write speed calculation being based off time() instead of microtime(true) resulting in less accurate write speed calculations.
+	Updated many instances of time() with microtime(true) for better resolution on time calculations that may run faster than 1 second for better resolution.
+	Removed majority of styles from legacy jquery ui CSS only used by tooltip. - Glenn Ansley
+	force_single_db_file setting now stored in DAT file as it is needed for regenerating integrity check if caches scan if lost. - Glenn Ansley
+	Maintenance mode (activated via .maintenance file) now sends a 503 HTTP status code with a retry time of 1 hour to better instruct search engines on how to handle the site being down.
+6.3.2.3 - 2015-09-09 - Dustin Bolton
+	S3 (v2) Remote Destination: Fixed error when trying to list remote multipart upload parts.
+6.3.3.0 - 2015-09-14 - Dustin Bolton
+	Stash destination: Fixed upgrade links to use both https and 10 & 25 GB links pointing to wrong URL.
+	Deployment: Fixed importbuddy step prematurely being killed stating it has been running too long.  Time calculation was from Deployment start not importbuddy start. Changed to 48 hours as a failsafe if Deployment stuck in a loop.
+	Reset plugin settings button now has option to skip resetting remote destination settings.
+	Deployment: Fixed issue where utf8 encoded media files would cause problems with deployment. - Glenn Ansley
+	Deployment: Added 503 HTTP status check to AJAX polling to detect Maintenance Mode and wait 6 seconds before retrying up to 5 times. - Glenn Ansley
+	Quick Setup Wizard now makes setting up your Stash destination even easier by just logging in with your iThemes credentials. Requires PHP v5.3.3 or newer.
+	Fixed issue where a Database backup "Maximum time per chunk" setting below ~5 seconds would result in infinite chunking. Rare to be encountered.
+	Additional information to error message regarding being unable to get create table data in the case where the table was defined in the 'additional tables' setting.
+	ENHANCEMENT:
+		Added support for a variable when configuring additional database tables to include or exclude. The variable may be used by placing {prefix} in place of the current site's database prefix as defined by global $wpdb->prefix.
+	IMPORTANT:
+		S3 v2 Destination: Fixed issue where archive limits from another type could be applied to the wrong type (based on which was uploaded), resulting in excess trimming.
+	sFTP Destination: Updated phpseclib library to v1.0 for improved server support. - Glenn Ansley
+	Server Tools: Added display of mysql_connect() availability. Deprecated in PHP 5.5.0 and removed in PHP 7.0.0. Optionally compiled in some versions. - Glen Ansley
+	FEATURE:
+		Added new backup filename date/time format to display the time in 24 hour format.
+	FEATURE:
+		Added new backup filename date/time format to display the date & time in Unix timestamp format (time since Unix Epoch).
+	Dropbox v2 destination: Improved memory performance.  One location could double memory usage.
+6.3.3.1 - 2015-09-21 - Dustin Bolton
+	FEATURE:
+		New BETA version of the "Stash" Remote Destination, "Stash v2". Stash v2 introduces bursting in addition to chunking, resulting in significant protection against timeouts, even in cases of intermittent server 'slowdowns'.
+		Requires PHP v5.3.3 or newer.
+		The best Stash destination ever. Less memory usage. Maximizes throughput per chunk while at the same time adapting as server conditions change, chunking as needed.
+		By default now stores all backups of all types, not limiting remote numbers. Configure via this destination's settings.
+	FEATURE:
+		New option to include the backup Profile name in the backup zip archive filename. -- Glenn Ansley
+	FEATURE:
+		Quick Setup Wizard now lets you set up your Stash destination faster than ever, just by entering your iThemes login. Easy.
+	Add missing key reference in options array during MS export process. -- Glenn Ansley
+6.3.3.2 - 2015-09-22 - Dustin Bolton
+	Fixed undefined index remote path in Stash v2 beta.
+	Changed Stash v2 backup limits to zero instead of blank to match other settings defaults better.
+	Removed depricated class file.
+	Fixed 'long time since last backup' notification emails when running under Multisite.
+	Removed debugging text "banana".
+6.3.3.3 - 2015-09-22 - Dustin Bolton
+	Added new safeguard default cap of 50 GB maximum local storage usage to prevent runaway storage of backups if user has not instituted their own cap in Settings. This may be changed in Advanced Settings but is recommended against disabling.
+6.3.3.4 - 2015-09-26 - Dustin Bolton
+	Fixed S3 v2 test giving error about deleting temporary object. -- Glenn Ansley
+6.3.3.5 - 2015-09-29 - Dustin Bolton
+	ENHANCEMENT:
+		User-disabled remote destination tabs are now displayed with a line through their name and hovering notes that the destination is disabled.
+	ENHANCEMENT:
+		When available and upon successful test, existing Stash v1 destinations will be auto-upgraded to Stash v2 destinations.
+6.3.3.6 - 2015-10-01 - Dustin Bolton
+	Stash v2: Fixed extra pipe (|) under usage bar when remote file management is disabled.
+	Stash v2: Fixed extra slash (/) when sending a file of an unknown backup type such as the test file.
+	Doubled loopback test timeout from 4 seconds to 8 seconds for slow hosts.
+	Additional checking and enforacement of data types in various areas.
+6.3.3.7 - 2015-10-02 - Dustin Bolton
+	Deployment: ImportBuddy now runs with the max execution time used for chunking based on the max execution time set in the advanced settings just prior to beginning Deployment.
+6.3.3.8 - 2015-10-02 - Dustin Bolton
+	Fixed call to wp_mail() if it does not exist yet due to running before WordPress has fully initialized.
+6.3.3.9 - 2015-10-02 - Dustin Bolton
+	Fixed BackupBuddy settings import/export thickbox not displaying due to recent update. -- Glenn Ansley
+6.3.3.10 - 2015-10-02 - Dustin Bolton
+	Added datestamp to data parameter in init_global.php backupbuddy_sync_add_notices() method for Sync API.
+6.4.0.1 - 2015-10-05 - Dustin Bolton
+	New BackupBuddy Stash v2.0 Remote Destination (no longer in beta).
+		New "Stash v2.0" Remote Destination. Stash v2 introduces bursting in addition to chunking, resulting in significant protection against timeouts, even in cases of intermittent server 'slowdowns'.
+		The best Stash destination ever. Less memory usage. Maximizes throughput per chunk while at the same time adapting as server conditions change, chunking as needed.
+		'Learns' as it goes, adjusting to your server's capabilities on the fly, maximizing transfer speeds while adjusting for bandwidth and storage I/O fluctuations as needed.
+		Requires PHP v5.3.3 or newer.
+	Remote Destinations
+		New Stash v2.0 remote destination.
+		By default now stores all backups of all types, not limiting remote numbers. Configure via this destination's settings.
+		All destinations now have an Advanced Option to disable the destination. When disabled the destination cannot be sent to and remote files cannot be viewed until re-enabling.
+		Many bug fixes and various improvements to reliability and troubleshooting ability.
+	Settings
+		Added support for a variable when configuring additional database tables to include or exclude. The variable may be used by placing {prefix} in place of the current site's database prefix as defined by global $wpdb->prefix.
+		Added new backup filename format options for displaying the time including 24 hour format and Unix timestamp formats.
+		Added new backup filename format option for including the backup profile name in the filename.
+	Other
+		Quick Setup Wizard now lets you set up your Stash destination faster than ever, just by entering your iThemes login. Easy.
+		ImportBuddy: Added button to download Status Log as a .txt file.
+		Importbuddy: Improved reliability when importing chunked database tables.
+		Added failsafes against making too many backps resulting in massive amounts of inadverdtant backup storage.
+		Many misc bug fixes and various improvements.
+		Deployment: Increased remote API call timeout defaults to 30 seconds unless otherwise overridden (up from 10 sec).
+		Dropbox v2 Destination: Removed low transfer speed cutoff resulting in some connections prematurely being terminated.
+		Changed alt cron load URL to load default admin page instead of BackupBuddy Backups page. -- Glenn Ansley
+6.4.0.2 - 2015-10-06 - Dustin Bolton
+	Fixed one-time warning for users upgrading that have no remote destinations.
+	Fixed FTP remote destination path picker not working when editing an existing destination. -- Glenn Ansley
+	Updated plugin support URL to point to ithemes.com/support instead of forums.
+6.4.0.3 - 2015-10-09 - Dustin Bolton
+	Fixed Remote Destination Stash v2 being unable to manually delete stored backups.
+6.4.0.4 - 2015-10-17 - Dustin Bolton
+	Fixed Multisite Export failing integrity check if fileoptions file not found as it deduces backup type as 'full' instead of the correct 'export' type.
+6.4.0.5 - 2015-10-20 - Dustin Bolton
+	Fixed undefined index when an old destination is loaded in AJAX destination tab due to lack of 'disabled' key.
+	UTF-8 encoding fixes for Deployment Push & Pull. - Glenn Ansley
+6.4.0.6 - 2015-10-21 - Dustin Bolton
+	Fixed undefined URL in Malware scanner due to issue introduced in recent quick release. - Glenn Ansley
+6.4.0.7 - 2015-10-22 - Dustin Bolton
+	Fixed Remote Destination send progress status bar size.
+	Stash2: Added delayed upload confirmation verification if initial upload confirmation does not complete within 15 seconds instead of giving up there. - Glenn Ansley, Dustin Bolton
+	Deployment: Fixed UTF-8 file issues during Push/Pull resulting in error halting Deployment.
+6.4.0.8 - 2015-10-23 - Dustin Bolton
+	Stash2: Fixed issue where Stash API connection timeout could result in failure when running PHP versions OLDER than v5.3 as string gets inadvertantly cast to array.
+6.4.0.9 - 2015-10-27 - Dustin Bolton
+	Cron system now can only run once per PHP page load.
+6.4.0.11 - 2015-10-30 - Dustin Bolton
+	Fixed cron issues. Rolling back to 6.4.0.8 contents.
+6.4.0.12 - 2015-10-31 - Dustin Bolton
+	Improved performance removing excess crons created by v6.4.0.9.
+6.4.0.13 - 2015-11-04 - Dustin Bolton
+	Removed misc. extra unused sftp files.
+	Fixed various issues when adding a schedule as 'disabled' not displaying things properly. -- Glenn Ansley
+	FEATURE:
+		Cron system now only runs one single BackupBuddy operationg per page load to help improve performance.
+		Cron system: BackupBuddy by default will now only run one scheduled BackupBuddy method via cron per PHP page load.  New Advanced setting "Limit to single cron method per pass". This prevents a second method from potentially running when there is little to no runtime remaining. Logs into Status Log if encountered for the process_backup method.
+	Applied v6.4.0.9 update with additional fixes to handle migration of all existing cron tags.  Additional checks in housekeeping help prevent old tags from lingering/returning including faulty unused tags.
+	Moved cleanup functions into housekeeping class.
+	Server Tools page: Improved cron array value readability.
+	Server Tools page: Cron period now shows user-friendly text.  Internal cron tag viewable by hovering the period.
+	ENHANCEMENT:
+		Server Tools page: Added new listing of all registered schedule intervals to Cron section.
+	ENHANCEMENT:
+		Updated most direct mysql calls to support new mysqli methods as available by making use of wpdb class throughout BackupBuddy and ImportBuddy. Remaining items to be updated soon.
+	ImportBuddy mysql test now makes use of wpdb class. -- Glenn Ansley
+	Deployment: Fixed Confirm button returning an error about expected '1' with wrong charcode instead of detailed error message when something goes wrong.
+	Deployment: Made confirmation more robust and provide more error details if it does happen to fail.
+	Stash v2 Destination: Fixed Copy to local site from remote not working.
+	FEATURE:
+		Added new schedule intervals: Twice yearly, Every 3 Months, Every 6 Hours.
+6.4.0.14 - 2015-11-09 - Dustin Bolton
+	Changed Error #98328923 to Warning #98328923 as it is often temporary.
+	ImportBuddy: Database connection test now supports mysqli (required for instance by PHP7). -- Glenn Ansley
+	ImportBuddy: Updated wp-db.php class to most recent WordPress version in anticipation of full mysqli support.
+	ImportBuddy: test-db.php now suppresses error logging to PHP error_log when trying to drop temp test table.
+	ImportBuddy: Added additional error catching and logging when database test returns a non status 202 HTTP response, including displaying raw error data.
+	Rollback Undo: Updated _rollback_undo.php to support mysqli (required for instance by PHP7).
+	Rollback Undo: Various improvements to error logging, wording, and status messages.
+	Multisite Export: Fixed problem where users may not always be exported as expected.
+	FEATURE:
+		Support for PHP7 and MySQLi through BackupBuddy in preparation for PHP7's official release.
+6.4.0.15 - 2015-11-10 - Dustin Bolton
+	ImportBuddy: Fixed mysqli_real_escape_string() missing parameter when using mysqli.
+6.4.0.16 - 2015-11-10 - Dustin Bolton
+	PHP7 compatibility updates removing deprecated constructor calls. Updates to pclzip, sftp phpseclib.
+6.4.0.17 - 2015-11-11 - Dustin Bolton
+	ImportBuddy: Fixed potential fatal error of call to undefined function mbstring_binary_safe_encoding() under some situations.
+6.4.0.18 - 2015-11-11 - Dustin Bolton
+	Amazon S3 destination v1: Fixed undedined CURLOPT_CLOSEPOLICY in PHP v5.6+.
+6.4.0.19 - 2015-11-11 - Dustin Bolton
+	Fixed three instances of issues involing constructor updates for PHP7 in phpseclib library.
+6.4.0.20 - 2015-11-12 - Dustin Bolton
+	ImportBuddy: Fixed wp-db missing did_action() call in some situations.
+6.4.0.21 - 2015-11-12 - Dustin Bolton
+	Fixed data version update to 13 in activation.
+6.5.0.0 - 2015-11-17 - Dustin Bolton
+	Full release of all changes found in 'Quick Release' versions 6.4.0.1-6.4.1.21.
+	Updated Malware Scan link URL. -- Glenn Ansley
+	Full support for PHP7 and Mysqli.
+	Better cron reliability by limiting BackupBuddy actions to one per page load.
+	Server Tools Page: Improved Cron section.
+	Added new schedule intervals: Twice yearly, Every 3 Months, Every 6 Hours.
+	Misc Multisite fixes.
+6.5.0.2 - 2015-11-17 - Dustin Bolton
+	Fixed page title being to small as of WordPress v4.4. Changed h2 to h1 for title function. - Ty Carlson
+6.5.0.3 - 2015-11-17 - Dustin Bolton
+	ImportBuddy: WP_CONTENT_DIR now set to handle check in wp-db class on failure.
+6.5.0.4 - 2015-11-24 - Dustin Bolton
+	Added check for empty options in pb_backupbuddy::load() and retries database again after short wait to help prevent loss of settings if database was missing. WordPress returns false for both no data found as well as a DB error. -- Glenn Ansley
+6.5.0.5 - 2015-12-01 - Dustin Bolton
+	Google Drive Destination: Fixed archive limiting problems when Google Drive did not respond with directory listing of uploaded files. -- Glenn Ansley
+	ImportBuddy: Changed data from ARRAY_N to ARRAY_A for 'SHOW TABLES' in _dbreplace.php; Removed GTA testing from db test. -- Glenn Ansley
+6.5.0.6 - 2015-12-01 - Dustin Bolton
+	ImportBuddy: Removed collation check on import of query. Since this data was already in database it does not need a new check. -- Glenn Ansley
+6.5.0.7 - 2015-12-08 - Dustin Bolton
+	Fixed tab styling on Settings page for WordPress v4.4 trunk. - Ty Carlson
+	Fixed undefined index when importing an older backup with a newer ImportBuddy due to unknown previous Mysql version. - Jeremy Trask
+	Fixed file permissions error on Windows when deleting files in some cases due to permissions. - Glenn Ansley
+	Removed ending ?> at bottom of several files with whitespace after to reduce introducing unexpected whitepsace.
+6.5.0.8 - 2015-12-09 - Dustin Bolton
+	Fixed missing limit_single_cron_per_pass default and settings option.
+6.5.0.9 - 2015-12-09 - Dustin Bolton
+	S3 v2 Destination: Added pagination and option to configure the max number of items to show during file listing.
+	S3 v1 Destination: Limited to only showing 200 files. Please upgrade to S3 v2 if you want to see more files in the file listing.
+6.5.0.10 - 2015-12-10 - Dustin Bolton
+	Fixed cron action limiting title on Advanced Settings page.
+6.5.0.11 - 2015-12-22 - Dustin Bolton
+	Removed stale transient cleanup as it did not work properly, deleting timeout setting but leaving actual transient.
+6.5.0.12 - 2015-12-28 - Dustin Bolton
+	Fixed migration error due to file transfer taking a long time. - Glenn Ansley
+6.5.0.13 - 2015-12-28 - Dustin Bolton
+	Fixed undefined index for schedule on_off for old schedules.
+	FEATURE:
+		Added new Advanced Option "Force Internal Cron" which forces uses of BackupBuddy's own simulated cron instead of the WordPress cron to attempt to work around web host caching. This may be limited to manual backups only.
+6.5.0.14 - 2016-01-09 - Dustin Bolton
+	Disabled cron pass limiting until next version.
+6.5.0.15 - 2016-01-13 - Dustin Bolton
+	Removed cleanup_temp_tables() call.
+6.5.0.16 - 2016-01-18 - Dustin Bolton
+	Fixed AJAX compatibility with WPML
+6.5.0.18 - 2016-01-01 - Dustin Bolton
+	Quick Release of upcoming core functionality improvements in next version.
+6.5.0.19 - 2016-01-02 - Dustin Bolton
+	Removed next version alert notices and settings.
+6.5.0.20 - 2016-01-03 - Dustin Bolton
+	Fixed wp-config.php existing in parent directory resulting in it being omitted from backup and failing integrity check as a result.
+6.5.0.21 - 2016-01-03 - Dustin Bolton
+	Added random parameter to end of download link to prevent .zip from being at end of URL due to some hosts blocking that. Merged browse-files-fix. - Glenn Ansley
+	Disable Browse & Select for FTP destinations with File Management disabled. Merged disable-browse-select. - Glenn Ansley
+7.0.0.0 - 2016-02-08 - Dustin Bolton
+	FEATURE:
+		BackupBuddy Stash Live
+			Requires PHP v5.3 or newer. PHP v5.3 was released June 30th, 2009.
+			The easiest to use, most shared hosting-friendly backup solution, without sacrificing any power. Live backup of all content, snapshots stored to Stash, and all files scanned for malware and viruses.
+			Mirrors your complete site including files, database, and all WordPress content offsite to BackupBuddy Stash Live servers, keeping your backup in sync with your site.
+			Live backup of WordPress database changes as they occur, including periodic full database dumps to insure nothing gets out of sync.
+			Backup of all site files to Live servers, scanned regularly for changes, new, or deleted files.
+			Schedule to regularly snapshot zip files of all the data stored on the BackupBuddy Stash Live servers.
+			Option to manually create a snapshot of the stored data.
+			Snapshotting results in a full backup zip file, database only backup zip file, a zip of the theme directory, and a zip of the plugin directory.
+			Snapshots are fully BackupBuddy compliant zip files.
+			Snapshots are fully scanned for malware and viruses, able to catch infections not normally found by front-end only scanners.
+			Automatically requests BackupBuddy Stash Live servers 'ping' the site during Live activity to prevent delays between steps for low activity sites.
+			Your latest snapshot zip file is stored for a week regardly of whether it is also set to save into Stash.
+			Snapshots may be stored indefinitely in your Stash storage, limited only by your Stash quota.
+			Advanced options to control additional inclusions or exclusions beyond your BackupBuddy defaults.
+			Easy to use. Sign in with your iThemes login and BackupBuddy Stash Live immediately starts backing up your site.
+			Incremental: only changed files are transferred, saving server resources and time.
+			Regular file auditing. Not only are file transfers verified as they occur but also all files are regularly verified against the BackupBuddy Stash Live server to insure they are still properly in sync.
+			Works on local development sites as long as either a) site activity exists (such as by you using the wp-admin) or b) you stay on the BackupBuddy Stash Live page to continue to push the cron along.
+			New Sync verb backupbuddy-get-liveStats for retrieving local catalog/state statistics such as those shown on the BackupBuddy Stash Live page.
+			Live update of stats when viewing the BackupBuddy Stash Live page.
+	FEATURE:
+		Stash (v2) destination now requests Stash Server to ping site whenever chunking commences to help push the cron along for inactive sites.
+	FEATURE:
+		Added single retry when attempting to schedule a one-time or recurring event in case there is a temporary problem.
+	FEATURE:
+		Only one BackupBuddy cron action may run per PHP page load. Subsequent actions will be rescheduled for the next load.
+	FEATURE:
+		If any maximum log file size is exceeded it is now trimmed down to 50% of its size (keeping most recent 50%) instead of completely deleting the log file.
+	ENHANCEMENT:
+		Adding remote destinations are now grouped by "Preferred", "Normal", and "Legacy" to make selecting destinstions easier.
+	ENHANCEMENT:
+		New option to limit the number of files returned in Amazon S3 (v2) destination. Defaults to 250 files per page.
+	Resetting plugin settings to defaults no longer resets log_serial value.
+	Improved cron chaining via spawn_cron().
+	Fileoptions: Improved handling of attempt at reading locked file.  Retries twice after 1 second delay each time to try and wait for unlock.
+	Fixed backup profile name option dividing profile name and type with underscore rather than dash.
+	Moved Advanced Setting to override Maximum Execution Time detection from 'Database' to 'Overall' section as it applies to other processes besides database chunking, including BackupBuddy Stash Live chunking.
+	Improved remote file send fileoptions cleanup performance.
+	Remote send fileoptions cleanup now also removed lock file (if exists).
+	Deployment no longer sends error emails for failed remote sends.
+	Now limiting the maximum number of notifications (as used by Recent Activity page & Sync) to 25 most recent notifications to prevent excess notification buildup.
+	Added new deepscandir() to replace deepglob() as deepglob() did not support directories or files beginning with a period.
+	Anti directory browsing function now recursively creates directory if needed.
+	S3 (v2) destionation: Fixed 'Next Page' button showing even if there are no more pages.
+	S3 (v2) destination: Fixed inability to delete remote files due to extra slash in path.
+	Stash (v) destination: Fixed long load times due to trying to load backup type from fileoptions. File listing no longer falls back to fileoptions for backup type.
+	fileoptions no longer pauses and re-attempts to read a fileoptions file if the file does not exist; now only does this if the file exists but is empty.
+	Added new {home_url} variable for error notification emails.
+	Error emails now default to mentioning the {home_url} rather than {site_url} in emails.
+	ImportBuddy: Now handles Live-formatting SQL filenames, prefixed with underscores. Imports underscore prefixed timestamped SQL files after normal SQL files, playing them back in the order they occurred.
+	FEATURE:
+		Automatic testing of the reported maximum PHP execution time.
+			Improved reliability of traditional backups, remote destination sends, Deployments, and BackupBuddy Stash Live.
+			Many servers report their maximum PHP execution time as a higher number than is actually available. This interferes with BackupBuddy's chunking during database backups, file transfers,
+			and other operations which require a lot of time.  As of v7.0 BackupBuddy will actually test the available runtime and use the lesser value between the reported and tested numbers to
+			ensure that chunking commences before time runs out, drastically reducing the chance of timeouts during any procedure where chunking is available and the server is misreporting runtime.
+	Added additional logging when error is returned accessing remote API during deployment.
+	Fixed AJAX URL compatibility issue with WPML plugin.
+	New default log size of 3MB. Updated to new default if old value was either of the old defaults of 10mb or 5mb.
+	Backup steps now schedule their single event slightly in the past to push to top. -155sec. Live schedules -60 into the past to come in second place.
+	Fixed manual triggering of PHP runtime checker not showing results properly.
+	Memory usage logged in Status Logs now indicates current usage rather than peak for better troubleshooting.
+	Renamed "Local Directory" Remote Destination to "Local Directory Copy" to help indicate its purpose better.
+	Added alert to Local Directory Copy destination informing about how BackupBuddy already stores a local copy of backups and that this is for additional copies.
+	FEATURE:
+		Live: Watched for file changes and uploads immediately: Added media, plugins, themes via WordPress. Deleted media and plugins.
+	ENHANCEMENT:
+		Added protection against email flooding if too many error occurs too closely together.
+	Changed EJS template extension from .ejs to .htm to prevent MIME type issues on IIS (Windows) servers.
+	FEATURE:
+		Enhanced emails added with HTML styling for better presentation of notification emails.
+	FEATURE:
+		Quick Setup Wizard now automatically chooses the newest version of a particular Remote Destination compatible with your server.
+	Function running too long message no longer displays for zip file creation step since it tracks the time since zip file growth and warns on that.
+	Now logging currentl sql file to 9010 error log file for troubleshooting.
+	No longer reporting error for failed schedule creations as long as we can verify the schedule does indeed exist.
+	ImportBuddy: Upgraded Stash restore functionality to use new Stash v2 API for improved performance and foreward compatibility.
+	ImportBuddy: Improved Stash restore functionality interface.
+	Deployment: Added new option to compare files between sites based on file hashes for enhanced reliability detecting file changes.
+	Added deprecation notice to old legacy remote destination configuration to help discourage use: Dropbox (v1), Amazon S3 (v1), Stash (v1). No ETA on retirement but further notice as well as more alerts will be displayed prior to retirement.
+7.0.0.1 - 2016-02-09 - Dustin Bolton
+	Added improved notice if PHP version is insufficient to run Stash Live. Requires PHP 5.3+.
+	Only loading password hash class if not already defined to avoid conflict with other plugins which always load it.
+	Added 'This may take a while' notice to sending modified files step.
+	Added 15 second delay after a fileoptions file shows finished (eg finished send) before cleanup/removal to prevent removing too early if two processes are running simultaneously.
+7.0.0.2 - 2016-02-09 - Dustin Bolton
+	Now cleaning up failed fileoptions file transfers immediately if exceeding file limit.
+7.0.0.3 - 2016-02-09 - Dustin Bolton
+	Added additional safeguard to prevent sending more queue data if shutdown already fired.
+	Button to delete all data files now notes that it resets Stash catalog as well.
+	Multisite: Fixed issue where subsites tried to run main network site scheduled backup.
+	PHP7 fix for database backup procedure. -- Glenn Ansley
+	Added additional logging for corrupt fileoptions file when in Live mode (eg corrupt catalog file detected).
+	Fixed fileoptions class to lock fileoptions file before attempting to read.
+7.0.0.4 - 2016-02-09 - Dustin Bolton
+	Duplicate SQL queries made in a row now trimmed down to a single query for improved performance / less overhead.
+	Updated options exclusions list for improved performance / less overhead.
+	Updated postmeta exclusions list for improved performance / less overhead.
+7.0.0.5 - 2016-02-09 - Dustin Bolton
+	Stash v2: Removed ability to view site files for other sites backed up into Stash, including option to enable this feature.
+7.0.0.6 - 2016-02-09 - Dustin Bolton
+	ImportBuddy: Fixed backups in importbuddy.php directory not showing under Windows due to PHP bug: https://bugs.php.net/bug.php?id=42501
+7.0.1.0 - 2016-02-09 - Dustin Bolton
+	Fixed potential error being displayed when updating posts when running 7.0.0.5-7.0.0.6.
+7.0.1.1 - 2016-02-09 - Dustin Bolton
+	Stash Live on Multisite: Fixed various URLs handling Network Admin format.
+7.0.1.2 - 2016-02-09 - Dustin Bolton
+	Stash Live on Multisite: Fixed Disconnect from Stash URL for Network Admin.
+7.0.1.3 - 2016-02-10 - Dustin Bolton
+	Added additional logging to PHP runtime tester.
+	Upgraded bundles S3 v2 cacert.pem.
+7.0.1.4 - 2016-02-10 - Dustin Bolton
+	Added /wp-content/cache/ as a default directory exclusion for traditional backups and as a hard-coded default for Stash Live.
+	Added Advanced Troubleshooting Options formatted view of local tables from the catalog.
+7.0.1.5 - 2016-02-10 - Dustin Bolton
+	Changed from ASP-style <% %> tags in Stash Live templates to <# #> and {{ }} to avoid conflicts with PHP asp_tags mode.
+7.0.1.6 - 2016-02-10 - Dustin Bolton
+	fileoptions unlock() calls now by default only unlock locks set by their own instance to preserve integrity.
+	Stash Live: Fixed problem where process may regress to an earlier percent completion due to corrupt catalog.
+	ImportBuddy: Fixed backup file listing not showing.
+	Stash Live Advanced Troubleshooting: Fixed Last Snapshot button.
+	Stash (v2): Fixed remote snapshots not showing up in some cases if www/non-www prefix changed.
+7.0.1.7 - 2016-02-10 - Dustin Bolton
+	Fixed some Snapshots and Backups not listing on Stash Live or Stash (v2) destination pages.
+7.0.1.8 - 2016-02-10 - Dustin Bolton
+	Removed /wp-content/cache/ as a default exclusion.
+	Increased file send wiggle room to 6 seconds up from 4.
+	Fixed max execution time override not being applied to send time limits.
+	Changed state fileoptions file to be readable even when locked.
+7.0.2.0 - 2016-02-10 - Dustin Bolton
+	Full release of quick release updates.
+	Various Stash Live improvements, especially with the first backup not completing.
+7.0.2.1 - 2016-02-10 - Dustin Bolton
+	Do not send database update for options update if option_name == ''.
+7.0.2.2 - 2016-02-10 - Dustin Bolton
+	Added new variable, $ignore_not_writable, to top of importbuddy.php to allow manual override of the server reporting the directory as not writable.
+7.0.2.3 - 2016-02-11 - Dustin Bolton
+	Fixed wait_on_transfers max time minutes not working due to destination settings not being loaded.
+	Fixed Stash Live authentication for site URLs prefixed with www since v7.0.1.6.
+7.0.2.4 - 2016-02-12 - Dustin Bolton
+	Added check for curl before running Stash Live and displaying alert is missing in addition to PHP version check.
+	Changed error 8439734 to 5002.
+	truncate_file_beginning() performance significantly increased (1-2 magnitudes).
+	Fixed Stash Live scripts running on admin pages when user that does not have access to BackupBuddy loads them.
+7.0.3.0 - 2016-02-12 - Dustin Bolton
+	Added BackupBuddy version into Stash Live logging.
+7.0.3.1 - 2016-02-16 - Dustin Bolton
+	Changed message when trying to unlock a fileoptions file of a different ID to be less worrisome. These are normal to see in the log.
+	If URL ends in .zip, add random additional parameter to help get around Varnish-related issues on some servers. - Glenn Ansley
+	Properly update 'next run' settings when overwriting existing schedules on settings import. - Glenn Ansley
+	Fixed Stash Live additional exclusions list trimming trailing slash.
+	Added additional logging to track down issues with lock ID.
+	When cron kicker fires too soon fixed time ago being wrong.
+	When cron rescheduler triggers it now logs the previous method as well.
+	schedule_single_event limits scheduling of 'live_periodic' method to once to prevent potential multiple schedules due to its rapid activity.
+	PHP runtime test with a blank result now does not error.
+	Fixed BackupBuddy version being logged in Live periodic functions. Also added WordPress version.
+7.0.3.4 - 2016-02-16 - Dustin Bolton
+	getBackupTypeFromFile() no longer scans zip files that do not behin with 'backup-'.
+	fileoptions now checks if file exists before checking lock status.
+	fileoptions now deletes any existing lock file if actual fileoptions file for it does not exist.
+	Added version number to Stash Live status screen to aid in support when customers provide screenshots. - Ty Carlson
+7.0.3.5 - 2016-02-16 - Dustin Bolton
+	Fixed deepscandir() startAt position not being set when chunking.
+7.0.3.6 - 2016-02-16 - Dustin Bolton
+	Failure to create DAT file during Stash Live halts process as it is needed.
+	Duplicate calls to run live_periodic cron twice in same page load now drops second in a row to run. No need to reschedule as two should not run at the same time.
+7.0.3.7 - 2016-02-16 - Dustin Bolton
+	Fixed excluded files not getting immediately deleted.
+7.0.3.8 - 2016-02-17 - Dustin Bolton
+	Now excluding backupbuddy_temp directory from Stash Live.
+	Now excluding Sucuri temporary files (such as IP blocks, etc) from Stash Live.
+	Added additional details for Stash Live advanced troubleshooting option to view Snapshot status.
+	Now resetting failed file send attempts on daily init for Stash Live files that exceeded maximum fail counter.
+7.0.3.9 - 2016-02-17 - Dustin Bolton
+	ENHANCEMENT:
+		Updated Google Drive remote destination instructions. - Glenn Ansley
+	Updated PHP maximum runtime tester to help avoid triggering PHP bug resulting in hanging process. - Chris Jean
+	Update Stash destination wording when no backups are found.
+	Updated MO file for German translations. - Glenn Ansley
+	Now excluding 3rd party backup plugins' backup files and Sucuri temporary files for Stash Live by default.
+	Misc improvements to Stash Live logging.
+7.0.3.10 - 2016-02-22 - Dustin Bolton
+	Fixed to local table listing for Stash Live.
+	Now clearing backed up timestamp for database files just prior to sending new updated copy for better tracking of unsent files.
+	Added logging of first 5 files and tables pending send when running wait_on_transfers step.
+	Increased wait_on_transfers step delay to 10 seconds of sleep, from 5.
+	Added additional logging to wait_on_transfers step to troubleshoot send problems.
+7.0.3.11 - 2016-02-22 - Dustin Bolton
+	Stash Live status now attempts to strip any PHP errors or warnings preceeding returned JSON data. _statsPoll.php.
+	Stash: Fixed backup files not being sent into backup type directory due to backup type detection failing, thinking file did not begin with "backup-".
+	Fixed backup type detection always failing to detect type.
+7.0.3.12 - 2016-02-22 - Dustin Bolton
+	Added additional error notifications to catch certificate issues sending to Live.
+	No longer a fatal error if during remote file deletion a send fileoptions file is stuck locked.
+7.0.3.13 - 2016-02-24 - Dustin Bolton
+	Fixed backup listing in Windows displaying an extra backup.
+	Added new Stash Live 'View Troubleshooting Data' button to display an overview of all troubleshooting data.
+7.0.4.0 - 2016-02-26 - Dustin Bolton
+	Various Stash Live improvements, including many updates from Quick Release versions.
+	Now only outputting status when adding many files at once every 20 items instead of each to reduce log I/O overhead.
+	Fixed missing mysql_error check in mysqlbuddy.php - Glenn Ansley
+	Better UI handling if Stash Quota not currently available - Ty Carlson
+	Check PHP version is new enough before giving Stash Live notice. - Glenn Ansley
+	Fix undefined variable in Multisite. - Glenn Ansley
+	Change option for default plugin access value from 'administrator' to 'activate_plugins' to match default options. - glenn Ansley
+	Stash Live: Improved Troubleshooting via new "View Troubleshooting Data" button.
+	Added new Stash Live 'View Troubleshooting Data' button to display an overview of all troubleshooting data.
+		Now displays possible detected memory timeouts.
+		Now displays PHP and BackupBuddy logged errors and warnings.
+	Now displaying both local and master memory limit values for reported PHP memory limit.
+	Added new "Download Troubleshooting Data" button at bottom of Stash Live page.
+	Misc fixes.
+7.0.4.1 - 2016-02-29 - Dustin Bolton
+	Added additional logging to file signature updating step to detect cause of backup count decrementing a large amount in Stash Live.
+	Added additional error catching to catalog load failure during reload after closing catalog during file send in Stash Live.
+7.0.4.2 - 2016-02-29 - Dustin Bolton
+	Stash Live advanced troubleshooting: Fixed displaying notices as 0 available when none available.
+	Now only showing v7 banner if in standalone or multisite main network site (no longer shown for subsites).
+7.0.4.3 - 2016-03-01 - Dustin Bolton
+	Deployment failure connecting to API now also logs HTTP code and message to help detect cause of failure.
+	Fixed Stash Live continuous backup of term database updates causing SQL error, resulting in failure, when updating terms.
+7.0.4.4 - 2016-03-01 - Dustin Bolton
+	Inability to clean SQL timestamped files due to timeout no longer fails as this may just be a delay on our end.
+7.0.4.5 - 2016-03-01 - Dustin Bolton
+	Added additional logging to DAT file creation function to troubleshoot write problems.
+	DAT file creation function now creates containing directory via mkdir recursively.
+7.0.4.6 - 2016-03-01 - Dustin Bolton
+	If Stash Live log file exceeds 10mb it is deleted rather than truncated to avoid memory issues blocking truncation.
+7.0.4.7 - 2016-03-01 - Dustin Bolton
+	Server Tools page updated to recommend v5.6 for PHP and mysql. Warns if PHP < 5.3.
+	Now hiding unlock() blocking status with lock ID for fileoptions.
+	Increased log size sent for Stash Live troubleshooting data.
+	Added additional 8 second wiggle room to file scan to allow for saving discovered files into catalog.
+	Fixed false error about unable to create directory for dat file.
+7.0.4.8 - 2016-03-04 - Dustin Bolton
+	Added more logging to file audit deletion.
+	Traditional backups: Reduced chance of race conditions with fileoptions loading by closing and unlocking fileoptions prior to spawning cron for next step. New log entry: "Closing & unlocking fileoptions."
+	Added additional logging to Stash Live fileoptions loading, including backtrace of calling class & function for troubleshooting.
+	Added burst size logging to S32 multipart log.
+7.0.4.9 - 2016-03-04 - Dustin Bolton
+	Fixed incorrect 'Attention! Remote storage lists fewer files' notification alert when audit step chunked. False positive.
+	Stash Live: Likely fixed bug where process could reset back, thinking it needed to resend most files, if the audit step chunked due to the audit start timestamp getting reset each chunked process. This resulted in the signatures step thinking files had not had their 'v' key updated to a timestamp within the audit begin and audit finish range. The 'v' timestamp would be BEFORE the audit begin timestamp since it was reset to a later timestamp during each chunk.
+7.0.5.0 - 2016-03-04 - Dustin Bolton
+	Fixed problem with Stash Live restarting its progress back to an earlier state when almost done.
+7.0.5.1 - 2016-03-08 - Dustin Bolton
+	Fix PHP notice due to addNotification message parameter being required. Now optional.
+	Now escaping in password form when using pb form class. - Glenn Ansley
+	Fixed Stash Live PHP version too old bar from not showing. - Glenn Ansley
+	S3 (v2) destination explicitly passes API version of 2006-03-01.
+	addNotification() message now optional.
+7.0.5.2 - 2016-03-09 - Dustin Bolton
+	Removed extraneous print_r statement from importbuddy.
+7.0.5.3 - 2016-03-15 - Dustin Bolton
+	esc_attr only used in form class if function exists to handle importbuddy. - Glenn Ansley
+7.0.5.4 - 2016-03-15 - Dustin Bolton
+	ImportBuddy: Fixed destination URL defaulting to http:// even when connected via https://.
+	ImportBuddy: Fixed homeurl being set to siteurl even when option to customize URL was not checked.
+	Stash Live: If made it to the Snapshot step but there are zero files and/or tables in the catalog then halt backup to protect integrity against making a Snapshot missing files.
+	Fixed issue where if deepscandir() halted due to making no progress then the string error was not caught. Now properly halting periodic process.
+	A detected maximum PHP runtime less than 29 seconds now is marked as a fail under Server Tools as all servers should provide at least 30 seconds of time.
+7.0.5.5 - 2016-03-21 - Dustin Bolton
+	Added various additional logging for troubleshooting Stash Live.
+	Added display of how long ago the log file was modified when viewing Stash Live log.
+	Google Drive: Added new option to disable gzip compression. - Glenn Ansley
+	Beta: Now testing handling archive trimming timing on the Stash API side for more consistency on handling removal of stale backups. Also fixes issues when only one set of backups can sit in storage.
+	Improved error logging when fileoptions is locked to give better instructions on trying to figure out cause.
+	Removed logging of email notification body to status log since it is HTML now and long.
+	Additional logging added to Rollback failure to copy undo script into site root.
+	Now hiding Live and Site destination types from listing when adding a new destination post-backup.
+7.0.5.6 - 2016-03-24 - Dustin Bolton
+	Fixed no new Stash Live Snapshot error email notification referencing traditional backup notification limit rather than Stash Live limit in email message. Also changed default notification period from 45 days without backup to 10.
+	Fixed Stash Live archive trim param passed in snapshot action sending delete = true.
+	Fixed Google Drive send error message not being logged.
+7.0.5.7 - 2016-03-29 - Dustin Bolton
+	ImportBuddy: Added additional logging to database migration step of import.
+	ImportBuddy: Fixed broken subchunking of bruteforce substep of database migration step. Major fix.
+	ImportBuddy: Fixed .htaccess migration happening each step during migration step.
+	FEATURE:
+		Added new PHP memory test.
+	Added new Advanced Setting for PHP runtime test.
+	Server Tools -> Server Information: PHP memory limit now reports a failure if less than 128MB of memory. Warning if above 128MB but below 256MB.
+	Added new Advanced Setting for PHP memory test.
+7.0.5.8 - 2016-04-04 - Dustin Bolton
+	Deployment no longer overwrites iThemes Sync authentication and other settings on push/pull of database.
+	Deployment destination settings now display site url of the currently set API key.
+	Server Tools: While Tested PHP memory information is pending the status is marked as OK instead of FAIL.
+	Server Tools: PHP memory test now gives some wiggle room if tested memory is slightly below a threshold so it does not needlessly report a FAIL if it is only a few MB off.
+	Added "Set to 0 (zero) to disable this test." text to PHP runtime and memory test tooltips.
+7.0.5.9 - 2016-04-06 - Dustin Bolton
+	Multisite: Housekeeping function now only runs for main site, not individual subsites which results in it running too often.
+7.0.5.10 - 2016-04-06 - Dustin Bolton
+	Amazon S3 (v2) remote destination: Fixed 'Copy to local' feature not working and silently failing. Functionality broke at unknown time ago.
+	Amazon S3 (v2) remote destination: Updated codex instructions for creating user and settings permissions for bucket access to add simpler method.
+7.0.5.11 - 2016-04-06 - Dustin Bolton
+	Google Drive destination: Now hiding remote folder viewer when Remote File Management is disabled.
+	Don't import Stash destinations or Server Tools values with Settings import. - Glenn Ansley
+7.0.5.12 - 2016-04-08 - Dustin Bolton
+	backupbuddy_core::calculate_tables() now makes sure returned table listing has no duplicates (eg if user enters duplicates in additional includes ).
+	Added additional check in housekeeping function to prevent it running for Multisite subsites.
+7.0.5.13 - 2016-04-08 - Dustin Bolton
+	Deployment / Sync compatibility: On Deployment do not copy hide backend / custom login URL settings between sites.
+7.0.5.14 - 2016-04-11 - Dustin Bolton
+	Added deprecation warnings to logs for Amazon S3 (v1) and Stash (v1) destinations suggesting upgrading to the newer v2 versions.
+	Multisite import: Added additional logging to step 5 import into Mulisite for troubleshooting.
+	Added additional checks to prevent PHP runtime and memory tests from running too often.
+	ENHANCEMENT:
+		Stash Live now processes local file deletions to remote storage in bursts instead of one at a time, significantly reducing API calls needed, significantly improving performance on files being removed from remote storage.
+	Stash Live: Fixed fatal PHP errors not showing in Advanced Troubleshooting Log due to only first line being noted.
+	Stash Live: Advanced Troubleshooting Log now also includes file sizes and modified times of several log files.
+	Stash Live: Now checking for pending files to send at end of audit step prior to running Snapshot step so 'Creating Snapshot' status is not shown if that step is going to be stepped anyway. Reduces confusion that snapshot has begun when it has not.
+	General Settings page saving no longer updates backupbuddy_live_jump transient if Stash Live is not set up.
+7.0.5.15 - 2016-04-11 - Dustin Bolton
+	FEATURE:
+		Added warning to Server Tools -> Cron tab if a cron has passed its runtime without running to detect cron problems.
+7.0.5.16 - 2016-04-12 - Dustin Bolton
+	Beta importbuddy version stats.
+7.1.0.0 - 2016-04-12 - Dustin Bolton
+	Full release of Quick Release versions.
+	Any users that experienced Stash Live problems early at v7.0 launch should give v7.1 a try.
+	Since the last major release:
+		Performance and reliability improvements to Stash Live. Major performance boosts.
+		Added easy to retrieve Stash Live troubleshooting data for quick troubleshooting.
+		Multisite support improvements for Stash Live backups and imports.
+		PHP runtime tester added.
+		PHP memory tester added.
+		Various improvements to Server Tools tests.
+		Various improvements to ImportBuddy process.
+		Various improvements to Deployment process.
+7.1.0.2 - 2016-04-12 - Dustin Bolton
+	Improved detection if importbuddy process is a restore vs migration.
+7.1.0.3 - 2016-04-13 - Dustin Bolton
+	Dropbox (v2): Updated SDK version to latest v1.1.6 to support new SSL and certificate changes.
+	Stash Live: Fixed user meta ID query for continuous database tracking.
+7.1.0.4 - 2016-04-18 - Dustin Bolton
+	Deployment wait for remote response now capped at adjustedMaxExecutionTime() which uses detected value (or manual value if overridden) instead of just 30 seconds.
+7.1.0.5 - 2016-04-19 - Dustin Bolton
+	Dropbox (v2) destination no longer throwing error on non-64-bit systems. Now only logging a BackupBuddy warning noting this.
+7.1.0.6 - 2016-04-20 - Dustin Bolton
+	FEATURE:
+		Amazon S3 (v2): Added support for S3 Transfer Acceleration to increase transfer speeds 50%-500% (or even more if sending to buckets out of country). See https://aws.amazon.com/blogs/aws/aws-storage-update-amazon-s3-transfer-acceleration-larger-snowballs-in-more-regions/ for more information.
+	32-bit architecture is now a Warning on Server Tools page.
+	Stash Live: Holding failed transfer logs longer for troubleshooting.
+	ImportBuddy: Fixed some notice typos on first page and scrollbars around file path.
+	Stash Live: Advanced troubleshooting now logs any detected crons which should have already run but have not, indicating cron malfunctioning.
+	Stash Live: Fixed 'Disconnect from Stash Live' not prompting for authentication resulting in server-side not properly disconnecting accounts.
+7.1.0.7 - 2016-04-20 - Dustin Bolton
+	Now removing Stash Live admin bar when menu item is hidden. - Glenn Ansley
+	Updates to Sync logging. - Lew Ayotte
+	Stash Live: Don't add log entries to report Logging is turned disabled. Report on View Log screen. - Glenn Ansley
+	Stash Live: When Logging is changed from Enabled to Disabled, add an entry in the Log to note that. - Glenn Ansley
+	Stash Live: Add percentage tracker to file size calculator. - Glenn Ansley
+	Stash Live: Don't log Catalog additions if log level isn't 3. - Glenn Ansley
+	Amazon S3 (v2): Added additional logging when etag verificiation fails for troubleshooting.
+	Stash Live: No longer trimming send logs before each logs' respective fileoptions file is logged to aid in troubleshooting. (log was being purged too soon making it difficult to view failure details)
+7.1.0.8 - 2016-04-22 - Dustin Bolton
+	Fixed undefined index for pb_backupbuddy::$options['max_execution_time'] when running in importbuddy.
+	Fixed mysql_error() call without checking to see if it was available. - Glenn Ansley
+	Fixed Dropbox (v2) error calling PB logging due to namespacing.
+7.1.1.0 - 2016-04-25 - Dustin Bolton
+	FEATURE:
+		Improved Sync logging for new Sync features.
+	Release of quick release updates 7.1.0.0-7.1.0.8.
+	Stash Live: Fixed single quote in JSON data breaking javascript due to some last_status messages.
+7.1.2.0 - 2016-05-01 - Dustin Bolton
+	Stash Live: Added headway cache directory to auto-exclude.
+	Added additional logging for Stash API calls failing to track URL that failed.
+	Added additional logging to S3 (v2) API calls failing to track URL that failed.
+	Improved stats on whether restore is a deployment.
+	Fixed Stash Live error message showing too long after file send errors fixed.
+7.1.2.1 - 2016-05-02 - Dustin Bolton
+	Loading fileoptions now logs how much memory increased to help get an idea of memory usage, especially for Stash Live with large numbers of files.
+7.1.3.0 - 2016-05-13 - Glenn Ansley
+	Release of Quick Release updates 7.1.2.0-7.1.2.1.
+	Remove advanced setting that clashes with old settings name and could potentially cause undesired results.
+7.1.3.1 - 2016-05-16 - Dustin Bolton
+	Added blank standalone preloaded function for _doing_it_wrong().
+	Reported max execution times below zero now treated as default 30 seconds.
+7.1.3.2 - 2016-05-25 - Dustin Bolton
+	French translation roughly edited to instruct against using ImportBuddy password the same as WordPress.
+	Serial calculation from zip filename made more robust against unexpected whitespace.
+	FEATURE:
+		Added new advanced option "Cron request timeout override" which allows overriding the Cron Loopback default timeout value of 0.01 seconds to a higher value. This is useful for servers which are unable to load wp-cron.php within 0.01 seconds, resulting in cron failure and multiple crons to become past-due.
+	S3 (v2) destionation: Added additional logging between reading in file chunk and beginning actual file upload to troubleshoot failure point better.
+7.1.3.3 - 2016-06-01 - Dustin Bolton
+	Cron request timeout override validation now number instead of int to allow decimal values.
+	ENHANCEMENT:
+		Stash Live: Added new 'memory' section to Advanced Troubleshooting Log to help identify memory problems based on actual calculated requirements based on catalog size and base memory usage of site compared to tested and/or reported PHP memory values. Also flags issues found into highlights section. Also scans log files to find largest seen memory usage for warning if getting to close to limits.
+		Stash Live: Various enhancements to memory issue detection.
+		Stash Live: Updated 'Creating Snapshot' step to note that is only happening if due for clarity.
+7.1.3.4 - 2016-06-07 - Dustin Bolton
+	FEATURE:
+		HTML email notification template can now be overridden with custom template. To do so copy the existing default template located at /wp-content/plugins/backupbuddy/views/backupbuddy-email-template.php into your theme directory at /wp-content/themes/backupbuddy-email-template.php. You may then edit this new template file to your liking. Its existance automatically enables using the new template rather than the default.
+	Misc minor bug fixes.
+	Fixed file exclusion of wp-config.php not being prevented.
+	File backupbuddy_dat.php can no longer be excluded as it can break database backups.
+	Warning added when checking box to disable backup integrity check. Description text also updated.
+7.1.3.5 - 2016-06-08 - Dustin Bolton
+	ENHANCEMENT:
+		Stash Live: Added alerts section to troubleshooting log to alert on highlights that are very likely to be a problem.
+	ENHANCEMENT:
+		Stash Live: Added automated running of troubleshooting data process via cron to detect possible causes of problems if Snaphost has not run in 72 hours or more.
+	ENHANCEMENT:
+		Stash Live: Added new potential problems alert to alert user if potential issues are detected such as low memory to aid user prior to having to seek support. Only runs if no snapshot has been made in > 3 days for performance. Auto-clears on successful snapshot or problem goes away and troubeleshooting log is re-viewed.
+	ENHANCEMENT:
+		Stash Live: Potential problem alert now detects definite memory shortages based on tested memory and alerts if no snapshot was made in 72 hours to help indicate actual problem. Also flags in new alerts section of troubleshooting log.
+7.1.4.0 - 2016-06-14 - Dustin Bolton
+	FEATURE:
+		Access Permission setting now adds support for restricting to custom roles.
+	Fixed importbuddy.php not being sent with automated send migration. - Glenn Ansley
+	FEATURE:
+		sFTP: Added beta support for sFTP key file.
+	Full release of Quick Release versions 7.1.3.1-7.1.3.5.
+7.1.4.1 - 2016-06-16 - Dustin Bolton
+	Stash Live: Added warnings if deep file scan max time is negative, indicating very low php runtime.
+	Updated Google Drive instructions to reflect their changes.
+	Fixed Integrity Check setting to properly indicate that it should only be _UN_selected if instructed by support.
+	Updated Integrity Check setting description for profiles to match global settings text.
+7.1.4.2 - 2016-06-17 - Dustin Bolton
+	ENHANCEMENT:
+		Stash Live: A detected PHP execution time limit below 30 seconds displays an alert on the Stash Live page with instructions to contact host.
+	Added some wiggle room to detected PHP value so 1 or 2 seconds below 30 will not result in potential false warning.
+	Stash Live: Troubleshooting log now more explicitly notes low PHP runtime in highlights.
+	Stash Live: Troubleshooting log now note low PHP runtime in 'alerts' section as it is critical if it is below 30 seconds.
+7.1.4.3 - 2016-06-20 - Dustin Bolton
+	Removed Windows server performance boost notification as zip.exe/unzip.exe are no longer supported with modern zip library.
+	Stash Live: Fixed bug causing PHP runtime override Advanced Setting to become populated with recent detected value.
+	Stash Live: Max php runtime detected now stored in _max_time variable as to not override manually entered max_time value.
+	Fixed exclusion button for files not working since recent quick release.
+7.1.4.4 - 2016-06-21 - Dustin Bolton
+	Fixed PHP warning when running Server Tools cron section via script and not UI.
+	S32, Stash2, Stash Live: Added additional logging of "Guzzle client cainfo" which includes any ca cert path/info overrides to help troubleshoot.
+	S32, Stash2, Stash Live: Added additional logging of "Guzzle client set to not validate peer nor host!" to verify when SSL validation is disabled.
+	S32, Stash2, Stash Live: Added new option to disable validation of host and peer to work around host certificate issues. Use with caution and only if directed by support.
+	S32, Stash2, Stash Live: Now defaulting to using included certificate bundle in options.
+	S32, Stash2, Stash Live: Improved option to control whether bundles or server certificate was to be use.
+	S32, Stash2, Stash Live: Changed option "Use included certificate bundle" to "Use server certificate bundle".
+	ENHANCEMENT:
+		Overdue cron warning now indicates how long past due the cron is.
+7.1.4.5 - 2016-06-23 - Dustin Bolton
+	GoDaddy Managed WordPress Hosting now detected, resulting in warnings being displayed (on Stash Live page, traditional backup page, and Server Tools section) as their cron system is currently broken. GoDaddy is aware of their broken cron system but there is not an ETA on is being fixed. Please contact their support for updates.
+	GoDaddy Managed WordPress Hosting now results in a warning being added to the Server Tools page.
+	GoDaddy Managed WordPress Hosting now results in warnings, highlights, and alerts displaying in the Stash Live Troubleshooting data.
+7.1.4.6 - 2016-06-23 - Dustin Bolton
+	Form validation "number" requirement no longer rejects a blank string as invalid.
+7.1.5.0 - 2016-07-05 - Dustin Bolton
+	Remote destination Dropbox (v1) will cease to function as of September 28, 2016, as Dropbox is retiring it. If you are using this destination you must update to using the newer Dropbox (v2) destination or your remote destination usage will be interrupted. See https://blogs.dropbox.com/developers/2016/06/api-v1-deprecated/
+	Added additional logging to Stash Live state variable not being an object to aid troubleshooting live periodic.
+	Stash Live: Added warnings if deep file scan max time is negative, indicating very low php runtime.
+	Updated Google Drive instructions to reflect their changes.
+	Fixed Integrity Check setting to properly indicate that it should only be _UN_selected if instructed by support.
+	Updated Integrity Check setting description for profiles to match global settings text.
+	ENHANCEMENT:
+		Stash Live: A detected PHP execution time limit below 30 seconds displays an alert on the Stash Live page with instructions to contact host.
+	Added some wiggle room to detected PHP value so 1 or 2 seconds below 30 will not result in potential false warning.
+	Stash Live: Troubleshooting log now more explicitly notes low PHP runtime in highlights.
+	Stash Live: Troubleshooting log now note low PHP runtime in 'alerts' section as it is critical if it is below 30 seconds.
+	Removed Windows server performance boost notification as zip.exe/unzip.exe are no longer supported with modern zip library.
+	Stash Live: Fixed bug causing PHP runtime override Advanced Setting to become populated with recent detected value.
+	Stash Live: Max php runtime detected now stored in _max_time variable as to not override manually entered max_time value.
+	Fixed exclusion button for files not working since recent quick release.
+	Fixed PHP warning when running Server Tools cron section via script and not UI.
+	S32, Stash2, Stash Live: Added additional logging of "Guzzle client cainfo" which includes any ca cert path/info overrides to help troubleshoot.
+	S32, Stash2, Stash Live: Added additional logging of "Guzzle client set to not validate peer nor host!" to verify when SSL validation is disabled.
+	S32, Stash2, Stash Live: Added new option to disable validation of host and peer to work around host certificate issues. Use with caution and only if directed by support.
+	S32, Stash2, Stash Live: Now defaulting to using included certificate bundle in options.
+	S32, Stash2, Stash Live: Improved option to control whether bundles or server certificate was to be use.
+	S32, Stash2, Stash Live: Changed option "Use included certificate bundle" to "Use server certificate bundle".
+	ENHANCEMENT:
+		Overdue cron warning now indicates how long past due the cron is.
+	GoDaddy Managed WordPress Hosting now detected, resulting in warnings being displayed (on Stash Live page, traditional backup page, and Server Tools section) as their cron system is currently broken. GoDaddy is aware of their broken cron system but there is not an ETA on is being fixed. Please contact their support for updates.
+	GoDaddy Managed WordPress Hosting now results in a warning being added to the Server Tools page.
+	GoDaddy Managed WordPress Hosting now results in warnings, highlights, and alerts displaying in the Stash Live Troubleshooting data.
+	Form validation "number" requirement no longer rejects a blank string as invalid.
+7.1.5.1 - 2016-07-13 - Dustin Bolton
+	Stash Live: Status polling now only running on pages not in an iframe to prevent multiple loads when on the Remote Destination page. Improved performance.
+	Stash (v2): Fixed download from Remote Destinations page not working (returned 404).
+7.1.5.2 - 2016-08-03 - Dustin Bolton
+	S3 (v2) destination: Fixed undefined index use_packaged_cert.
+	Increased retry attempts from 8 to 30 times when backup process_backup() fileoptions is locked due to long PHP runtime.
+	mail_error() function now defaults to get_option('admin_email') email if none is set on the Settings page for error notifications. Also helpful if settings get lost.
+	mail_error() is now able to function even if plugin settings are missing/corrupt.
+	BackupBuddy plugin settings are automatically backed up regularly in housekeeping function.
+	Corrupt or missing BackupBuddy plugin settings are now automatically restored/replaced with the last working version stored in a settings backup file in pb_backupbuddy log directory. Protected with random 32char string and anti directory browsing. Error notification email will be sent to admin_email.
+	FEATURE:
+		BackupBuddy now automatically backs up and restores its own settings if they become missing or corrupted due to database problems. This will help prevent loss of settings and backups.
+	ENHANCEMENT:
+		Database and file exclusion lists are now resizable.
+	FEATURE:
+		Added new "Delete All Cron Entries" button to Server Tools' WordPress Schedules (cron) section for clearing out all cron entries for all of WordPress.  Useful if a plugin clogs the cron system with too many entries.
+	Stash Live: Fixed excluding file(s) already in the catalog not being removed if they have never successfully sent.
+	Stash Live: Added new error when modified time is unable to be determined via stat() such as due to permissions to aid troubleshooting of pending files which never send. Ex: Error #8438934: File modified time unexpectly zero (0). File permissions may be blocking proper modification detection on file `/index.php`.
+	ENHANCEMENT:
+		ImportBuddy: DAT not found error now checks to see if the DAT file is contained within a subdirectory matching the zip file name. This is common if the user unzips the backup zip manually then re-zips the folder, resulting in site contents being inside a subdirectory matching the zip file name.
+7.1.5.3 - 2016-08-03 - Dustin Bolton
+	ENHANCEMENT:
+		ImportBuddy: cPanel wizard now supports connecting to https URLs instead of just http.
+7.1.5.4 - 2016-08-08 - Dustin Bolton
+	Fixed BackupBuddy settings backup storage location going to wrong directory. Corrected and cleanup added.
+7.1.5.5 - 2016-08-11 - Dustin Bolton
+	Now cleaning backupbuddy_dat.php files in root during housekeeping. - Glenn Ansley
+	Suppress error reporting during PHP runtime detection. - Glenn Ansley
+	Suppress error reporting during PHP maximum memory detection. - Dustin Bolton
+	Now clearing Malware Scanner transient pre-backup so it does not linger after restore on new site. - Glenn Ansley
+	Fix bug that breaks importbuddy Step 3 presentation of old DB pass if it includes a double quote ("). - Glenn Ansley
+	Fix importbuddy bug that breaks wp-config.php when password contains a single quote ('). - Glenn Ansley
+	When checking for wp-config.php in parent directory, also make sure wp-settings.php isn't there. - Glenn Ansley
+	Catch instances where fread length param was bad during log file truncation. - Glenn Ansley
+7.1.5.6 - 2016-08-17 - Dustin Bolton
+	ImportBuddy: Added additional logging to Deployment load of state file.
+	Deployment: Don't attempt to reset settings if missing during importbuddy resulting in Error #843797944. - Glenn Ansley
+	Fixed count of how many new edits have been made since the last backup. Was showing more changes than had actually been saved. - Gary Harris
+	Added additional logging and checks for Stash Live pending files to prevent hanging transfers.
+7.1.6.0 - 2016-08-23 - Dustin Bolton
+	Rollback: Now hiding next step button as process proceeds on its own.
+	FEATURE:
+		Stash Live: Now tracking daily statistics including the number of files and database tables sent and total size of database tables and files sent per day. Displayed under Advanced Troubleshooting Options.
+	FEATURE:
+		Sync: Added support for new daily stats tracking.
+	When creating a new remote destination auto-select the new destination. - Glenn Ansley
+	Skip local ssl verification. Don't show override options in Advanced settings in WP 4.6 or later as 4.6's new default it to skip this verification. - Glenn Ansley
+	ImportBuddy: Fixed version not being appended to asset URLs (js, css) resulting in caches not always getting busted with latest version.
+	Now excluding /error_log from backups by default. These can grow very large.
+	Changed PHP minimum value for Stash Live to a string for some PHP versions not casting it from float to string resulting in failure in version comparison.
+	Release of Quick Release updates 7.1.5.1-7.1.5.6.
+7.1.6.1 - 2016-09-02 - Dustin Bolton
+	Improved detection of GoDaddy Managed WordPress hosting to display warning about their broken cron system.
+	Stash Live stats cleanup.
+7.1.6.2 - 2016-09-08 - Dustin Bolton
+	Fixed importbuddy asset URL including spaces and other characters after version number.
+7.1.6.3 - 2016-09-16 - Dustin Bolton
+	Already-depricated Stash remote destination version 1 will be discontinued September 27, 2016. Please update to Stash v2 before then.
+	ImportBuddy: Fixed undefined index for max runtime if not set by server.
+	Server Tools: Made active plugin listing resizable.
+	Server Tools: Made 'Delete All Crons' button more visible and placed at the right side of the cron listing table. Shown at top and bottom of table.
+7.1.6.4 - 2016-09-16 - Dustin Bolton
+	Downgraded GoDaddy Managed WordPress Hosting warning as they have addressed the broken cron problems for US-based customers so the issue may now finally be resolved for USA-based hosting accounts. Non-US customers should contact GoDaddy support until this is resolved in non-USA datacenters.
+	Stash Live: Added last remote snapshot ID to stats.
+	Stash Live: Troubleshooting log will now highlight an issue if the last snapshot occurred greater than 7 days past the due time OR twice past the due time.
+	Stash Live: Troubleshooting log will now include response from API server of last snapshot request if last snapshot is either overdue by twice the snapshot interval OR 7 days past the snapshot interval due time.
+7.2.0.0 - 2016-09-27 - Dustin Bolton
+	FEATURE:
+		Added new BETA Amazon S3 (v3) remote destination. Improved performance, bug fixes, and troubleshooting capabilities. Uses new AWS SDK v3 which fixes several known bugs in the v2 SDK uses in the v2 destination.
+		Added new BETA Stash (v3) remote destination. Improved performance, bug fixes, and troubleshooting capabilities.
+		New S3 and Stash destinations recommended for any users experiencing problems with special encoded characters such as non-UTF8 non-ascii characters in filenames.
+	Removed discontinued Remote Destination Stash v1.
+	Removed discontinued Remote Receiption Dropbox v1 as Dropbox.com has removed support for this API version.
+	Stash Live: Now allowing daily snapshot to run up to 4 hours early, up from previous 3 hour 'wiggle room' on timing.
+7.2.0.1 - 2016-09-27 - Dustin Bolton
+	Removed remaining Stash (v1) and Dropbox (v1) references.
+7.2.0.3 - 2016-10-03 - Dustin Bolton
+	ENHANCEMENT:
+		ImportBuddy: PHP-based database import now temporarily turns off foreign key checking during import.
+7.2.0.4 - 2016-10-03 - Dustin Bolton
+	ImportBuddy: Fixed missing $wpdb global error.
+7.2.0.5 - 2016-10-06 - Dustin Bolton
+	Fix variable type of php_max_execution in Server Tools causing invalid Status Indication for PHP Max Execution Time in Server Tools. - Glenn Ansley
+	Fix error causing Restore from Stash to not display in importbuddy. - Glenn Ansley
+7.2.0.6 - 2016-10-17 - Dustin Bolton
+	ImportBuddy: cPAnel wizard now truncates prefixes to only first 8 characters or cPanel username.
+	Stash Live: Added new option to run Stash Live with Stash v3 instead of just the default Stash v2 destination backend.
+	iterate_edits_since_last 3rd parameter now optional.
+	Server Tools Page: Http Loopback Test now displays results in textarea for better readability or copy/pasting. - Josh Benham
+	Server Tools Page: Cron Loopback Test now displays results in textarea for better readability or copy/pasting. - Josh Benham
+	Server Tools Page: Now alternating table background color for better readability.
+	All tables in plugin now default to alternating backgrounds for improved readability.
+	Stash Live: Fixed too many daily stats building up. Now trimmed to last 14 days.
+	FEATURE:
+		'Files' profile types now support backing up from a custom directory root. Useful for backing up only individual directories without having to default to backing up everything and excluding everything else, whether within the site root or even above the site root such as when custom content directories are set above the ABSPATH. Note: File/directory exclusions not currently supported for custom root directories. All content within the custom root will be backed up. Note: Integrity check will not be performed on this backup type at this time as there are not 'expected' files to verify.
+7.2.0.7 - 2016-10-25 - Dustin Bolton
+	Fixed Scheduled Page Datepicker Date Format Issue in WP4.6 - Glenn Ansley
+	Fixed $this->_error called in static function without that method in housekeeping. - Glenn Ansley
+	Now checking PHP min version before offering Stash Version option in Stash Live settings. - Glenn Ansley
+	ImportBuddy: Added destination for .user.ini custom PHP configuration warnings.
+	Added cron loopback test to pre-backup preflight check.
+	Fixed error attempting to disconnect from Stash Live since last version release.
+	Added 'Show preflight results' button to upper right of Backups page.
+7.2.0.8 - 2016-10-25 - Dustin Bolton
+	Fixed undefined class backupbuddy when Google Drive multipart upload fails.
+	Fixed error about trigger being logged when backup triggered by Sync.
+	Stash Live Stash version now shows only compatible versions in listing.
+7.2.1.0 - 2016-11-09 - Dustin Bolton
+	Custom backup root setting fixed showing for all profile types as this feature is only for FILES type profiles.
+	Backgound color of error alerts now reddish for better visibility to color-blind persons.
+	Added additional changes to keep beta S3 (v3) memory usage low when bursing.
+7.2.1.1 - 2016-11-21 - Dustin Bolton
+	Scheduling page: Fixed forcing Datepicker date format if theme overrides WordPress date format.
+	Added additional error logging for importbuddy Error #329723 to detect server response to failed ajax call.
+7.2.1.2 - 2016-12-07 - Dustin Bolton
+	Changed all disabled form items to readonly to allow for copy/pasting and expanding box sizes.
+	ImportBuddy: Added additional logging when loading a step template.
+	ImportBuddy: Added additional logging when calling mysql_test ajax call.
+	Stash Live: Added new link in Stash Live Settings screen at VERY BOTTOM of modal: "Remove Stash Live destination without disconnecting (use only if directed)" -- Allows removing destination without calling API for a disconnect. Use only if directed by support.
+7.2.1.3 - 2016-12-09 - Dustin Bolton
+	Re-added automatic cleaning of expired transients.
+	Clean up orphansed deployment temp tables. - Glenn Ansley
+	Don't 503 during BackupBuddy-related AJAX calls. - Glenn Ansley
+	Add importbuddy support for SSL mysql connections. - Glenn Ansley
+	sFTP test fixed if no path specified. - Glenn Ansley
+7.2.1.4 - 2016-12-29 - Dustin Bolton
+	Fix return by reference error when returning false. - Glenn Ansley
+	Fixed cleanup of deployment tables. - Glenn Ansley
+	Stash Live & Stash v3 now auto-bust cache on next file if token is reported expired. - Dustin Bolton
+7.2.1.5 - 2016-12-30 - Dustin Bolton
+	Disabled WP transient cleanup -- possible issue effecting Stash transient storage.
+7.2.1.6 - 2016-12-30 - Dustin Bolton
+	Deployment: No longer migrating wp-config.php during Deployment as this file is not transferred in the process and should be skipped migrating.
+7.2.1.7 - 2017-01-03 - Dustin Bolton
+	Fixed undefined custom_root during DAT file rendering.
+	Added additional escaping into bruteforce_table() for WHERE portion of statement to avoid SQL syntax error if criteria includes quote.
+7.2.1.8 - 2017-01-04 - Dustin Bolton
+	Added additional logging when clearing Live transient due to expired token.
+	Added transient clearing for expired token for S32 destination.
+7.2.2.0 - 2017-01-16 - Dustin Bolton
+	Housekeeping now cleans up old fileoptions lock files. Helps address problems loading backup page when large numbers of old locks exist.
+	Fixed .maintenance file contents not matching expected importbuddy.php generated version resulting in file hanging around. - Glenn Ansley
+	Removed S3 (v2 & v3) acceleration endpoints as they are invalid.
+	ENHANCEMENT:
+		Added S3 (v3) acceleration option.
+	Misc minor fixes.
+	S3  (v3) settings tooltrip wording improvements.
+	Major release of Quick Release versions 7.2.1.0-7.2.1.8.
+	Stash Live robustness improvements.
+7.2.2.1 - 2017-01-20 - Dustin Bolton
+	Clarified Amazon S3 (v3) acceleration charges being from Amazon.
+	S3 (v3) destination: Added several new Amazon S3 regions/endpoints.
+7.2.2.2 - 2017-02-13 - Dustin Bolton
+	Stash Live:
+		Increased robustness of catalog.
+		Catalog is now backed up more regularly locally during file send step, at least once each 90 seconds, at the beginning of step.
+		Upon detection of a corrupt or truncated catalog file (eg. due to PHP process being killed) if the backup catalog is larger it is reverted to as to prevent 'falling back' to a much earlier catalog state requiring many file re-transfers.
+	Fixed housekeeping not cleaning up recently made bbold and bbnew tables if in rollback_cleanups settings array. Resulted in some bbold & bbnew hanging around longer than normal.
+	Fixed confirmation of a Deployment pull not immediately cleaning up tables NOR undo PHP file.
+	Housekeeping remove_temp_tables() now accepts $backup_age_limit so that clicking button to perform housekeeping will immediately clean up ALL deployment tables.
+7.2.2.4 - 2017-02-14 - Dustin Bolton
+	Happy Valentine's Day!
+	sftp destination: Added additional logging of directory we are trying to change into.
+	Stash Live: If files are remaining we are waiting on, added logging to display first 5 files.
+	Stash Live: Re-organized ordering in Troubleshooting Log to place higher priority items higher for visibility/readability.
+	Added Cleanup Procedure Status Log when manually running cleanup from Settings -> Other tab.
+	FEATURE:
+		Added expired transients cleanup to housekeeping including expired or corrupt.
+		Added new housekeeping option to cleanup all unexpiring transients. Useful if some transients are set to not expire though they should.
+7.2.2.5 - 2017-02-20 - Dustin Bolton
+	Now automatically cleaning up orphaned transients upon upgrade one time (new data structure version 15) to address problems with orphaned transients due to old transient cleanup bug.
+7.2.2.6 - 2017-02-22 - Dustin Bolton
+	The array-key_exists() function maps changed to use all string keys so as not to raise Warning on a non-string key. The boolean false value that get_cfg_var() or ini_get() might return is changed to string "false" to be a valid string to check against array keys. - Jeremy Trask
+	Replace reference to v2 with v3 in Stash 3 and S33 init.php files. - Glenn Ansley
+7.3.0.1 - 2017-02-27 - Dustin Bolton
+	OVERVIEW:
+		This release focuses on increasing robustness and reliability of the Stash Live and Deployment features.
+		Also includes the official release of Quick Release updates 7.2.2.1-7.2.2..6, including all features and enhancements within those.
+	FEATURES:
+		Automatic cleanup of expired transients from the database to increase site performance and reduce needless old transients from hanging in the database.
+		Automatic cleanup of corrupt transients from the database.
+		Settings -> Other tab has added new button to clean up transients manually.
+	ENHANCEMENTS:
+		Stash Live: Significant increase in robustness. Prior to this version corruption of the catalog would result in the backup process falling back to an earlier state, resulting in longer transfer times or Stash Live even hanging indefinitely if the catalog was repeatedly corrupted. This is no longer the case.
+		Stash Live: Faster recovery upon encountering a temporary error due to timeout or memory limit causing file lock to persist.
+		Settings -> Other tab's housekeeping options now include a Status Log to see what is happening. Re-organized the display.
+	BUG FIXES:
+		Various fixes to Deployment cleanup and confirmation procedures.
+		Misc fixes.
+		Added is_array() check then default assignment to Stash Live catalog load to avoid warning in PHP 7.1.
+7.3.0.2 - 2017-03-03 - Dustin Bolton
+	Fixed PHP 7.1 compatibility issue in importbuddy database replacement due to variable being initialized as string instead of array. Only impacts PHP 7.1+.
+7.3.0.3 - 2017-03-03 - Dustin Bolton
+	Fixed inability to disable Stash Live no new snapshot notification by setting its value to zero (0).
+	Added Google Drive note: If re-using a project for multiple sites, do NOT exceed 50 sites per project. Google limits tokens to 50 or FEWER per project.
+	Trimmed remote destination libraries to reduce plugin size.
+	Removed unused images to reduce plugins size.
+	ENHANCEMENT:
+8.0.0.0 - 2017-06-13 - Dustin Bolton
+	PROFILES
+		New "Smart Profiles" Themes, Plugins, Media for backing up files of each respective type/location:
+			SCREENSHOT: http://image.prntscr.com/image/c866aeb96c8d47dd86d44dbd66b3274b.png
+			Use the new default smart profiles or create your own for further customizing. These new profile types allow you to automatically only backup this section of the site, allowing for more granular control over what is backed up by a profile. Paired with scheduling this allows you to easily break up backup processes into smaller portions for better spreading server load or timeout issues, especially for larger sites. Smart profiles also support directory and file exclusions.
+		New "Custom backup root" option for all profile types (except database):
+			SCREENSHOT: http://image.prntscr.com/image/af2c0f714183423eb8b04d4c146ad1e6.png
+			You can now configure which directory BackupBuddy backs up on a per-profile basis. Prior to this feature you could only backup the entire site and select directories to exclude. You can now select any directory to be backed up, even directories ABOVE the WordPress root (abspath) by using "/../" in the path. This is useful for backing up individual directories, 3rd party applications, or directories outside the WordPress root. This can also be used for more granular control when breaking up backups across multiple profiles for spreading server load or working around timeout issues.
+			Global exclusions apply but default but exclusions may be set for just this profile relative to this custom path manually or with the exclusion picker.
+		"Full" and "Files" profiles now have three SMART exclusion options: Auto-exclude Media Directory, Auto-exclude Themes Directory, Auto-exclude Plugins Directory for making it easier to exclude directories which can be backed up by other default Profile types.
+			SCREENSHOT: http://image.prntscr.com/image/5a2b85de30ad4ab281a362630fc038c6.png
+		Backup profiles can now individually override the default global backup mode (classic vs modern) on a per-profile basis.
+			SCREENSHOT: http://image.prntscr.com/image/b42fdd4ff549416fa9a25be28f1643e0.png
+	STASH LIVE
+		Significant performance improvements, especially for larger sites. Sites which in the past would run out of memory due to hosting limits are very likely to now operate within server limits.
+		A troubleshooting scan is now regularly performed detecting common problems and alerting the user and also providing solutions.
+		A new "Troubleshooting Scan" button to upper right of page of Stash Live page is available for manually troubleshooting.
+			SCREENSHOT: http://image.prntscr.com/image/b80166b92ce24f77986b4892150ee325.png
+	IMPORTBUDDY:
+		New "Search Engine Visibility" setting to Step 6 of restore process, allowing you to either keep the setting as it was on the source site, turn on search engine visibility, or turn it off. Useful for moving sites between development, staging, and live locations.
+			SCREENSHOT: http://image.prntscr.com/image/a10ff6ca440c4d6a8658eb3ed49c9e33.png
+		Added "Forgot password" feature which allows you to generate a new password hash. This hash can then be placed inside the importbuddy.php file to make it usable even if you forgot its password.
+			SCREENSHOT: http://image.prntscr.com/image/7786f5d6199040ea97eae3930526f226.png
+			SCREENSHOT: http://image.prntscr.com/image/66d8c06337d6474da1c2e9609f4b14d4.png
+			SCREENSHOT: http://image.prntscr.com/image/be93a67018f440f0910cee758152d8b8.png
+		Javascript errors are now automatically detected and brought to the user's attention as well as logged to aid in troubleshooting. Sometimes various browser plugins running javascript fail causing importbuddy.php's javascript to halt.
+		Improved look and feel with animated progress as well as highlights to areas that require user attention.
+		importbuddy.php file size has been reduced for faster uploading during restore process.
+	GENERAL
+		Directory exclusions (both global and profiles) support three new variables: {media}, {theme}, and {plugins} to exclude those specific WordPress directories.
+		Added advanced option to hide the BackupBuddy Status widget from the dashboard, including the dashboard option to hide or display it.
+		Reduced plugin file size by removing unneeded remote destination library files.
+		Backup and restore of databases containing foreign key constraints are now fully supported and possible.
+	DEPLOYMENT:
+		Differences in plugins between source and destination are now highlighted. Plugins not on the other site a colored RED while plugins on the other site but with a different version are colored BLUE.
+		You can now click on the number of files to Push/Pull for Plugins, Themes, and Media, to display a listing of all files to transfer of that type.
+		Selection listings for database tables and plugins to transfer are now larger and resizable.
+		Selection of plugins to push/pull now only lists plugins that either do not exist on the destination or differ in version.
+	DROPBOX:
+		Added support for Google "Service Accounts" which allows for more than 50 tokens per account for users with large numbers of sites. Previously users with more than 50 sites would hit a Google Account token limit.
+			SCREENSHOT: http://image.prntscr.com/image/4d72825fdb524b42a764f30a48a62f12.png
+			SCREENSHOT: http://image.prntscr.com/image/d217ded5208241ba8287b6da4e5d95e3.png
+	AMAZON S3:
+		Added support for Amazon S3 Glacier Storage Class (less cost but slow to restore files for access) for both v2 and v3 remote destinations.
+		Added support for Amazon S3 Infrequent Access Storage Class (less cost but slow to restore files for access) for both v2 and v3 remote destinations.
+		Amazon S3 (v3) Remote Destination is now compatible with ALL standard geographical locations:
+			US East 1 (US Standard; N. Virginia)
+			US East 2 (Ohio)
+			US West 1 (N. California)
+			US West 2 (Oregon)
+			Canada Central 1
+			Asia Pacific South 1 (Mumbai)
+			Asia Pacific Northeast 1 (Tokyo)
+			Asia Pacific Northeast 2 (Seoul)
+			Asia Pacific Southeast 1 (Singapore)
+			Asia Pacific Southeast 2 (Sydney)
+			EU Central 1 (Frankfurt)
+			EU West 1 (Ireland)
+			EU West 2 (London)
+			South America East 1 (Sao Paulo)
+			China North 1 (Beijing)
+	MISC:
+		Remote destinations unavailable due to not meeting PHP version requirements are now displayed and greyed out, displaying PHP requirements.
+		Dropbox v2 remote destination no longer allows changing the storage directory when editing for enhanced security.
+		Directory exclusion picker now takes into account custom root profile and shows directories/files from the custom root path.
+		Stash Live: Significant memory usage reduction on sites with a large number of individual files.
+		Added support for Google "Service Accounts" which allows for more than 50 tokens per account for users with large numbers of sites. Use p12 type key files.
+		Stash Live now stores less metadata in catalog to reduce memory and I/O footprint.
+			Removed default catalog entries for h (hash), t (send tries), and d (delete) if at defaults.
+			b (backed up), and v (verified during audit) no longer store microtime(true) instead storing simple time for reduced size.
+			Removed a (added) timestamp entirely.
+		Stash Live: Troubleshooting scan now automatically detects and alerts about possible files or database tables being unable to be transferred. This aids in determining the cause of Stash Live being unable to reach 100%. This alert it shown at the top of the screen.
+		Custom backup root profile option now supports directory exclusions. Exclusions in profile should be entered relative to custom root. Global profiles will automatically be applied if their relative to ABSPATH root resides within the custom root.
+		Custom backup root profile option now supports going "up" into parent directories above the WordPress site directory (ABSPATH) by using the dot dot ('/..') directory format.  For instance to back up a directory above the WordPress installation named "myapp" you could enter "/../myapp/" as the custom directory.
+		Improved profile selector styling to handle varying screen widths better.
+		Reduced fileoptions lock timeout from deduced max execution time + 60 seconds to deduced max execution time + 30 for faster potential recovery.
+		Renamed phpinfo.php to pinfo.php to avoid Sucuri false positive.
+		Now clearing stat cache prior to getting current database file size in _getBackupStatus.php.
+		truncate_file_beginning() now clears stat cache prior to testing file size.
+		Updated WordPress PHP and mysql version recommendations on Server Tools page. Tests reports fail if php older than 5.2.4, warning if older than 5.6.  Warning is mysql older than 5.6. Recommends PHP v7 as per WordPress suggestion.
+		Fixed fileoptions illegal string offset for Stash Live $this->options assignment by key.
+		Added importbuddy.php cleanup note about custom file permissions possibly needing re-applied.
+		Zipbuddy libraries: _render_exclusions_file() now accepts optional third parameter ($root) which allows for defining directory which exclusions are relative too. Previously hardcoded exclusion relative to ABSPATH.
+		Updated default email error message to put emphasis that error is due to server not BackupBuddy itself.
+		Added warning if Wordfence is installed as a potential source of conficts.
+		Added Google Drive note: If re-using a project for multiple sites, do NOT exceed 50 sites per project. Google limits tokens to 50 or FEWER per project.
+		Trimmed remote destination libraries to reduce plugin size.
+		Removed unused images to reduce plugins size.
+		ImportBuddy: Improved styling and animations for clarity and improved look & feel.
+		Overall plugin file size reduced.
+		backup_mode setting moved from root into default profile (profile 0).
+		After displaying error message about backup zip file not growing if it then begins to grow again the error is hidden from view since it is no longer applicable.
+		Added additional logging to destination init Error #8548833.
+		Fixed typo in destination send failure email message.
+		Bug: Fixed rare situation where days since last Stash Live snapshot could incorrectly be very large due to state being cached and cached value not being returned by _load_state().
+		Added availability, durability, and description information to Amazon S3 storage class types.
+		ImportBuddy: Now detecting javascript errors and alerting if any are encountered. Useful for detecting browser plugin errors or bugs.
+		Moved S3 (v2) and (v3) storage class from advanced options to standard options configuration.
+		Quick Setup wizard fixed to show option for scheduling by default.
+		Backup process javascript errors now also log a stack trace and column into the Status Log.
+		Added animate.css.
+		ImportBuddy:
+			restore.php connectDatabase() only runs once per PHP instance.
+			Detected javascript errors now also log full troubleshooting details into the Status Log.
+			The database settings form will no longer submit if javascript has failed to prevent it from reloading the page without submitting restoreData, resulting in an error about being unable to decode submitted data.
+			Added additional logging if state data decoding is failing logging the exact decoding failure.
+			Added animate.css for animations to draw attention and improve look.
+			Removed multiple unused assets including javascript, css, and images to reduce file size.
+			Fixed undefined variable $importbuddy_file during cleanup if skipping deletion of importbuddy.php.
+		Fixed total aggregate database size resetting.
+		Fixed maximum log file size not being enforced.
+		Fixed could not connect to stash error on remote destinations page. - Josh Benham
+		Fixed remote destinations page displaying scrollbar placeholders on some systems. - Josh Benham
+		.sql files now temporarily disable foreign key and unique index checks prior to other sql statements to help avoid temporary errors due to foreign key constraints.
+		Better handling for Error #3297392 fileoptions lock in Stash Live
+		Fixed PHP memory calculation on PHP 7.x+ due to changes in memory usage. - Jeremy Trask
+		Merged Restore / Migrate page into Backup & Restore page.
+		Renamed "Remote Destinations" page to "Destinations"
+		When no destinations exist added explanation text to explain that by default all backups are stored locally but additional destinations may be added for redundancy or remote storage.
+		Destinations page now displays local storage directory.
+		Added additional importbuddy logging to step 4 for troubleshooting.
+		Fixed error if importbuddy database test fails to connect when using mysqli.
+		Remove call to backupbuddy_core::addNotification inside sync API function. - Glenn Ansley.
+		Fixed Stash Live backup type display being blank.
+		Fixed CSS styling issues on mobile.
+		Fixed CSS profiles when name very long.
+		Fixed tooltip not wrapping if contents are too long.
+		Prevent "Warning: Cannot assign an empty string to a string offset" in PHP 7.1 in _migrate_database.php line 693 due to array possibly not being set before setting migrateResumePoint = ''.
+		Unchecking or changing send to remote destination after backup clears previously selected destination title.
+		Fixed directory exclusions not handling custom roots above the ABSPATH.
+		Added note that restored files will be restored to ABSPATH, not necessarily their original location.
+		Defaulting missing profile mode to modern (2). Added warning if this occurs.
+		Added PHP version into DAT file as 'php_version'.
+		Added PHP version into first line of status log.
+		Fixed links in table on Restore / Migrate page not working as of last quick release.
+		Fixed inconsistencies in exclusions between zipbuddy and xzipbuddy.
+		Fixed inaccurate exclusion creation during zip generation when using parent path in custom root (/../) although directory listing preview was accurate. Caused by defaults overwriting exclusions prior to calculation of parent root prefix.
+		Fixed exclusions picker prepending /./ when using parent directory path (/../) in custom root.
+		Fixed "Browse & Restore Files" link on backup page as of 7.3.1.5.
+		Re-wrote backup exclusion function to be more robust.
+		Fixed directory size listing not properly taking into account exclusions on some profiles.
+		Fixed directory size listing not loading from proper root path for smart profile types.
+		Now enforcing trailing slash on get_themes_root(), get_media_root().
+		Fixed global profile not merging over plugin defaults. This could cause missing default parameters on existing installs.
+		Media exclusion tooltip typo fixed.
+		Misc minor fixes.
+		Misc UI tweaks for screen size compatibility.
+		Fixed unexpected [ in core.php.
+		Added v8 welcome dismissable banner.
+		New v8 welcome banner look and feel.
+		Cleaned Stash Live UI.
+		live_periodic-shrunk testing variable replacements for common paths in catalog for shrinking catalog file size and memory usage.
+		Call to a member function save() on string in live_periodic fixed. Only saving if object.
+		Fixed media, theme, and plugin profile types not having exclusions 'bubble up' into them resulting in some files not being excluded.
+		Updated warning about possibly conflicting plugin being detected not being caching-plugin-only specific.
+		Stash Live: New "View Unsent Files" in Raw Data Advanced Troubleshooting Options lists all files that are still pending transfer.
+8.0.0.1 - 2017-06-16 - Dustin Bolton
+	mysqlbuddy now logs if $ignore_existing is enabled for troubleshooting as this suppresses error logging.
+	Added additional logging of zip time elapsed to periodic status display to better see how much time has passed: Ex: "Temporary ZIP file size: 34.64 MB. Approximate speed: 12.24 MB/sec. Elapsed: 2.83 secs."
+	Extended archive limits of destinations supporting full and database archive limits to also include themes, plugins, media, and files.
+	ImportBuddy password hash now using underscores "_" instead of right parentheses ")" due to false positives with ModSecurity. Ticket #70795.
+8.0.0.2 - 2017-06-19 - Dustin Bolton
+	Renamed temporarily created recurse() function to bb_recurse() to avoid conflict.
+8.0.0.3 - 2017-06-20 - Dustin Bolton
+	Full backup types can no longer auto-exclude media due to current technical limitations.
+8.0.1.0 - 2017-06-30 - Dustin Bolton
+	Fixed BackupBuddy welcome banner showing on plugin activate screen.
+	FEATURE:
+		Rackspace destination: Added support for directory paths.
+	Stash Live live database backup now excludes options updates to "wordfence_syncAttackDataAttempts" option due to rapid updates.
+	Updated Google Drive setup instructions to reflect Google's UI changes.
+	Fixed undefined index $client_id and $client_secret for Google Drive destination.
+	Fixed global exclusions not being applied to schedule backups.
+	If Full profile type was auto-excluding media then this is now forced off upon upgrade.
+8.0.1.1 - 2017-07-06 - Dustin Bolton
+	Fixed Deployment confirmation not cleaning up some tables due to housekeeping cleanup_temp_tables rename to remove_temp_tables().
+8.0.1.2 - 2017-07-10 - Dustin Bolton
+	Rackspace Remote Destination: Fixed support for storing into directories and browsing directories.
+	Rackspace Remote Destination: Fixed table listing size.
+8.0.1.3 - 2017-07-12 - Dustin Bolton
+	Added additional status logging and error checking for fread'ing file contents for S3 (v2) and S3 (V3) destinations.
+	Recent Sends listing table now limits the maximum displayed to the most recent 100 items to prevent page load issues. New constant: RECENT_SENDS_MAX_LISTING_COUNT.
+	Stash Live: View unsent files now optionally shows file permissions and ownership for each pending file by default.
+8.0.1.4 - 2017-07-18 - Dustin Bolton
+	Full backups now contain a copy of importbuddy.php even if password is not set. In this case the user will need to use the "Forgot Password" option to use this importbuddy.php.
+	importbuddy: Lack of json_decode() function now displays error message.
+	Rackspace remote destination: Fixed uncaught exception when directory value is blank.
+	Misc logging improvements.
+8.0.1.5 - 2017-07-20 - Dustin Bolton
+	Added additional default exclusions for 3rd party files/directories.
+	Stash Live: Added default postmeta exclusion for Adrotate plugin: /_count-views_.+/
+	Rackspace destination: Fixed file listing not showing when no directory is set.
+	FEATURE:
+		Deployment: Added new option to disable Pushing to or Pulling from a site in the destination's configuration options. Useful for preventing accidental deployments in the wrong direction.
+8.0.1.6 - 2017-07-24 - Dustin Bolton
+	Fixed multiple "A non-numeric value encountered " errors due to PHP 7.1.
+	Added additional Backup page logging to detect failure point.
+8.0.1.7 - 2017-07-28 - Dustin Bolton
+	Deployment: Fixed issue where importbuddy step 5 (migrating URLs/paths) step chunking would result in premature 'finished' signal for Deployment resulting in it stopping before database migration and cleanup would run. Symptoms would be incomplete database contents migration and .maintenance file lingering.
+8.0.1.8 - 2017-08-02 - Dustin Bolton
+	Fixed Deployment typo.
+	Deployment: Added new Error #8001b if 413 request entity too large error is returned during deployment: Request Entity Too Large. The destination server says we sent too much data. Either change the Deployment Advanced Setting "Max Chunk Size" to a lower value or change the server configuration to accept a larger value. See the following webpage for the server solution for Apache, nginx, or IIS: https://craftcms.stackexchange.com/questions/2328/413-request-entity-too-large-error-with-uploading-a-file
+	S33 destination fixed array declaration using bracket form instead of array().
+	Improved Live action handling function for postmeta.
+8.0.1.9 - 2017-08-10 - Dustin Bolton
+	Stash Live: Added errors and warnings if adjusted max execution time falls below certain thresholds.
+	Stash Live: If adjusted max execution time falls below 5 seconds, including wiggle room buffer, adjust back up to 5 seconds to give things a chance. Throws error.
+	Stash Live: 5002 error now logs last send filename that failed and how long ago that was.
+	Transient housekeeping cleanup currently capped at 1000 per run as a temporary workaround for high memory usage on sites with massive numbers of transients.
+8.0.1.10 - 2017-08-28 - Dustin Bolton
+	Added 60-second wiggle room for detecting stuck crons.
+	Fixed undefined index type in integrity scan.
+	Stash Live: Added additional information about low site activity being a potential cause of crons being behind.
+	Stash Live: Fixed Stash Live-specific file exclusions not applying since 8.0. Caused by core exclusion function not applying abspath before relative paths.
+8.1.0.0 - 2017-09-29 - Dustin Bolton
+	importbuddy.php: Now detects unexpected leading whitespace (newlines, etc) at the beginning of importbuddy.php, removed them, and re-writes a valid importbuddy.php. Fixes error about whitespace already being sent and authentication breakage.
+	ENHANCEMENT:
+		Dropbox (v2) Remote Destination: Fixed use of retired v1 Dropbox API calls. Dropbox no longer provides an official comparible PHP SDK.
+	importbuddy: Fixed detection of database sql files location when a database backup was manually unzipped.
+	QUICK RELEASE UPDATES 8.0.1.0-8.0.1.11.
+	mysqlbuddy now logs if $ignore_existing is enabled for troubleshooting as this suppresses error logging.
+	Added additional logging of zip time elapsed to periodic status display to better see how much time has passed: Ex: "Temporary ZIP file size: 34.64 MB. Approximate speed: 12.24 MB/sec. Elapsed: 2.83 secs."
+	Extended archive limits of destinations supporting full and database archive limits to also include themes, plugins, media, and files.
+	ImportBuddy password hash now using underscores "_" instead of right parentheses ")" due to false positives with ModSecurity. Ticket #70795.
+	Renamed temporarily created recurse() function to bb_recurse() to avoid conflict.
+	Full backup types can no longer auto-exclude media due to current technical limitations.
+	Fixed BackupBuddy welcome banner showing on plugin activate screen.
+	FEATURE:
+		Rackspace destination: Added support for directory paths.
+	Stash Live live database backup now excludes options updates to "wordfence_syncAttackDataAttempts" option due to rapid updates.
+	Updated Google Drive setup instructions to reflect Google's UI changes.
+	Fixed undefined index $client_id and $client_secret for Google Drive destination.
+	Fixed global exclusions not being applied to schedule backups.
+	If Full profile type was auto-excluding media then this is now forced off upon upgrade.
+	Fixed Deployment confirmation not cleaning up some tables due to housekeeping cleanup_temp_tables rename to remove_temp_tables().
+	Rackspace Remote Destination: Fixed support for storing into directories and browsing directories.
+	Rackspace Remote Destination: Fixed table listing size.
+	Added additional status logging and error checking for fread'ing file contents for S3 (v2) and S3 (V3) destinations.
+	Recent Sends listing table now limits the maximum displayed to the most recent 100 items to prevent page load issues. New constant: RECENT_SENDS_MAX_LISTING_COUNT.
+	Stash Live: View unsent files now optionally shows file permissions and ownership for each pending file by default.
+	Full backups now contain a copy of importbuddy.php even if password is not set. In this case the user will need to use the "Forgot Password" option to use this importbuddy.php.
+	importbuddy: Lack of json_decode() function now displays error message.
+	Rackspace remote destination: Fixed uncaught exception when directory value is blank.
+	Misc logging improvements.
+	Added additional default exclusions for 3rd party files/directories.
+	Stash Live: Added default postmeta exclusion for Adrotate plugin: /_count-views_.+/
+	Rackspace destination: Fixed file listing not showing when no directory is set.
+	FEATURE:
+		Deployment: Added new option to disable Pushing to or Pulling from a site in the destination's configuration options. Useful for preventing accidental deployments in the wrong direction.
+	Fixed multiple "A non-numeric value encountered " errors due to PHP 7.1.
+	Added additional Backup page logging to detect failure point.
+	Deployment: Fixed issue where importbuddy step 5 (migrating URLs/paths) step chunking would result in premature 'finished' signal for Deployment resulting in it stopping before database migration and cleanup would run. Symptoms would be incomplete database contents migration and .maintenance file lingering.
+	Fixed Deployment typo.
+	Deployment: Added new Error #8001b if 413 request entity too large error is returned during deployment: Request Entity Too Large. The destination server says we sent too much data. Either change the Deployment Advanced Setting "Max Chunk Size" to a lower value or change the server configuration to accept a larger value. See the following webpage for the server solution for Apache, nginx, or IIS: https://craftcms.stackexchange.com/questions/2328/413-request-entity-too-large-error-with-uploading-a-file
+	S33 destination fixed array declaration using bracket form instead of array().
+	Improved Live action handling function for postmeta.
+	Stash Live: Added errors and warnings if adjusted max execution time falls below certain thresholds.
+	Stash Live: If adjusted max execution time falls below 5 seconds, including wiggle room buffer, adjust back up to 5 seconds to give things a chance. Throws error.
+	Stash Live: 5002 error now logs last send filename that failed and how long ago that was.
+	Transient housekeeping cleanup currently capped at 1000 per run as a temporary workaround for high memory usage on sites with massive numbers of transients.
+	Added 60-second wiggle room for detecting stuck crons.
+	Fixed undefined index type in integrity scan.
+	Stash Live: Added additional information about low site activity being a potential cause of crons being behind.
+	Stash Live: Fixed Stash Live-specific file exclusions not applying since 8.0. Caused by core exclusion function not applying abspath before relative paths.
+	importbuddy: Removed old unused debugging files and cleaned up file formatting.
+	Misc plugin cleanup.
+8.1.0.1 - 2017-10-09 - Dustin Bolton
+	Remote Destinations: Fixed edge case where a successful file transfer with no chunking might get marked as failed despite success sending.
+	importbuddy: Fixed runtime setting of -1 not skipping chunking feature.
+	Dropbox destination: Added additional logging information to troubleshoot chunk completion error 400 from Dropbox API.
+8.1.0.2 - 2017-10-11 - Dustin Bolton
+	Now passing data between multiple pages using json rather than serialization.
+	Database Rollback: Fixed mysqli database warning due to missing parameter.
+	Dropbox destination: Added additional troubleshooting information when full troubleshooting logging enabled.
+	Fixed error retrieving Stash Live status log if it does not yet exist.
+	Dropbox: Fixed 400 error when finishing multipart upload on some servers where the specific curl version sets the content length header to -1 when no body specified rather than no content length header.
+8.1.0.3 - 2017-10-12 - Dustin Bolton
+	Deployment: Fixed error message blocking deployment as of 8.1.0.2.
+	Only DAT file and settings backup are stored as serialized data.
+	Misc importbuddy cleanup.
+8.1.1.0 - 2017-10-16 - Dustin Bolton
+	Dropbox send fixes for new API.
+	Release of Quick Release versions 8.1.0.1-8.1.0.3.
+8.1.1.1 - 2017-11-13 - Dustin Bolton
+	Deployment:
+		FEATURE:
+			Deploy up to 15 times faster when pushing! Multiple files sent per pass: Multipass!
+		ENHANCEMENT:
+				Reduced file transfer overhead by 37%! Speeds up file transfers 37% or MORE due to less HTTP overhead.
+		FEATURE:
+			All remotely performed transactions are now logged and returned with each API call so that remote activity may be troubleshooted within Deployment log.
+		FEATURE:
+			Deployment now supports setting the deployed site's Search Engine Visibility option to either visible, not visible, or no change. A default for this setting can be set in the Deployment settings.
+		No longer base64 encoding all transferred data. Left in binary.
+		PUSH mode: Multiple files can be transferred in each PHP run when Pushing (not Pulling), significanly increasing speeds of PHP file transfers.
+		Existing importbuddy from previous deployments is erased at the beginning of each new deployment to insure fresh version usage.
+		No database tables selected will no longer display warning about missing database files as this is to be expected.
+		Fixed deploy confirmation sometimes failing without error.
+		Remotely called API actions now log fatal PHP errors with shutdown function to both main log and remote API log.
+		Exclusions now include global default hardcoded exclusions.
+		Improved white-space on Push/Pull comparison table for readability when changes are only on one side.
+		localInfo is now logged to browser console when loading Deployment remote destination to aid in troubleshooting.
+		FEATURE:
+			New Exclusions option alloww you to exclude files and folders from Deployment.
+			New Additional Inclusions option allows you to include additional files and folders during Deployment that are outside the media, themes, or plugins directories.
+	importbuddy.php: Now detects unexpected leading whitespace (newlines, etc) at the beginning of importbuddy.php, removed them, and re-writes a valid importbuddy.php. Fixes error about whitespace already being sent and authentication breakage.
+	Downgraded Error #437479545 to Warning.
+	ImportBuddy: Fixed missing backup zip file not throwing error. New Error #8498394349.
+	hashGlob() function added support for additional optional parameter to prepend all paths in the array keys with an additional path.
+	Fixed housekeeping warning about failed destination send filename being array.
+	Rollback: Fixed undo feature sometimes displaying mysqli error about missing parameter.
+	Updated internally used wp-db class for importbuddy and rollback packages.
+	Added hook for informing PHP compatibility checker plugin that we are always compatible with the latest PHP version(s).
+8.1.1.2 - 2017-11-13 - Dustin Bolton
+	Fixed missing wp-db function.
+8.1.1.3 - 2017-11-15 - Dustin Bolton
+	Fixed WP compatibility function matching pattern missing *.
+	Fixed the Export Settings feature giving non-functioning data.
+8.1.1.5 - 2017-11-17 - Dustin Bolton
+	Fixed Deployment API key URL issue due to recent update.
+	Added current BackupBuddy version to upper right of every page.
+8.1.1.6 - 2017-11-22 - Dustin Bolton
+	ImportBuddy: Added additional Status Log information post-mysql-test for troubleshooting failures moving on to actual database import.
+	Deployment: Fixed invalid error about corrupted API key due to past bug. Regenerate keys and apply to Remote Destination if encountered.
+8.1.1.7 - 2017-11-27 - Dustin Bolton
+	Deployment: Key authentication failure logging improvements when troubelshooting enabled.
+	Deployment: Fixed issue where keys could falsely fail. If you encounter connection trouble verify the site is using freshly generated keys.
+8.1.1.8 - 2017-11-27 - Dustin Bolton
+	Updated stat() failure message to suggest possibility of file being deleted unexpectedly as possible cause.
+	Fixed HTTP Loopback test displaying 400 Bad Request despite correct Success status due to change in unknown WordPress AJAX responses as of 4.9.
+	Server Tools: Added "PHP Maximum File Upload Size (server-reported)" test.
+	Deployment: File transfers now take into account other server's maximum PHP upload size limit.
+8.1.1.9 - 2017-11-27 - Dustin Bolton
+	Deployment: When full logging is enabled Deployment will log API connection attempts into the extraneous log for troubleshooting.
+	Deployment: Added Key Troubleshooting link below the API Key configuration setting for peaking into the encoded contents of the API key.
+8.1.1.10 - 2017-11-29 - Dustin Bolton
+	Server Tools: Added new Deployment wp-config.php API setting to bottom of list for checking that the API is enabled.
+	Remote Destinations: Added new (enabled) or (disabled) status indicator to Deployment Key button (upper right of page) to quickly see if Deployment is enabled in the wp-config.php.
+	Deployment: Fixed issue where API connection could not be completed when running on nginx servers where HTTP header underscores were silently dropped.
+8.1.1.11 - 2017-12-05 - Dustin Bolton
+	Deployment: Fixed search engine visibility change not happening.
+	Deployment: Misc logging improvements to debug issues surrounding search engine visibility.
+	Deployment: Misc minor fixes to default settings being applied.
+	Misc UI tweaks.
+8.2.0.0 - 2017-12-18 - Dustin Bolton
+	This release mainly focuses on majorly improving Deployment, especially when Pushing sites, making it significantly faster while adding more vital features for Developers such as exclusions, additional inclusions, and search engine visibility.
+	Deployment:
+		FEATURE:
+			New Exclusions option alloww you to exclude files and folders from Deployment.
+			New Additional Inclusions option allows you to include additional files and folders during Deployment that are outside the media, themes, or plugins directories.
+		FEATURE:
+			Deploy up to 15 times faster when pushing! Multiple files sent per pass: Multipass!
+		ENHANCEMENT:
+			Reduced file transfer overhead by 37%! Speeds up file transfers 37% or MORE due to less HTTP overhead.
+		FEATURE:
+			All remotely performed transactions are now logged and returned with each API call so that remote activity may be troubleshooted within Deployment log.
+		FEATURE:
+			Deployment now supports setting the deployed site's Search Engine Visibility option to either visible, not visible, or no change. A default for this setting can be set in the Deployment settings.
+		No longer base64 encoding all transferred data. Left in binary.
+		PUSH mode: Multiple files can be transferred in each PHP run when Pushing (not Pulling), significanly increasing speeds of PHP file transfers.
+		Existing importbuddy from previous deployments is erased at the beginning of each new deployment to insure fresh version usage.
+		No database tables selected will no longer display warning about missing database files as this is to be expected.
+		Fixed deploy confirmation sometimes failing without error.
+		Remotely called API actions now log fatal PHP errors with shutdown function to both main log and remote API log.
+		Exclusions now include global default hardcoded exclusions.
+		Improved white-space on Push/Pull comparison table for readability when changes are only on one side.
+		localInfo is now logged to browser console when loading Deployment remote destination to aid in troubleshooting.
+	importbuddy.php: Now detects unexpected leading whitespace (newlines, etc) at the beginning of importbuddy.php, removed them, and re-writes a valid importbuddy.php. Fixes error about whitespace already being sent and authentication breakage.
+	Downgraded Error #437479545 to Warning.
+	ImportBuddy: Fixed missing backup zip file not throwing error. New Error #8498394349.
+	hashGlob() function added support for additional optional parameter to prepend all paths in the array keys with an additional path.
+	Fixed housekeeping warning about failed destination send filename being array.
+	Rollback: Fixed undo feature sometimes displaying mysqli error about missing parameter.
+	Updated internally used wp-db class for importbuddy and rollback packages.
+	Added hook for informing PHP compatibility checker plugin that we are always compatible with the latest PHP version(s).
+	Fixed missing wp-db function.
+	Fixed WP compatibility function matching pattern missing *.
+	Fixed the Export Settings feature giving non-functioning data.
+	Fixed Deployment API key URL issue due to recent update.
+	Added current BackupBuddy version to upper right of every page.
+	ImportBuddy: Added additional Status Log information post-mysql-test for troubleshooting failures moving on to actual database import.
+	Deployment: Fixed invalid error about corrupted API key due to past bug. Regenerate keys and apply to Remote Destination if encountered.
+	Deployment: Key authentication failure logging improvements when troubelshooting enabled.
+	Deployment: Fixed issue where keys could falsely fail. If you encounter connection trouble verify the site is using freshly generated keys.
+	Updated stat() failure message to suggest possibility of file being deleted unexpectedly as possible cause.
+	Fixed HTTP Loopback test displaying 400 Bad Request despite correct Success status due to change in unknown WordPress AJAX responses as of 4.9.
+	Server Tools: Added "PHP Maximum File Upload Size (server-reported)" test.
+	Deployment: File transfers now take into account other server's maximum PHP upload size limit.
+	Deployment: When full logging is enabled Deployment will log API connection attempts into the extraneous log for troubleshooting.
+	Deployment: Added Key Troubleshooting link below the API Key configuration setting for peaking into the encoded contents of the API key.
+	Server Tools: Added new Deployment wp-config.php API setting to bottom of list for checking that the API is enabled.
+	Remote Destinations: Added new (enabled) or (disabled) status indicator to Deployment Key button (upper right of page) to quickly see if Deployment is enabled in the wp-config.php.
+	Deployment: Fixed issue where API connection could not be completed when running on nginx servers where HTTP header underscores were silently dropped.
+	Deployment: Fixed search engine visibility change not happening.
+	Deployment: Misc logging improvements to debug issues surrounding search engine visibility.
+	Deployment: Misc minor fixes to default settings being applied.
+	Now ignoring zip process warnings by default.
+	Misc UI tweaks.
+	Misc bug fixes.
+8.2.0.2 - 2017-12-22 - Dustin Bolton
+	Deployment: Fixed Pull failing on some fails due to encoding corrupting the metadata.
+	Fixed informational notice saying Alternate Cron enabled sometimes when it is not.
+	Fixed syntax error in rollback and deployment undo file.
+8.2.0.3 - 2018-01-03 - Dustin Bolton
+	Deployment: New "Deployment: Verify SSL Cert" setting on the BackupBuddy Advanced Settings page allowing for disabling the SSL authenticity check for outgoing connections. Useful if using an invalid SSL cert for staging.
+8.2.0.4 - 2018-01-04 - Dustin Bolton
+	sFTP destination: Added additional troubleshooting logging information for archive limiting.
+8.2.0.5 - 2018-01-05 - Dustin Bolton
+	Fixed importbuddy not deleting its log in cleanup step.
+8.2.0.6 - 2018-01-12 - Dustin Bolton
+	sFTP destination: Fix for not deleting archives exceeding archive limits on some servers when a custom path is defined.
+8.2.0.8 - 2018-01-15 - Dustin Bolton
+	Dropbox v2 destination: Fixed archive limiting not working in some circumstances.
+	Dropbox v2 destination: Updated delete call to use new v2 API for future-proofing.
+	Local path destination: Defaults now applied before all activity and path trailing slash forced before each use.
+	Added an additional backup hard-coded remote destination retry limit of 10 tries. Prevents runaway retry attempts if base system for limiting retries fails as a safety mechanism.
+	Removed 'new' ribbon from S3 (v3) destination.
+	Scheduling page now displays the user-friendly interval tag for schedules with the internal tag in parentheses for creating, editing, and viewing existing schedules.
+	Scheduling page now displays error at top of page and in schedule listing if an invalid schedule interval tag is selected (eg. If a plugin's custom interval was selected but the plugin was later uninstalled).
+8.2.0.9 - 2018-01-15 - Dustin Bolton
+	S3 (v3) destination: Attempted fix on China region destinations.
+	S3 (v3) destination: Added China Northwest 1 (Ningxia) region.
+8.2.0.10 - 2018-01-16 - Dustin Bolton
+	Improved handling of edit counting for "edits since last backup" counter for better accuracy.
+	S3 (v3): China region fixes.
+	S3 (v3): Fixed East-1 problem as of 8.2.0.9.
+8.2.0.11 - 2018-01-16 - Dustin Bolton
+	sFTP destination: Fix to address archive limiting not being able to delete files on some servers. Now switching into path and then deleting without path in deletion call.
+8.2.1.0 - 2018-01-24 - Dustin Bolton
+	Major release of all Quick Release updates since 8.2.0.
+		Deployment: Fixed Pull failing on some fails due to encoding corrupting the metadata.
+		Fixed informational notice saying Alternate Cron enabled sometimes when it is not.
+		Fixed syntax error in rollback and deployment undo file.
+		Deployment: New "Deployment: Verify SSL Cert" setting on the BackupBuddy Advanced Settings page allowing for disabling the SSL authenticity check for outgoing connections. Useful if using an invalid SSL cert for staging.
+		sFTP destination: Added additional troubleshooting logging information for archive limiting.
+		Fixed importbuddy not deleting its log in cleanup step.
+		sFTP destination: Fix for not deleting archives exceeding archive limits on some servers when a custom path is defined.
+		Dropbox v2 destination: Fixed archive limiting not working in some circumstances.
+		Dropbox v2 destination: Updated delete call to use new v2 API for future-proofing.
+		Local path destination: Defaults now applied before all activity and path trailing slash forced before each use.
+		Added an additional backup hard-coded remote destination retry limit of 10 tries. Prevents runaway retry attempts if base system for limiting retries fails as a safety mechanism.
+		Removed 'new' ribbon from S3 (v3) destination.
+		Scheduling page now displays the user-friendly interval tag for schedules with the internal tag in parentheses for creating, editing, and viewing existing schedules.
+		Scheduling page now displays error at top of page and in schedule listing if an invalid schedule interval tag is selected (eg. If a plugin's custom interval was selected but the plugin was later uninstalled).
+		S3 (v3) destination: Attempted fix on China region destinations.
+		S3 (v3) destination: Added China Northwest 1 (Ningxia) region.
+		Improved handling of edit counting for "edits since last backup" counter for better accuracy.
+		S3 (v3): China region fixes.
+		S3 (v3): Fixed East-1 problem as of 8.2.0.9.
+		sFTP destination: Fix to address archive limiting not being able to delete files on some servers. Now switching into path and then deleting without path in deletion call.
+	Deployment Push and Pull buttons now indicate that Push is faster (up to 15 times faster or more!) and Pull is slower.
+	Fixed temp_dat_read-XXX.php file not being cleaned up.
+	Fixed type in remote send error email.
+	Fixed bootstrap.php error logging throwing error due to lack of quotes.
+	Stash (v2) Destination: Removed disconnected error if quota information is not available.
+	Added additional exclusions based on recommended default wpengine exclusion list.
+	Misc bug fixes.
+	Misc minor tweaks.
+8.2.2.0 - 2018-02-06 - Glenn Ansley
+	Deployment: Fixed issue where files were not being cleaned up after completion.
+	Fixed Backup Type Labels when view backups from Remote Destinations tabs.
+	Removed double slashes (//) in custom root path.
+8.2.2.1 - 2018-02-08 - Glenn Ansley
+	Fixed Deployment issues including cleanup procedure and file queue.
+	Fixed Bad Comment Count in backup metadata (removed spam / trash from count)
+	Enhancement: Moved zip metadata to beginning of zip process to make it play better with certain shared hosting environments.
+8.2.2.2 - 2018-02-15 - Glenn Ansley
+	Fix bug preventing housekeeping of timed-out remote sends after corrupt fileoptions is found
+	Improve feedback given when wp-cron loopbacks fail. Notify when script is reachable but crons aren't firing
+8.2.2.3 - 2018-02-22 - Glenn Ansley
+    Further modifications to updated cron loopback test. Don't test for cron fire on backups page. Hide cron from list of late crons
+    Fix bug including temp_dirs from previous BUB attempts in backup zip
+    Fix bug causing backups to be sent to remote destination even if unchecked after initial check
+8.2.2.4 - 2018-02-27 - Glenn Ansley
+	Further wp-cron loopback test improvements. - Jeremy Trask
+	Improve Disconnect process from Stash Live
+	Warn user if Stash Live and Stash Destinations are both activated
+8.2.3.0 - 2018-03-07 - Glenn Ansley
+	Major release of all quick releases since 8.2.2.0
+		Fixed Deployment issues including cleanup procedure and file queue.
+		Fixed Bad Comment Count in backup metadata (removed spam / trash from count)
+		Enhancement: Moved zip metadata to beginning of zip process to make it play better with certain shared hosting environments.
+		Fix bug preventing housekeeping of timed-out remote sends after corrupt fileoptions is found
+		Improve feedback given when wp-cron loopbacks fail. Notify when script is reachable but crons aren't firing
+		Further modifications to updated cron loopback test. Don't test for cron fire on backups page. Hide cron from list of late crons
+		Fix bug including temp_dirs from previous BUB attempts in backup zip
+		Fix bug causing backups to be sent to remote destination even if unchecked after initial check
+		Further wp-cron loopback test improvements. - Jeremy Trask
+		Improve Disconnect process from Stash Live
+		Warn user if Stash Live and Stash Destinations are both activated
+8.2.3.1 - 2018-03-19 - Jeremy Trask, Glenn Ansley
+	Enhancement: BUB Scheduling Overhaul. Only show BUB Schedule Labels on Scheduling page and other fixes - Jeremy Trask.
+	Enhancement: BUB Integrity Check Overhaul. Prevent false negatives on some Backup Types if cached log is missing. Other fixes. - Glenn Ansley.
+8.2.3.2 - 2018-03-19 - Glenn Ansley
+	Bug Fix: Fix compat issue with PHP 5.4
+8.2.3.3 - 2018-03-19 - Glenn Ansley
+	Bug Fix: Fix compat issue with PHP 5.4
+8.2.3.4 - 2018-03-26 - Jeremy Trask
+	Bug Fix: Fix compat issue with PHP 5.3 in scheduling
+8.2.3.5 - 2018-04-09 - Jeremy Trask
+	Bug Fix: Fix bug that doesn't select correct default scheduling period for Stash Live Settings
+8.2.3.6 - 2018-04-23 - Brian DiChiara
+	Bug Fix: Fix Amazon S3 Destinations URL
+8.2.3.7 - 2018-05-07 - Glenn Ansley, Brian DiChiara, Jeremy Trask, Chris Jean, Rebecca Diamond
+	* Last Quick Release before 8.2.4.0 *
+	Enhancement: Added Updated Licensing module to support WP-CLI
+	Enahncement: Multiple coding standard enhancments
+	Enhancement: Multiple UI enhancements.
+	Bug Fix:     Fixed PCLZip dependancy issues
+	Bug Fix:     Modified the way .htaccess protects the backup directory from direct downloads
+	Bug Fix:     Fixed multiple minor PHP warnings and several small refactors of inefficient code.
+8.2.4.0 - 2018-05-08 - Glenn Ansley
+	Major Release of all quick releases since 8.2.3.1
+		Enhancement: BUB Scheduling Overhaul. Only show BUB Schedule Labels on Scheduling page and other fixes - Jeremy Trask.
+		Enhancement: BUB Integrity Check Overhaul. Prevent false negatives on some Backup Types if cached log is missing. Other fixes. - Glenn Ansley.
+		Bug Fix:     Fix compat issue with PHP 5.4
+		Bug Fix:     Fix compat issue with PHP 5.4
+		Bug Fix:     Fix compat issue with PHP 5.3 in scheduling
+		Bug Fix:     Fix bug that doesn't select correct default scheduling period for Stash Live Settings
+		Bug Fix:     Fix Amazon S3 Destinations URL
+		Bug Fix:     Fixed PCLZip dependancy issues
+		Bug Fix:     Modified the way .htaccess protects the backup directory from direct downloads
+		Bug Fix:     Fixed multiple minor PHP warnings and several small refactors of inefficient code.
+		Enhancement: Added Updated Licensing module to support WP-CLI
+		Enahncement: Multiple coding standard enhancments
+		Enhancement: Multiple UI enhancements.
+8.2.5.0 - 2018-05-08 - Glenn Ansley
+	Notice:      Added PHP version notice for Stash / S3 versions
+	Bug Fix:     Updated link in Loopback Error
+	Bug Fix:     Fixed bug causing some error messages to not print to screen
+	Bug Fix:     Fixed remote destination checkbox when no destination is selected
+	Enhancement: Added ftp destination error messages upon FTP failure.
+	Enhancement: Adjusted Destinations error message to add clarity.
+8.2.5.1 - 2018-05-11 - Glenn Ansley
+	Bug Fix: Fixed bug preventing Deployment from completing.
+8.2.5.2 - 2018-05-22 - Brian DiChiara, Jeremy Trask
+	Enhancement: Multiple coding standard enhancements.
+	Enhancement: Licensing page styling improvements.
+	Enhancement: Zip file handling improvements.
+	UI Fix:      New Profile UI positioning fix.
+	Bug Fix:     Resolved bug related to cPanel.
+	Bug Fix:     Corrected multiple old codex references to point to new Zendesk documentation.
+	Bug Fix:     Removed multiple instances where create_function is being used, replaced with anonymous functions, resolving PHP notices.
+8.2.5.3 - 2018-05-22 - Glenn Ansley
+	Bug Fix: Bad scope causing PHP errors.
+8.2.5.4 - 2018-05-23 - Brian DiChiara
+	Bug Fix: Replaced anonymous functions with named functions/methods for PHP 5.2 support.
+8.2.5.5 - 2018-05-24 - Brian DiChiara
+	Privacy: Added hooks to export and erase personal data.
+	Privacy: Added suggested privacy statement to WordPress privacy guide.
+8.2.6.0 - 2018-05-25 - Brian DiChiara, Glenn Ansley, Jeremy Trask
+	Major Release of all quick releases since 8.2.5.1
+		Bug Fix:     Fixed bug preventing Deployment from completing.
+		Enhancement: Multiple coding standard enhancements.
+		Enhancement: Licensing page styling improvements.
+		Enhancement: Zip file handling improvements.
+		UI Fix:      New Profile UI positioning fix.
+		Bug Fix:     Resolved bug related to cPanel.
+		Bug Fix:     Corrected multiple old codex references to point to new Zendesk documentation.
+		Bug Fix:     Removed multiple instances where create_function is being used, replaced with anonymous functions, resolving PHP notices.
+		Bug Fix:     Bad scope causing PHP errors.
+		Bug Fix:     Replaced anonymous functions with named functions/methods for PHP 5.2 support.
+		Privacy:     Added hooks to export and erase personal data.
+		Privacy:     Added suggested privacy statement to WordPress privacy guide.
+8.2.6.1 - 2018-05-25 - Brian DiChiara
+	UI Fix: Fixed issue where license page heading overlapping icons.
+8.2.6.2 - 2018-05-25 - Brian DiChiara
+	Bug Fix: Replaced anonymous function with static method
+	Bug Fix: Fixed PHP 5.2 compatibility bug.
+8.2.6.3 - 2018-05-31 - Brian DiChiara
+	Bug Fix: Resolves an error where backup dat file isn't found and PHP notices during import.
+8.2.6.4 - 2018-06-01 - Brian DiChiara, Jeremy Trask
+	Bug Fix: Gets rid of notice about exclude reporting incorrectly.
+8.2.6.5 - 2018-06-01 - Brian DiChiara, Jeremy Trask
+	Bug Fix:     Resolved problem with scheduled backups sending to remote destinations automatically.
+    Bug Fix:     Show proper MySQL version or N/A when MariaDB is used.
+    Bug Fix:     Got rid of PHP notice related to 'skip_database_dump'.
+	Enhancement: Display supported MariaDB version on Server Tools page.
+8.2.6.6 - 2018-06-11 - Brian DiChiara, Glenn Ansley
+	Enhancement: Made ImportBuddy to accept hooks.
+	Enhancement: Multiple coding standard enhancements.
+	Enhancement: Slightly optimized email template.
+	Enhancement: Malware Scan page code revamp.
+	Enhancement: Multisite Import Class constructor revamp.
+	Bug Fix:     Integrity Check PHP Notice fix.
+	Bug Fix:     Multisite Import bug fix.
+	Bug Fix:     Fixed Scheduling Page Datepicker UI when visible on page load.
+8.2.7.0 - 2018-06-13 - Brian DiChiara, Glenn Ansley, Jeremy Trask
+	Major Release of all quick releases since 8.2.6.1
+		UI Fix:      Fixed issue where license page heading overlapping icons.
+		Bug Fix:     Replaced anonymous function with static method
+		Bug Fix:     Fixed PHP 5.2 compatibility bug.
+		Bug Fix:     Resolves an error where backup dat file isn't found and PHP notices during import.
+		Bug Fix:     Gets rid of notice about exclude reporting incorrectly.
+		Bug Fix:     Resolved problem with scheduled backups sending to remote destinations automatically.
+	    Bug Fix:     Show proper MySQL version or N/A when MariaDB is used.
+	    Bug Fix:     Got rid of PHP notice related to 'skip_database_dump'.
+		Enhancement: Display supported MariaDB version on Server Tools page.
+		Enhancement: Made ImportBuddy to accept hooks.
+		Enhancement: Multiple coding standard enhancements.
+		Enhancement: Slightly optimized email template.
+		Enhancement: Malware Scan page code revamp.
+		Enhancement: Multisite Import Class constructor revamp.
+		Bug Fix:     Integrity Check PHP Notice fix.
+		Bug Fix:     Multisite Import bug fix.
+		Bug Fix:     Fixed Scheduling Page Datepicker UI when visible on page load.
+8.2.7.1 - 2018-06-20 - Brian DiChiara, Jeremy Trask
+	Bug Fix: Removed confusing messages about deleting local backups on scheduling page.
+	Bug Fix: Fixed email test message where dialog only shows "0".
+	Bug Fix: Fixed a few bugs related to MySQL v8.x and retrieving table information
+8.2.7.2 - 2018-06-21 - Brian DiChiara
+	Bug Fix:     Resolved PHP error that sometimes appears on Restore / Migrate page.
+	Bug Fix:     Fixed invalid HTML on importbuddy login page.
+	Enhancement: Multiple coding standards improvements.
+8.2.8.0 - 2018-07-09 - Glenn Ansley, Brian DiChiara
+	Enhancement: Add filters to filer permissions
+	Enhancement: Use popen / pclose with zbzipexec unzip commands to help with load balancers
+	Major Release of all quick releases since 8.2.7.0
+		Bug Fix:     Removed confusing messages about deleting local backups on scheduling page.
+		Bug Fix:     Fixed email test message where dialog only shows "0".
+		Bug Fix:     Fixed a few bugs related to MySQL v8.x and retrieving table information
+		Bug Fix:     Resolved PHP error that sometimes appears on Restore / Migrate page.
+		Bug Fix:     Fixed invalid HTML on importbuddy login page.
+		Enhancement: Multiple coding standards improvements.
+8.2.8.1 - 2018-07-17 - Brian DiChiara, Glenn Ansley
+	Bug Fix: Suppress errors related to open_basedir in ImportBuddy.
+	Bug Fix: Fixed duplicate element ID errors in browser console.
+	Bug Fix: Typo in loopback error corrected.
+	Bug Fix: Sometimes database shows skipped when wasn't skipped. Fixed confusion.
+	Bug Fix: Restoring from Stash Live sometimes opened a new tab/window.
+	Bug Fix: PHP notice when restoring from Stash Live
+8.2.8.2 - 2018-08-07 - Brian DiChiara
+	Enhancement: New Backup setting to include only active plugins in backup.
+	Bug Fix:     Resolved issue with database rollback.
+	Bug Fix:     Tweaked regular expression related to database prefix to remove warning when multiple underscores in prefix.
+	Bug Fix:     Additional logging for potential scheduling issues.
+8.2.8.3 - 2018-08-13 - Brian DiChiara, Joshua Benham
+	Bug Fix: Resolved issues with invalid schedules.
+	Bug Fix: Added schedule cleanup to Housekeeping to resolve some issues with bad schedules.
+8.2.9.0 - 2018-09-19 - Brian DiChiara
+	Enhancement: Added more detail about recent edits in WordPress Dashboard widget as well as track more events more accurately, such as changes to posts and plugin activations/deletions
+	Enhancement: Added ability to change Dropbox remote destination directory.
+	Enhancement: Filtered files in all remote destinations to only show backups.
+	Enhancement: Made remote destination file list tables more consistent.
+	Bug Fix:     Fixed issue for Dropbox when using root directory.
+	Bug Fix:     Resolved an issue with Rackspace remote destination.
+	Bug Fix:     Fixed an escaped HTML issue in FTP Browse interface.
+	Bug Fix:     Fixed a typo in importbuddy.
+	Bug Fix:     Made a message about crons a little clearer.
+	Bug Fix:     Resolved a few issues where PHP Error Notices were being displayed.
+	Update:      Updated 3rd party jQuery Date/Time picker library to v1.6.3
+	Update:      Updated 3rd party LeanModal library to v1.1
+	Cleanup:     Removed unused 3rd party SimpleExpand library
+	Major Release of all quick releases since 8.2.8.1
+		Bug Fix: Suppress errors related to open_basedir in ImportBuddy.
+		Bug Fix: Fixed duplicate element ID errors in browser console.
+		Bug Fix: Typo in loopback error corrected.
+		Bug Fix: Sometimes database shows skipped when wasn't skipped. Fixed confusion.
+		Bug Fix: Restoring from Stash Live sometimes opened a new tab/window.
+		Bug Fix: PHP notice when restoring from Stash Live
+		Enhancement: New Backup setting to include only active plugins in backup.
+		Bug Fix:     Resolved issue with database rollback.
+		Bug Fix:     Tweaked regular expression related to database prefix to remove warning when multiple underscores in prefix.
+		Bug Fix:     Additional logging for potential scheduling issues.
+		Bug Fix: Resolved issues with invalid schedules.
+		Bug Fix: Added schedule cleanup to Housekeeping to resolve some issues with bad schedules.
+8.3.0.0 - 2018-09-28 - Brian DiChiara, Glenn Ansley
+	Enhancement: Added new BackupBuddy API Verb for Editing Schedules.
+	Enhancement: Removed storage/tracking of option value and post content to reduce memory usage.
+	Bug Fix:     Added several third-party plugin exceptions to automatically ignore when tracking recent edits.
+	Bug Fix:     Fixed an issue where modal window isn't always centered.
+	Bug Fix:     Fixed a PHP Error/Notice occuring during Importbuddy.
+8.3.1.0 - 2018-10-18 - Brian DiChiara, Joshua Benham
+	Enhancement: Added Advanced Mode to Recent Edits tracking, with a toggle setting under Settings > Advanced > Logging.
+	Enhancement: Added new advanced dashboard widget with more detail when logging in Advanced mode.
+	Bug Fix:     Removed option variable comparison which sometimes causing recursive looping.
+	Bug Fix:     Recent Edits button jump issue in Chrome fixed.
+	Bug Fix:     Resolved issues where PHP Countable notice thrown on variables that were not countable.
+	Bug Fix:     Reduced the number of "Edits" in Dashboard Widget, limiting to 1 per item, with more detail in the Recent Edits modal window.
+8.3.1.1 - 2018-10-24 - Brian DiChiara
+	Bug Fix: Exclude BackupBuddy from Recent Edits Plugin tracking to prevent errors.
+8.3.2.0 - 2018-12-05 - Chris Jean, Joshua Benham
+	Enhancement: Added improvements to the Stash remote destination as preparation for merging both v2 and v3 into a unified single Stash version.
+8.3.3.0 - 2018-12-05 - Chris Jean, Joshua Benham
+	Bug Fix: Increased timeouts for Stash to fix some reported issues of requests timing out.
+	Bug Fix: Fixed issue that could cause failure to sign into Stash Live.
+	Bug Fix: Fixed source of the following warning: "Undefined index: finish_time in backupbuddy/classes/housekeeping.php on line 392".
+8.3.3.1 - 2018-12-12 - Chris Jean, Joshua Benham
+	Bug Fix: Fixed error that prevents users from disconnecting from Stash Live when no Stash remote destinations are active.
+8.3.4.0 - 2018-12-18 - Glenn Ansley
+	Enhancement: Added new Sync Verb addProfile allows for backup profile to be added via API.
+8.3.5.0 - 2019-01-30 - Glenn Ansley, Brian DiChiara
+	Enhancement: Add Sync Verb for creating a Backup Profile.
+	Enhancement: Add Sync Verb for Editing Remote Destinations.
+	Enhancement: Edit Sync Verb for start backup to allow option to send to Remote Destinations.
+	Bug Fix:     Resolved memory issue when sending large backups to Stash/S3 Destinations.
+8.3.6.0 - 2019-02-20 - Chris Jean, Joshua Benham
+	Enhancement: Improvements to Stash v2 and v3 that can dramatically improve performance of sending files.
+8.3.6.1 - 2019-02-21 - Lew Ayotte
+	Enhancement: Updating http to https
+8.3.7.0 - 2019-03-08 - Chris Jean
+	Bug Fix: Fixed Stash remote destinations sometimes not removing older uploads per the destination settings.
+8.3.8.0 - 2019-03-12 - Lew Ayotte
+	Enhancement: Added nextRun to getSchedules API.
+8.3.9.0 - 2019-03-12 - Chris Jean
+	Bug Fix: Fixed importbuddy bug that prevents all files in Stash from showing properly.
+8.3.10.0 - 2019-03-22 - Lew Ayotte
+	Enhancement: Adding filters for LiquidWeb UI improvements (Managed Press)
+8.3.11.0 - 2019-04-09 - Chris Jean
+	Bug Fix: Added support for a new BACKUPBUDDY_STASH_USE_LEGACY_UPLOAD define that may help some sites send files into Stash.
+8.3.12.0 - 2019-05-02 - Chris Jean, Josh Benham, Brian DiChiara
+	Enhancement: Added improved caching to the Stash Live system which can improve performance.
+	Enhancement: Added support for the Stash Live server to attempt to fix known issues that can prevent the service from functioning correctly.
+	Enhancement: Fixed error reporting in Stash Live to report error details from the AWS SDK API that were previously missing.

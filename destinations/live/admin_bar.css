@@ -1,0 +1,26 @@
+#wp-admin-bar-backupbuddy_stash_live_admin_bar_stats .backupbuddy-pulsing-orb {
+	display:inline-block;
+	float:left;
+	width: 10px !important;
+	height: 10px;
+	border-radius: 100%;
+	background: #00b5e4;
+	margin: .75em .75em 0 0;
+	animation: bub_pulse 1s infinite;
+	vertical-align: middle;
+}
+
+#wp-admin-bar-backupbuddy_stash_live_admin_bar_stats .backupbuddy-stash-live-admin-bar-stats-text {
+	padding-right: 2em;
+}
+
+@-webkit-keyframes bub_pulse {
+	0%   {-webkit-box-shadow: 0 0 0 0    rgba(0,181,228, 1);-webkit-transform: scale(1.2,1.2);}
+	70%  {-webkit-box-shadow: 0 0 0 10px rgba(0,181,228, 0);}
+	100% {-webkit-box-shadow: 0 0 0 0    rgba(0,181,228, 0);}
+}
+@keyframes bub_pulse {
+	0%   {-moz-box-shadow: 0 0 0 0    rgba(0,181,228, 1);  box-shadow: 0 0 0 0    rgba(0,181,228, 1); -moz-transform: scale(1.2,1.2); transform: scale( 1.2, 1.2 )}
+	70%  {-moz-box-shadow: 0 0 0 10px rgba(0,181,228, 0);    box-shadow: 0 0 0 10px rgba(0,181,228, 0);}
+	100% {-moz-box-shadow: 0 0 0 0    rgba(0,181,228, 0);    box-shadow: 0 0 0 0    rgba(0,181,228, 0);}
+}

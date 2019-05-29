@@ -1,0 +1,45 @@
+.pb_backupbuddy_alert[rel="deprecated_s3_destinations"] {
+	border-left: 10px solid #a94442;
+	background: #f2dede;
+	color: #2D5058;
+	padding-left: 25px;
+	padding-bottom: 25px;
+	padding-right: 0;
+	padding-top: 20px;
+}
+.pb_backupbuddy_alert[rel="deprecated_s3_destinations"] p {
+	font-size: 1.4em;
+	font-weight: bold;
+	margin: 0;
+	padding: 0;
+	margin-bottom: 10px;
+}
+
+.pb_backupbuddy_alert[rel="deprecated_s3_destinations"] .backupbuddy-nag-button {
+	background: #a94442;
+	border-radius: 8px;
+	display: inline-block;
+	margin: 20px 0 0 0;
+	padding: 6px 14px;
+	-webkit-transition: all .1s linear;
+	-moz-transition: all .1s linear;
+	transition: all .1s linear;
+	color: #fff;
+	font-weight: bold;
+	text-decoration: none;
+	text-transform: uppercase;
+	font-size: 0.7em;
+}
+.pb_backupbuddy_alert[rel="deprecated_s3_destinations"] .more_info {
+	display:none;
+}
+
+.pb_backupbuddy_alert[rel="deprecated_s3_destinations"] .pb_backupbuddy_disalert:not(.backupbuddy-nag-button) {
+	margin: 20px;
+	margin-top: 5px;
+}
+
+.pb_backupbuddy_alert[rel="deprecated_s3_destinations"] span {
+	display: inline-block;
+	font-size: 1.05em;
+}

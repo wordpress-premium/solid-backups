@@ -1,0 +1,5 @@
+=== BackupBuddy ===
+
+The most complete WordPress solution for Backup, Restoration, Migration, and Deployment to the same host or a new domain. Backs up a customizable selection of files, settings, and content for a complete snapshot of your site. Stash Live feature allows for real-time live backups to the cloud.
+
+http://ithemes.com/purchase/backupbuddy/

@@ -1,0 +1,31 @@
+; Default values can be seen in: importbuddy/classes/restore.php (or backupbuddy/classes/restore.php) in the __construct() function, where $this->_state is first set.
+
+type = restore
+archive = backup-backupbuddy-XXXXXXXXXXX.zip
+siteurl = http://finalurl.com
+homeurl = http://finalurl.com
+restoreFiles = true
+restoreDatabase = true
+migrateHtaccess = true
+
+; Both of these must be true when using .ini file.
+inimode = true
+autoAdvance = true
+
+[databaseSettings]
+server = localhost
+database = database_name
+username = database_user
+password = database_password
+prefix = wp_
+renamePrefix = true
+wipePrefix = false
+wipeDatabase = false
+
+[cleanup]
+deleteArchive = false
+deleteTempFiles = true
+deleteImportBuddy = false
+set_blog_public = 
+deleteImportBuddyDirectory = true
+deleteImportLog = true

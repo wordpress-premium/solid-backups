@@ -1,0 +1,780 @@
+#tooltip {
+	position: absolute;
+	z-index: 999999;
+	border: 2px solid #DFDFDF;
+	padding: 12px;
+	max-width: 300px;
+	border-radius: 8px;
+	-webkit-border-radius: 8px;
+	-moz-border-radius: 8px;
+	-webkit-box-shadow: 6px 6px 25px 15px rgba(0, 0, 0, .08);
+	-moz-box-shadow: 6px 6px 25px 15px rgba(0, 0, 0, .08);
+	box-shadow: 6px 6px 25px 15px rgba(0, 0, 0, .08);
+	background: #ededed;
+	background: -moz-linear-gradient(top, #ededed 0%, #ffffff 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ededed), color-stop(100%,#ffffff));
+	background: -webkit-linear-gradient(top, #ededed 0%,#ffffff 100%);
+	background: -o-linear-gradient(top, #ededed 0%,#ffffff 100%);
+	background: -ms-linear-gradient(top, #ededed 0%,#ffffff 100%);
+	background: linear-gradient(top, #ededed 0%,#ffffff 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ededed', endColorstr='#ffffff',GradientType=0 );
+}
+
+#tooltip h3, #tooltip div {
+	margin: 0;
+}
+
+.pluginbuddy-nodecor a {
+	text-decoration: none;
+}
+
+.pluginbuddy_tip img {
+	vertical-align: -2px;
+}
+
+.form-table span.description {
+	display: inline !important;
+}
+
+/* Scrollable text for displaying default dirs, etc. */
+
+.pb_scroll {
+	display: inline-block;
+	overflow-x: scroll;
+	white-space: nowrap;
+}
+
+.pb_scroll::-webkit-scrollbar {
+	-webkit-appearance: none;
+	width: 11px;
+	height: 11px;
+}
+
+.pb_scroll::-webkit-scrollbar-thumb {
+	border-radius: 8px;
+	border: 2px solid white; /* should match background, can't be transparent */
+	background-color: rgba(0, 0, 0, .1);
+}
+
+.pb_scroll::-webkit-scrollbar-corner {
+	background-color: rgba(0,0,0,0.0);
+}
+
+.advanced-toggle {
+	display: none;
+}
+
+.advanced-toggle-title h3 {
+	margin-left: -5px;
+	cursor: pointer;
+	/* margin-bottom: 0; */
+	margin-top: 6px !important;
+}
+
+.advanced-toggle-title .dashicons {
+	font-size: 1.5em;
+	padding-right: 10px;
+	margin-left: -5px;
+	vertical-align: -7px;
+}
+
+/*.advanced-toggle-title .dashicons-arrow-down {
+  margin-left: -11px;
+}*/
+
+h3.title {
+	font-weight: 300;
+}
+
+.pb_form th, h3 {
+	font-weight: normal;
+}
+
+td.pb_draghandle {
+	cursor: move;
+	text-align: center;
+	vertical-align: middle;
+}
+
+tr.tDnD_whileDrag td, tr.tDnD_whileDrag th {
+	background: #EEEEEE;
+	border-top: 1px solid #BBBBBB !important;
+	border-bottom: 1px solid #BBBBBB !important;
+	padding-top: 2px;
+}
+
+.pb_debug {
+	float: right;
+	background: #FF8989;
+	border: 2px solid red;
+	padding: 8px;
+	width: 40px;
+	position: absolute;
+	right: 0;
+	z-index: 9000;
+}
+
+.pb_debug_show {
+	cursor: pointer;
+	float: right;
+}
+
+.pb_debug_hide {
+	cursor: pointer;
+	display: none;
+	float: right;
+}
+
+.pb_debug_content {
+	display: none;
+}
+
+.pb_debug textarea {
+	width: 100%;
+	height: 100px;
+}
+
+.pb_toggle {
+	cursor: pointer;
+}
+
+.pb_toggled {
+	display: none;
+	border: 1px solid #CCCCCC;
+	margin: 4px;
+	padding: 8px;
+	-webkit-border-radius: 4px;
+	   -moz-border-radius: 4px;
+			border-radius: 4px;
+}
+
+#pb_backupbuddy_status {
+	width: 100%;
+	height: 200px;
+}
+
+.backupbuddy-tab-blocks .backupbuddy-tab {
+	display: none;
+	padding-top: 10px;
+}
+
+.backupbuddy-tab-blocks .backupbuddy-tab:first-child {
+	display: block;
+}
+
+/* Tabs ----------------------------------*/
+
+.ui-tabs {
+	border-top: 1px solid #DFDFDF;
+	margin-top: 20px;
+}
+
+/* padding: .2em; zoom: 1; */
+
+.ui-tabs .ui-tabs-nav {
+	z-index: 15;
+	list-style: none;
+	position: relative;
+	padding: 0px 0px 0px;
+	margin-top: -28px;
+	margin-left: 10px;
+}
+
+.ui-tabs .ui-tabs-nav li {
+	margin: -12px 7px -1px 0px;
+	position: relative;
+	float: left;
+	padding: 0;
+	text-align: center;
+}
+
+.ui-tabs .ui-tabs-nav li a {
+	background-color: #FFFFFF; /* #EDEDED Inactive bg. */
+	height: 27px;
+	float: left;
+	text-decoration: none;
+	padding-left: 15px;
+	padding-right: 15px;
+	   -moz-border-radius: 3px 3px 0px 0px;
+	-webkit-border-radius: 3px 3px 0px 0px;
+			border-radius: 3px 3px 0px 0px;
+	border: 1px solid #dfdfdf;
+	outline: none;
+	padding-top: 5px;
+	border-bottom: 0px;
+	display: inline-block;
+	padding-top: 10px;
+	font-weight: 200;
+	font-size: 20px;
+	font-family: "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",sans-serif;
+	/* color: #464646 !important; */
+	color: #aaa;
+
+}
+
+.ui-tabs .ui-tabs-nav .ui-tabs-active {
+	margin-top: -12px;
+}
+
+.ui-tabs .ui-tabs-nav .ui-tabs-active a {
+	background-color: #ffffff;
+	height: 28px;
+	border-color: #CCC;
+	color: #464646;
+}
+
+.ui-tabs .ui-tabs-nav .ui-tabs-active a:hover {
+	background-color: #ffffff;
+	/* cursor: default; *//* border-color: #CCC; */
+}
+
+.ui-tabs .ui-tabs-nav li a:hover {/* background-color: #DFDFDF; */
+	border-color: #CCC;
+	color: #d54e21;
+}
+
+.ui-tabs .ui-tabs-nav li.ui-tabs-selected {
+}
+
+/* padding-bottom: 0px; */
+
+.ui-tabs .ui-tabs-nav li.ui-tabs-selected a,
+.ui-tabs .ui-tabs-nav li.ui-state-disabled a,
+.ui-tabs .ui-tabs-nav li.ui-state-processing a {
+	height: 28px;
+	cursor: text;
+	background-color: #FFFFFF;
+	/* #F9F9F9border-bottom: 1px solid #FFFFFF; */
+}
+
+.ui-tabs .ui-tabs-nav li a,
+.ui-tabs.ui-tabs-collapsible .ui-tabs-nav li.ui-tabs-selected a {
+	cursor: pointer;
+}
+
+/* first selector in group seems obsolete, but required to overcome bug in Opera applying cursor: text overall if defined elsewhere... */
+
+.ui-tabs .ui-tabs-panel {
+	padding: 0;
+	padding-top: 10px;
+	display: block;
+	border-width: 0;
+	background: none;
+}
+
+.ui-tabs .ui-tabs-hide {
+	display: none !important;
+}
+
+/*
+.ui-tabs-nav li a span .pb_backupbuddy_fancytab {
+
+}
+*/
+
+.pb_label {
+	-webkit-border-radius: 3px;
+	   -moz-border-radius: 3px;
+			border-radius: 3px;
+}
+
+.pb_label {
+	display: inline-block;
+	padding: 2px 4px;
+	font-size: 11.844px;
+	font-weight: bold;
+	line-height: 14px;
+	color: white;
+	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+	white-space: nowrap;
+	vertical-align: baseline;
+	background-color: #999;
+}
+
+.pb_label-success {
+	background-color: #468847;
+}
+
+.pb_label-warning {
+	background-color: #F89406;
+}
+
+.pb_label-error {
+	background-color: red;
+}
+
+.pb_label-important {
+	background-color: #dd4542;
+}
+
+.pb_label-info {
+	background-color: #3A87AD;
+}
+
+.pb_label-inverse {
+	background-color: #333;
+}
+
+.pb_label-subtle {
+	text-shadow: none;
+	background-color: #dedede;
+	color: #555;
+}
+
+.pb_backupbuddy_alert {
+	padding: 15px !important;
+}
+
+.pb_backupbuddy_alert h3 {
+	font-weight: 800;
+	font-size: 15px;
+	margin: 0.1em 0;
+}
+
+#backupbuddy-meta-link-wrap a.show-settings {
+	float: right;
+	margin: 0;
+}
+
+#screen-meta-links #backupbuddy-meta-link-wrap a {
+	background: none;
+}
+
+#screen-meta-links #backupbuddy-meta-link-wrap a:after {
+	color: #FFFFFF !important;
+	margin-right: 5px;
+}
+
+.bb-topbar-title {
+	display: block;
+	background: #2ea2cc;
+	padding: 1em;
+	margin-left: -30px;
+	color: #fff;
+	text-transform: uppercase;
+	padding-left: 29px;
+	font-size: 28px;
+	font-weight: 200;
+}
+
+.bb-topbar-title strong {
+	font-weight: 800;
+}
+
+.add-new-h2.bb-toggle-meta, .add-new-h2.bb-toggle-meta:active,
+.add-new-h2.bb-toggle-meta:focus {
+	background: #2ea2cc;
+	border-bottom: 2px solid #277693;
+	color: #FFFFFF !important;
+	display: block;
+	width: 205px;
+	margin-top: 20px;
+	padding: .5em 1em 1em;
+	border-radius: 3px;
+	vertical-align: middle;
+	margin-left: 0;
+}
+
+.bb-toggle-meta:after {
+	right: 0;
+	content: "\f140";
+	font: 400 20px/1 dashicons;
+	speak: none;
+	display: inline-block;
+	padding: 0;
+	vertical-align: middle;
+	bottom: 0px;
+	position: relative;
+	vertical-align: bottom;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-decoration: none!important;
+	color: #fff;
+}
+
+#backupbuddy-meta-link-wrap a.show-settings {
+	display: inline-block;
+	text-decoration: none;
+	padding: 10px;
+	margin-top: 10px;
+	border-radius: 3px;
+	margin-right: 10px;
+	border: solid 1px #85bcd0;
+	border-bottom: 2px solid #277693;
+	-webkit-box-shadow: 0 1px 0 #ccc;
+			box-shadow: 0 1px 0 #ccc;
+	float: right;
+	background: #2ea2cc !important;
+	color: #fff;
+}
+
+#backupbuddy-meta-link-wrap a.show-settings:hover,
+#backupbuddy-meta-link-wrap a.show-settings:focus {
+	border-color: #008EC2;
+	background: #00a0d2 !important;
+	color: #fff !important;
+}
+
+#contextual-help-link.button.show-settings {
+	display: inline-block;
+	text-decoration: none;
+	padding: 10px;
+	margin-top: 10px;
+	border-radius: 3px;
+	margin-right: 10px;
+	background: #baedff;
+	color: #0d6f92;
+	border: 1px solid #BAEDFF;
+	border-bottom: 2px solid #85bcd0;
+	height: auto;
+}
+
+#contextual-help-link.button.show-settings:hover {
+	border-color: #a0d8ec;
+	background: #b1e6f9 !important;
+}
+
+#screen-meta-links .show-settings:after {
+	color: #2B5158 !important;
+	margin-right: 0 !important;
+	padding: 0 !important;
+}
+
+#contextual-help-link-wrap {
+	float: right;
+	height: auto;
+	margin: 0;
+	border: none;
+	border-top: none;
+	background: transparent;
+}
+
+#contextual-help-link-wrap, #screen-options-link-wrap {
+	margin: 0 !important;
+	padding: 0 !important;
+	background: inherit !important;
+}
+
+#screen-meta-links .show-settings.no-dropdown:after {
+	content: '';
+	padding-right: 12px;
+}
+
+.profile_text {
+	text-transform: capitalize;
+}
+
+.profile_settings:hover {
+	background-color: #2ea2cc!important;
+	background-size: 20px 20px!important;
+	box-shadow: none!important;
+	color: #006799!important;
+}
+
+#wpbody-content .wrap ol {
+	background: #F8F8F8;
+	margin: 0;
+	display: block;
+	border-radius: 5px;
+	padding: 20px 10px 20px 10px;
+	margin-bottom: 10px;
+	border-radius: 5px;
+	border: 1px solid #d6d6d6;
+	border-top: 1px solid #ebebeb;
+	box-shadow: 0px 3px 0px 0px #aaaaaa;
+	box-shadow: 0px 3px 0px 0px #CFCFCF;
+	font-size: auto;
+	margin-left: 0px;
+}
+
+#wpbody-content .wrap ol li {
+	margin: 0 20px 6px;
+}
+
+#pb_backupbuddy_profile_settings_form .form-table {
+	margin: 0;
+	width: 95%;
+}
+
+.profile_type {
+	border-right: 2px solid #2ea2cc!important;
+}
+
+.bb-remote-checkbox {
+	padding-top: 20px;
+	margin-top: 10px;
+	border-top: solid 1px #ddd;
+}
+
+.profile_type {
+	display: inline-block;
+	float: left;
+	line-height: 16px;
+	vertical-align: middle;
+	margin-right: 10px;
+	color: #aaa;
+	padding-right: 15px!important;
+	border-right: 1px solid #EBEBEB;
+	font-size: 0;
+}
+
+span.profile_type:before {
+	content: "\f111";
+	font-size: 26px;
+	vertical-align: middle;
+	line-height: 26px;
+	display: inline-block;
+	-webkit-font-smoothing: antialiased;
+	font-family: 'dashicons';
+	line-height: 1;
+	vertical-align: top;
+	color: #2ea2cc;
+}
+
+span.profile_type-media:before {
+	content: "\f104";
+}
+
+span.profile_type-themes:before {
+	content: "\f100";
+}
+
+span.profile_type-plugins:before {
+	content: "\f106";
+}
+
+span.profile_type-full:before {
+	content: "\f318";
+}
+
+span.profile_type-db:before {
+	content: "\f495";
+}
+
+#pb_backupbuddy_profileadd span.profile_type {
+	border: none !important;
+}
+
+#pb_backupbuddy_profileadd .profile_item_noselect input {
+}
+
+#pb_backupbuddy_profileadd .profile_item_noselect input.button {
+	background: #2EA2CC !important;
+}
+
+#pb_backupbuddy_profileadd span.profile_type:before {
+	content: none;
+}
+
+/* css for timepicker */
+
+/*! jQuery Timepicker Addon - v1.6.3 - 2016-04-20
+* http://trentrichardson.com/examples/timepicker
+* Copyright (c) 2016 Trent Richardson; Licensed MIT */
+
+.ui-timepicker-div .ui-widget-header{margin-bottom:8px}.ui-timepicker-div dl{text-align:left}.ui-timepicker-div dl dt{float:left;clear:left;padding:0 0 0 5px}.ui-timepicker-div dl dd{margin:0 10px 10px 40%}.ui-timepicker-div td{font-size:90%}.ui-tpicker-grid-label{background:0 0;border:0;margin:0;padding:0}.ui-timepicker-div .ui_tpicker_unit_hide{display:none}.ui-timepicker-div .ui_tpicker_time .ui_tpicker_time_input{background:0 0;color:inherit;border:0;outline:0;border-bottom:solid 1px #555;width:95%}.ui-timepicker-div .ui_tpicker_time .ui_tpicker_time_input:focus{border-bottom-color:#aaa}.ui-timepicker-rtl{direction:rtl}.ui-timepicker-rtl dl{text-align:right;padding:0 5px 0 0}.ui-timepicker-rtl dl dt{float:right;clear:right}.ui-timepicker-rtl dl dd{margin:0 40% 10px 10px}.ui-timepicker-div.ui-timepicker-oneLine{padding-right:2px}.ui-timepicker-div.ui-timepicker-oneLine .ui_tpicker_time,.ui-timepicker-div.ui-timepicker-oneLine dt{display:none}.ui-timepicker-div.ui-timepicker-oneLine .ui_tpicker_time_label{display:block;padding-top:2px}.ui-timepicker-div.ui-timepicker-oneLine dl{text-align:right}.ui-timepicker-div.ui-timepicker-oneLine dl dd,.ui-timepicker-div.ui-timepicker-oneLine dl dd>div{display:inline-block;margin:0}.ui-timepicker-div.ui-timepicker-oneLine dl dd.ui_tpicker_minute:before,.ui-timepicker-div.ui-timepicker-oneLine dl dd.ui_tpicker_second:before{content:':';display:inline-block}.ui-timepicker-div.ui-timepicker-oneLine dl dd.ui_tpicker_millisec:before,.ui-timepicker-div.ui-timepicker-oneLine dl dd.ui_tpicker_microsec:before{content:'.';display:inline-block}.ui-timepicker-div.ui-timepicker-oneLine .ui_tpicker_unit_hide,.ui-timepicker-div.ui-timepicker-oneLine .ui_tpicker_unit_hide:before{display:none}
+
+.modal {
+	width: 700px;
+	background: #FFFFFF;
+			border-radius: 5px;
+	border: 1px solid #D6D6D6;
+	   -moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	overflow: hidden;
+	padding: 0px;
+	height: 100%;
+	overflow: scroll;
+}
+
+.modal_header {
+	background: whiteSmoke;
+	padding: 20px;
+	padding-top: 5px;
+	padding-bottom: 15px;
+	border-bottom: 1px solid #D6D6D6;
+}
+
+.modal_header h2 {
+	font-family: "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",sans-serif;
+	color: #464646;
+	font-size: 1.43em;
+	font-style: normal;
+	margin-bottom: 0px;
+}
+
+.modal_close {
+	float: right;
+	color: #8f8f8f;
+	font-size: 18px;
+	cursor: pointer;
+	position: absolute;
+	right: 15px;
+	top: 15px;
+}
+
+.modal_content {
+	padding: 20px;
+}
+
+#lean_overlay {
+	position: fixed;
+	z-index: 100;
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	width: 100%;
+	background: #000;
+	display: none;
+}
+
+.bb-iframe-divpadding-noscroll::-webkit-scrollbar {
+	width: 0; /* remove scrollbar space */
+	background: transparent; /* optional: just make scrollbar invisible */
+}
+.profile_item_select,
+.profile_item_noselect {
+	min-width: 204px;
+}
+
+.bb_profile_divider {
+	display: none !important;
+}
+
+.profile_item_add_select {
+	min-width: auto;
+}
+
+.profile_box {
+	margin-top: -20px !important;
+}
+
+span.profile_type {
+	font-size: 26px;
+	vertical-align: middle;
+	line-height: 26px;
+}
+
+.profile_item_select:hover {
+	color: #2ea2cc!important;
+}
+
+span.profile_type:before {
+	-webkit-font-smoothing: antialiased;
+    font-family: 'dashicons';
+    color: #2ea2cc;
+    font-size: 22px;
+    line-height: 1;
+}
+.profile_type-full:before {
+	content: "\f318";
+	font-family: 'dashicons';
+}
+
+.profile_type-db:before {
+	content: "\f495";
+	font-family: 'dashicons';
+}
+
+.profile_type-themes:before {
+	content: "\f100";
+	font-family: 'dashicons';
+}
+
+.profile_type-plugins:before {
+	content: "\f106";
+	font-family: 'dashicons';
+}
+
+.profile_type-media:before {
+	content: "\f104";
+	font-family: 'dashicons';
+}
+
+.profile_type-files:before {
+	content: "\f318";
+	font-family: 'dashicons';
+}
+
+.profile_text {
+	font-weight: 400;
+}
+
+.bb-profilebox-wrap.profile_box {
+	position: relative;
+}
+
+#pb_backupbuddy_profileadd {
+	min-width: 280px;
+}
+
+#pb_backupbuddy_profileadd .profile_text,
+#pb_backupbuddy_profileadd .profile_type {
+}
+
+#pb_backupbuddy_profileadd .profile_type select {
+	margin: 2% 0;
+}
+
+.pb_form .form-table h3, .pb_htitle {
+	font-size: 24px;
+	position: relative;
+	text-align: left;
+	font-weight: 300;
+	margin-top: 0;
+	margin-bottom: 0.5em;
+	line-height: 1.3;
+}
+
+.pb_form .form-table h3::after, .pb_htitle::after {
+	content: '';
+	position: absolute;
+	width: 50px;
+	height: 3px;
+	background: #2ea2cc;
+	bottom: -5px;
+	left: 0;
+	margin: auto;
+}
+
+#TB_ajaxWindowTitle {
+	color: #fff;
+	float: left;
+	font-weight: 600;
+	line-height: 30px;
+	overflow: hidden;
+	padding: 5px 30px 0 10px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	width: calc( 100% - 39px );
+}
+
+#TB_title {
+	background: #2ea2cc!important;
+	border-bottom: 1px solid #ddd;
+	height: 40px;
+}
+
+.tb-close-icon {
+	display: block;
+	color: #fff !important;
+	text-align: center;
+	line-height: 29px;
+	width: 29px;
+	height: 29px;
+	position: absolute;
+	top: 5px;
+	right: 0;
+}
+
+.button.secondary-button.backupbuddy-do_bulk_action {
+	text-decoration: none;
+	border-radius: 3px;
+	border: solid 1px #85bcd0;
+	border-bottom: 2px solid #277693;
+	-webkit-box-shadow: 0 1px 0 #ccc;
+			box-shadow: 0 1px 0 #ccc;
+	background: #2EA2CC !important;
+	color: #fff;
+	height: auto;
+}
