@@ -894,7 +894,7 @@ class pb_backupbuddy_destinations {
 		}
 
 		$destination_list = array_merge( $stash3_destination, $stash2_destination, $stash_destination, $deploy_destination, $s33_destination, $s32_destination, $s3_destination, $destination_list );
-		$destination_list = apply_filters( 'itbub_destination_list', $destination_list );
+		$destination_list = apply_filters( 'backupbuddy_destinations', $destination_list );
 
 		return $destination_list;
 	} // End get_destinations().

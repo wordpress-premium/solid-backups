@@ -1985,3 +1985,9 @@
 	Enhancement: Added improved caching to the Stash Live system which can improve performance.
 	Enhancement: Added support for the Stash Live server to attempt to fix known issues that can prevent the service from functioning correctly.
 	Enhancement: Fixed error reporting in Stash Live to report error details from the AWS SDK API that were previously missing.
+8.3.13.0 - 2019-05-07 - Lew Ayotte
+	Enhancement: Custom template filter added, Destination list filter renamed
+8.3.14.0 - 2019-05-08 - Brian DiChiara, Jeremy Trask
+	Bug Fix: Corrected typo for apply_filter/s.
+8.4.15.0 - 2019-05-08 - Brian DiChiara
+	Bug Fix: Someone fat fingered the last release version.

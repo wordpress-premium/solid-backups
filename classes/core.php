@@ -459,8 +459,9 @@ class backupbuddy_core {
 		$replacements['{body}'] = $body;
 
 		// Customize the final body based on our HTML template.
-		if ( @file_exists( get_theme_root() . '/backupbuddy-email-template.php' ) ) {
-			$body = file_get_contents( get_theme_root() . '/backupbuddy-email-template.php' );
+		$custom_email_template = apply_filters( 'backupbuddy_custom_email_template', get_theme_root() . '/backupbuddy-email-template.php' );
+		if ( @file_exists( $custom_email_template ) ) {
+			$body = file_get_contents( $custom_email_template );
 		} else {
 			$body = file_get_contents( dirname( dirname( __FILE__ ) ) . '/views/backupbuddy-email-template.php' );
 		}

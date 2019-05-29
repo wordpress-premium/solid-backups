@@ -1,7 +1,8 @@
 {
     "name": "thaikolja/backupbuddy",
     "type": "wordpress-plugin",
-    "version": "8.3.12.0",
+    "version": "8.4.15.0",
+	"minimum-stability": "dev",
     "require": {
     	"composer/installers": "~1.0"
     }
