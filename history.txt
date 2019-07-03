@@ -1991,3 +1991,11 @@
 	Bug Fix: Corrected typo for apply_filter/s.
 8.4.15.0 - 2019-05-08 - Brian DiChiara
 	Bug Fix: Someone fat fingered the last release version.
+8.4.16.0 - 2019-06-17 - Chris Jean, Josh Benham
+	Bug Fix: Corrected an issue that caused Stash Live to send all files when creating a manual snapshot when the files were already present.
+8.4.17.0 - 2019-06-18 - Chris Jean, Josh Benham
+	Bug Fix: Some user's sites permanently cached invalid Stash Live credentials. This fix automatically clears the cache for sites that currently have this issue and adds measures to prevent it from happening in the future.
+8.4.17.1 - 2019-06-19 - Brian DiChiara, Josh Benham
+	Bug Fix: Fixes button layout issue in WP 5.2.2 update.
+8.4.18.0 - 2019-06-19 - Lew Ayotte
+    Enhancement: Version bump (that's it)

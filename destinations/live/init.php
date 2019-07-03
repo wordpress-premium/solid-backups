@@ -287,6 +287,7 @@ class pb_backupbuddy_destination_live {
 		}
 
 		$prefix = $response['prefix'] . '/' . $prefix;
+		$prefix = rtrim( $prefix, '/' );
 
 		if ( '' != $marker ) {
 			$marker = $prefix . $marker;
@@ -372,7 +373,7 @@ class pb_backupbuddy_destination_live {
 		}
 
 		// Get credentials via LIVE action and cache them for future calls.
-		if ( false === ( $response = get_transient( self::LIVE_ACTION_TRANSIENT_NAME ) ) ) {
+		if ( false == ( $response = get_transient( self::LIVE_ACTION_TRANSIENT_NAME ) ) ) {
 			require_once( pb_backupbuddy::plugin_path() . '/lib/stash/stash-api.php' );
 
 			$settings = self::_formatSettings( $settings );
@@ -401,11 +402,22 @@ class pb_backupbuddy_destination_live {
 
 				// Cache the response temporarily so that the site doesn't make continuous requests to the server when
 				// there is an error response due to a temporary server issue or a problem with the account.
-				$response = false;
 				$cache_time = 5 * MINUTE_IN_SECONDS;
+				$response = time() + $cache_time;
 			}
 
+			// Ensure a non-zero cache timeout.
+			$cache_time = max( $cache_time, MINUTE_IN_SECONDS );
+
 			set_transient( self::LIVE_ACTION_TRANSIENT_NAME, $response, $cache_time );
+		}
+
+		if ( is_string( $response ) && preg_match( '/^\d+$/', $response ) ) {
+			if ( $response < time() ) {
+				return self::_get_live_action_response( $settings, true );
+			} else {
+				return false;
+			}
 		}
 
 		return $response;

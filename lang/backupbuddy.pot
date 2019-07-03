@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the BackupBuddy package.
 msgid ""
 msgstr ""
-"Project-Id-Version: BackupBuddy 8.4.15.0\n"
+"Project-Id-Version: BackupBuddy 8.4.18.0\n"
 "Report-Msgid-Bugs-To: http://ithemes.com/support/\n"
-"POT-Creation-Date: 2019-05-08 20:16:03+00:00\n"
+"POT-Creation-Date: 2019-06-19 17:06:12+00:00\n"
 "PO-Revision-Date: 2019-MO-DA HO:MI+ZONE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -4464,7 +4464,7 @@ msgstr ""
 msgid "Manage Remote Files"
 msgstr ""
 
-#. #-#-#-#-#  backupbuddy.pot (BackupBuddy 8.4.15.0)  #-#-#-#-#
+#. #-#-#-#-#  backupbuddy.pot (BackupBuddy 8.4.18.0)  #-#-#-#-#
 #. Plugin Name of the plugin/theme
 #: destinations/live/_manage.php:1006 helpers/privacy.php:21
 #: helpers/privacy.php:121 helpers/privacy.php:263

@@ -778,3 +778,8 @@ span.profile_type:before {
 	color: #fff;
 	height: auto;
 }
+
+.backupbuddy_page_pb_backupbuddy_destinations #screen-meta-links,
+.toplevel_page_pb_backupbuddy_backup #screen-meta-links {
+	min-width: 500px;
+}
