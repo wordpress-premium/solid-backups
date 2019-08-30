@@ -85,22 +85,8 @@ class pb_backupbuddy_destination_stash2 { // Change class name end to match dest
 			}
 
 
-			$file_size = filesize( $file );
-			$remote_path = self::get_remote_path(); // Has leading and trailng slashes.
-			$backup_type = backupbuddy_core::getBackupTypeFromFile( $file, $quiet = false, $skip_fileoptions = false );
-			if ( '' == $backup_type ) { // unknown backup type
-				$backup_type_path = '';
-			} else { // known backup type. store in subdir.
-				$backup_type_path = $backup_type . '/';
-			}
+			$response = BackupBuddy_Stash_API::get_fallback_upload_action_response( $settings['itxapi_username'], $settings['itxapi_token'], $file );
 
-			$additionalParams =array(
-				'filename' => $remote_path . $backup_type_path . basename( $file ),
-				'size'     => $file_size,
-				'timezone' => get_option('timezone_string')
-			);
-			$stashAction = 'upload';
-			$response = self::stashAPI( $settings, $stashAction, $additionalParams );
 			if ( ! is_array( $response ) ) {
 				$error = 'Error #832973: Unable to initiate Stash (v2) upload. Details: `' . $response . '`.';
 				self::_error( $error );
@@ -108,29 +94,19 @@ class pb_backupbuddy_destination_stash2 { // Change class name end to match dest
 			}
 
 			if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
-				pb_backupbuddy::status( 'details', 'Stash API upload action response due to logging level: `' . print_r( $response, true ) . '`. Call params: `' . print_r( $additionalParams, true ) . ' `.' );
+				pb_backupbuddy::status( 'details', 'Stash API upload action response due to logging level: `' . print_r( $response, true ) . '`' );
 			}
+
+			$settings = array_merge( $settings, $response );
 			$settings['stash_mode'] = '1'; // Stash is calling the s32 destination.
-			$settings['bucket'] = $response['bucket'];
-			$settings['credentials'] = $response['credentials'];
-			if ( isset( $response['object'] ) ) {
-				$settings['_stash_object'] = $response['object'];
-			}
-			if ( isset( $response['upload_id'] ) ) {
-				$settings['_stash_upload_id'] = $response['upload_id'];
-			}
 		}
 		//error_log( print_r( $settings, true ) );
 
 		// Send file.
 		$result = pb_backupbuddy_destination_s32::send( $settings, $file, $send_id, $delete_after, $clear_uploads );
 
-		if ( false === $result ) { // Notify Stash if failure.
-			self::_uploadFailed( $settings );
-		} elseif ( is_array( $result ) ) { // Chunking. Notify Stash API to kick cron.
+		if ( is_array( $result ) ) { // Chunking. Notify Stash API to kick cron.
 			self::cron_kick_api( $settings, $blocking = false );
-		} elseif ( true === $result ) {
-
 		}
 
 		return $result;
@@ -591,31 +567,6 @@ class pb_backupbuddy_destination_stash2 { // Change class name end to match dest
 		return false;
 
 	}
-
-
-
-	/* _uploadFailed()
-	 *
-	 * Reports to the Stash API that the upload failed.
-	 * @return	bool		True if reporting failure succeeded, else false.
-	 *
-	 */
-	public static function _uploadFailed( $settings ) {
-
-		pb_backupbuddy::status( 'details', 'Notifying Stash of upload failure.' );
-		$additionalParams =array(
-			'upload_id' => $settings['_stash_upload_id'],
-		);
-		$failResult = self::stashAPI( $settings, 'upload-fail', $additionalParams );
-		if ( ( ! isset( $failResult['success'] ) || ( true !== $failResult['success'] ) ) ) {
-			pb_backupbuddy::status( 'error', 'Warning #32736326: Error notifying Stash of upload failure. Details: `' . print_r( $failResult, true ) . '`.' );
-			return false;
-		} else {
-			pb_backupbuddy::status( 'details', 'Stash notified of upload fail.' );
-			return true;
-		}
-
-	} // End _uploadFailed().
 
 
 

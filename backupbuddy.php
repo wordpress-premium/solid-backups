@@ -3,7 +3,7 @@
  * Plugin Name: BackupBuddy
  * Plugin URI: http://ithemes.com/purchase/backupbuddy/
  * Description: The most complete WordPress solution for Backup, Restoration, Migration, and Deployment to the same host or a new domain. Backs up a customizable selection of files, settings, and content for a complete snapshot of your site. Stash Live feature allows for real-time live backups to the cloud.
- * Version: 8.4.18.0
+ * Version: 8.4.19.0
  * Author: iThemes
  * Author URI: http://ithemes.com/
  * iThemes Package: backupbuddy

@@ -212,6 +212,7 @@ class pb_backupbuddy_destination_s33 { // Change class name end to match destina
 		global $pb_backupbuddy_destination_errors;
 		if ( '1' == $settings['disabled'] ) {
 			$pb_backupbuddy_destination_errors[] = __( 'Error #48933: This destination is currently disabled. Enable it under this destination\'s Advanced Settings.', 'it-l10n-backupbuddy' );
+			BackupBuddy_Stash_API::send_fallback_upload_results( $settings, 'Error #48933: This destination is currently disabled. Enable it under this destination\'s Advanced Settings.' );
 			return false;
 		}
 		$settings = self::_init( $settings ); // Handles formatting & sanitizing settings.
@@ -327,6 +328,7 @@ class pb_backupbuddy_destination_s33 { // Change class name end to match destina
 						$contentLength = 0;
 					} else {
 						pb_backupbuddy::status( 'error', 'Error #392383: Missing multipart data and NOT a zero byte file. Aborting.' );
+						BackupBuddy_Stash_API::send_fallback_upload_results( $settings, 'Error #392383: Missing multipart data and NOT a zero byte file. Aborting.' );
 						return false;
 					}
 				} else {
@@ -416,6 +418,7 @@ class pb_backupbuddy_destination_s33 { // Change class name end to match destina
 						pb_backupbuddy::status( 'details', 'Stash confirmed upload completition was successful.' );
 					} else {
 						pb_backupbuddy::status( 'error', 'Error #23972793: Error notifying Stash of upload success even after wait. Details: `' . print_r( $response, true ) . '`.' );
+						BackupBuddy_Stash_API::send_fallback_upload_results( $settings, 'Error #23972793: Error notifying Stash of upload success even after wait. Details: `' . print_r( $response, true ) . '`.' );
 						return false;
 					}
 
@@ -440,12 +443,9 @@ class pb_backupbuddy_destination_s33 { // Change class name end to match destina
 					pb_backupbuddy::status( 'details', 'Server notified of multipart completion.' );
 
 					if ( '1' == $settings['stash_mode'] ) { // Stash send confirm.
-						pb_backupbuddy::status( 'details', 'Notifying Stash of upload completion.' );
-						$additionalParams =array(
-							'upload_id' => $settings['_stash_upload_id'],
-						);
-						$response = pb_backupbuddy_destination_stash3::stashAPI( $settings, 'upload-complete', $additionalParams );
-						if ( ( ! is_array( $response ) ) || ( ! isset( $response['success'] ) ) ) { // If not array OR success key missing. May be a timeout or waiting on AWS system to combine multipart still. Check for file later.
+						$response = BackupBuddy_Stash_API::send_fallback_upload_results( $settings );
+
+						if ( false === $response ) { // May be a timeout or waiting on AWS system to combine multipart still. Check for file later.
 							$settings[ '_retry_stash_confirm' ] = true;
 							$settings['_multipart_counts'] = array(); // No more parts remain.
 
@@ -468,15 +468,7 @@ class pb_backupbuddy_destination_s33 { // Change class name end to match destina
 							 */
 
 							return array( $settings['_multipart_id'], 'Pending multipart send confirmation.' );
-						} else { // Array.
-							if ( ( isset( $response['success'] ) && ( true !== $response['success'] ) ) ) { // Success key set AND not true.
-								pb_backupbuddy::status( 'error', 'Error #83298932: Error notifying Stash of upload success. Details: `' . print_r( $response, true ) . '`.' );
-								return false;
-							} else { // Success.
-								pb_backupbuddy::status( 'details', 'Stash notified of upload completition.' );
-							}
 						}
-
 					}
 				} // end not a Stash confirm retry.
 
