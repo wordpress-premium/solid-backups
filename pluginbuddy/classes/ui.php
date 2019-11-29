@@ -1,13 +1,15 @@
 <?php
-
-
-
-/*	pluginbuddy_ui class
+/**
+ * PluginBuddy UI Class
  *
- *	Handles typical user interface items used in WordPress development.
+ * @author Dustin Bolton
+ * @package BackupBuddy
+ */
+
+/**
+ * Handles typical user interface items used in WordPress development.
  *
- *	@author Dustin Bolton
- *	@version 1.0.0
+ * @version 1.0.0
  */
 class pb_backupbuddy_ui {
 
@@ -65,28 +67,26 @@ class pb_backupbuddy_ui {
 		}
 	} // End end_metabox().
 
-
-
-	/*	pluginbuddy_ui->title()
+	/**
+	 * Displays a styled, properly formatted title for pages.
 	 *
-	 *	Displays a styled, properly formatted title for pages.
+	 * @param string $title       Title to display.
+	 * @param bool   $echo        Whether or not to echo the string or return.
+	 * @param bool   $br          Disables the line break after h1.
+	 * @param string $icon_class  Customize the icon class.
 	 *
-	 *	@param		string		$title		Title to display.
-	 *	@param		boolean		$echo		Whether or not to echo the string or return.
-	 *	@return		null/string				Returns null if $echo is true; else returns string with HTML.
+	 * @return null|string  Returns null if $echo is true; else returns string with HTML.
 	 */
-	public function title( $title, $echo = true, $br = true ) {
-		$return = '<h1 style="zoom: 1.05;"><span class="backupbuddy-icon-drive" style="font-size: 1.2em; vertical-align: -4px;"></span> ' . $title . '</h1>';
+	public function title( $title, $echo = true, $br = true, $icon_class = 'backupbuddy-icon-drive' ) {
+		$return = sprintf( '<h1 style="zoom: 1.05;"><span class="%s"></span> %s</h1>', esc_attr( $icon_class ), $title );
 		if ( true === $br ) {
 			$return .= '<br />';
 		}
-		if ( $echo === true ) {
-			echo $return;
-		} else {
+		if ( true !== $echo ) {
 			return $return;
 		}
+		echo $return;
 	} // End title().
-
 
 
 	/*	pluginbuddy_ui->button()
@@ -120,194 +120,178 @@ class pb_backupbuddy_ui {
 	 *	@return		null/string				Returns null if $echo is true; else returns string with HTML.
 	 */
 	public static function note( $text, $echo = true ) {
-		$return = '<span class="description"><i>' . $text . '</i></span>';
-		if ( $echo === true ) {
-			echo $return;
-		} else {
+		$return = '<span class="description ui-note"><i>' . $text . '</i></span>';
+		if ( true !== $echo ) {
 			return $return;
 		}
+		echo $return;
 	} // End note().
 
-
-
-	/*	pluginbuddy_ui->list_table()
+	/**
+	 * Displays a nice table with multiple columns, rows, bulk actions, hover actions, etc similar to WordPress posts table.
+	 * Currently only supports echo of output.
 	 *
-	 *	Displays a nice table with multiple columns, rows, bulk actions, hover actions, etc similar to WordPress posts table.
-	 *	Currently only supports echo of output.
-	 *
-	 *	@param		array		$items		Array of rows to display. Each row array contains an array with the columns. Typically set in controller.
-	 *										Ex: array( array( 'blue', 'red' ), array( 'brown', 'green' ) ).
-	 *										If the value for an item is an array then the first value will be assigned to the rel tag of any hover actions. If not
-	 *										an array then the value itself will be put in the rel tag.  If an array the second value will be the one displayed in the column.
-	 *										BackupBuddy needed the displayed item in the column to be a link (for downloading backups) but the backup file as the rel.
-	 *	@param		array		$settings	Array of all the various settings. Merged with defaults prior to usage. Typically set in view.
-	 *										See $default_settings at beginning of function for available settings.
-	 *										Ex: $settings = array(
-	 *												'action'		=>		pb_backupbuddy::plugin_url(),
-	 *												'columns'		=>		array( 'Group Name', 'Images', 'Shortcode' ),
-	 *												'hover_actions'	=>		array( 'edit' => 'Edit Group Settings' ),		// Slug can be a URL. In this case the value of the hovered row will be appended to the end of the URL. TODO: Make the first hover action be the link for the first listed item.
-	 *												'bulk_actions'	=>		array( 'delete_images' => 'Delete' ),
-	 *											);
-	 *	@return		null
+	 * @param array $items     Array of rows to display. Each row array contains an array with the columns. Typically set in controller.
+	 *                         Ex: array( array( 'blue', 'red' ), array( 'brown', 'green' ) ).
+	 *                         If the value for an item is an array then the first value will be assigned to the rel tag of any hover actions. If not
+	 *                         an array then the value itself will be put in the rel tag.  If an array the second value will be the one displayed in the column.
+	 *                         BackupBuddy needed the displayed item in the column to be a link (for downloading backups) but the backup file as the rel.
+	 * @param array $settings  Array of all the various settings. Merged with defaults prior to usage. Typically set in view.
+	 *                         See $default_settings at beginning of function for available settings.
+	 *                         Ex: $settings = array(
+	 *                             'action'        => pb_backupbuddy::plugin_url(),
+	 *                             'columns'       => array( 'Group Name', 'Images', 'Shortcode' ),
+	 *                             'hover_actions' => array( 'edit' => 'Edit Group Settings' ),
+	 *                             'bulk_actions'  => array( 'delete_images' => 'Delete' ),
+	 *                         );
+	 *                         // Slug can be a URL. In this case the value of the hovered row will be appended to the end of the URL.
+	 *                         // TODO: Make the first hover action be the link for the first listed item.
 	 */
 	public static function list_table( $items, $settings ) {
 		$default_settings = array(
-								'columns'					=>	array(),
-								'hover_actions'				=>	array(),
-								'bulk_actions'				=>	array(),
-								'hover_action_column_key'	=>	'',			// int of column to set value= in URL and rel tag= for using in JS.
-								'action'					=>	'',
-								'reorder'					=>	'',
-								'after_bulk'				=>	'',
-								'css'						=>	'',
-							);
+			'columns'                  => array(),
+			'hover_actions'            => array(),
+			'bulk_actions'             => array(),
+			'hover_action_column_key'  => '', // int of column to set value= in URL and rel tag= for using in JS.
+			'action'                   => '',
+			'reorder'                  => '',
+			'after_bulk'               => '',
+			'css'                      => '',
+			'table_class'              => '',
+			'table_id'                 => '',
+			'destination_id'           => '',
+			'disable_top_bulk_actions' => false,
+			'disable_tfoot'            => false,
+			'disable_wrapper'          => false,
+			'wrapper_class'            => false,
+			'display_mode'             => '',
+			'form_class'               => '',
+		);
 
 		// Merge defaults.
-		$settings = array_merge( $default_settings, $settings );
+		$settings = apply_filters( 'backupbuddy_list_table_settings', array_merge( $default_settings, $settings ), $items );
 
 		// Function to iterate through bulk actions. Top and bottom set are the same.
-		if ( !function_exists( 'bulk_actions' ) ) {
-			function bulk_actions( $settings, $hover_note = false ) {
-				if ( count( $settings['bulk_actions'] ) > 0 ) {
-					echo '<div style="padding-bottom: 3px; padding-top: 3px;">';
-					if ( count( $settings['bulk_actions'] ) == 1 ) {
-						foreach( $settings['bulk_actions'] as $action_slug => $action_title ) {
-							echo '<input type="hidden" name="bulk_action" value="' . $action_slug . '">';
-							echo '<input type="submit" name="do_bulk_action" value="' . $action_title . '" class="button secondary-button backupbuddy-do_bulk_action">';
-						}
-					} else {
-						echo '<select name="bulk_action" class="actions">';
-						foreach ( $settings['bulk_actions'] as $action_slug => $action_title ) {
-							echo '<option>Bulk Actions</option>';
-							echo '<option value="' . $action_slug . '">' . $action_title . '</option>';
-						}
-						echo '</select> &nbsp;';
-						//echo self::button( '#', 'Apply' );
-						echo '<input type="submit" name="do_bulk_action" value="Apply" class="button secondary-button backupbuddy-do_bulk_action">';
-					}
-					echo '&nbsp;&nbsp;';
-					echo $settings['after_bulk'];
-
-					echo '<div class="alignright actions">';
-					if ( $hover_note === true ) {
-						echo pb_backupbuddy::$ui->note( 'Hover over items above for additional options.' );
-					}
-					if ( $settings['reorder'] != '' ) {
-						echo '	<input type="submit" name="save_order" id="save_order" value="Save Order" class="button-secondary" />';
-					}
-					echo '</div>';
-
-					echo '</div>';
+		if ( ! function_exists( 'bulk_actions' ) ) {
+			/**
+			 * Bulk Actions function if it doesn't already exist.
+			 *
+			 * @param array  $settings    Settings array.
+			 * @param bool   $hover_note  Display Hover note.
+			 * @param string $class       Wrapper class name.
+			 * @param bool   $echo        Echo output or return.
+			 *
+			 * @return string|null  Output or null if echoed.
+			 */
+			function bulk_actions( $settings, $hover_note = true, $class = '', $echo = true ) {
+				if ( count( $settings['bulk_actions'] ) <= 0 ) {
+					return;
 				}
-			} // End subfunction bulk_actions().
+
+				$hover_note = $hover_note && count( $settings['hover_actions'] ) > 0;
+				$class      = $class ? sprintf( ' class="%s"', esc_attr( $class ) ) : '';
+				$output     = '<div' . $class . '>';
+				if ( count( $settings['bulk_actions'] ) == 1 ) {
+					foreach ( $settings['bulk_actions'] as $action_slug => $action_title ) {
+						$output .= '<input type="hidden" name="bulk_action" value="' . $action_slug . '">';
+						$output .= '<input type="submit" name="do_bulk_action" value="' . $action_title . '" class="button secondary-button backupbuddy-do_bulk_action">';
+					}
+				} else {
+					$output .= '<select name="bulk_action" class="actions">';
+					foreach ( $settings['bulk_actions'] as $action_slug => $action_title ) {
+						$output .= '<option>Bulk Actions</option>';
+						$output .= '<option value="' . $action_slug . '">' . $action_title . '</option>';
+					}
+					$output .= '</select> &nbsp;';
+					//$output .= self::button( '#', 'Apply' );
+					$output .= '<input type="submit" name="do_bulk_action" value="Apply" class="button secondary-button backupbuddy-do_bulk_action">';
+				}
+				$output .= '&nbsp;&nbsp;';
+				$output .= $settings['after_bulk'];
+
+				$output .= '<div class="alignright actions">';
+				if ( true === $hover_note && count( $settings['hover_actions'] ) ) {
+					$output .= pb_backupbuddy::$ui->note( 'Hover over items above for additional options.', false );
+				}
+				if ( '' != $settings['reorder'] ) {
+					$output .= '<input type="submit" name="save_order" id="save_order" value="Save Order" class="button-secondary" />';
+				}
+				$output .= '</div><!-- .actions -->';
+
+				$output .= '</div><!-- wrapper -->';
+
+				if ( true !== $echo ) {
+					return $output;
+				}
+
+				echo $output;
+			} // End subfunction bulk_actions.
 		} // End if function does not exist.
 
-		if ( $settings['action'] != '' ) {
-			echo '<form method="post" action="' . $settings['action'] . '">';
+		if ( '' != $settings['action'] ) {
+			$form_class = ! empty( $settings['form_class'] ) ? sprintf( ' class="%s"', esc_attr( $settings['form_class'] ) ) : '';
+			printf( '<form method="post" action="' . $settings['action'] . '"%s>', $form_class );
 			pb_backupbuddy::nonce();
-			if ( $settings['reorder'] != '' ) {
+			if ( '' != $settings['reorder'] ) {
 				echo '<input type="hidden" name="order" value="" id="pb_order">';
 			}
 		}
 
-
-		echo '<div style="width: 70%; min-width: 720px; ' . $settings['css'] . '">';
+		if ( true !== $settings['disable_wrapper'] ) {
+			printf( '<div class="backupbuddy-list-table-wrapper %s" style="%s">', esc_attr( $settings['wrapper_class'] ), esc_attr( $settings['css'] ) );
+		}
 
 		// Display bulk actions (top).
-		bulk_actions( $settings );
+		if ( true !== $settings['disable_top_bulk_actions'] ) {
+			bulk_actions( $settings, false, 'bulk-actions top-bulk-actions' );
+		}
 
-		echo '<table class="widefat striped"';
-		echo ' id="test">';
-		echo '		<thead>
-					<tr class="thead">';
-		if ( count( $settings['bulk_actions'] ) > 0 ) {
-			echo'		<th scope="col" class="check-column"><input type="checkbox" class="check-all-entries" /></th>';
+		echo '<table class="widefat striped';
+		if ( ! empty( $settings['table_class'] ) ) {
+			echo ' ' . esc_attr( $settings['table_class'] );
 		}
-		foreach ( $settings['columns'] as $column ) {
-			echo '<th>' . $column . '</th>';
+		echo '"';
+		if ( ! empty( $settings['table_id'] ) ) {
+			echo ' id="' . esc_attr( $settings['table_id'] ) . '"';
 		}
-		echo '		</tr>
-				</thead>
-			<tfoot>
-				<tr class="thead">';
-		if ( count( $settings['bulk_actions'] ) > 0 ) {
-			echo'	<th scope="col" class="check-column"><input type="checkbox" class="check-all-entries" /></th>';
-		}
-		foreach ( $settings['columns'] as $column ) {
-			echo '<th>' . $column . '</th>';
-		}
-		echo '	</tr>
-			</tfoot>
-			<tbody';
-		if ( $settings['reorder'] != '' ) {
+		echo '>';
+
+		self::column_headings( $settings, true );
+
+		echo '<tbody';
+		if ( '' != $settings['reorder'] ) {
 			echo ' class="pb_reorder"';
 		}
 		echo '>';
 
 		// LOOP THROUGH EACH ROW.
 		$itemi = 0;
-		foreach ( (array)$items as $item_id => $item ) {
+		$month = false;
+		foreach ( (array) $items as $item_id => $item ) {
 			$itemi++;
-			echo '	<tr class="entry-row" id="pb_rowitem-' . $item_id . '">';
+			$timestamp_attr = '';
+			$timestamp      = self::get_timestamp( $item );
+			if ( $timestamp ) {
+				$timestamp_attr = sprintf( ' data-timestamp="%s"', esc_attr( $timestamp ) );
+			}
+
+			$addl_row_class = ' month-' . strtolower( date( 'M', $timestamp ) );
+			if ( date( 'M', $timestamp ) !== $month ) {
+				$addl_row_class .= ' begin-month';
+				$month           = date( 'M', $timestamp );
+			}
+
+			echo sprintf( '<tr class="entry-row%s" data-id="%s" data-destination-id="%s"%s>', esc_attr( $addl_row_class ), esc_attr( basename( $item_id ) ), esc_attr( $settings['destination_id'] ), $timestamp_attr );
 			if ( count( $settings['bulk_actions'] ) > 0 ) {
-				echo'	<th scope="row" class="check-column"><input type="checkbox" name="items[]" class="entries" value="' . $item_id . '"></th>';
+				echo '<th scope="row" class="check-column"><input type="checkbox" name="items[]" class="entries" value="' . esc_attr( $item_id ) . '"></th>';
 			}
-			echo '		<td>';
+			$column_class   = sanitize_title( strip_tags( $settings['columns'][0] ) );
+			$column_comment = self::get_comment( $item );
+			echo sprintf( '<td class="%s"%s>', esc_attr( $column_class ), $column_comment );
+			self::first_column_content( $item, $item_id, $itemi, $settings, true );
+			echo '</td>';
 
-			if ( is_array( $item['0'] ) ) {
-				if ( $item['0'][1] == '' ) {
-					echo '&nbsp;';
-				} else {
-					echo $item['0'][1];
-				}
-			} else {
-				if ( $item['0'] == '' ) {
-					echo '&nbsp;';
-				} else {
-					echo $item['0'];
-				}
-			}
-
-			echo '			<div class="row-actions" style="margin-top: 10px;">'; //  style="margin:0; padding:0;"
-			$i = 0;
-			foreach ( $settings['hover_actions'] as $action_slug => $action_title ) { // Display all hover actions.
-				$i++;
-				// If filter is set to not display edit link for first schedule. Don't show it.
-				if ( $itemi === 1 && ! empty( $settings['hide_edit_for_first_schedule'] ) && $action_slug == 'edit' ) {
-					continue; 
-				}
-
-				if ( $settings['hover_action_column_key'] != '' ) {
-					if ( is_array( $item[$settings['hover_action_column_key']] ) ) {
-						$hover_action_column_value = $item[$settings['hover_action_column_key']][0];
-					} else {
-						$hover_action_column_value = $item[$settings['hover_action_column_key']];
-					}
-				} else {
-					$hover_action_column_value = '';
-				}
-
-				if ( strstr( $action_slug, '/' ) === false ) { // Word hover action slug.
-					$hover_link= pb_backupbuddy::page_url() . '&' . $action_slug . '=' . $item_id . '&value=' . $hover_action_column_value;
-				} else { // URL hover action slug so just append value to URL.
-					$hover_link = $action_slug . $hover_action_column_value;
-				}
-
-				// Some host's don't allow get params that end in .zip
-				if ( '.zip' == substr( $hover_link, -4 ) ) {
-					$hover_link .= '&bub_rand=' . rand( 100, 999 );
-				}
-
-				echo '<a href="' . $hover_link . '" class="pb_' . pb_backupbuddy::settings( 'slug' ) . '_hoveraction_' . $action_slug . '" rel="' . $hover_action_column_value . '">' . $action_title . '</a>';
-				if ( $i < count( $settings['hover_actions'] ) ) {
-					echo ' | ';
-				}
-			}
-			echo '			</div>
-						</td>';
-
-
-			if ( $settings['reorder'] != '' ) {
+			if ( '' != $settings['reorder'] ) {
 				$count = count( $item ) + 1; // Extra row for reordering.
 			} else {
 				$count = count( $item );
@@ -315,43 +299,262 @@ class pb_backupbuddy_ui {
 
 			// LOOP THROUGH COLUMNS FOR THIS ROW.
 			for ( $i = 1; $i < $count; $i++ ) {
-				if ( ! isset( $item[$i] ) ) { continue; } // This row does not have a corresponding index-based item.  It is probably a named key not for use in table?
+				if ( ! isset( $item[ $i ] ) ) {
+					continue; // This row does not have a corresponding index-based item.  It is probably a named key not for use in table?
+				}
+				$column_class = ! empty( $settings['columns'][ $i ] ) ? sanitize_title( strip_tags( $settings['columns'][ $i ] ) ) : '';
 				echo '<td';
-				if ( $settings['reorder'] != '' ) {
+				if ( '' != $settings['reorder'] ) {
 					if ( $i == $settings['reorder'] ) {
-						echo ' class="pb_draghandle" align="center"';
+						echo ' align="center"';
+						$column_class .= ' pb_draghandle';
 					}
+				}
+				if ( $column_class ) {
+					echo sprintf( ' class="%s"', esc_attr( $column_class ) );
 				}
 				echo '>';
 
-				if ( ( $settings['reorder'] != '' ) && ( $i == ( $settings['reorder'] ) ) ) {
+				if ( $settings['reorder'] != '' && $i == $settings['reorder'] ) {
 					echo '<img src="' . pb_backupbuddy::plugin_url() . '/pluginbuddy/images/draghandle.png" alt="Click and drag to reorder">';
 				} else {
-					if ( $item[$i] == '' ) {
-						echo '&nbsp;';
-					} else {
-						echo $item[$i];
-					}
+					self::column_content( $item, $i, $item_id, $itemi, $settings, true );
 				}
 
 				echo '</td>';
 			}
 
-			echo '	</tr>';
+			echo '</tr>';
 		}
 
-		echo '	</tbody>';
+		echo '</tbody>';
 		echo '</table>';
 
 		// Display bulk actions (bottom).
-		bulk_actions( $settings, true );
+		bulk_actions( $settings, true, 'bulk-actions bottom-bulk-actions' );
 
-		echo '</div>';
-		if ( $settings['action'] != '' ) {
+		if ( true !== $settings['disable_wrapper'] ) {
+			echo '</div>';
+		}
+
+		if ( '' != $settings['action'] ) {
 			echo '</form>';
 		}
-	} // End list_table().
+	} // list_table.
 
+	/**
+	 * Try to find timestamp value.
+	 *
+	 * @param array $item  Row array.
+	 *
+	 * @return int  Row timestamp.
+	 */
+	public static function get_timestamp( $item ) {
+		$timestamp = '';
+		if ( ! is_array( $item ) ) {
+			if ( is_int( $item ) ) {
+				$timestamp = $item;
+			}
+		} elseif ( ! empty( $item[0][1] ) && is_int( $item[0][1] ) ) {
+			$timestamp = $item[0][1];
+		} elseif ( ! empty( $item[0] ) && is_int( $item[0] ) ) {
+			$timestamp = $item[0];
+		}
+
+		return (int) $timestamp;
+	}
+
+	/**
+	 * Check if comment found in row item.
+	 *
+	 * @param array $item  Row item array.
+	 *
+	 * @return string  Comment attribute.
+	 */
+	public static function get_comment( $item ) {
+		if ( ! is_array( $item ) || empty( $item[0] ) || ! is_array( $item[0] ) ) {
+			return '';
+		}
+		if ( empty( $item[0][2] ) ) {
+			return '';
+		}
+		return sprintf( ' title="%s"', esc_attr( $item[0][2] ) );
+	}
+
+	/**
+	 * Output Column headings in thead and tfoot.
+	 *
+	 * @param array $settings  Settings array.
+	 * @param bool  $echo      Echo or return output.
+	 *
+	 * @return string|null  Output or null if echoed.
+	 */
+	public static function column_headings( $settings, $echo = false ) {
+		$output = '<thead><tr class="thead">';
+		if ( count( $settings['bulk_actions'] ) > 0 ) {
+			$output .= '<th scope="col" class="check-column"><input type="checkbox" class="check-all-entries" /></th>';
+		}
+		foreach ( $settings['columns'] as $column ) {
+			$column_class = sanitize_title( strip_tags( $column ) );
+			$output      .= sprintf( '<th class="%s">%s</th>', $column_class, $column );
+		}
+		$output .= '</tr></thead>';
+
+		if ( true !== $settings['disable_tfoot'] ) {
+			$output .= '<tfoot><tr class="thead">';
+			if ( count( $settings['bulk_actions'] ) > 0 ) {
+				$output .= '<th scope="col" class="check-column"><input type="checkbox" class="check-all-entries" /></th>';
+			}
+			foreach ( $settings['columns'] as $column ) {
+				$column_class = str_replace( ' ', '_', strtolower( strip_tags( $column ) ) );
+				$output      .= sprintf( '<th class="%s">%s</th>', $column_class, $column );
+			}
+			$output .= '</tr></tfoot>';
+		}
+
+		if ( true !== $echo ) {
+			return $output;
+		}
+
+		echo $output;
+	}
+
+	/**
+	 * Output first column content.
+	 *
+	 * @param array $item      Row item array.
+	 * @param int   $item_id   Row item ID.
+	 * @param int   $itemi     Row item incrementer.
+	 * @param array $settings  Settings array.
+	 * @param bool  $echo      Return or echo the output.
+	 *
+	 * @return string|null  Output or null if echoed.
+	 */
+	public static function first_column_content( $item, $item_id, $itemi, $settings, $echo = false ) {
+		$output = '';
+		if ( is_array( $item[0] ) ) {
+			if ( isset( $item[0][1] ) && '' == $item[0][1] ) {
+				$output .= '&nbsp;';
+			} else {
+				$output .= $item[0][1];
+			}
+		} else {
+			if ( '' == $item[0] ) {
+				$output .= '&nbsp;';
+			} else {
+				$output .= $item[0];
+			}
+		}
+
+		$output = apply_filters( 'backupbuddy_list_table_first_column_content', apply_filters( 'backupbuddy_list_table_column_content', $output, $item, $item_id, $itemi, $settings ), $item, $item_id, $itemi, $settings );
+
+		$output .= self::hover_actions( $settings, $item, $item_id, $itemi );
+
+		if ( true !== $echo ) {
+			return $output;
+		}
+
+		echo $output;
+	}
+
+	/**
+	 * Output every other column content.
+	 *
+	 * @param array $item      Row item array.
+	 * @param int   $i         Column index.
+	 * @param int   $item_id   Row item ID.
+	 * @param int   $itemi     Row item incrementer.
+	 * @param array $settings  Settings array.
+	 * @param bool  $echo      Return or echo the output.
+	 *
+	 * @return string|null  Output or null if echoed.
+	 */
+	public static function column_content( $item, $i, $item_id, $itemi, $settings, $echo = false ) {
+		$output = '';
+		if ( '' == $item[ $i ] ) {
+			$output .= '&nbsp;';
+		} else {
+			$output .= $item[ $i ];
+		}
+
+		$output = apply_filters( 'backupbuddy_list_table_column_content', $output, $item, $i, $item_id, $itemi, $settings );
+
+		if ( true !== $echo ) {
+			return $output;
+		}
+
+		echo $output;
+	}
+
+	/**
+	 * Output Hover Actions.
+	 *
+	 * @param array $settings  Settings array.
+	 * @param array $item      Row item array.
+	 * @param int   $item_id   Row item ID.
+	 * @param int   $itemi     Row item incrementer.
+	 * @param bool  $echo      Return or echo the output.
+	 *
+	 * @return string|null  Output or null if echoed.
+	 */
+	public static function hover_actions( $settings, $item, $item_id, $itemi, $echo = false ) {
+		$output = '';
+
+		$settings['hover_actions'] = apply_filters( 'backupbuddy_list_table_hover_actions', $settings['hover_actions'], $item_id, $item, $itemi );
+
+		if ( $settings['hover_actions'] ) {
+			$output .= '<div class="row-actions" style="margin-top: 10px;">'; //  style="margin:0; padding:0;"
+		}
+
+		$i = 0;
+
+		foreach ( $settings['hover_actions'] as $action_slug => $action_title ) { // Display all hover actions.
+			$i++;
+			// If filter is set to not display edit link for first schedule. Don't show it.
+			if ( 1 === $itemi && ! empty( $settings['hide_edit_for_first_schedule'] ) && 'edit' == $action_slug ) {
+				continue;
+			}
+
+			if ( '' != $settings['hover_action_column_key'] ) {
+				if ( is_array( $item[ $settings['hover_action_column_key'] ] ) ) {
+					$hover_action_column_value = $item[ $settings['hover_action_column_key'] ][0];
+				} else {
+					$hover_action_column_value = $item[ $settings['hover_action_column_key'] ];
+				}
+			} else {
+				$hover_action_column_value = '';
+			}
+
+			if ( strstr( $action_slug, '/' ) === false ) { // Word hover action slug.
+				$action_url = ! empty( $settings['action'] ) ? $settings['action'] : pb_backupbuddy::page_url();
+				$hover_link = $action_url . '&' . $action_slug . '=' . $item_id;
+				if ( $hover_action_column_value ) {
+					$hover_link .= '&value=' . $hover_action_column_value;
+				}
+			} else { // URL hover action slug so just append value to URL.
+				$hover_link = $action_slug . $hover_action_column_value;
+			}
+
+			// Some hosts don't allow get params that end in .zip.
+			if ( '.zip' === strtolower( substr( $hover_link, -4 ) ) ) {
+				$hover_link .= '&bub_rand=' . rand( 100, 999 );
+			}
+
+			$output .= '<a href="' . $hover_link . '" class="pb_' . pb_backupbuddy::settings( 'slug' ) . '_hoveraction_' . $action_slug . '" rel="' . $hover_action_column_value . '">' . $action_title . '</a>';
+			if ( $i < count( $settings['hover_actions'] ) ) {
+				$output .= ' | ';
+			}
+		}
+		if ( $settings['hover_actions'] ) {
+			$output .= '</div>';
+		}
+
+		if ( true !== $echo ) {
+			return $output;
+		}
+
+		echo $output;
+	}
 
 	/**
 	 *	pb_backupbuddy::get_feed()
@@ -436,64 +639,76 @@ class pb_backupbuddy_ui {
 		}
 	} // End tip().
 
-
-
 	/**
-	 *	pb_backupbuddy::alert()
+	 * Displays a message to the user at the top of the page when in the dashboard.
 	 *
-	 *	Displays a message to the user at the top of the page when in the dashboard.
-	 *
-	 *	@param		string		$message		Message you want to display to the user.
-	 *	@param		boolean		$error			OPTIONAL! true indicates this alert is an error and displays as red. Default: false
-	 *	@param		int			$error_code		OPTIONAL! Error code number to use in linking in the wiki for easy reference.
-	 *	@return		null
+	 * @param string $message     Message you want to display to the user.
+	 * @param bool   $error       OPTIONAL! true indicates this alert is an error and displays as red. Default: false.
+	 * @param string $error_code  OPTIONAL! Error code number to use in linking in the wiki for easy reference.
+	 * @param string $rel_tag     Rel attribute value.
+	 * @param string $more_css    Additional inline styles.
+	 * @param array  $args        Array of additional arguments.
 	 */
-	public function alert( $message, $error = false, $error_code = '', $rel_tag = '', $more_css = '' ) {
+	public function alert( $message, $error = false, $error_code = '', $rel_tag = '', $more_css = '', $args = array() ) {
 		$log_error = false;
+		$id        = 'message';
+		$style     = '';
+		$rel       = '';
+		$classes   = 'pb_backupbuddy_alert';
 
-		echo '<div id="message" style="' . $more_css . '" rel="' . $rel_tag . '" class="pb_backupbuddy_alert ';
-		if ( $error === false ) {
-			echo 'updated fade';
+		if ( ! empty( $args['id'] ) ) {
+			$id = sprintf( ' id="%s"', esc_attr( $args['id'] ) );
+		}
+		if ( $rel_tag || ! empty( $args['rel'] ) ) {
+			$rel_tag = ! empty( $args['rel'] ) ? $args['rel'] : $rel_tag;
+			$rel     = sprintf( ' rel="%s"', esc_attr( $rel_tag ) );
+		}
+		if ( $more_css || ! empty( $args['css'] ) ) {
+			$more_css = ! empty( $args['css'] ) ? $args['css'] : $more_css;
+			$style    = sprintf( ' style="%s"', esc_attr( $more_css ) );
+		}
+		if ( ! empty( $args['class'] ) ) {
+			$classes .= ' ' . $args['class'];
+		}
+		if ( false === $error ) {
+			$classes .= ' updated fade';
 		} else {
-			echo 'error';
+			$classes  .= ' error';
 			$log_error = true;
 		}
-		if ( $error_code != '' ) {
-			$message .= ' <a href="https://ithemeshelp.zendesk.com/hc/en-us/articles/211132377-Error-Codes-#' . $error_code . '" target="_blank"><i>' . pb_backupbuddy::settings( 'name' ) . ' Error Code ' . $error_code . ' - Click for more details.</i></a>';
+
+		$alert = sprintf( '<div class="%s"%s%s%s>%%s</div>', esc_attr( $classes ), $id, $style, $rel );
+
+		if ( '' != $error_code ) {
+			$message  .= sprintf( ' <a href="https://ithemeshelp.zendesk.com/hc/en-us/articles/211132377-Error-Codes-#%s" target="_blank"><i>%s Error Code %s - Click for more details.</i></a>', esc_attr( $error_code ), esc_html( pb_backupbuddy::settings( 'name' ) ), esc_html( $error_code ) );
 			$log_error = true;
 		}
-		if ( $log_error === true ) {
-			pb_backupbuddy::log( $message . ' Error Code: ' . $error_code, 'error' );
+
+		if ( true === $log_error ) {
+			pb_backupbuddy::log( $message . sprintf( ' Error Code: %s', esc_html( $error_code ) ), 'error' );
 		}
-		echo '" >' . $message . '</div>';
+
+		echo sprintf( $alert, $message );
 	} // End alert().
 
-
-
 	/**
-	 *	pb_backupbuddy::disalert()
+	 * Displays a DISMISSABLE message to the user at the top of the page when in the dashboard.
 	 *
-	 *	Displays a DISMISSABLE message to the user at the top of the page when in the dashboard.
-	 *
-	 *	@param		string		$message		Message you want to display to the user.
-	 *	@param		boolean		$error			OPTIONAL! true indicates this alert is an error and displays as red. Default: false
-	 *	@param		int			$error_code		OPTIONAL! Error code number to use in linking in the wiki for easy reference.
-	 *	@return		null
+	 * @param string $unique_id  Unique Message ID.
+	 * @param string $message    Message you want to display to the user.
+	 * @param bool   $error      OPTIONAL! true indicates this alert is an error and displays as red. Default: false.
+	 * @param string $more_css   OPTIONAL! Error code number to use in linking in the wiki for easy reference.
+	 * @param array  $args       Array of additional args to pass.
 	 */
-	public function disalert( $unique_id, $message, $error = false, $more_css = '' ) {
-
-		if ( ( '' == $unique_id ) || ( ! isset( pb_backupbuddy::$options['disalerts'][$unique_id] ) ) ) {
+	public function disalert( $unique_id, $message, $error = false, $more_css = '', $args = array() ) {
+		if ( '' == $unique_id || ! isset( pb_backupbuddy::$options['disalerts'][ $unique_id ] ) ) {
 			$message = '<a style="float: right;" class="pb_backupbuddy_disalert" href="javascript:void(0);" title="' . __( 'Dismiss this alert. Unhide dismissed alerts on the Settings page.', 'it-l10n-backupbuddy' ) . '" alt="' . pb_backupbuddy::ajax_url( 'disalert' ) . '"><b>' . __( 'Dismiss', 'it-l10n-backupbuddy' ) . '</b></a><div style="margin-right: 120px;">' . $message . '</div>';
-			$this->alert( $message, $error, '', $unique_id, $more_css );
+			$this->alert( $message, $error, '', $unique_id, $more_css, $args );
 		} else {
 			echo '<!-- Previously Dismissed Alert: `' . htmlentities( $message ) . '` -->';
 		}
 
-		return;
-
-	} // End alert().
-
-
+	} // End disalert().
 
 	/**
 	 *	pb_backupbuddy::video()
@@ -714,19 +929,18 @@ class pb_backupbuddy_ui {
 	} // End end_tab().
 
 
-
-	/*	ajax_header()
+	/**
+	 * Output HTML headers when using AJAX.
 	 *
-	 *	Output HTML headers when using AJAX.
-	 *
-	 *	@param		boolean		$js			Whether or not to load javascript. Default false.
-	 *	@param		bool		$padding	Whether or not to padd wrapper div. Default has padding.
-	 *	@return
+	 * @param bool   $js          Whether or not to load javascript. Default false.
+	 * @param bool   $padding     Whether or not to padd wrapper div. Default has padding.
+	 * @param string $body_class  Body class.
 	 */
-	function ajax_header( $js = true, $padding = true ) {
+	public function ajax_header( $js = true, $padding = true, $body_class = '' ) {
+		echo '<html>';
 		echo '<head>';
 		echo '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />';
-		echo '<title>PluginBuddy</title>';
+		echo '<title>BackupBudddy iFrame</title>';
 
 		wp_print_styles( 'wp-admin' );
 		wp_print_styles( 'dashicons' );
@@ -747,7 +961,7 @@ class pb_backupbuddy_ui {
 		pb_backupbuddy::load_script( 'jquery-ui-tooltip', false );
 		pb_backupbuddy::load_style( 'jQuery-ui-1.11.2.css', true );
 
-		echo '<body class="wp-core-ui" style="background: inherit;">';
+		printf( '<body class="wp-core-ui %s" style="background: inherit;">', esc_attr( $body_class ) );
 		if ( $padding === true ) {
 			echo '<div class="bb-iframe-divpadding-noscroll" style="padding: 12px; padding-left: 20px; padding-right: 20px; overflow: scroll;">';
 		} else {
@@ -758,14 +972,14 @@ class pb_backupbuddy_ui {
 
 
 	function ajax_footer( $js_common = true ) {
-		echo '</body>';
 		echo '</div>';
-		echo '</head>';
 
 		if ( true === $js_common ) {
 			pb_backupbuddy::load_script( 'common' ); // Needed for table 'select all' feature.
 		}
 
+		echo '</body>';
+		echo '</head>';
 		echo '</html>';
 	} // End ajax_footer().
 

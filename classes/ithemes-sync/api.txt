@@ -244,7 +244,7 @@ backupbuddy-add-destination
 	Description:
 		Create a new destionation.
 	Arguments:
-		settings- (array) Destination settings for the new destinatino. This should be the complete destination settings array.
+		settings- (array) Destination settings for the new destination. This should be the complete destination settings array.
 					Defaults are applied by BackupBuddy whenever these settings are called so defaults shoudl not be mandatory.
 					These settings are NOT validated and are expected to be trusted and functional. Use the test verb for testing these same settings.
 					Accepts the exact settings also used for backupbuddy-test-destination verb.
@@ -317,7 +317,7 @@ backupbuddy-get-liveStats
 							[f_s] => 131533
 						)
 					)
-					
+
 backupbuddy-set-liveStatus
 	Description:
 		Pause/Resume BackupBuddy Stash Live status for continuous database and/or periodic scans (files).

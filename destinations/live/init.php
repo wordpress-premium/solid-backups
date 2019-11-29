@@ -275,8 +275,8 @@ class pb_backupbuddy_destination_live {
 			return false;
 		}
 
-		$settings['stash_mode'] = '1'; // Stash is calling the s32/s33 destination.
-		$settings['bucket'] = $response['bucket'];
+		$settings['stash_mode']  = '1'; // Stash is calling the s32/s33 destination.
+		$settings['bucket']      = $response['bucket'];
 		$settings['credentials'] = $response['credentials'];
 
 		if ( isset( $response['client_settings'] ) ) {
@@ -290,19 +290,21 @@ class pb_backupbuddy_destination_live {
 		$prefix = rtrim( $prefix, '/' );
 
 		if ( '' != $marker ) {
-			$marker = $prefix . $marker;
+			$settings['marker'] = $prefix . $marker;
 		}
 
-		$files = call_user_func_array( array( 'pb_backupbuddy_destination_s3' . $settings['destination_version'], 'listFiles' ), array( $settings, $prefix, $marker ) );
+		$settings['remote_path'] = $prefix;
+
+		$files = call_user_func_array( array( 'pb_backupbuddy_destination_s3' . $settings['destination_version'], 'get_files' ), array( $settings ) );
 		if ( ! is_array( $files ) ) {
 			pb_backupbuddy::status( 'error', 'Erorr #43894394734: listFiles() did not return array. Details: `' . print_r( $files ) . '`.' );
 			return array();
 		}
 
 		// Strip prefix from keys.
-		$prefixLen = strlen( $prefix );
-		foreach( $files as &$file ) {
-			$file['Key'] = substr( $file['Key'], $prefixLen );
+		$prefix_len = strlen( $prefix );
+		foreach ( $files as &$file ) {
+			$file['Key'] = substr( $file['Key'], $prefix_len );
 		}
 
 		return $files;
@@ -460,11 +462,13 @@ class pb_backupbuddy_destination_live {
 	 *
 	 */
 	public static function _formatSettings( $settings ) {
+		if ( ! is_array( $settings ) ) {
+			return $settings;
+		}
 
 		// Apply defaults.
 		$settings = array_merge( self::$default_settings, $settings );
 		return $settings;
-
 	} // End _formatSettings().
 
 } // End class.

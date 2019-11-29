@@ -48,7 +48,7 @@ jQuery( '.expander' ).click( function(){
 <div class="expander-box">
 	<a class="expander" href="javascript:void(0)">Source site has changed to the destination URL</a>
 	<div class="content">
-		This is caused if you restored over your source site database by entering the source site database settings on Step 3. This means that your new site AND your old site are now using the same database but the database has been migrated to work with the new URL. You may re-restore both the source and destination using correct settings or use the mass database replacement tool.  You may correct the modified URL on the source site by using the Server Tools page's Mass Text Replace tool within the Database tab.
+		This is caused if you restored over your source site database by entering the source site database settings on Step 3. This means that your new site AND your old site are now using the same database but the database has been migrated to work with the new URL. You may re-restore both the source and destination using correct settings or use the mass database replacement tool.  You may correct the modified URL on the source site by using the Diagnostics page's Mass Text Replace tool within the Database tab.
 	</div>
 </div>
 <div class="expander-box">
@@ -63,20 +63,20 @@ jQuery( '.expander' ).click( function(){
 
 <form onSubmit="jQuery('#cleanupSettings-restoreData').val( window.btoa( encodeURIComponent( JSON.stringify( window.restoreData ) ) ) );" action="?ajax=6" target="miniFrame" method="post"><!-- this form is only submitted after running through javascript. submitting actual form instead of using jQuery post so we can target iframe. -->
 	<input type="hidden" name="restoreData" id="cleanupSettings-restoreData" value="">
-	
-	
-	
+
+
+
 	<div class="main_box_foot">
-		
+
 		<h3>Site Search Engine Visibility</h3>
 		<div style="display: inline-block; text-align: left;">
 			<label for="set_blog_public-keep" style="font-size: 12px;"><input type="radio" name="set_blog_public" id="set_blog_public-keep" value="" checked="checked">No change (default): <%=sourceSitePublicStatusText%></label><br>
 			<label for="set_blog_public-public" style="font-size: 12px;"><input type="radio" name="set_blog_public" id="set_blog_public-public" value="1">Public - Do not discourage search engines from indexing this site</label><br>
 			<label for="set_blog_public-private" style="font-size: 12px;"><input type="radio" name="set_blog_public" id="set_blog_public-private" value="0">Private - Discourage search engines from indexing this site</label><br>
 		</div>
-			
+
 		<br><br>
-		
+
 		<h3>ImportBuddy Cleanup:</h3>
 		<table style="margin-left: auto; margin-right: auto; text-align: left;"><tr><td>
 			<label for="delete_backup" style="width: auto; font-size: 12px;"><input type="checkbox" name="delete_backup" id="delete_backup" value="1" checked> Delete backup zip archive</label>
@@ -89,11 +89,11 @@ jQuery( '.expander' ).click( function(){
 			<br>
 			<label for="delete_importbuddylog" style="width: auto; font-size: 12px;"><input type="checkbox" name="delete_importbuddylog" id="delete_importbuddylog" value="1" checked> Delete importbuddy.txt log file</label>
 		</td></tr></table>
-		
+
 		<br>
 		<center>
 			<input type="submit" name="nextStep" value="Finish Cleanup" class="it-button pb_database_next_test">
 		</center>
-	
+
 	</div>
 </form>

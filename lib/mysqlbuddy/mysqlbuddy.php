@@ -329,7 +329,7 @@ class pb_backupbuddy_mysqlbuddy {
 		if ( ( '' != $max_execution ) && ( is_numeric( $max_execution ) ) ) {
 			$this->_maxExecutionTime = $max_execution;
 		} else { // Not passed. Deduce.
-			if ( isset( pb_backupbuddy::$options['max_execution_time'] ) ) {
+			if ( ! empty( pb_backupbuddy::$options['max_execution_time'] ) ) {
 				$this->_maxExecutionTime = pb_backupbuddy::$options['max_execution_time'];
 			} else {
 				// Detect max execution time.
@@ -1180,7 +1180,7 @@ class pb_backupbuddy_mysqlbuddy {
 						}
 					}
 
-					return array( $fs_pointer, $query_count, $failed_queries, ( microtime( true ) - $this->time_start ) ); // filepointer location, number of queries done this pass, number of sql qeuries that failed, elapsed time during the import.
+					return array( $fs_pointer, $query_count, $failed_queries, ( microtime( true ) - $this->time_start ) ); // filepointer location, number of queries done this pass, number of sql queries that failed, elapsed time during the import.
 				} // End if.
 			}
 		} // end while.

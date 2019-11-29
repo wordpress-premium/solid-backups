@@ -37,7 +37,7 @@ if ( 'push' === pb_backupbuddy::_GET( 'direction' ) ) {
 if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
 	pb_backupbuddy::$ui->title( 'Deploy Site' . $direction_text );
 } else {
-	pb_backupbuddy::$ui->title( 'Create Backup' );
+	pb_backupbuddy::$ui->title( 'Create Backup', true, false );
 }
 
 if ( 'true' == pb_backupbuddy::_GET( 'quickstart_wizard' ) && ( true !== apply_filters( 'itbub_hide_quickwizard') ) ) {
@@ -99,6 +99,8 @@ if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
 		$profile_array['skip_database_dump'] = '1';
 	}
 }
+
+$is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanitize_text_field( wp_unslash( $_GET['callback_data'] ) );
 
 ?>
 <style>
@@ -663,7 +665,7 @@ if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
 					thisSuggestion = {
 						description: 'BackupBuddy uses WordPress\' scheduling system (cron) for running each backup step. Sometimes something interferes with this scheduling preventing the next step from running.',
 						quickFix: 'If there are delays but the backup proceeds anyway then you can ignore this. If not, you will need to narrow down the problem first.',
-						solution: 'Narrow down the problem: Check "Server Tools --> wp-cron.php Loopbacks" for more info. Run BackupBuddy in classic mode which bypasses the cron. Navigate to Settings: Advanced Settings / Troubleshooting tab: Change "Default global backup method" to Classic Mode (v1.x). If either of these fixes it, another plugin is most likely the cause is a malfunctioning plugin or a server problem. Disable all other plugins to see if this solves the problem. If it does then it is a problem plugin. Enable one by one until the problem returns to determine the culprit.'
+						solution: 'Narrow down the problem: Check "Diagnostics --> wp-cron.php Loopbacks" for more info. Run BackupBuddy in classic mode which bypasses the cron. Navigate to Settings: Advanced Settings / Troubleshooting tab: Change "Default global backup method" to Classic Mode (v1.x). If either of these fixes it, another plugin is most likely the cause is a malfunctioning plugin or a server problem. Disable all other plugins to see if this solves the problem. If it does then it is a problem plugin. Enable one by one until the problem returns to determine the culprit.'
 					};
 					suggestions['cronPass'] = thisSuggestion;
 					backupbuddy_showSuggestions( [thisSuggestion] );
@@ -911,7 +913,9 @@ if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
 		<div class="bb_destinations">
 			<div class="bb_destinations-group bb_destinations-existing">
 				<h3>Send to one of your existing destinations?</h3>
-				<label><input type="checkbox" name="delete_after" id="pb_backupbuddy_remote_delete" value="1">Delete local backup after successful delivery?</label>
+				<?php if ( ! $is_importbuddy ) : ?>
+					<label><input type="checkbox" name="delete_after" id="pb_backupbuddy_remote_delete" value="1">Delete local backup after successful delivery?</label>
+				<?php endif; ?>
 				<ul>
 					<?php
 					foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => $destination ) {

@@ -8,7 +8,7 @@
 backupbuddy_core::verifyAjaxAccess();
 
 require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
-pb_backupbuddy::$ui->ajax_header( true, false );
+pb_backupbuddy::$ui->ajax_header( true, false, 'destination-tabs' );
 
 pb_backupbuddy::load_style( 'admin.js' );
 pb_backupbuddy::load_style( 'admin' );
@@ -16,14 +16,11 @@ pb_backupbuddy::load_style( 'destination_picker.css' );
 pb_backupbuddy::load_script( 'jquery' );
 pb_backupbuddy::load_script( 'jquery-ui-core' );
 pb_backupbuddy::load_script( 'jquery-ui-widget' );
+pb_backupbuddy::load_script( 'backupbuddy.min.js' );
+pb_backupbuddy::load_style( 'backupbuddy-core.css' );
 
 pb_backupbuddy::load_style( 'backupProcess.css' );
 pb_backupbuddy::load_style( 'backupProcess2.css' );
-
-$default_tab = 0;
-if ( is_numeric( pb_backupbuddy::_GET( 'tab' ) ) ) {
-	$default_tab = pb_backupbuddy::_GET( 'tab' );
-}
 
 // Destinations may hide the add and test buttons by altering these variables.
 global $pb_hide_save;
@@ -32,21 +29,18 @@ $pb_hide_save = false;
 $pb_hide_test = false;
 $mode         = 'destination';
 
-if ( '' != pb_backupbuddy::_GET( 'alert_notice' ) ) {
-	pb_backupbuddy::alert( htmlentities( pb_backupbuddy::_GET( 'alert_notice' ) ) );
-	echo '<br>';
-}
-
 $picker_url = pb_backupbuddy::ajax_url( 'destinationTabs' );
 if ( 'migration' == $mode ) {
 	$picker_url = pb_backupbuddy::ajax_url( 'migration_picker' );
+} elseif ( pb_backupbuddy::_GET( 'tab' ) ) {
+	$picker_url .= pb_backupbuddy::_GET( 'tab' );
 }
 ?>
 
 <script>
 	jQuery(function() {
 
-		jQuery( '.bb-tab-add_new' ).click( function(){
+		jQuery( '.tab.add-new a' ).on( 'click', function(){
 			jQuery( '.bb_destinations-adding' ).hide();
 			jQuery( '.bb_destinations' ).show();
 		});
@@ -79,25 +73,27 @@ if ( 'migration' == $mode ) {
 			jQuery(this).closest('form').find( '.pb_backupbuddy_destpicker_saveload' ).show();
 			jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'remote_save' ); ?>&pb_backupbuddy_destinationid=' + pb_remote_id, jQuery(this).parent( 'form' ).serialize(),
 				function(data) {
-					data = jQuery.trim( data );
+					//data = jQuery.trim( data );
 
-					if ( data == 'Destination Added.' ) {
-						<?php if ( pb_backupbuddy::_GET( 'quickstart' ) != '' ) { ?>
-							var win = window.dialogArguments || opener || parent || top;
-							win.pb_backupbuddy_quickstart_destinationselected();
-							win.tb_remove();
-							return false;
-						<?php } ?>
+					if ( data.success ) {
+						if ( 'added' === data.status ) {
+							<?php if ( pb_backupbuddy::_GET( 'quickstart' ) != '' ) { ?>
+								var win = window.dialogArguments || opener || parent || top;
+								win.pb_backupbuddy_quickstart_destinationselected();
+								win.tb_remove();
+								return false;
+							<?php } ?>
 
-						window.location.href = '<?php echo $picker_url . '&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ); ?>&sending=<?php echo pb_backupbuddy::_GET( 'sending' ); ?>&alert_notice=' + encodeURIComponent( 'New destination successfully added.' );
-					} else if ( data == 'Settings saved.' ) {
-						jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
-						jQuery( '.nav-tab-active' ).find( '.destination_title' ).text( new_title );
-						configToggler.toggle();
-						configToggler.closest('.backupbuddy-destination-wrap').find( 'iframe' ).attr( 'src', function ( i, val ) { return val; }); // Refresh iframe.
+							window.location.href = '<?php echo $picker_url . '&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ); ?>&sending=<?php echo pb_backupbuddy::_GET( 'sending' ); ?>&alert_notice=' + encodeURIComponent( 'New destination successfully added.' );
+						} else if ( 'saved' === data.status ) {
+							jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
+							jQuery( '.nav-tab-active' ).find( '.destination_title' ).text( new_title );
+							configToggler.toggle();
+							configToggler.closest('.backupbuddy-destination-wrap').find( 'iframe' ).attr( 'src', function ( i, val ) { return val; }); // Refresh iframe.
+						}
 					} else {
 						jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
-						alert( "Error: \n\n" + data );
+						alert( "Error: \n\n" + data.error );
 					}
 
 				}
@@ -151,7 +147,7 @@ if ( 'migration' == $mode ) {
 			return false;
 		} );
 
-		jQuery( '.bb_destination_config_icon' ).click( function(e){
+		jQuery( '.bb_destination_config_icon' ).on( 'click', function(e){
 			e.preventDefault();
 			jQuery( '.backupbuddy-destination-wrap[data-destination_id="' + jQuery(this).attr('data-id') + '"]' ).find( '.backupbuddy-destination-config' ).toggle();
 		});
@@ -159,85 +155,73 @@ if ( 'migration' == $mode ) {
 	});
 </script>
 
-<style>
-	.pb_backupbuddy_destpicker_testload {
-		display: none;
-		vertical-align: -2px;
-		margin-left: 10px;
-		width: 12px;
-		height: 12px;
-	}
-	.pb_backupbuddy_destpicker_saveload,.pb_backupbuddy_destpicker_deleteload {
-		display: none;
-		vertical-align: -4px;
-		margin-left: 5px;
-		width: 16px;
-		height: 16px;
-	}
-	.bb_destination_config_icon::before {
-		-webkit-font-smoothing: antialiased;
-		font-family: 'dashicons';
-		font-size: 18px;
-		color: #BBB;
-		vertical-align: top;
-		margin-left: 5px;
-		content: "\f111"; /* dash */
-	}
-	.bb_destination_config_icon:hover::before {
-		color: #888;
-	}
-</style>
-
 <?php
+$active_tab = pb_backupbuddy::_GET( 'tab' );
 
-$destination_tabs = array();
+echo '<div class="backupbuddy-tabs">';
+
+echo '<ul class="tab-controls">';
+
+$first = true;
 foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => $destination ) {
 	if ( 'live' == $destination['type'] ) { // Hide Live from tab listing.
 		continue;
 	}
 
+	$href             = '#destination-' . $destination['type'] . '-' . $destination_id;
 	$title_style      = '';
 	$hover_title_text = __( 'Destination type', 'it-l10n-backupbuddy' ) . ': ' . $destination['type'] . '. ID: ' . $destination_id;
-	if ( isset( $destination['disabled'] ) && ( '1' == $destination['disabled'] ) ) {
+	if ( isset( $destination['disabled'] ) && '1' == $destination['disabled'] ) {
 		$title_style       = 'text-decoration: line-through';
 		$hover_title_text .= ' [' . __( 'DISABLED', 'it-l10n-backupbuddy' ) . ']';
 	}
-	$destination_tabs[] = array(
-		'title' => '<span title="' . esc_attr( $hover_title_text ) . '"><img src="' . pb_backupbuddy::plugin_url() . '/destinations/' . esc_attr( $destination['type'] ) . '/icon50.png" width="16" height="16" style="vertical-align: -2px;"> <span class="destination_title" style="' . esc_attr( $title_style ) . '">' . esc_html( $destination['title'] ) . '</span> <span class="bb_destination_config_icon" data-id="' . esc_attr( $destination_id ) . '" title="Show configuration options"></span></span>',
-		'slug'  => 'destination_' . $destination['type'] . '_' . $destination_id,
-	);
+	$label = '<span title="' . esc_attr( $hover_title_text ) . '" class="destination_title" style="' . esc_attr( $title_style ) . '">' . esc_html( $destination['title'] ) . '<span class="bb_destination_config_icon" data-id="' . esc_attr( $destination_id ) . '" title="Show configuration options"></span>';
+
+	$class  = ' ' . sanitize_title( strip_tags( $label ) );
+	$class .= ' type-' . esc_attr( $destination['type'] );
+	if ( $active_tab ) {
+		$class .= ( '#' . $active_tab === $href ) ? ' active' : '';
+	} else {
+		$class .= $first ? ' active' : '';
+	}
+
+	printf( '<li class="tab%s"><a href="%s">%s</a>', esc_attr( $class ), esc_attr( $href ), $label );
+	$first = false;
 }
 
 if ( false === apply_filters( 'itbub_disable_add_destination_tab', false ) ) {
-	$destination_tabs[] = array(
-		'title' => '<span class="dashicons dashicons-plus" style="vertical-align: middle;"></span> ' . esc_html__( 'Add New', 'it-l10n-backupbuddy' ) . '&nbsp;',
-		'slug'  => 'add_new',
-	);
+	$add_href  = '#add';
+	$add_label = esc_html__( 'Add New', 'it-l10n-backupbuddy' );
+	$add_class = ' add-new';
+	if ( '#' . $active_tab === $add_href ) {
+		$add_class .= ' active';
+	} elseif ( $first ) {
+		$add_class .= ' active';
+	}
+	printf( '<li class="tab%s"><a href="%s">%s</a>', esc_attr( $add_class ), esc_attr( $add_href ), $add_label );
 }
 
-pb_backupbuddy::$ui->start_tabs(
-	'destinations',
-	$destination_tabs,
-	'width: 100%;',
-	true,
-	$default_tab
-);
+echo '</ul>';
 
+
+if ( '' != pb_backupbuddy::_GET( 'alert_notice' ) ) {
+	pb_backupbuddy::alert( htmlentities( pb_backupbuddy::_GET( 'alert_notice' ) ) );
+}
+
+$first = true;
 foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => $destination ) {
-	pb_backupbuddy::$ui->start_tab( 'destination_' . $destination['type'] . '_' . $destination_id );
+	if ( 'live' == $destination['type'] ) { // Hide Live from tab listing.
+		continue;
+	}
+
+	$tab_id = 'destination-' . $destination['type'] . '-' . $destination_id;
+	$class  = ( ( ! $active_tab && $first ) || $tab_id === $active_tab ) ? ' active' : '';
+	printf( '<div id="%s" class="tab-contents%s">', esc_attr( $tab_id ), esc_attr( $class ) );
 
 	echo '<div class="backupbuddy-destination-wrap" data-destination_id="' . esc_attr( $destination_id ) . '">';
 
 	// SETTINGS CONFIG FORM.
-	echo '<div class="backupbuddy-destination-config" style="
-		display: none;
-		border: 1px solid rgb(229, 229, 229);
-		-webkit-box-shadow: rgba(0, 0, 0, 0.0392157) 0px 1px 1px;
-		box-shadow: rgba(0, 0, 0, 0.0392157) 0px 1px 1px;
-		padding: 20px;
-		margin-bottom: 40px;
-		background: rgb(255, 255, 255);
-	">';
+	echo '<div class="backupbuddy-destination-config" style="display: none;">';
 	echo '<h3 style="margin-left: 0;">' . esc_html__( 'Destination Settings', 'it-l10n-backupbuddy' ) . '</h3>';
 	$settings = pb_backupbuddy_destinations::configure( $destination, 'edit', $destination_id );
 	if ( false === $settings ) {
@@ -265,10 +249,12 @@ foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => 
 	echo '<iframe id="pb_backupbuddy_iframe-dest-' . esc_attr( $destination_id ) . '" src="' . esc_attr( $url ) . '" width="100%" height="3000" frameBorder="0">Error #4584594579. Browser not compatible with iframes.</iframe>';
 	echo '</div><!-- .backupbuddy-destination-wrap -->';
 
-	pb_backupbuddy::$ui->end_tab();
+	echo '</div><!-- #' . esc_html( $tab_id ) . '-->';
+
+	$first = false;
 }
 
-pb_backupbuddy::$ui->start_tab( 'add_new' );
+printf( '<div id="add" class="tab-contents%s">', ( 'add' === $active_tab || $first ? ' active' : '' ) );
 
 $destination_type = pb_backupbuddy::_GET( 'add' );
 
@@ -296,6 +282,9 @@ require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
 				if ( 'live' == $destination['type'] ) {
 					continue;
 				}
+				if ( empty( $destination['name'] ) ) {
+					continue;
+				}
 
 				$disable_class = '';
 				if ( true !== $destination['compatible'] ) {
@@ -314,21 +303,23 @@ require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
 				}
 				$this_dest .= '</a></li>';
 
-				if ( isset( $destination['category'] ) && 'best' == $destination['category'] ) {
+				$category = isset( $destination['category'] ) ? $destination['category'] : false;
+
+				if ( 'best' === $category ) {
 					$best .= $this_dest;
 					$best_count++;
 					if ( $best_count > 4 ) {
 						$best      .= '<span class="bb_destination-break"></span>';
 						$best_count = 0;
 					}
-				} elseif ( isset( $destination['category'] ) && 'legacy' == $destination['category'] ) {
+				} elseif ( 'legacy' === $category ) {
 					$legacy .= $this_dest;
 					$legacy_count++;
 					if ( $legacy_count > 4 ) {
 						$legacy      .= '<span class="bb_destination-break"></span>';
 						$legacy_count = 0;
 					}
-				} else {
+				} elseif ( 'normal' === $category ) {
 					$normal .= $this_dest;
 					$normal_count++;
 					if ( $normal_count > 4 ) {
@@ -350,15 +341,15 @@ require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
 
 		<h3><?php esc_html_e( 'Discontinued', 'it-l10n-backupbuddy' ); ?></h3>
 		<br>
-		<span class="description"><?php esc_html_e( 'Stash (v1) and Dropbox (v1) destinations have been discontinued as these legacy APIs have been discontinued by their providers. Please use their newer respective versions instead.', 'it-l10n-backupbuddy' ); ?></span>
+		<span class="description"><?php esc_html_e( 'Stash (v1), Dropbox (v1), and AmazonS3 (v1) destinations have been discontinued as these legacy APIs have been discontinued by their providers. Please use their newer respective versions instead.', 'it-l10n-backupbuddy' ); ?></span>
 	</div>
 </div>
 <div class="bb_destinations-adding"></div>
 <?php
-pb_backupbuddy::$ui->end_tab();
+echo '</div><!-- #add.tab -->';
 
-echo '<br style="clear: both;"><br><br>';
-pb_backupbuddy::$ui->end_tabs();
+echo '</div><!-- .tabs-container -->';
+echo '</div><!-- .backupbuddy-tabs -->';
 
 pb_backupbuddy::$ui->ajax_footer();
 die();

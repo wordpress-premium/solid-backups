@@ -1,6 +1,6 @@
 <?php
 /**
- * Server Tools Page Server Info
+ * Diagnostics Page Server Info
  *
  * @package BackupBuddy
  */
@@ -12,29 +12,29 @@
 	}
 </style>
 <script>
-jQuery(function() {
+jQuery(function( $ ) {
 	function bb_isNumber( n ) {
 		return !isNaN(parseFloat(n)) && isFinite(n);
 	};
 
-	jQuery('.pb_backupbuddy_testErrorLog').on( 'click', function(e) {
-		jQuery( '.pb_backupbuddy_loading' ).show();
-		jQuery.post( jQuery(this).attr( 'rel' ), { function: 'testErrorLog' },
+	$('.pb_backupbuddy_testErrorLog').on( 'click', function(e) {
+		$( '.pb_backupbuddy_loading' ).show();
+		$.post( $(this).attr( 'rel' ), { function: 'testErrorLog' },
 			function(data) {
-				jQuery( '.pb_backupbuddy_loading' ).hide();
+				$( '.pb_backupbuddy_loading' ).hide();
 				alert( data );
 			}
 		);
 		return false;
 	});
 
-	jQuery( '.pb_backupbuddy_testPHPRuntime' ).on( 'click', function(e){
-		loading = jQuery(this).children( '.pb_backupbuddy_loading' );
-		serializedForm = jQuery(this).closest( 'form' ).serialize();
+	$( '.pb_backupbuddy_testPHPRuntime' ).on( 'click', function(e){
+		loading = $(this).children( '.pb_backupbuddy_loading' );
+		serializedForm = $(this).closest( 'form' ).serialize();
 
 		testPHPRuntimeInterval = setInterval( function(){
 			loading.show();
-			jQuery.post(
+			$.post(
 				'<?php echo pb_backupbuddy::ajax_url( 'run_php_runtime_test_results' ); ?>',
 				serializedForm,
 				function(data) {
@@ -50,13 +50,13 @@ jQuery(function() {
 		}, 5000 );
 	});
 
-	jQuery( '.pb_backupbuddy_testPHPMemory' ).on( 'click', function(e){
-		loading = jQuery(this).children( '.pb_backupbuddy_loading' );
-		serializedForm = jQuery(this).closest( 'form' ).serialize();
+	$( '.pb_backupbuddy_testPHPMemory' ).on( 'click', function(e){
+		loading = $(this).children( '.pb_backupbuddy_loading' );
+		serializedForm = $(this).closest( 'form' ).serialize();
 
 		testPHPMemoryInterval = setInterval( function(){
 			loading.show();
-			jQuery.post(
+			$.post(
 				'<?php echo pb_backupbuddy::ajax_url( 'run_php_memory_test_results' ); ?>',
 				serializedForm,
 				function(data) {
@@ -72,13 +72,13 @@ jQuery(function() {
 		}, 5000 );
 	});
 
-	jQuery('.pb_backupbuddy_refresh_stats').on( 'click', function(e) {
-		loading = jQuery(this).children( '.pb_backupbuddy_loading' );
+	$('.pb_backupbuddy_refresh_stats').on( 'click', function(e) {
+		loading = $(this).children( '.pb_backupbuddy_loading' );
 		loading.show();
 
-		result_obj = jQuery( '#pb_stats_' + jQuery(this).attr( 'rel' ) );
+		result_obj = $( '#pb_stats_' + $(this).attr( 'rel' ) );
 
-		jQuery.post( jQuery(this).attr( 'alt' ), jQuery(this).closest( 'form' ).serialize(),
+		$.post( $(this).attr( 'alt' ), $(this).closest( 'form' ).serialize(),
 			function(data) {
 				loading.hide();
 				result_obj.html( data );
@@ -132,14 +132,14 @@ jQuery(function() {
 </table>
 <br>
 <center>
-<?php
-if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
-	echo '<a href="#TB_inline?width=640&#038;height=600&#038;inlineId=pb_serverinfotext_modal" class="button button-secondary button-tertiary thickbox" title="Server Information Results">Display Server Configuration in Text Format</a> &nbsp;&nbsp;&nbsp; ';
-	echo '<a href="' . pb_backupbuddy::ajax_url( 'pinfo' ) . '&#038;TB_iframe=1&#038;width=640&#038;height=600" class="thickbox button secondary-button" title="' . esc_html__( 'Display Extended PHP Settings via phpinfo()', 'it-l10n-backupbuddy' ) . '">' . esc_html__( 'Display Extended PHP Settings via phpinfo()', 'it-l10n-backupbuddy' ) . '</a>';
-} else {
-	echo '<a id="serverinfotext" class="button button-secondary button-tertiary button-primary thickbox toggle" title="Server Information Results">Display Results in Text Format</a> &nbsp;&nbsp;&nbsp; ';
-}
-?>
+	<?php
+	if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
+		echo '<a href="#TB_inline?width=640&#038;height=600&#038;inlineId=pb_serverinfotext_modal" class="button button-secondary button-tertiary thickbox" title="Server Information Results">Display Server Configuration in Text Format</a> &nbsp;&nbsp;&nbsp; ';
+		echo '<a href="' . pb_backupbuddy::ajax_url( 'pinfo' ) . '&#038;TB_iframe=1&#038;width=640&#038;height=600" class="thickbox button secondary-button" title="' . esc_html__( 'Display Extended PHP Settings via phpinfo()', 'it-l10n-backupbuddy' ) . '">' . esc_html__( 'Display Extended PHP Settings via phpinfo()', 'it-l10n-backupbuddy' ) . '</a>';
+	} else {
+		echo '<a id="serverinfotext" class="button button-secondary button-tertiary button-primary thickbox toggle" title="Server Information Results">Display Results in Text Format</a> &nbsp;&nbsp;&nbsp; ';
+	}
+	?>
 </center>
 <br>
 
@@ -148,14 +148,15 @@ $div_id         = ! defined( 'PB_IMPORTBUDDY' ) ? 'pb_serverinfotext_modal' : 't
 $textarea_width = ! defined( 'PB_IMPORTBUDDY' ) ? '100%' : '95%';
 ?>
 <div id="<?php echo esc_attr( $div_id ); ?>" style="display: none;">
+	<?php if ( ! defined( 'PB_IMPORTBUDDY' ) ) : ?>
+		<h3><?php esc_html_e( 'Server Information Results', 'it-l10n-backupbuddy' ); ?></h3>
+	<?php endif; ?>
+	<textarea style="width: <?php echo esc_attr( $textarea_width ); ?>; height: 300px;" wrap="off">
 		<?php
-		if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
-			echo '<h3>' . esc_html__( 'Server Information Results', 'it-l10n-backupbuddy' ) . '</h3>';
-		}
-		echo '<textarea style="width: ' . esc_attr( $textarea_width ) . '; height: 300px;" wrap="off">';
-		foreach ( $tests as $test ) {
+		foreach ( $tests as $test ) :
 			echo '[' . esc_html( $test['status'] ) . ']     ' . esc_html( $test['title'] ) . '   =   ' . esc_html( strip_tags( $test['value'] ) ) . "\n";
-		}
+		endforeach;
+		unset( $tests );
 		?>
-		</textarea>
+	</textarea>
 </div>

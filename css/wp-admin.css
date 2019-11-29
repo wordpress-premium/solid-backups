@@ -1,3 +1,27 @@
+.bb-topbar-title {
+	margin-left: -20px;
+	background: #2ea2cc;
+	font-size: 2em;
+	padding: 20px;
+	color: #fff;
+	font-weight: 100 !important;
+}
+
+.bb-topbar-title strong {
+	font-weight: 800 !important;
+}
+.bb-topbar-title > span {
+	float: right;
+	text-transform: initial;
+	font-size: 0.7em;
+	opacity: 0.4;
+	/* letter-spacing: 0.5px; */
+}
+.bb-topbar-title > span > span {
+	margin-right: 2px;
+	font-size: 0.9em;
+}
+
 .backupbuddy-recent-activity-details {
 	word-wrap: initial;
 	width: 100%;
@@ -32,35 +56,9 @@
 	}
 }
 
-@font-face {
-	font-family: 'backupbuddy';
-	src:url('fonts/backupbuddy.eot');
-	src:url('fonts/backupbuddy.eot?#iefix') format('embedded-opentype'),
-		url('fonts/backupbuddy.ttf') format('truetype'),
-		url('fonts/backupbuddy.woff') format('woff'),
-		url('fonts/backupbuddy.svg#backupbuddy') format('svg');
-	font-weight: normal;
-	font-style: normal;
-}
-
 .backupbuddy-tabs-wrap .nav-tab-wrapper {
 	border-bottom: 1px solid #ccc;
 }
-.backupbuddy-icon-drive:before {
-	font-family: 'backupbuddy' !important;
-	speak: none;
-	font-style: normal;
-	font-weight: normal;
-	font-variant: normal;
-	text-transform: none;
-
-	/* Better Font Rendering =========== */
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
-
-	content: "\e600" !important;
-}
-
 
 .backupbuddy-progressbar {
 	position: relative;

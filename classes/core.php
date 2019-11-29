@@ -12,7 +12,12 @@
  */
 class backupbuddy_core {
 
-	private static $_cachedLogDirectory = ''; // Cached log dir for getLogDirectory() to prevent having to call WP to retrieve.
+	/**
+	 * Cached log dir for getLogDirectory() to prevent having to call WP to retrieve.
+	 *
+	 * @var string
+	 */
+	private static $_cachedLogDirectory = '';
 
 	public static $warn_plugins = array(
 		'w3-total-cache.php' => 'W3 Total Cache',
@@ -119,7 +124,6 @@ class backupbuddy_core {
 		return $check->integrity_array;
 	} // End backup_integrity_check().
 
-
 	/**
 	 * Returns the backup serial based on the filename.
 	 *
@@ -140,6 +144,109 @@ class backupbuddy_core {
 
 	} // End get_serial_from_file().
 
+	/**
+	 * Get Backup Information from File name.
+	 *
+	 * @param string $file  Zip file or path to zip.
+	 * @param string $info  Specific info to return.
+	 *
+	 * @return array|string  Info array or info contents.
+	 */
+	public static function parse_file( $file, $info = false ) {
+		if ( false === strpos( $file, '.zip' ) ) {
+			// Invalid file.
+			return false;
+		}
+
+		$segments = explode( '-', substr( basename( $file ), 0, -4 ) );
+		$return   = array();
+		$defaults = array(
+			'source'    => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'domain'    => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'profile'   => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'date'      => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'time'      => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'type'      => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'serial'    => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'timestamp' => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'datetime'  => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'id'        => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'nicename'  => __( 'Unknown', 'it-l10n-backupbuddy' ),
+		);
+
+		$total_segments = count( $segments );
+		$rev_segments   = array_reverse( $segments );
+
+		// We need a minimum of 5 segments.
+		if ( $total_segments >= 5 ) {
+			$return = array(
+				'source' => $segments[0], // Usually "backup" or "snapshot".
+				'type'   => strtolower( $rev_segments[1] ),
+				'serial' => $rev_segments[0],
+				'id'     => $rev_segments[0], // Alias ID for serial.
+			);
+
+			$last_seg   = $total_segments - 5; // 5 represents serial, type, date, time plus one more.
+			$maybe_date = $rev_segments[2];
+
+			if ( is_numeric( $maybe_date ) ) { // timestamp.
+				$return['timestamp'] = (int) $maybe_date;
+				$last_seg++; // Bump up one for missing date.
+			} elseif ( false !== strtotime( str_replace( '_', '-', $maybe_date ) ) || false !== strtotime( str_replace( '_', ':', $maybe_date ) ) ) {
+				if ( false !== strtotime( str_replace( '_', '-', $rev_segments[3] ) ) ) { // date and time.
+					$return['date'] = str_replace( '_', '-', $rev_segments[3] );
+					$return['time'] = str_replace( '_', ':', $maybe_date );
+				} else { // just date.
+					$return['date'] = str_replace( '_', '-', $maybe_date );
+					$last_seg--; // drop down one for missing time.
+				}
+			} else { // Support for profile.
+				$return['profile'] = $maybe_date;
+				$maybe_date        = $rev_segments[3];
+
+				if ( is_numeric( $maybe_date ) ) { // Timestamp.
+					$return['timestamp'] = (int) $maybe_date;
+				} elseif ( false !== strtotime( str_replace( '_', '-', $rev_segments[4] ) ) ) { // date and time.
+					$return['date'] = str_replace( '_', '-', $rev_segments[4] );
+					$return['time'] = str_replace( '_', ':', $maybe_date );
+					$last_seg--; // we have 1 extra (profile), so bump down one.
+				} else { // just date.
+					$return['date'] = str_replace( '_', '-', $maybe_date );
+				}
+			}
+
+			// Domain is anything between the first element and the last determined value.
+			$domain           = implode( '-', array_slice( $segments, 1, $last_seg ) );
+			$return['domain'] = str_replace( '_', '.', $domain );
+
+			if ( ! empty( $return['date'] ) ) {
+				$time                = ! empty( $return['time'] ) ? ' ' . $return['time'] : '';
+				$return['timestamp'] = (int) strtotime( $return['date'] . $time );
+			}
+			if ( ! empty( $return['timestamp'] ) ) {
+				$return['datetime'] = date( 'Y-m-d H:i:s', $return['timestamp'] );
+			}
+
+			// Normalize date/time.
+			if ( ! empty( $return['timestamp'] ) ) {
+				$return['date']     = date( 'Y-m-d', $return['timestamp'] );
+				$return['time']     = date( 'H:i:s', $return['timestamp'] );
+				$return['nicename'] = pb_backupbuddy::$format->date( $return['timestamp'], 'l, F j, Y g:ia' );
+			}
+		}
+
+		$return = array_merge( $defaults, $return );
+
+		if ( false === $info ) {
+			return $return;
+		}
+
+		if ( ! empty( $return[ $info ] ) ) {
+			return $return[ $info ];
+		}
+
+		return false;
+	}
 
 	/**
 	 * Check the version of an item and compare it to the minimum requirements BackupBuddy requires.
@@ -932,6 +1039,12 @@ class backupbuddy_core {
 					if ( true === @unlink( backupbuddy_core::getBackupDirectory() . $item ) ) {
 						$deleted_files[] = $item;
 
+						// Delete data file.
+						$data_file = backupbuddy_data_file()->locate( backupbuddy_core::getBackupDirectory() . $item );
+						if ( false !== $data_file ) {
+							backupbuddy_data_file()->delete( $data_file );
+						}
+
 						// Cleanup any related fileoptions files.
 						$serial = backupbuddy_core::get_serial_from_file( $item );
 
@@ -1074,6 +1187,12 @@ class backupbuddy_core {
 					} else {
 						$main_string = '{Unknown type.}';
 					}
+
+					$data_file = backupbuddy_data_file()->locate( $file );
+					if ( false !== $data_file ) {
+						$main_string .= '<a href="#" style="display:inline-block; margin-left:5px;"><img src="' . esc_attr( pb_backupbuddy::plugin_url() ) . '/images/check.png" style="vertical-align:top;max-width: 16px;"></a>';
+					}
+
 					// Add comment to main row string if applicable.
 					if ( ! empty( $backup_integrity['comment'] ) ) {
 						$main_string .= '<br><span class="description">Note: <span class="pb_backupbuddy_notetext">' . htmlentities( $backup_integrity['comment'] ) . '</span></span>';
@@ -1296,7 +1415,7 @@ class backupbuddy_core {
 			'pluginbuddy'                                 => 'importbuddy/pluginbuddy',
 
 			'controllers/pages/server_info'               => 'importbuddy/controllers/pages/server_info',
-			'controllers/pages/server_tools.php'          => 'importbuddy/controllers/pages/server_tools.php',
+			'controllers/pages/diagnostics.php'           => 'importbuddy/controllers/pages/diagnostics.php',
 
 			// Stash
 			// 'destinations/stash2/init.php'             => 'importbuddy/lib/stash2/init.php',
@@ -1431,16 +1550,16 @@ class backupbuddy_core {
 	 */
 	public static function pretty_backup_type( $type ) {
 		$types = array(
-			'full'    => 'Full',
-			'db'      => 'Database',
-			'files'   => 'Files',
-			'themes'  => 'Themes',
-			'plugins' => 'Plugins',
-			'media'   => 'Media',
+			'full'    => 'Complete Backup',
+			'db'      => 'Database Only',
+			'files'   => 'Custom',
+			'themes'  => 'Themes Only',
+			'plugins' => 'Plugins Only',
+			'media'   => 'Media Only',
 		);
 
-		if ( isset( $types[ $type ] ) ) {
-			return $types[ $type ];
+		if ( isset( $types[ strtolower( $type ) ] ) ) {
+			return $types[ strtolower( $type ) ];
 		} else {
 			return $type;
 		}
@@ -1486,7 +1605,7 @@ class backupbuddy_core {
 
 
 	/**
-	 * Build directory tree for use with the "icicle" javascript library for the graphical directory display on Server Tools page.
+	 * Build directory tree for use with the "icicle" javascript library for the graphical directory display on Diagnostics page.
 	 *
 	 * @param string $dir          Directory.
 	 * @param string $base         Base.
@@ -1756,7 +1875,7 @@ class backupbuddy_core {
 		}
 		/***** END LOOKING FOR BACKUP FILES IN SITE ROOT */
 
-		if ( ! is_writable( backupbuddy_core::getBackupDirectory() ) ) {
+		if ( ! is_writable( backupbuddy_core::getBackupDirectory() ) && false === backupbuddy_is_restoring() ) {
 			$tests[] = array(
 				'test'    => 'backup_dir_permissions',
 				'success' => false,
@@ -2811,7 +2930,7 @@ class backupbuddy_core {
 	public static function getBackupTypeFromFile( $file, $quiet = false, $skip_fileoptions = false ) {
 
 		// If not a zip file, return blank.
-		if ( 'zip' != strtolower( substr( $file, -3 ) ) ) {
+		if ( 'zip' !== strtolower( substr( $file, -3 ) ) ) {
 			return '';
 		}
 
@@ -2819,26 +2938,17 @@ class backupbuddy_core {
 			pb_backupbuddy::status( 'details', 'Detecting backup type if possible.' );
 		}
 
-		// Try to figure out type via filename.
-		if ( stristr( $file, '-db-' ) !== false ) {
-			$type = 'db';
-		} elseif ( stristr( $file, '-full-' ) !== false ) {
-			$type = 'full';
-		} elseif ( stristr( $file, '-files-' ) !== false ) {
-			$type = 'files';
-		} elseif ( stristr( $file, '-themes-' ) !== false ) {
-			$type = 'themes';
-		} elseif ( stristr( $file, '-media-' ) !== false ) {
-			$type = 'media';
-		} elseif ( stristr( $file, '-plugins-' ) !== false ) {
-			$type = 'plugins';
-		} elseif ( false !== stristr( $file, 'importbuddy.php' ) ) {
-			$type = 'ImportBuddy Tool';
-		} elseif ( stristr( $file, '-export-' ) !== false ) {
-			$type = 'export';
+		$type = self::parse_file( $file, 'type' );
+
+		if ( ! $type ) {
+			if ( false !== stristr( $file, 'importbuddy.php' ) ) {
+				$type = 'ImportBuddy Tool';
+			} elseif ( stristr( $file, '-export-' ) !== false ) {
+				$type = 'export';
+			}
 		}
 
-		if ( isset( $type ) ) {
+		if ( $type ) {
 			if ( false === $quiet ) {
 				pb_backupbuddy::status( 'details', 'Detected backup type as `' . $type . '` via filename.' );
 			}
@@ -3167,7 +3277,7 @@ class backupbuddy_core {
 	public static function deleteAllDataFiles() {
 		$temp_dir = self::getTempDirectory();
 		$log_dir  = self::getLogDirectory();
-		pb_backupbuddy::alert( 'Deleting all files contained within `' . $temp_dir . '` and `' . $log_dir . '`.' );
+		pb_backupbuddy::alert( 'Deleting all files contained within `' . $temp_dir . '` and `' . $log_dir . '`.', false, '', '', '', array( 'class' => 'below-h2' ) );
 		pb_backupbuddy::$filesystem->unlink_recursive( $temp_dir );
 		pb_backupbuddy::$filesystem->unlink_recursive( $log_dir );
 		pb_backupbuddy::anti_directory_browsing( $log_dir, false ); // Put log dir back in place.
