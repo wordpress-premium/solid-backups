@@ -1,8 +1,5 @@
 {
-    "name": "wordpress-premium/backupbuddy",
-    "type": "wordpress-plugin",
-	"version": "8.5.2.1",
     "require": {
-        "composer/installers": "~1.6"
+        "krizalys/onedrive-php-sdk": "^2.4"
     }
 }
