@@ -52,10 +52,6 @@ if ( ! isset( pb_backupbuddy::$options['remote_destinations'][ $destination_id ]
 
 pb_backupbuddy::status( 'details', 'Scheduling cron to send to this remote destination...' );
 $schedule_result = backupbuddy_core::schedule_single_event( time(), 'remote_send', array( $destination_id, $backup_file, pb_backupbuddy::_POST( 'trigger' ), $send_importbuddy, $delete_after ) );
-$data_file       = backupbuddy_data_file()->locate( $backup_file );
-if ( false !== $data_file ) {
-	backupbuddy_core::schedule_single_event( time(), 'remote_send', array( $destination_id, $data_file, pb_backupbuddy::_POST( 'trigger' ), false, false ) );
-}
 if ( false === $schedule_result ) {
 	$error = 'Error scheduling file transfer. Please check your BackupBuddy error log for details. A plugin may have prevented scheduling or the database rejected it.';
 	pb_backupbuddy::status( 'error', $error );

@@ -56,7 +56,7 @@ if ( 'add' == $mode ) { // ADD mode.
 		}
 
 		echo '<form method="post" action="' . pb_backupbuddy::ajax_url( 'destination_picker' ) . '&add=dropbox2&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ) . '">';
-		echo '&nbsp;<a href="https://www.dropbox.com/basic" target="_top">Don\'t have a Dropbox account? Click here!</a><br><br>';
+		echo '&nbsp;<a href="https://db.tt/ar3MNMZo" target="_top">Don\'t have a Dropbox account? Click here!</a><br><br>';
 		echo '<br><b>Setup Instructions</b><ol>';
 		echo '<li> <a href="' . $authorizeUrl . '" class="button-primary pb_dropbox_authorize" target="_blank">' . __('Connect to Dropbox.com & Authorize (opens new window)', 'it-l10n-backupbuddy' ) . '</a></li>';
 		echo '<li>Click <b>Allow</b> in the new window (you may need to login to Dropbox.com first).</li>';

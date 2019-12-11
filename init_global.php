@@ -109,7 +109,8 @@ pb_backupbuddy::add_cron( 'cron', backupbuddy_constants::DEFAULT_CRON_PRIORITY, 
 /********** FILTERS (global) **********/
 pb_backupbuddy::add_filter( 'cron_schedules' ); // Add schedule periods such as bimonthly, etc into cron. By default passes 1 param at priority 10.
 if ( '1' == pb_backupbuddy::$options['disable_https_local_ssl_verify'] ) {
-	add_filter( 'https_local_ssl_verify', '__return_false', 100 );
+	$disable_local_ssl_verify_anon_function = create_function( '', 'return false;' );
+	add_filter( 'https_local_ssl_verify', $disable_local_ssl_verify_anon_function, 100 );
 }
 
 

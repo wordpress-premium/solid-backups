@@ -84,7 +84,7 @@ class pb_backupbuddy_settings {
 	 * @param array $settings  Array of settings for this added setting. See $default_settings for list of options that can be defined.
 	 */
 	public function add_setting( $settings_config ) {
-		$default_config    = array(
+		$default_config  = array(
 			'type'        => '',
 			'name'        => '',
 			'title'       => '',
@@ -93,12 +93,12 @@ class pb_backupbuddy_settings {
 			'before'      => '',
 			'after'       => '',
 			'rules'       => '',
-			'default'     => '', // IMPORTANT: Overrides default array. Also useful if savepoint is === false to override.
+			'default'     => '',                 // IMPORTANT: Overrides default array. Also useful if savepoint is === false to override.
 			'options'     => array(),
-			'orientation' => 'horizontal', // Used by radio and checkboxes. TODO: still need to add to checkboxes.
+			'orientation' => 'horizontal',       // Used by radio and checkboxes. TODO: still need to add to checkboxes.
 			'class'       => '',
-			'classes'     => '', // String of additional classes.
-			'row_class'   => '', // Class to apply to row td's in row.
+			'classes'     => '',                 // String of additional classes.
+			'row_class'   => '',                 // Class to apply to row td's in row.
 		);
 		$settings_config   = array_merge( $default_config, $settings_config );
 		$this->_settings[] = $settings_config;
@@ -291,7 +291,7 @@ class pb_backupbuddy_settings {
 				}
 
 				pb_backupbuddy::save();
-				pb_backupbuddy::alert( __( 'Settings saved.', 'it-l10n-backupbuddy' ) . $error_note, false, '', '', '', array( 'class' => 'below-h2' ) );
+				pb_backupbuddy::alert( __( 'Settings saved.', 'it-l10n-backupbuddy' ) . $error_note );
 
 				$return = array(
 					'errors' => $errors,
@@ -358,25 +358,20 @@ class pb_backupbuddy_settings {
 				$return .= $this->_form->get( $settings['name'], $settings['css'], $settings['classes'] );
 			} else { // Normal item.
 				$return .= '<tr class="' . $settings['row_class'] . '">';
-				if ( false === strpos( $settings['rules'], 'no-th' ) ) {
-					$return .= '<th scope="row" class="' . $settings['row_class'] . '"';
-					if ( '' != $this->_custom_title_width ) {
-						$return .= ' style="width: ' . $this->_custom_title_width . 'px; ' . $th_css . '"';
-					} else {
-						$return .= ' style="' . $th_css . '"';
-					}
-					if ( false !== strpos( $settings['rules'], 'th-rowspan-2' ) ) {
-						$return .= ' rowspan="2"';
-					}
-					$return .= '>';
-
-					$return .= $settings['title'];
-
-					if ( isset( $settings['tip'] ) && '' != $settings['tip'] ) {
-						$return .= pb_backupbuddy::$ui->tip( $settings['tip'], '', false );
-					}
-
-					$return .= '</th>';
+				$return .= '<th scope="row" class="' . $settings['row_class'] . '"';
+				if ( '' != $this->_custom_title_width ) {
+					$return .= ' style="width: ' . $this->_custom_title_width . 'px; ' . $th_css . '"';
+				} else {
+					$return .= ' style="' . $th_css . '"';
+				}
+				$return .= '>';
+				$return .= $settings['title'];
+				if ( isset( $settings['tip'] ) && '' != $settings['tip'] ) {
+					$return .= pb_backupbuddy::$ui->tip( $settings['tip'], '', false );
+				}
+				$return .= '</th>';
+				if ( 'title' === $settings['type'] ) { // Extend width full length for title item.
+					$return .= ' colspan="2"';
 				}
 
 				$return .= '<td class="' . $settings['row_class'] . '"';

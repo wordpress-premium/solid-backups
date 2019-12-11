@@ -130,7 +130,7 @@ function pb_additional_tables( $profile_array, $display_size = false ) {
 		$return .= '</li>';
 	}
 
-	return '<div class="jQueryOuterTree" style="height: 160px;"><ul class="jqueryFileTree">' . $return . '</ul></div>';
+	return '<div class="jQueryOuterTree" style="position: absolute; height: 160px;"><ul class="jqueryFileTree">' . $return . '</ul></div>';
 
 } // end pb_additional_tables().
 
@@ -138,13 +138,13 @@ global $wpdb;
 $prefix = $wpdb->prefix;
 $settings_form->add_setting(
 	array(
-		'type'    => 'textarea',
-		'name'    => 'profiles#' . $profile_id . '#mysqldump_additional_includes',
-		'title'   => 'Hover & select <img src="' . pb_backupbuddy::plugin_url() . '/images/greenplus.png" style="vertical-align: -3px;"> to include, <img src="' . pb_backupbuddy::plugin_url() . '/images/redminus.png" style="vertical-align: -3px;"> to exclude. ' . pb_additional_tables( $profile_array ),
-		'before'  => sprintf( '<strong>%s</strong> ', __( 'Inclusions', 'it-l10n-backupbuddy' ) ) . __( 'beyond base', 'it-l10n-backupbuddy' ) . '*:' .
-			pb_backupbuddy::tip( __( 'Additional databases tables to include OR exclude IN ADDITION to the DEFAULTS determined by the previous option. You may override defaults with exclusions. Excluding tables may result in an incomplete or broken backup so exercise caution.', 'it-l10n-backupbuddy' ), '', false ),
-		'rules'   => 'th-rowspan-2',
-		'css'     => 'width: 100%;',
+		'type'   => 'textarea',
+		'name'   => 'profiles#' . $profile_id . '#mysqldump_additional_includes',
+		'title'  => 'Hover & select <img src="' . pb_backupbuddy::plugin_url() . '/images/greenplus.png" style="vertical-align: -3px;"> to include, <img src="' . pb_backupbuddy::plugin_url() . '/images/redminus.png" style="vertical-align: -3px;"> to exclude. ' . pb_additional_tables( $profile_array ),
+		'before' => sprintf( '<strong>%s</strong> ', __( 'Inclusions', 'it-l10n-backupbuddy' ) ) . __( 'beyond base', 'it-l10n-backupbuddy' ) . '*:',
+		'tip'    => __( 'Additional databases tables to include OR exclude IN ADDITION to the DEFAULTS determined by the previous option. You may override defaults with exclusions. Excluding tables may result in an incomplete or broken backup so exercise caution.', 'it-l10n-backupbuddy' ),
+		'rules'  => '',
+		'css'    => 'width: 100%;',
 	)
 );
 $settings_form->add_setting(
@@ -152,10 +152,10 @@ $settings_form->add_setting(
 		'type'   => 'textarea',
 		'name'   => 'profiles#' . $profile_id . '#mysqldump_additional_excludes',
 		'title'  => '&nbsp;',
-		'before' => sprintf( '<strong>%s</strong> ', __( 'Exclusions', 'it-l10n-backupbuddy' ) ) . __( 'beyond base', 'it-l10n-backupbuddy' ) . '*:' .
-			pb_backupbuddy::tip( __( 'Additional databases tables to EXCLUDE from the backup. Exclusions are exempted after calculating defaults and additional table includes first. These may include non-WordPress and WordPress tables. WARNING: Excluding WordPress tables results in an incomplete backup and could result in failure in the ability to restore or data loss. Use with caution.', 'it-l10n-backupbuddy' ), '', false ),
+		'before' => sprintf( '<strong>%s</strong> ', __( 'Exclusions', 'it-l10n-backupbuddy' ) ) . __( 'beyond base', 'it-l10n-backupbuddy' ) . '*:',
+		'tip'    => __( 'Additional databases tables to EXCLUDE from the backup. Exclusions are exempted after calculating defaults and additional table includes first. These may include non-WordPress and WordPress tables. WARNING: Excluding WordPress tables results in an incomplete backup and could result in failure in the ability to restore or data loss. Use with caution.', 'it-l10n-backupbuddy' ),
 		'after'  => '<br><br><span class="description">* ' . __( 'One table per line. {prefix} may be used for the WordPress database prefix (currently: ', 'it-l10n-backupbuddy' ) . $prefix . ')</span>',
-		'rules'  => 'no-th',
+		'rules'  => '',
 		'css'    => 'width: 100%;',
 	)
 );

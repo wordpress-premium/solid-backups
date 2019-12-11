@@ -2001,30 +2001,3 @@
 	Enhancement: Version bump (that's it)
 8.4.19.0 - 2019-08-27 - Chris Jean, Josh Benham, Tyler Gilbert
 	Bug Fix: Fix for some sites that are unable to send to Stash Remote Destination (both v2 and v3).
-8.5.0.0 - 2019-11-18 - Brian DiChiara, Saylor Rain Holder, Chris Jean, Josh Benham, Jeremy Trask, Thomas Oliver, Tyler Gilbert, Yobani Mendoza, Michael Moore, AJ Morris
-	New Feature: BackupBuddy Dashboard Restore. Restore your whole site or a single file without ever leaving the WordPress Dashboard.
-	Enhancement: New Restore Backup Files interface.
-	Enhancement: Compare Backup Plugin and Theme Versions with current installed versions via Restore Files.
-	Enhancement: New local backup file viewer interface.
-	Enhancement: Better Restore compatiblity with Plugin, Theme, Media and Database only backups.
-	Enhancement: Restore remote backups from Stash, AmazonS3 and Local Directory Copy destinations.
-	Enhancement: New Microsoft OneDrive Destination.
-	Enhancement: Implemented Refreshed UI throughout BackupBuddy.
-	Enhancement: Backup Listing Groups, separated by month.
-	Enhancement: New Diagnostics page (formerly Server Tools) with some reorganization.
-	Enhancement: Cleaned up main BackupBuddy menu.
-	Enhancement: Better Stash and AmazonS3 Remote Backup file download procedure.
-	Enhancement: Moved BackupBuddy Stash v3 and AmazonS3 v3 Destinations to "Preferred", Discontinued AmazonS3 v1 destination.
-	Bug Fix: Better support for varying backup file names.
-	Bug Fix: Resolved some PHP notices related to create_function.
-	Bug Fix: Updated Dropbox sign-up link.
-8.5.1.0 - 2019-11-19 - Brian DiChiara, AJ Morris
-	Bug Fix: Resolved issue where "time ago" sometimes calculated incorrectly.
-	Bug Fix: Resolved issue where some folders may not show up during Browse/File Restore.
-	Bug Fix: Corrected a typo related to restoring from a Destination.
-8.5.2.0 - 2019-11-19 - Brian DiChiara, Tyler Gilbert, Thomas Oliver
-	Bug Fix: Resolves Guzzle library conflict with AmazonS3v3 Destination.
-	Bug Fix: Resolves permission issue on some hosts when restoring.
-	Bug Fix: Corrected minor PHP notices.
-8.5.2.1 - 2019-11-26 - Brian DiChiara, Tyler Gilbert
-	Bug Fix: Send Importbuddy to remote destination bug.

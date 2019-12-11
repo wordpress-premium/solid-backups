@@ -54,14 +54,10 @@ a:focus {
 }
 
 
-.backupbuddy-admin-page.toplevel_page_pb_backupbuddy_backup #wpbody-content .wrap > h1:first-of-type {
-	margin-bottom: 0;
-}
-
 
 .bb_progress-bar {
-    width: calc( 100% + 42px );
-    margin: 0 0 2em -22px;
+    width: 100%;
+    margin: 1em 0 2em;
     border-radius: 3px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     z-index: 2;
@@ -422,7 +418,7 @@ a:focus {
     //-moz-animation:    activeglowleft 2s infinite; /* Fx 5+ */
     //-o-animation:      activeglowleft 2s infinite; /* Opera 12+ */
     //animation:         activeglowleft 2s infinite; /* IE 10+ */
-
+    
 }
 
 /*
@@ -495,7 +491,7 @@ a:focus {
     -webkit-animation: slidedown .75s;
     -moz-animation: slidedown .75s;
     animation: slidedown .75s;
-
+    
 }
 
 @-webkit-keyframes slidedown {
@@ -636,7 +632,7 @@ a:focus {
     -moz-animation:    activeglowdeploy 2s infinite; /* Fx 5+ */
     -o-animation:      activeglowdeploy 2s infinite; /* Opera 12+ */
     animation:         activeglowdeploy 2s infinite; /* IE 10+ */
-
+    
 }
 .bb_actions .btn.btn-confirm .btn-icon:before {
     content: "\f147";
@@ -757,14 +753,14 @@ a:focus {
     -webkit-animation: slidedown .75s;
     -moz-animation: slidedown .75s;
     animation: slidedown .75s;
-
+    
 }
 
 .bb_destinations-group.bb_destinations-new {
     -webkit-animation: slideright .75s;
     -moz-animation: slideright .75s;
     animation: slideright .75s;
-
+    
 }
 
 .bb_destination-item {
@@ -841,11 +837,6 @@ a:focus {
 
 .bb_destination-item.bb_destination-email a {
     background: #fff url('../destinations/email/icon50.png') no-repeat center 22px;
-}
-
-.bb_destination-item.bb_destination-onedrive a {
-    background: #fff url('../destinations/onedrive/icon50.png') no-repeat center 22px;
-    background-size: 56px 56px;
 }
 
 .bb_destination-item a:hover {

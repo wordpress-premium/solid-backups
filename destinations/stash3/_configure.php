@@ -20,7 +20,9 @@ $itxapi_username = '';
 $itxapi_password = '';
 $itxapi_token    = '';
 
+
 if ( 'add' === $mode ) { // ADD MODE.
+
 	$credentials_form = new pb_backupbuddy_settings( 'pre_settings', false, 'action=pb_backupbuddy_backupbuddy&function=destination_picker&quickstart=' . htmlentities( pb_backupbuddy::_GET( 'quickstart' ) ) . '&add=' . htmlentities( pb_backupbuddy::_GET( 'add' ) ) . '&callback_data=' . htmlentities( pb_backupbuddy::_GET( 'callback_data' ) ) . '&sending=' . pb_backupbuddy::_GET( 'sending' ) . '&selecting=' . pb_backupbuddy::_GET( 'selecting' ) ); // name, savepoint|false, additional querystring.
 
 	$credentials_form->add_setting(
@@ -68,7 +70,7 @@ if ( 'add' === $mode ) { // ADD MODE.
 			$pb_hide_test = true;
 			$pb_hide_save = true;
 
-			require_once pb_backupbuddy::plugin_path() . '/lib/stash/stash-api.php';
+			require_once( pb_backupbuddy::plugin_path() . '/lib/stash/stash-api.php' );
 			require_once dirname( __FILE__ ) . '/class.itx_helper2.php';
 			global $wp_version;
 
@@ -163,8 +165,9 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 		}
 
 		echo '<br><br>';
-		pb_backupbuddy_destination_stash3::get_quota_bar( $account_info, true );
+		echo pb_backupbuddy_destination_stash3::get_quota_bar( $account_info );
 		echo '<!-- STASH DETAILS: ' . print_r( $account_info, true ) . ' -->'; // TODO: Should this code be in production?
+
 	} // end if NOT in save mode.
 
 	// Form settings.

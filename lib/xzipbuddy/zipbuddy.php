@@ -3020,68 +3020,6 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 
 		}
 
-		public function get_file_contents( $zip_file, $file_path ) {
-			$zip_methods = array();
-
-			$zip_methods = $this->_zip_methods;
-
-			// Better make sure we have some available methods
-			if ( empty( $zip_methods ) ) {
-
-				// Hmm, we don't seem to have any available methods, oops, best go no further
-				$this->log( 'details', __('Failed to list backup file contents - no available methods.','it-l10n-backupbuddy' ) );
-
-				return false;
-
-			}
-
-			// Iterate over the methods - once we succeed just return directly otherwise drop through
-			foreach ( $zip_methods as $method_tag ) {
-
-				// First make sure we can list backup file content with this method (ignore silently if not)
-				// Note: has to be able to unzip as well but if that functionality wasn't available in
-				// the method the is_lister attribute will have been set false
-				if ( $this->_zip_methods_details[ $method_tag ][ 'attr' ][ 'is_lister' ] === true ) {
-
-					$class_name = 'pluginbuddy_zbzip' . $method_tag;
-
-					$zipper = new $class_name( $this );
-
-					$zipper->set_logger( $this->_default_child_logger );
-
-					// We need to tell the method what details belong to it
-					$zipper->set_method_details( $this->_zip_methods_details[ $method_tag ] );
-
-					// Now we are ready to try and test for the file existence
-					$result = $zipper->get_file_contents( $zip_file, $file_path );
-
-					// Will be false if we couldn't list contents or file list array otherwise
-					if ( ! empty( $result ) ) {
-
-						// We got a list so better assume it is ok
-						unset( $zipper );
-
-						// We have to return here because we cannot break out of foreach
-						return $result;
-
-					} else {
-
-						// The zipper encountered an error so we need to drop through and loop round to try another
-						// We'll not process the result here, just drop through silently (the method will have logged it)
-						unset( $zipper );
-
-					}
-
-				}
-
-			}
-
-			// If we got this far then no method to list backup file content was available or worked
-			$this->log( 'details', sprintf( __('Unable to check file content of backup (%1$s): No compatible zip method found.','it-l10n-backupbuddy' ), $zip_file ) );
-			return false;
-
-		}
-
 		/*	set_comment()
 		 *
 		 *	Retrieve archive comment.

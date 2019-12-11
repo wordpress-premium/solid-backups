@@ -33,24 +33,24 @@ if ( 'save' != $mode ) {
 // Form settings.
 $settings_form->add_setting(
 	array(
-		'type'    => 'text',
-		'name'    => 'title',
-		'title'   => __( 'Destination name', 'it-l10n-backupbuddy' ),
-		'tip'     => __( 'Name of the new destination to create. This is for your convenience only.', 'it-l10n-backupbuddy' ),
-		'rules'   => 'required|string[1-45]',
-		'default' => $default_name,
+		'type'      => 'text',
+		'name'      => 'title',
+		'title'     => __( 'Destination name', 'it-l10n-backupbuddy' ),
+		'tip'       => __( 'Name of the new destination to create. This is for your convenience only.', 'it-l10n-backupbuddy' ),
+		'rules'     => 'required|string[1-45]',
+		'default'   => $default_name,
 	)
 );
 
 $settings_form->add_setting(
 	array(
-		'type'  => 'text',
-		'name'  => 'accesskey',
-		'title' => __( 'AWS access key', 'it-l10n-backupbuddy' ),
-		'tip'   => __( '[Example: BSEGHGSDEUOXSQOPGSBE] - Log in to your Amazon S3 AWS Account and navigate to Account: Access Credentials: Security Credentials.', 'it-l10n-backupbuddy' ),
-		'rules' => 'required|string[1-45]',
-		'after' => ' <a target="_new" href="https://ithemeshelp.zendesk.com/hc/en-us/articles/211129517-Amazon-S3">Help setting up S3</a>',
-		'css'   => 'width: 250px;',
+		'type'      => 'text',
+		'name'      => 'accesskey',
+		'title'     => __( 'AWS access key', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Example: BSEGHGSDEUOXSQOPGSBE] - Log in to your Amazon S3 AWS Account and navigate to Account: Access Credentials: Security Credentials.', 'it-l10n-backupbuddy' ),
+		'rules'     => 'required|string[1-45]',
+		'after'     => ' <a target="_new" href="https://ithemeshelp.zendesk.com/hc/en-us/articles/211129517-Amazon-S3">Help setting up S3</a>',
+		'css'       => 'width: 250px;',
 	)
 );
 
@@ -62,33 +62,33 @@ if ( 'add' === $mode ) { // text mode to show secret key during adding.
 
 $settings_form->add_setting(
 	array(
-		'type'  => $secretkey_type_mode,
-		'name'  => 'secretkey',
-		'title' => __( 'AWS secret key', 'it-l10n-backupbuddy' ),
-		'tip'   => __( '[Example: GHOIDDWE56SDSAZXMOPR] - Log in to your Amazon S3 AWS Account and navigate to Account: Access Credentials: Security Credentials.', 'it-l10n-backupbuddy' ),
-		'css'   => 'width: 250px;',
-		'rules' => 'required|string[1-45]',
+		'type'      => $secretkey_type_mode,
+		'name'      => 'secretkey',
+		'title'     => __( 'AWS secret key', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Example: GHOIDDWE56SDSAZXMOPR] - Log in to your Amazon S3 AWS Account and navigate to Account: Access Credentials: Security Credentials.', 'it-l10n-backupbuddy' ),
+		'css'       => 'width: 250px;',
+		'rules'     => 'required|string[1-45]',
 	)
 );
 
 $settings_form->add_setting(
 	array(
-		'type'  => 'text',
-		'name'  => 'bucket',
-		'title' => __( 'Bucket name', 'it-l10n-backupbuddy' ),
-		'tip'   => __( '[Example: wordpress_backups] - This bucket will be created for you automatically if it does not already exist. Bucket names must be globally unique amongst all Amazon S3 users.', 'it-l10n-backupbuddy' ),
-		'after' => '',
-		'css'   => 'width: 250px;',
-		'rules' => 'required|string[1-500]',
+		'type'      => 'text',
+		'name'      => 'bucket',
+		'title'     => __( 'Bucket name', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Example: wordpress_backups] - This bucket will be created for you automatically if it does not already exist. Bucket names must be globally unique amongst all Amazon S3 users.', 'it-l10n-backupbuddy' ),
+		'after'     => '',
+		'css'       => 'width: 250px;',
+		'rules'     => 'required|string[1-500]',
 	)
 );
 
 $settings_form->add_setting(
 	array(
-		'type'    => 'select',
-		'name'    => 'region',
-		'title'   => __( 'Bucket region', 'it-l10n-backupbuddy' ),
-		'options' => array(
+		'type'      => 'select',
+		'name'      => 'region',
+		'title'     => __( 'Bucket region', 'it-l10n-backupbuddy' ),
+		'options'   => array(
 			's3.amazonaws.com'                   => 'us-east-1 &nbsp;|&nbsp; US East 1 (US Standard; N. Virginia)',
 			's3-us-east-2.amazonaws.com'         => 'us-east-2 &nbsp;|&nbsp; US East 2 (Ohio)',
 
@@ -121,116 +121,116 @@ $settings_form->add_setting(
 			's3-website-us-gov-west-1.amazonaws.com'    =>      'US GovCloud (website)',
 			*/
 		),
-		'tip'     => __( '[Default: US East aka US Standard] - Determines the region where your S3 bucket exists. This must be correct for BackupBuddy to access your bucket. Select the S3 Transfer Acceleration option to potentially significantly increase speeds, especially when sending to a bucket outside your geographical location. You must enable this option per-bucket in your AWS Console. Amazon may charge for use of this feature.', 'it-l10n-backupbuddy' ),
-		'rules'   => 'required',
+		'tip'       => __( '[Default: US East aka US Standard] - Determines the region where your S3 bucket exists. This must be correct for BackupBuddy to access your bucket. Select the S3 Transfer Acceleration option to potentially significantly increase speeds, especially when sending to a bucket outside your geographical location. You must enable this option per-bucket in your AWS Console. Amazon may charge for use of this feature.', 'it-l10n-backupbuddy' ),
+		'rules'     => 'required',
 	)
 );
 
 $settings_form->add_setting(
 	array(
-		'type'    => 'select',
-		'name'    => 'storage',
-		'title'   => __( 'Storage Class', 'it-l10n-backupbuddy' ),
-		'options' => array(
+		'type'      => 'select',
+		'name'      => 'storage',
+		'title'     => __( 'Storage Class', 'it-l10n-backupbuddy' ),
+		'options'   => array(
 			'STANDARD'                  => 'Standard Storage [default] 99.999999999% durability &nbsp;|&nbsp; 99.99% availability',
 			'REDUCED_REDUNDANCY'        => 'Reduced Redundancy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 99.99% durability &nbsp;|&nbsp; 99.99% availability (less cost, less robust)',
 			'STANDARD_IA'               => 'Infrequent Access &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 99.999999999% durability &nbsp;|&nbsp; &nbsp;&nbsp;99.9% availability (less storage cost, fee to restore)',
 			'GLACIER'                   => 'Glacier &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 99.999999999% durability &nbsp;|&nbsp; &nbsp;&nbsp;99.9% availability (less cost, slow restore)',
 		),
-		'tip'     => __( '[Default: Standard Storage] - Determines the type of storage to use when placing this file on Amazon S3. Reduced redundancy offers less protection against loss but costs less. Infrequent access is cheaper for storage but requires a fee for retrieval. Glacier is cheaper for storage but requires a very slow restore before files are accessible. See Amazon for for details.', 'it-l10n-backupbuddy' ),
-		'rules'   => 'required',
+		'tip'       => __( '[Default: Standard Storage] - Determines the type of storage to use when placing this file on Amazon S3. Reduced redundancy offers less protection against loss but costs less. Infrequent access is cheaper for storage but requires a fee for retrieval. Glacier is cheaper for storage but requires a very slow restore before files are accessible. See Amazon for for details.', 'it-l10n-backupbuddy' ),
+		'rules'     => 'required',
 	)
 );
 
 $settings_form->add_setting(
 	array(
-		'type'  => 'text',
-		'name'  => 'directory',
-		'title' => __( 'Directory (optional)', 'it-l10n-backupbuddy' ),
-		'tip'   => __( '[Example: backupbuddy] - Directory name to place the backup within.', 'it-l10n-backupbuddy' ),
-		'rules' => 'string[0-500]',
+		'type'      => 'text',
+		'name'      => 'directory',
+		'title'     => __( 'Directory (optional)', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Example: backupbuddy] - Directory name to place the backup within.', 'it-l10n-backupbuddy' ),
+		'rules'     => 'string[0-500]',
 	)
 );
 
 $settings_form->add_setting(
 	array(
-		'type'  => 'text',
-		'name'  => 'full_archive_limit',
-		'title' => __( 'Full backup limit', 'it-l10n-backupbuddy' ),
-		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of Full (complete) backup archives for this site (based on filename) to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
-		'rules' => 'required|int[0-9999999]',
-		'css'   => 'width: 50px;',
-		'after' => ' backups',
+		'type'      => 'text',
+		'name'      => 'full_archive_limit',
+		'title'     => __( 'Full backup limit', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of Full (complete) backup archives for this site (based on filename) to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
+		'rules'     => 'required|int[0-9999999]',
+		'css'       => 'width: 50px;',
+		'after'     => ' backups',
 	)
 );
 $settings_form->add_setting(
 	array(
-		'type'  => 'text',
-		'name'  => 'db_archive_limit',
-		'title' => __( 'Database only limit', 'it-l10n-backupbuddy' ),
-		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of Database Only backup archives for this site (based on filename) to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
-		'rules' => 'required|int[0-9999999]',
-		'css'   => 'width: 50px;',
-		'after' => ' backups',
+		'type'      => 'text',
+		'name'      => 'db_archive_limit',
+		'title'     => __( 'Database only limit', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of Database Only backup archives for this site (based on filename) to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
+		'rules'     => 'required|int[0-9999999]',
+		'css'       => 'width: 50px;',
+		'after'     => ' backups',
 	)
 );
 $settings_form->add_setting(
 	array(
-		'type'  => 'text',
-		'name'  => 'themes_archive_limit',
-		'title' => __( 'Themes only limit', 'it-l10n-backupbuddy' ),
-		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
-		'rules' => 'int[0-9999999]',
-		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'type'      => 'text',
+		'name'      => 'themes_archive_limit',
+		'title'     => __( 'Themes only limit', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
+		'rules'     => 'int[0-9999999]',
+		'css'       => 'width: 50px;',
+		'after'     => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
 	)
 );
 $settings_form->add_setting(
 	array(
-		'type'  => 'text',
-		'name'  => 'plugins_archive_limit',
-		'title' => __( 'Plugins only limit', 'it-l10n-backupbuddy' ),
-		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
-		'rules' => 'int[0-9999999]',
-		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'type'      => 'text',
+		'name'      => 'plugins_archive_limit',
+		'title'     => __( 'Plugins only limit', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
+		'rules'     => 'int[0-9999999]',
+		'css'       => 'width: 50px;',
+		'after'     => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
 	)
 );
 $settings_form->add_setting(
 	array(
-		'type'  => 'text',
-		'name'  => 'media_archive_limit',
-		'title' => __( 'Media only limit', 'it-l10n-backupbuddy' ),
-		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
-		'rules' => 'int[0-9999999]',
-		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'type'      => 'text',
+		'name'      => 'media_archive_limit',
+		'title'     => __( 'Media only limit', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
+		'rules'     => 'int[0-9999999]',
+		'css'       => 'width: 50px;',
+		'after'     => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
 	)
 );
 $settings_form->add_setting(
 	array(
-		'type'  => 'text',
-		'name'  => 'files_archive_limit',
-		'title' => __( 'Files only limit', 'it-l10n-backupbuddy' ),
-		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
-		'rules' => 'int[0-9999999]',
-		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'type'      => 'text',
+		'name'      => 'files_archive_limit',
+		'title'     => __( 'Files only limit', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
+		'rules'     => 'int[0-9999999]',
+		'css'       => 'width: 50px;',
+		'after'     => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
 	)
 );
 $settings_form->add_setting(
 	array(
-		'type'    => 'checkbox',
-		'name'    => 'accelerate',
-		'options' => array(
+		'type'      => 'checkbox',
+		'name'      => 'accelerate',
+		'options'   => array(
 			'unchecked'  => '0',
 			'checked'    => '1',
 		),
-		'title'   => __( 'Use Transfer Acceleration', 'it-l10n-backupbuddy' ),
-		'tip'     => __( '[Default: disabled] - When enabled, transfers will be sent using a geographically near endpoint to your server and then transferred internally by Amazon to your final endpoint location. This allows for faster transfers from your server into Amazon. Additional charges may apply from Amazon. Transfer acceleration must be enabled by you within your Amazon control panel for this bucket prior to enabling this feature.', 'it-l10n-backupbuddy' ),
-		'css'     => '',
-		'after'   => '<span class="description"> ' . __( 'Additional charges may apply from Amazon.', 'it-l10n-backupbuddy' ) . '</span>',
-		'rules'   => '',
+		'title'     => __( 'Use Transfer Acceleration', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Default: disabled] - When enabled, transfers will be sent using a geographically near endpoint to your server and then transferred internally by Amazon to your final endpoint location. This allows for faster transfers from your server into Amazon. Additional charges may apply from Amazon. Transfer acceleration must be enabled by you within your Amazon control panel for this bucket prior to enabling this feature.', 'it-l10n-backupbuddy' ),
+		'css'       => '',
+		'after'     => '<span class="description"> ' . __( 'Additional charges may apply from Amazon.', 'it-l10n-backupbuddy' ) . '</span>',
+		'rules'     => '',
 	)
 );
 $settings_form->add_setting(
@@ -301,8 +301,8 @@ $settings_form->add_setting(
 		'type'      => 'checkbox',
 		'name'      => 'use_server_cert',
 		'options'   => array(
-			'unchecked' => '0',
-			'checked'   => '1',
+			'unchecked'  => '0',
+			'checked'    => '1',
 		),
 		'title'     => __( 'Use system CA bundle', 'it-l10n-backupbuddy' ),
 		'tip'       => __( '[Default: disabled] - When enabled, BackupBuddy will use your web server\'s certificate bundle for connecting to the server instead of BackupBuddy bundle. Use this if SSL fails due to SSL certificate issues.', 'it-l10n-backupbuddy' ),
@@ -317,8 +317,8 @@ $settings_form->add_setting(
 		'type'      => 'checkbox',
 		'name'      => 'disable_hostpeer_verficiation',
 		'options'   => array(
-			'unchecked' => '0',
-			'checked'   => '1',
+			'unchecked'  => '0',
+			'checked'    => '1',
 		),
 		'title'     => __( 'Disable SSL Verifications', 'it-l10n-backupbuddy' ),
 		'tip'       => __( '[Default: disabled] - When enabled, the SSL host and peer information will not be verified. While the connection will still be encrypted SSL\'s man-in-the-middle protection will be voided. Disable only if you understand and if directed by support to work around host issues.', 'it-l10n-backupbuddy' ),
@@ -333,8 +333,8 @@ $settings_form->add_setting(
 		'type'      => 'checkbox',
 		'name'      => 'debug_mode',
 		'options'   => array(
-			'unchecked' => '0',
-			'checked'   => '1',
+			'unchecked'  => '0',
+			'checked'    => '1',
 		),
 		'title'     => __( 'Enable SDK debug mode', 'it-l10n-backupbuddy' ),
 		'tip'       => __( '[Default: disabled] - When enabled, additional data will be logged by the SDK for troubleshooting.', 'it-l10n-backupbuddy' ),
@@ -363,8 +363,8 @@ if ( 'edit' !== $mode || '0' == $destination_settings['disable_file_management']
 			'type'      => 'checkbox',
 			'name'      => 'disable_file_management',
 			'options'   => array(
-				'unchecked' => '0',
-				'checked'   => '1',
+				'unchecked'  => '0',
+				'checked'    => '1',
 			),
 			'title'     => __( 'Disable file management', 'it-l10n-backupbuddy' ),
 			'tip'       => __( '[[Default: unchecked] - When checked, selecting this destination disables browsing or accessing files stored at this destination from within BackupBuddy. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination.', 'it-l10n-backupbuddy' ),
@@ -381,7 +381,7 @@ $settings_form->add_setting(
 		'name'      => 'disabled',
 		'options'   => array(
 			'unchecked' => '0',
-			'checked'   => '1',
+			'checked' => '1',
 		),
 		'title'     => __( 'Disable destination', 'it-l10n-backupbuddy' ),
 		'tip'       => __( '[Default: unchecked] - When checked, this destination will be disabled and unusable until re-enabled. Use this if you need to temporary turn a destination off but don\t want to delete it.', 'it-l10n-backupbuddy' ),

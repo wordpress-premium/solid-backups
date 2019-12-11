@@ -13,10 +13,6 @@ if ( '' != pb_backupbuddy::_GET( 'zip_viewer' ) ) {
 	require_once '_zip_viewer.php';
 	return;
 }
-if ( '' != pb_backupbuddy::_GET( 'dat_viewer' ) ) {
-	require_once '_dat_viewer.php';
-	return;
-}
 
 wp_enqueue_script( 'thickbox' );
 wp_print_scripts( 'thickbox' );

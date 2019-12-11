@@ -3,7 +3,7 @@
  *	pluginbuddy_zbzipcore Class
  *
  *  Provides an abstract zip capability core class
- *
+ *	
  *	Version: 1.0.0
  *	Author:
  *	Author URI:
@@ -31,62 +31,62 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
 		const THIRTY_TWO_BIT = 32;
 		const SIXTY_FOUR_BIT = 64;
-
+		
 		public static function is_php( $bits ) {
-
+		
 			$result = ( ( PHP_INT_SIZE * 8 ) == $bits ) ? true : false;
-
+			
 			return $result;
-
+		
 		}
-
+	
 		public static function stat( $filename ) {
-
+		
 			$result = false;
 
-			// If the file is readable then we should be able to stat it
+			// If the file is readable then we should be able to stat it 
 			if ( @is_readable( $filename ) ) {
-
+			
 				$stats = @stat( $filename );
-
+				
 				if ( false !== $stats ) {
-
+				
 					// Looks like we got some valid data - for now just process the size
 					if ( self::is_php( self::THIRTY_TWO_BIT ) ) {
-
+					
 						// PHP is 32 bits so we may have a file size problem over 2GB.
 						// This is one way to test for a file size problem - there are others
 						if ( 0 > $stats[ 'size' ] ) {
-
+						
 							// Unsigned long has been interpreted as a signed int and has sign bit
 							// set so is appearing as negative - magically convert it to a double
 							// Note: this only works to give us an extension from 2GB to 4GB but that
 							// should be enough as the underlying OS probably can't support >4GB or
 							// zip command cannot anyway
 							$stats[ 'dsize' ] = ( (double)0x80000000 + ( $stats[ 'size' ] & 0x7FFFFFFF ) );
-
+						
 						} else {
-
+						
 							// Assume it's valid
 							$stats[ 'dsize' ] = (double)$stats[ 'size' ];
-
+						
 						}
-
+												
 					} else {
-
+					
 						// Looks like 64 bit PHP so file size should be fine
 						// Force added item to double for consistency
 						$stats[ 'dsize' ] = (double)$stats[ 'size' ];
-
+					
 					}
-
+					
 					// Add an additional item for short octal representation of mode
 					$stats[ 'mode_octal_four' ] = substr( sprintf( '%o', $stats[ 'mode' ] ), -4 );
-
+					
 					$result = $stats;
-
+				
 				} else {
-
+				
 					// Hmm, stat() failed for some reason - could be an LFS problem with the
 					// way PHP has been built :-(
 					// TODO: Consider alternatives - may be able to use exec to run the
@@ -94,21 +94,21 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 					// into the same array format. This does depend on having exec() and the
 					// stat command available and it's definitely not a nice option
 					$result = false;
-
+				
 				}
-
+			
 			}
-
+			
 			return $result;
 		}
-
+	
 	}
 
 	abstract class pluginbuddy_zbzipcore {
-
+	
 		// status method type parameter values - would like a class for this
 		const STATUS_TYPE_DETAILS       = 'details';
-
+		
 		// Constants for handling paths
 		const NORM_DIRECTORY_SEPARATOR  = '/';
 		const DIRECTORY_SEPARATORS      = '/\\';
@@ -117,7 +117,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		const MAX_ERROR_LINES_TO_SHOW   = 20;
 		const MAX_WARNING_LINES_TO_SHOW = 20;
 		const MAX_OTHER_LINES_TO_SHOW   = 20;
-
+		
 		// Enumerated types that we need for now
 		// Note: Values must be sequential
 		const OS_TYPE_UNKNOWN 	=	0;
@@ -131,14 +131,14 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		const ZIP_WARNING_FILTERED 			= 3;
 		const ZIP_WARNING_LONGPATH 			= 4;
 		const ZIP_WARNING_IGNORED_SYMLINK 	= 5;
-
+		
 		const ZIP_OTHER_UNKNOWN         = 0;
 		const ZIP_OTHER_GENERIC         = 1;
 		const ZIP_OTHER_SKIPPED  		= 2;
 		const ZIP_OTHER_FILTERED 		= 3;
 		const ZIP_OTHER_LONGPATH 		= 4;
 		const ZIP_OTHER_IGNORED_SYMLINK	= 5;
-
+		
 		const COMMAND_UNKNOWN_PATH	= 0;
 		const COMMAND_ZIP_PATH		= 1;
 		const COMMAND_UNZIP_PATH	= 2;
@@ -148,84 +148,84 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
         /**
          * The plugin path for this plugin
-         *
+         * 
          * @var $_pluginPath string
          */
         public $_pluginPath = '';
 
         /**
          * The path of this directory node
-         *
+         * 
          * @var path string
          */
         protected $_path = "";
-
+        
         /**
          * The absolute paths to be excluded, must be / terminated
-         *
+         * 
          * @var paths_to_exclude array of string
          */
         protected $_paths_to_exclude = array();
 
         /**
          * The details of the method
-         *
+         * 
          * @var method_details array
          */
 		protected $_method_details = array();
-
+		
         /**
          * The set of paths where to look for executables
-         *
+         * 
          * @var  executable_paths	array
          */
 		protected $_executable_paths = array();
-
+		
         /**
          * Array of status information
-         *
+         * 
          * @var status array
          */
 		protected $_status = array();
-
+		
         /**
          * Enumerated OS type
-         *
+         * 
          * @var os_type	int
          */
 		protected $_os_type = self::OS_TYPE_UNKNOWN;
-
+		
         /**
          * Convenience boolean indicating if PHP has exec_dir set or not
-         *
+         * 
          * @var exec_dir_set	bool
          */
 		protected $_exec_dir_set = false;
-
+		
         /**
          * Convenience boolean indicating if Warnings should be ignored when building archives
-         *
+         * 
          * @var ignore_warnings	bool
          */
 		protected $_ignore_warnings = false;
-
+		
         /**
          * Convenience boolean indicating if symlinks should be ignored/not-followed when building archives
-         *
+         * 
          * @var ignore_symlinks	bool
          */
 		protected $_ignore_symlinks = false;
-
+		
          /**
          * Convenience boolean indicating if compression shoul dbe used when building archives
-         *
+         * 
          * @var compression	bool
          */
 		protected $_compression = false;
-
+		
        /**
          * Used to translate our warnings reasons into a longer description
-         *
+         * 
          * @var array
          */
 		public static $_warning_desc = array( self::ZIP_WARNING_UNKNOWN  			=> 'warning reason unknown',
@@ -246,33 +246,33 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
         /**
          * The Server API that is in use
-         *
+         * 
          * @var string
          */
 		protected $_sapi_name = "";
 
 		/**
 		 *	__construct()
-		 *
+		 *	
 		 *	Default constructor.
-		 *
+		 *	
 		 *	@return		null
 		 *
 		 */
 		public function __construct() {
-
+		
 			// Make sure we know what we are running on for later
 			$this->set_os_type();
-
+			
 			// Derive whether we are ignoring Warnings or not (expected to be overridden by user)
 			$this->set_ignore_warnings();
-
+			
 			// Derive whether we are ignoring/not-following symlinks or not (expected to be overridden by user)
 			$this->set_ignore_symlinks();
-
+			
 			// Derive whether compression should be used (expected to be overridden by user)
 			$this->set_compression();
-
+			
 			// Specific method constructor will override some of these and the tests may override others
 			$this->_method_details[ 'attr' ] = array( 'name' => 'Unknown Method',
 													  'compatibility' => false ,
@@ -300,19 +300,19 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 													 );
 
 		}
-
+		
 		/**
 		 *	__destruct()
-		 *
+		 *	
 		 *	Default destructor.
-		 *
+		 *	
 		 *	@return		null
 		 *
 		 */
 		public function __destruct( ) {
 
 		}
-
+				
 		/**
 		 *	set_os_type()
 		 *
@@ -328,32 +328,32 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *
 		 */
 		 public function set_os_type( $os_type = PHP_INT_MAX ) {
-
+		 
 		 	// Check if we have been given a valid enumerated value
 		 	if ( ( self::OS_TYPE_UNKNOWN < $os_type ) && ( self::OS_TYPE_MAX >= $os_type ) ) {
-
+		 	
 		 		$this->_os_type = $os_type;
-
+		 		
 		 	} else {
-
+		 		
 		 		// Use UC for ease - this _should not? cause any ambiguity
 		 		$os_name = strtoupper( PHP_OS );
-
+		 
 		 		// Currently we'll assume anything that doesn't look like Windows is *nix based
 		 		if ( substr( $os_name, 0, 3 ) === 'WIN') {
-
+		 		
 		 			$this->_os_type = self::OS_TYPE_WIN;
-
+		 			
 		 		} else {
-
+		 		
 		 			$this->_os_type = self::OS_TYPE_NIX;
-
+		 			
 		 		}
-
+		 	
 		 	}
-
+		 	
 		 	return $this;
-
+		 	
 		 }
 
 		/**
@@ -365,7 +365,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *
 		 */
 		 public function get_os_type( ) {
-
+		 
 			return $this->_os_type;
 
 		 }
@@ -379,20 +379,20 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *
 		 */
 		 public function set_exec_dir_flag( ) {
-
+		 
 		 	$exec_dir = '';
 		 	$result = false;
 
 		 	if ( ( false !== ( $exec_dir = ini_get( 'exec_dir' ) ) ) && ( '' != trim( $exec_dir ) ) ) {
-
+		 	
 		 		$result = true;
-
+		 	
 		 	} else {
-
+		 	
 		 		$result = false;
-
+		 		
 		 	}
-
+		 
 		 	$this->_exec_dir_set = $result;
 
 			return $this;
@@ -408,7 +408,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *
 		 */
 		 public function get_exec_dir_flag() {
-
+		 
 			return $this->_exec_dir_set;
 
 		 }
@@ -424,7 +424,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *
 		 */
 		 public function set_ignore_warnings( $ignore = null ) {
-
+		 
 		 	$this->_ignore_warnings = ( is_bool( $ignore ) ) ? $ignore : false ;
 
 			return $this;
@@ -440,7 +440,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *
 		 */
 		 public function get_ignore_warnings() {
-
+		 
 			return $this->_ignore_warnings;
 
 		 }
@@ -456,7 +456,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *
 		 */
 		 public function set_ignore_symlinks( $ignore = null ) {
-
+		 
 		 	$this->_ignore_symlinks =  ( is_bool( $ignore ) ) ? $ignore : true ;
 
 			return $this;
@@ -465,19 +465,19 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
 		/**
 		 *	get_ignore_symlinks()
-		 *
+		 *	
 		 *	This returns true if the option to ignore symlinks is set. In this context ignoring
 		 *	means not following but the symlink itself is recorded in the backup
-		 *
+		 *	
 		 *	@return		bool				Value of $_ignore_symlinks
 		 *
 		 */
 		protected function get_ignore_symlinks() {
-
+		
 			return $this->_ignore_symlinks;
-
+		
 		}
-
+		
 		/**
 		 *	set_compression()
 		 *
@@ -488,7 +488,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *
 		 */
 		 public function set_compression( $compression = null ) {
-
+		 
 		 	$this->_compression =  ( is_bool( $compression ) ) ? $compression : true ;
 
 			return $this;
@@ -497,18 +497,18 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
 		/**
 		 *	get_compression()
-		 *
+		 *	
 		 *	This returns true if the option to use compression is set.
-		 *
+		 *	
 		 *	@return		bool				Value of $_compression
 		 *
 		 */
 		protected function get_compression() {
-
+		
 			return $this->_compression;
-
+		
 		}
-
+		
 		/**
 		 *	set_sapi_name()
 		 *
@@ -518,11 +518,11 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *	@return	object			This object
 		 */
 		public function set_sapi_name( $sapi_name = "" ) {
-
+		
 			$this->_sapi_name = $sapi_name;
-
+			
 			return $this;
-
+			
 		}
 
 		/**
@@ -533,53 +533,53 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *	@return	string			The stored sapi name
 		 */
 		public function get_sapi_name() {
-
+			
 			return $this->_sapi_name;
-
+			
 		}
 
 		/**
 		 *	get_status()
-		 *
+		 *	
 		 *	Returns the status array
-		 *
+		 *	
 		 *	@return		array	The status array
 		 *
 		 */
 		public function get_status() {
-
+		
 			return $this->_status;
-
+		
 		}
-
+		
 		/**
 		 *	log_archive_file_stats()
-		 *
+		 *	
 		 *	Produced a status log entry for the archive file stats
-		 *
+		 *	
 		 *	@param	string	$file	The file to stat and and log
-		 *	@return
+		 *	@return		
 		 *
 		 */
 		protected function log_archive_file_stats( $file ) {
-
+		
 			// Get the file stats so we can log some information
 			$file_stats = pluginbuddy_stat::stat( $file );
-
+			
 			// Only log anything if we got some valid file stats
 			if ( false !== $file_stats ) {
-
+			
 				pb_backupbuddy::status( 'details', sprintf( __( 'Zip Archive file size: %1$s bytes, owned by user:group %2$s:%3$s with permissions %4$s', 'it-l10n-backupbuddy' ), $file_stats[ 'dsize' ], $file_stats[ 'uid' ], $file_stats[ 'gid' ], $file_stats[ 'mode_octal_four' ] ) );
 
 			}
-
+			
 		}
 
 		/**
 		 *	get_method_tag()
-		 *
+		 *	
 		 *	Returns the (static) method tag
-		 *
+		 *	
 		 *	@return		string The method tag
 		 *
 		 */
@@ -587,9 +587,9 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
 		/**
 		 *	get_is_compatibility_method()
-		 *
+		 *	
 		 *	Returns the (static) is_compatibility_method boolean
-		 *
+		 *	
 		 *	@return		bool
 		 *
 		 */
@@ -597,63 +597,63 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
 		/**
 		 *	get_method_details()
-		 *
+		 *	
 		 *	Returns the details array
-		 *
+		 *	
 		 *	@return		array
 		 *
 		 */
 		public function get_method_details() {
-
+		
 			return $this->_method_details;
-
+			
 		}
 
 		/**
 		 *	set_method_details()
-		 *
+		 *	
 		 *	Sets the internal (settable) details
-		 *
+		 *	
 		 *	@param		array
 		 *	@return		null
 		 *
 		 */
 		public function set_method_details( array $details, $merge = true ) {
-
+		
 			if ( true === $merge ) {
-
+			
 				$this->_method_details[ 'attr' ] = array_merge( $this->_method_details[ 'attr' ], $details[ 'attr' ] );
 				$this->_method_details[ 'param' ] = array_merge( $this->_method_details[ 'param' ], $details[ 'param' ] );
-
+			
 			} else {
-
+			
 				$this->_method_details = $details;
-
+			
 			}
-
+			
 			return $this;
-
+						
 		}
 
 		/**
 		 *	get_executable_paths()
-		 *
+		 *	
 		 *	Returns the executable_paths array
-		 *
+		 *	
 		 *	@return		array
 		 *
 		 */
 		public function get_executable_paths() {
-
+		
 			return $this->_executable_paths;
-
+			
 		}
 
 		/**
 		 *	set_executable_paths()
-		 *
+		 *	
 		 *	Sets the executable_paths array so can be used to augment or override the default
-		 *
+		 *	
 		 *	@param		$paths	array	Paths to set or merge
 		 *	@param		$merge	bool	True (default) if merging paths with current paths
 		 *	@param		$before	bool	True (default) if paths to be prepended
@@ -661,34 +661,34 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *
 		 */
 		public function set_executable_paths( array $paths, $merge = true, $before = true ) {
-
+		
 			if ( true === $merge ) {
-
+			
 				if ( true === $before ) {
-
+				
 					$this->_executable_paths = array_merge( $paths, $this->_executable_paths );
-
+					
 				} else {
-
+			
 					$this->_executable_paths = array_merge( $this->_executable_paths, $paths );
-
+				
 				}
-
+			
 			} else {
-
+			
 				$this->_executable_paths = $paths;
-
+			
 			}
-
+			
 			return $this;
-
+						
 		}
 
 		/**
 		 *	delete_directory_recursive()
-		 *
+		 *	
 		 *	Recursively delete a directory and it's content
-		 *
+		 *	
 		 *	@param		string	$directory	Directory to delete
 		 *	@return		bool				True if operation fully successful, otherwise false
 		 *
@@ -701,55 +701,55 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
 			// Remove any trailing directory separator so we know where we are
 			$directory = rtrim( $directory, self::DIRECTORY_SEPARATORS );
-
+			
 			// Non-existent directory so pretend we deleted it ok
 			if ( !file_exists( $directory ) ) {
-
+			
 				return true;
-
+				
 			}
 
-			// Make sure it wasn't just a file or link - if so just delete it and return
+			// Make sure it wasn't just a file or link - if so just delete it and return			
 			if ( !is_dir( $directory ) || is_link( $directory ) ) {
-
+			
 				return @unlink( $directory );
-
+				
 			}
-
+			
 			// So it is a directory so process content
 			foreach ( scandir( $directory ) as $item ) {
-
+			
 				// Skip the this and parent directories
 				if ( $item == '.' || $item == '..' ) {
-
+				
 					continue;
-
+					
 				}
-
-				// Delete the item if we can
+				
+				// Delete the item if we can			
 				if ( !$this->delete_directory_recursive( $directory . "/" . $item ) ) {
-
+				
 					// TODO: Supposedly change the perms on the item so we can delete it?
 					@chmod( $directory . "/" . $item, 0777 );
-
+					
 					if ( !$this->delete_directory_recursive( $directory . "/" . $item ) ) {
-
+					
 						return false;
-
+						
 					}
-
+					
 				}
-
+				
 			}
-
+			
 			return @rmdir( $directory );
-
+				
 		}
-
+		
 		/*	_render_exclusions_file()
-		 *
+		 *	
 		 *	function description
-		 *
+		 *	
 		 *	@param		string		$file			File to write exclusions into.
 		 *	@param		array		$exclusions		Array of directories/paths to exclude. One per line.
 		 *	@param		atring		$root			Root directory to exclude relative to.
@@ -764,55 +764,55 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
 			// Array for cleaned up exclusions list
 			$sanitized_exclusions = array();
-
+			
 			pb_backupbuddy::status( 'details', 'Creating backup exclusions file `' . $file . '`.' );
 			//$exclusions = backupbuddy_core::get_directory_exclusions();
-
+			
 			// Test each exclusion for validity (presence) and drop those not actually present
 			foreach( $exclusions as $exclusion ) {
-
+				
 				// Make sure platform specific directory separators are used (could have migrated from different platform)
 				$exclusion = preg_replace( '|[' . addslashes( self::DIRECTORY_SEPARATORS ) . ']+|', DIRECTORY_SEPARATOR, $exclusion );
-
+				
 				// DIRECTORY.
 				if ( is_dir( $root . ltrim( $exclusion, DIRECTORY_SEPARATOR ) ) ) {
-
+					
 					pb_backupbuddy::status( 'details', 'Excluding directory `' . $exclusion . '`.' );
-
+					
 					// Need to add the wildcard so that zip will exclude the directory and content
 					$exclusion = rtrim( $exclusion, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR . '*';
-
+				
 				// FILE.
 				} elseif ( is_file( $root . ltrim( $exclusion, DIRECTORY_SEPARATOR ) ) ) {
-
+					
 					pb_backupbuddy::status( 'details', 'Excluding file `' . $exclusion . '`.' );
-
+				
 				// SYMBOLIC LINK.
 				} elseif ( is_link( $root . ltrim( $exclusion, DIRECTORY_SEPARATOR ) ) ) {
-
+					
 					pb_backupbuddy::status( 'details', 'Excluding symbolic link `' . $exclusion . '`.' );
-
+				
 				// DOES NOT EXIST.
 				} else {
-
+					
 					pb_backupbuddy::status( 'details', 'Omitting exclusion as file/directory does not currently exist: `' . $exclusion . '`.' );
-
+					
 					// Skip to next exclusion
 					continue;
-
+					
 				}
-
+				
 				// We have a valid exclude so add it
 				$sanitized_exclusions[] = $exclusion;
-
+				
 			}
-
+			
 			// Put the exclusions to a file as a string
 			file_put_contents( $file, implode( PHP_EOL, $sanitized_exclusions ) . PHP_EOL );
 			pb_backupbuddy::status( 'details', 'Backup exclusions file created.' );
-
+			
 		} // End render_exclusions_file().
-
+		
 		/**
 		 *	slashify()
 		 *
@@ -826,31 +826,31 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *	@return	string							The path with trailing slash optionally added
 		 *
 		 */
-
+		 
 		 protected function slashify( $path, $ignore_empty = true, $use_normalized_slash = true ) {
-
+		 
 		 	// Check if it is empty now before we may remove a single slash
 		 	if ( ! ( empty( $path ) && ( true === $ignore_empty ) ) ) {
-
+		 	
 				// First remove any trailing slash that may be present
 				$path = $this->unslashify( $path );
-
+				
 				if ( true === $use_normalized_slash ) {
-
+				
 					$path = $path . self::NORM_DIRECTORY_SEPARATOR;
-
+				
 				} else {
-
+				
 					$path = $path . DIRECTORY_SEPARATOR;
-
+				
 				}
-
+				
 		 	}
-
+		 	
 		 	return $path;
-
+		 
 		 }
-
+		
 		/**
 		 *	unslashify()
 		 *
@@ -863,23 +863,23 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *	@return	string							The path with trailing slash removed
 		 *
 		 */
-
+		 
 		 protected function unslashify( $path, $ignore_empty = true ) {
-
+		 
 		 	// Create a candidate path to optionally return
 		 	$candidate_path = rtrim( $path, self::DIRECTORY_SEPARATORS );
-
+		 
 		 	// If candidate isn't empty or we're ignoring it being empty anyway
 		 	if ( !empty( $candidate_path ) || ( true === $ignore_empty ) ) {
-
+		 	
 				$path = $candidate_path;
-
+				
 		 	}
-
+		 	
 		 	return $path;
-
+		 
 		 }
-
+		
 		/**
 		 *	log_zip_reports()
 		 *
@@ -895,7 +895,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *	@return	N/A								Currently no return parameter
 		 *
 		 */
-
+		 
 		protected function log_zip_reports( $reports_log, $report_desc, $report_prefix, $report_lines_to_show, $reports_file ) {
 
 			$reports = array();
@@ -904,22 +904,22 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
 			// Make sure we clear up ant previous reports file that may still be present
 			if ( @file_exists( $reports_file ) ) {
-
+	
 				@unlink( $reports_file );
-
+		
 			}
 
 			// Parse the reports array into an ordered array based on id (log line number) as sort key
 			foreach ( $reports_log as $reason => $report ) {
-
+	
 				foreach ( $report as $id => $filename ) {
 
 					$reports[ $id ] = sprintf( __( '%1$s: (%2$s): %3$s' . PHP_EOL,'it-l10n-backupbuddy' ), $report_prefix, $report_desc[ $reason ], $filename );
 
 				}
-
+	
 			}
-
+	
 			// Make sure array is now ordered by the numeric log line number key
 			$result = ksort( $reports, SORT_NUMERIC );
 
@@ -931,41 +931,41 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 				pb_backupbuddy::status( 'details', __( 'Zip process reported: ','it-l10n-backupbuddy' ) . $line );
 
 			}
-
+		
 			// If there were more lines then output the whole to the report file
 			$reports_count = sizeof( $reports );
 			if ( $reports_count  > $report_lines_to_show ) {
-
+	
 				@file_put_contents( $reports_file, $reports );
-
+		
 				if ( @file_exists( $reports_file ) ) {
-
+		
 					pb_backupbuddy::status( 'details', sprintf( __( 'Zip process reported %1$s more %2$s report%3$s - please review in: %4$s','it-l10n-backupbuddy' ), ( $reports_count - $report_lines_to_show ), $report_prefix, ( ( 1 == $reports_count ) ? '' : 's' ), $reports_file ) );
-
+			
 				}
-
+		
 			}
-
+			
 		}
-
+		
 		/**
 		 *	is_available()
-		 *
+		 *	
 		 *	A function that tests for the availability of the specific method and its available modes. Will test for
 		 *  multiple modes (zip & unzip) and only return false if neither is available. Actual available modes will
 		 *  be indicated in the method attributes.
-		 *
+		 *	
 		 *	@param		string	$tempdir	Temporary directory to use for any test files (must be writeable)
 		 *	@return		bool				True if the method is available for at least one mode, false otherwise
 		 *
 		 */
 		abstract public function is_available( $tempdir );
-
+		
 		/**
 		 *	add_virtual_file()
-		 *
+		 *	
 		 *	A function that allows a virtual file to be added to a zip archive
-		 *
+		 *	
 		 *	The virtual file descriptor is an array of descriptor array(s) that provide a filename
 		 *	for the virtual file to be added (can include path prefix) and a string that contains the
 		 *	file content (can be empty but must be present). For example:
@@ -973,7 +973,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *	Note that the actual zip file to which the file is added is formed from the filenaem from
 		 *	the $zip parameter appaended to the $tempdir directory path. This is slightly clunky and
 		 *	may be changed at some later date.
-		 *
+		 *	
 		 *	@param		string	$zip						Full path & filename of ZIP Archive file to add file to
 		 *	@param		array	$virtual_file_descriptor	Full descriptor of file(s) to add to ZIP Archive file
 		 *	@param		string	$tempdir					Full path of directory for temporary usage
@@ -984,12 +984,12 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
 		/**
 		 *	create()
-		 *
+		 *	
 		 *	A function that creates an archive file
-		 *
+		 *	
 		 *	The $excludes will be a list or relative path excludes if the $listmaker object is NULL otherwise
 		 *	will be absolute path excludes and relative path excludes can be had from the $listmaker object
-		 *
+		 *	
 		 *	@param		string	$zip			Full path & filename of ZIP Archive file to create
 		 *	@param		string	$dir			Full path of directory to add to ZIP Archive file
 		 *	@parame		array	$excludes		List of either absolute path exclusions or relative exclusions
@@ -999,7 +999,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *
 		 */
 		abstract public function create( $zip, $dir, $excludes, $tempdir, $listmaker = NULL );
-
+		
 		/**
 		 *	extract()
 		 *
@@ -1014,10 +1014,10 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 
 		/**
 		 *	file_exists()
-		 *
+		 *	
 		 *	Tests whether a file (with path) exists in the given zip file
 		 *	If leave_open is true then the zip object will be left open for faster checking for subsequent files within this zip
-		 *
+		 *	
 		 *	@param		string	$zip_file		The zip file to check
 		 *	@param		string	$locate_file	The file to test for
 		 *	@param		bool	$leave_open		Optional: True if the zip file should be left open
@@ -1025,30 +1025,20 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 *
 		 */
 		abstract public function file_exists( $zip_file, $locate_file, $leave_open = false );
-
+		
 		/*	get_file_list()
-		 *
+		 *	
 		 *	Get an array of all files in a zip file with some file properties.
-		 *
+		 *	
 		 *	@param		string		$zip_file	The file to list the content of
 		 *	@return		bool|array				false on failure, otherwise array of file properties (may be empty)
 		 */
 		abstract public function get_file_list( $zip_file );
-
-		/*	get_file_contents()
-		 *
-		 *	Get an array of all files in a zip file with some file properties.
-		 *
-		 *	@param		string		$zip_file	The file to list the content of
-		 *	@param      string      $file_path  The path to the file to get contents.
-		 *	@return		bool|array				false on failure, otherwise array of file properties (may be empty)
-		 */
-		abstract public function get_file_contents( $zip_file, $file_path );
-
+		
 		/*	set_comment()
-		 *
+		 *	
 		 *	Retrieve archive comment.
-		 *
+		 *	
 		 *	@param		string			$zip_file		Filename of archive to set comment on.
 		 *	@param		string			$comment		Comment to apply to archive.
 		 *	@return		bool							true on success, otherwise false.
@@ -1056,16 +1046,16 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		abstract public function set_comment( $zip_file, $comment );
 
 		/*	get_comment()
-		 *
+		 *	
 		 *	Retrieve archive comment.
-		 *
+		 *	
 		 *	@param		string		$zip_file		Filename of archive to retrieve comment from.
 		 *	@return		bool|string					false on failure, Zip comment otherwise.
 		 */
 		abstract public function get_comment( $zip_file );
+		
 
-
-	} // end pluginbuddy_zbzipcore class.
-
+	} // end pluginbuddy_zbzipcore class.	
+	
 }
 ?>

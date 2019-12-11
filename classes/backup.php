@@ -442,7 +442,6 @@ class pb_backupbuddy_backup {
 			'runnerUID'				=>		get_current_user_id(),							// UID of whomever is running this backup. 0 if scheduled or ran by other automation means.
 			'wp-config_in_parent'	=>		false,
 			'custom_root'			=>		$custom_root,
-			'data_checksum'         =>      '',                                             // Used to verify data file integrity.
 		);
 
 		if ( ( $this->_backup['type'] == 'files' ) && ( isset( $profile['custom_root'] ) ) && ( '' != $profile['custom_root'] ) ) {
@@ -1077,7 +1076,7 @@ class pb_backupbuddy_backup {
 						pb_backupbuddy::status( 'details', 'Closing & unlocking fileoptions.' );
 						$this->_backup_options = '';
 
-						$this->cron_next_step( $this->_backup['serial'], false, null, $next_step['function'] );
+						$this->cron_next_step( $this->_backup['serial'], null, null, $next_step['function'] );
 
 					} elseif ( $this->_backup['profile']['backup_mode'] == '1' ) { // classic mode
 						pb_backupbuddy::status( 'details', 'Classic mode; skipping cron & triggering next step.' );
@@ -2421,27 +2420,28 @@ class pb_backupbuddy_backup {
 
 	} // End integrity_check().
 
-	/**
-	 * Post-backup procedured. Clean up, send notifications, etc.
+
+
+	/*	post_backup()
 	 *
-	 * @param bool $fail_mode      If should be run with fail mode.
-	 * @param bool $cancel_backup  If backup was cancelled.
+	 *	Post-backup procedured. Clean up, send notifications, etc.
 	 *
-	 * @return bool  True if succesful, false if cancelled.
+	 *	@return		null
 	 */
-	public function post_backup( $fail_mode = false, $cancel_backup = false ) {
-		pb_backupbuddy::status( 'message', __( 'Cleaning up after backup.', 'it-l10n-backupbuddy' ) );
+	function post_backup( $fail_mode = false, $cancel_backup = false ) {
+		pb_backupbuddy::status( 'message', __('Cleaning up after backup.', 'it-l10n-backupbuddy' ) );
 
 		// Delete temporary data directory.
 		if ( file_exists( $this->_backup['temp_directory'] ) ) {
-			pb_backupbuddy::status( 'details', __( 'Removing temp data directory.', 'it-l10n-backupbuddy' ) );
+			pb_backupbuddy::status( 'details', __('Removing temp data directory.', 'it-l10n-backupbuddy' ) );
 			pb_backupbuddy::$filesystem->unlink_recursive( $this->_backup['temp_directory'] );
 		}
 		// Delete temporary ZIP directory.
 		if ( file_exists( backupbuddy_core::getBackupDirectory() . 'temp_zip_' . $this->_backup['serial'] . '/' ) ) {
-			pb_backupbuddy::status( 'details', __( 'Removing temp zip directory.', 'it-l10n-backupbuddy' ) );
+			pb_backupbuddy::status( 'details', __('Removing temp zip directory.', 'it-l10n-backupbuddy' ) );
 			pb_backupbuddy::$filesystem->unlink_recursive( backupbuddy_core::getBackupDirectory() . 'temp_zip_' . $this->_backup['serial'] . '/' );
 		}
+
 
 		if ( true === $fail_mode ) {
 			pb_backupbuddy::status( 'warning', 'Backup archive limiting has been skipped since there was an error to avoid deleting potentially good backups to make room for a potentially bad backup.' );
@@ -2449,13 +2449,6 @@ class pb_backupbuddy_backup {
 			$this->trim_old_archives(); // Clean up any old excess archives pushing us over defined limits in settings.
 		}
 
-		// Generate data file.
-		$checksum = backupbuddy_data_file()->create( $this->_backup );
-		if ( false !== $checksum ) {
-			pb_backupbuddy::status( 'details', __( 'Backup data file created successfully.', 'it-l10n-backupbuddy' ) );
-			$this->_backup['data_checksum'] = $checksum;
-			$this->_backup_options->save();
-		}
 
 		if ( true === $cancel_backup ) {
 			pb_backupbuddy::status( 'details', 'Backup stopped so deleting backup ZIP file.' );
@@ -2472,10 +2465,10 @@ class pb_backupbuddy_backup {
 
 		} else { // Not cancelled.
 			$this->_backup['archive_size'] = @filesize( $this->_backup['archive_file'] );
-			pb_backupbuddy::status( 'details', __( 'Final ZIP file size', 'it-l10n-backupbuddy' ) . ': ' . pb_backupbuddy::$format->file_size( $this->_backup['archive_size'] ) );
+			pb_backupbuddy::status( 'details', __('Final ZIP file size', 'it-l10n-backupbuddy' ) . ': ' . pb_backupbuddy::$format->file_size( $this->_backup['archive_size'] ) );
 			pb_backupbuddy::status( 'archiveSize', pb_backupbuddy::$format->file_size( $this->_backup['archive_size'] ) );
 
-			if ( false === $fail_mode ) { // Not cancelled and did not fail so mark finish time.
+			if ( $fail_mode === false ) { // Not cancelled and did not fail so mark finish time.
 
 				$archiveFile = basename( $this->_backup_options->options['archive_file'] );
 
@@ -2484,11 +2477,12 @@ class pb_backupbuddy_backup {
 				$downloadURL = '';
 				$abspath = str_replace( '\\', '/', ABSPATH ); // Change slashes to handle Windows as we store backup_directory with Linux-style slashes even on Windows.
 				$backup_dir = str_replace( '\\', '/', backupbuddy_core::getBackupDirectory() );
-				if ( false !== stristr( $backup_dir, $abspath ) ) { // Make sure file to download is in a publicly accessible location (beneath WP web root technically).
+				if ( FALSE !== stristr( $backup_dir, $abspath ) ) { // Make sure file to download is in a publicly accessible location (beneath WP web root technically).
 					//pb_backupbuddy::status( 'details', 'mydir: `' . $backup_dir . '`, abs: `' . $abspath . '`.');
-					$sitepath    = str_replace( $abspath, '', $backup_dir );
+					$sitepath = str_replace( $abspath, '', $backup_dir );
 					$downloadURL = rtrim( site_url(), '/\\' ) . '/' . trim( $sitepath, '/\\' ) . '/' . $archiveFile;
 				}
+
 
 				$integrityIsOK = '-1';
 				if ( isset( $this->_backup_options->options['integrity']['is_ok'] ) ) {
@@ -2496,20 +2490,18 @@ class pb_backupbuddy_backup {
 				}
 
 				$destinations = array();
-				foreach ( $this->_backup_options->options['steps'] as $step ) {
-					if ( 'send_remote_destination' === $step['function'] ) {
+				foreach( $this->_backup_options->options['steps'] as $step ) {
+					if ( 'send_remote_destination' == $step['function'] ) {
 						$destinations[] = array(
-							'id'    => $step['args'][0],
-							'title' => pb_backupbuddy::$options['remote_destinations'][ $step['args'][0] ]['title'],
-							'type'  => pb_backupbuddy::$options['remote_destinations'][ $step['args'][0] ]['type'],
-						);
+											'id' => $step['args'][0],
+											'title' => pb_backupbuddy::$options['remote_destinations'][ $step['args'][0] ]['title'],
+											'type' => pb_backupbuddy::$options['remote_destinations'][ $step['args'][0] ]['type'],
+										);
 					}
 				}
 
 				pb_backupbuddy::status( 'details', 'Updating statistics for last backup completed and number of edits since last backup.' );
-
-				$finishTime = microtime( true );
-
+				$finishTime                                    = microtime( true );
 				pb_backupbuddy::$options['last_backup_finish'] = $finishTime;
 				pb_backupbuddy::$options['last_backup_stats']  = array(
 					//'serial'			=> $this->_backup['serial'],
@@ -2524,14 +2516,13 @@ class pb_backupbuddy_backup {
 					'integrityStatus'	=> $integrityIsOK, // 1, 0, -1 (unknown)
 					'destinations'		=> $destinations, // Index is destination ID. Empty array if none.
 				);
-
-				pb_backupbuddy::$options['edits_since_last'] = array( // Reset edit stats for notifying user of how many recent edits since last backup happened.
+				pb_backupbuddy::$options['edits_since_last']   = array( // Reset edit stats for notifying user of how many recent edits since last backup happened.
 					'all'    => 0,
 					'post'   => 0,
 					'plugin' => 0,
 					'option' => 0,
 				);
-				pb_backupbuddy::$options['recent_edits']     = array(); // Reset recent edits.
+				pb_backupbuddy::$options['recent_edits']       = array(); // Reset recent edits.
 				pb_backupbuddy::save();
 			}
 
@@ -2539,6 +2530,7 @@ class pb_backupbuddy_backup {
 
 		require_once( pb_backupbuddy::plugin_path() . '/classes/housekeeping.php' );
 		backupbuddy_housekeeping::cleanup_temp_dir();
+
 
 		if ( $this->_backup['trigger'] == 'manual' ) {
 			// Do nothing. No notifications as of pre-3.0 2012.
@@ -2556,6 +2548,7 @@ class pb_backupbuddy_backup {
 			pb_backupbuddy::status( 'warning', 'Warning #4343434. Unknown backup trigger `' . $this->_backup['trigger'] . '`. This may be okay if triggered via an external source such as iThemes Sync.' );
 		}
 
+
 		pb_backupbuddy::status( 'message', __( 'Finished cleaning up.', 'it-l10n-backupbuddy' ) );
 
 		if ( true === $cancel_backup ) {
@@ -2565,6 +2558,7 @@ class pb_backupbuddy_backup {
 			if ( true === $fail_mode ) {
 				pb_backupbuddy::status( 'details', __( 'As this backup did not pass the integrity check you should verify it manually or re-scan. Integrity checks can fail on good backups due to permissions, large file size exceeding memory limits, etc. You may manually disable integrity check on the Settings page but you will no longer be notified of potentially bad backups.', 'it-l10n-backupbuddy' ) );
 			} else {
+
 				if ( ( $this->_backup['trigger'] != 'deployment' ) && ( $this->_backup['trigger'] != 'deployment_pulling' ) ) {
 					//$stats = stat( $this->_backup['archive_file'] );
 					//$sizeFormatted = pb_backupbuddy::$format->file_size( $stats['size'] );
@@ -2578,13 +2572,12 @@ class pb_backupbuddy_backup {
 						) )
 					);
 				}
+
 			}
 		}
 
-		// Clear Backups Cache.
-		backupbuddy_backups()->clear_cache();
-
 		return true;
+
 	} // End post_backup().
 
 

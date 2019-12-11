@@ -11,16 +11,16 @@ pb_backupbuddy::set_status_serial( $serial );
 
 if ( true == get_transient( 'pb_backupbuddy_stop_backup-' . $serial ) ) {
 	pb_backupbuddy::status( 'message', 'Backup STOPPED by user. Post backup cleanup step has been scheduled to clean up any temporary files.', $serial );
-
+	
 	require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
 	$fileoptions_file = backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt';
 	pb_backupbuddy::status( 'details', 'Fileoptions instance #30.' );
 	$backup_options = new pb_backupbuddy_fileoptions( $fileoptions_file, false, $ignore_lock = true );
-
+	
 	if ( true !== ( $result = $backup_options->is_ok() ) ) {
 		pb_backupbuddy::status( 'error', 'Unable to access fileoptions file `' . $fileoptions_file . '`.', $serial );
 	}
-
+	
 	// Wipe backup file.
 	if ( isset( $backup_options->options['archive_file'] ) && file_exists( $backup_options->options['archive_file'] ) ) { // Final zip file.
 		$unlink_result = @unlink( $backup_options->options['archive_file'] );
@@ -32,9 +32,9 @@ if ( true == get_transient( 'pb_backupbuddy_stop_backup-' . $serial ) ) {
 	} else {
 		pb_backupbuddy::status( 'details', 'Archive file not found. Not deleting.', $serial );
 	}
-
+	
 	// NOTE: fileoptions file will be wiped by periodic cleanup. We need to keep this for now...
-
+	
 	delete_transient( 'pb_backupbuddy_stop_backup-' . $serial );
 	pb_backupbuddy::status( 'details', 'Backup stopped by user. Any remaining processes or files will time out and be cleaned up by scheduled housekeeping functionality.', $serial );
 	pb_backupbuddy::status( 'haltScript', '', $serial ); // Halt JS on page.
@@ -47,12 +47,12 @@ if ( $serial != '' ) {
 	//pb_backupbuddy::status( 'details', 'Fileoptions instance #29.' );
 	$waitingFileoptions = true;
 	$waitingFileoptionsCount = 0;
-
+	
 	// In case fileoptions is not ready for proper reading then keep waiting for a bit to see if it becomes usable.
 	while ( true === $waitingFileoptions ) {
 		$backup_options = new pb_backupbuddy_fileoptions( $fileoptions_file, $read_only = true, $ignore_lock = true );
 		$backup = &$backup_options->options;
-
+		
 		if ( true !== ( $result = $backup_options->is_ok() ) ) { // File does not exists or unreadable.
 			if ( 0 >= $init_wait_retry_count ) {
 				// Waited too long for init to complete, must be something wrong
@@ -68,21 +68,21 @@ if ( $serial != '' ) {
 		} else { // File existed and was read. Make sure the data is valid.
 			if ( ! is_array( $backup ) ) {
 				pb_backupbuddy::status( 'warning', 'Fileoptions file did not contain an array. Waiting 1 second before trying again. Attempt ' . $waitingFileoptionsCount . ' of ' . backupbuddy_constants::BACKUP_STATUS_FILEOPTIONS_WAIT_COUNT_LIMIT . ' times this round.', $serial );
-
+				
 				// If we do not output this here then status may never be shown.
 				$status_lines = pb_backupbuddy::get_status( $serial, true, false, true ); // Clear file, dont unlink file, supress status retrieval msg.
 				echo implode( '', $status_lines );
-
+				
 				sleep( 1 );
 				$waitingFileoptionsCount++;
 				if ( $waitingFileoptionsCount > ( backupbuddy_constants::BACKUP_STATUS_FILEOPTIONS_WAIT_COUNT_LIMIT ) ) {
 					pb_backupbuddy::status( 'error', 'Error #9031b. Fileoptions file `' . $fileoptions_file . '` did not contain an array and waiting did not produce results. Contents: `' . $backup . '`.', $serial );
 					$waitingFileoptions = false;
-
+					
 					// If we do not output this here then status may never be shown.
 					$status_lines = pb_backupbuddy::get_status( $serial, true, false, true ); // Clear file, dont unlink file, supress status retrieval msg.
 					echo implode( '', $status_lines );
-
+					
 					die();
 				}
 			} else { // File is array so stop waiting.
@@ -90,14 +90,14 @@ if ( $serial != '' ) {
 			}
 		}
 	}
-
+	
 }
 if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 	pb_backupbuddy::status( 'error', 'Error #9031. Invalid backup serial (' . htmlentities( $serial ) . '). Please check directory permissions for your wp-content/uploads/ directory recursively, your PHP error_log for any errors, and that you have enough free disk space. If seeking support please provide this full status log and PHP error log. Fatal error. Verify this fileoptions file exists `' . $fileoptions_file . '`', $serial );
 	pb_backupbuddy::status( 'haltScript', '', $serial );
 	die();
 } else {
-
+	
 	// Verify init completed.
 	if ( false === $backup['init_complete'] ) {
 		if ( 0 >= $init_wait_retry_count ) {
@@ -109,14 +109,14 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 			pb_backupbuddy::status( 'wait_init', '', $serial );
 		}
 	}
-
+	
 	//***** Process any specialAction methods.
 	if ( 'checkSchedule' == $specialAction ) {
-
+		
 		if ( FALSE === ( $next_scheduled = wp_next_scheduled( 'pb_backupbuddy_process_backup', array( $serial ) ) ) ) {
 			//pb_backupbuddy::status( 'details', print_r( pb_backupbuddy::_POST(), true ), $serial );
 			pb_backupbuddy::status( 'warning', 'WordPress reports the next step is not currently scheduled. It is either in the process of running or went missing. Consider enabled advanced setting missing cron rescheduling if this persists.', $serial, null, $echoNotWrite = true );
-
+			
 			if ( '1' == pb_backupbuddy::$options['backup_cron_rescheduling'] ) {
 				pb_backupbuddy::status( 'details', 'Missing cron rescheduling enabled. Attempting to add the missing schedule back in.', $serial );
 				// Schedule event.
@@ -132,7 +132,7 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 					pb_backupbuddy::status( 'cronParams', base64_encode( json_encode( array( 'time' => $cron_time, 'tag' => 'backupbuddy_cron', 'method' => 'process_backup', 'args' => $cron_args ) ) ), $serial );
 				}
 			}
-
+			
 		} else {
 			$timeFromNow = $next_scheduled - time();
 			pb_backupbuddy::status( 'details', 'Checked cron schedule. Next run: `' . $next_scheduled . '`. ' . $timeFromNow . ' seconds from now.', $serial, null, $echoNotWrite = true );
@@ -140,7 +140,7 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 				$missedTime = abs( $timeFromNow );
 				if ( ( '' != pb_backupbuddy::$options['backup_cron_passed_force_time'] ) && ( is_numeric( pb_backupbuddy::$options['backup_cron_passed_force_time'] ) ) && ( $missedTime > pb_backupbuddy::$options['backup_cron_passed_force_time'] ) ) {
 					pb_backupbuddy::status( 'details', 'Cron has passed the force time of `' . pb_backupbuddy::$options['backup_cron_passed_force_time'] . '` seconds. Currently `' . $missedTime . '` seconds overdue. Forcing cron to spawn now. If the problem persists the host may be blocking the cron loopback, possibly due to mod_security settings.', $serial );
-
+					
 					if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
 						update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
 						spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
@@ -152,18 +152,18 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 				}
 			}
 		}
-
+		
 	}
 	//***** End processing any specialAction methods.
-
-
+	
+	
 	//***** Begin outputting status of the current step.
 	$zipRunTime = 0;
 	//error_log( print_r( $backup['steps'], true ) );
 	foreach( $backup['steps'] as $step ) {
 		if ( ( $step['start_time'] != -1 ) && ( $step['start_time'] != 0 ) && ( $step['finish_time'] == 0 ) ) { // A step isnt mark to skip, has begun but has not finished. This should not happen but the WP cron is funky. Wait a while before continuing.
 			$thisRunTime = ( time() - $step['start_time'] );
-
+			
 			// For database dump step output the SQL file current size.
 			if ( 'backup_create_database_dump' == $step['function'] ) {
 				if ( '' != $sqlFile ) {
@@ -179,28 +179,28 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 					} else { // No SQL file yet.
 						$sql_filesize = 0;
 					}
-
+					
 					$writeSpeedText = '';
 					if ( $thisRunTime > 0 ) {
 						$writeSpeed = $sql_filesize / $thisRunTime;
 						$writeSpeedText = '. ' . __('Approximate creation speed', 'it-l10n-backupbuddy' ) . ': ' . pb_backupbuddy::$format->file_size( $writeSpeed ) . '/sec [' . $writeSpeed . ']';
 					}
-
+					
 					pb_backupbuddy::status( 'details', 'Current database dump file (' . basename( $sql_file ) . ') size: ' . pb_backupbuddy::$format->file_size( $sql_filesize ) . ' [' . $sql_filesize . '].' . $writeSpeedText, $serial );
 				}
 			}
-
+			
 			if ( 'backup_zip_files' == $step['function'] ) {
 				$zipRunTime = $thisRunTime;
 			}
-
+			
 			if ( 'backup_zip_files' != $step['function'] ) {
 				pb_backupbuddy::status( 'details', 'Waiting for function `' . $step['function'] . '` to complete. Started ' . $thisRunTime . ' seconds ago.', $serial );
 				if ( ( time() - $step['start_time'] ) > 300 ) {
 					pb_backupbuddy::status( 'warning', 'The function `' . $step['function'] . '` is taking an abnormally long time to complete (' . $thisRunTime . ' seconds). The backup may have failed. If it does not increase in the next few minutes it most likely timed out. See the Status Log for details.', $serial );
 				}
 			}
-
+			
 		} elseif ( $step['start_time'] == 0 ) { // Step that has not started yet.
 			// Do nothing.
 		} elseif ( $step['start_time'] == -1 ) { // Step marked for skipping (backup stop button hit).
@@ -210,8 +210,8 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 		}
 	}
 	//***** End outputting status of the current step.
-
-
+	
+	
 	//***** Begin output of temp zip file size.
 	$temporary_zip_directory = backupbuddy_core::getBackupDirectory() . 'temp_zip_' . $serial . '/';
 	if ( file_exists( $temporary_zip_directory ) ) { // Temp zip file.
@@ -221,7 +221,7 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 			while( $file = readdir( $directory ) ) {
 				if ( ( $file != '.' ) && ( $file != '..' ) && ( $file != 'exclusions.txt' ) && ( !preg_match( '/.*\.txt/', $file ) ) && ( !preg_match( '/pclzip.*\.gz/', $file) ) ) {
 					$stats = stat( $temporary_zip_directory . $file );
-
+					
 					$writeSpeedText = '';
 					if ( $zipRunTime > 0 ) {
 						$writeSpeed = $stats['size'] / $zipRunTime;
@@ -236,10 +236,11 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 		unset( $directory );
 	}
 	//***** End output of temp zip file size.
-
-
+	
+	
 	// Output different stuff to the browser depending on whether backup is finished or not.
 	if ( $backup['finish_time'] > 0 ) { // BACKUP FINISHED.
+		
 		// OUTPUT COMPLETED ZIP FINAL SIZE.
 		if ( 'pull' != $backup['deployment_direction'] ) { // not a pull type deployment.
 			if( file_exists( $backup['archive_file'] ) ) { // Final zip file.
@@ -264,7 +265,7 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 				}
 			}
 		}
-
+		
 		if ( 'deployment_pulling' == $backup['trigger'] ) {
 			pb_backupbuddy::status( 'message', __('Remote backup snapshot successfully completed in', 'it-l10n-backupbuddy' ) . ' ' . pb_backupbuddy::$format->time_duration( $backup['finish_time'] - $backup['start_time'] ) . ' with BackupBuddy v' . pb_backupbuddy::settings( 'version' ) . '. Trigger: `' . $backup['trigger'] . '`.', $serial );
 			pb_backupbuddy::status( 'milestone', 'finish_deploymentPullBackup', $serial );
@@ -275,8 +276,8 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 	} else { // NOT FINISHED
 		//$return_status .= '!' . pb_backupbuddy::$format->localize_time( time() ) . "|~|0|~|0|~|ping\n";
 	}
-
-
+	
+	
 	//***** Begin getting status log information.
 	if ( '' != $backup['deployment_log'] ) {
 		//error_log( print_r( $backup, true ) );
@@ -290,12 +291,12 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 			pb_backupbuddy::status( 'error', 'Error #84377834: Deployment log set but direction missing.', $serial );
 		}
 	}
-
+	
 	// Get local status log and output it.
 	//echo "\nEND_DEPLOY\n"; // In case prior end deploy signal did not go out.
 	$status_lines = pb_backupbuddy::get_status( $serial, true, false, true ); // Clear file, dont unlink file, supress status retrieval msg.
 	echo implode( '', $status_lines );
-
+	
 	// DEPLOYMENT OUTPUT.
 	if ( '' != $backup['deployment_log'] ) {
 		echo "\nSTART_DEPLOY\n";
@@ -334,12 +335,12 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 					echo $message;
 				}
 			}
-
+			
 		} elseif ( 'pull' == $backup['deployment_direction'] ) { // *** PULL
 			if ( false === strpos( $backup['deployment_log'], 'http' ) ) { // Get log via API using serial.
-
+				
 				require_once( pb_backupbuddy::plugin_path() . '/classes/remote_api.php' );
-
+				
 				if ( false === ( $response = backupbuddy_remote_api::remoteCall( $backup['deployment_destination'], 'getBackupStatus', array( 'serial' => $backup['deployment_log'] ), 30, array(), $returnRaw = true ) ) ) {
 					$message = 'Error #783283378. Unable to get remove backup status log with serial `' . $backup['deployment_log'] . '` via remote API.';
 					pb_backupbuddy::status( 'error', $message, $serial );
@@ -350,13 +351,13 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 					} else {
 						echo $response;
 					}
-
+					
 					// Check if remote backup has reported it finished. If so then we need to set it locally that it is done.
 					if ( false !== strpos( $response, 'finish_deploymentPullBackup' ) ) {
 						set_transient( 'backupbuddy_deployPullBackup_finished', $backup['deployment_log'], time() + 120 ); // Set transient storing this completion so backup process can check for this in subsequent run. Touching fileoptions would be not recommended at this point due to possible collissions.
 					}
 				}
-
+			
 			} else { // get log from URL
 				$response = wp_remote_get(
 					$backup['deployment_log'],
@@ -394,19 +395,19 @@ if ( ( $serial == '' ) || ( ! is_array( $backup ) ) ) {
 						echo $message;
 					}
 				}
-
+				
 			} // end get lof from URL.
-
+			
 		} else { // *** UNKNOWN
-
+			
 			$message = 'Error #272823443: Deployment log set but direction missing.';
 			pb_backupbuddy::status( 'error', $message, $serial );
 			echo $message;
-
+			
 		}
 		echo "\nEND_DEPLOY\n";
 	}
-
+	
 	// Queue up a pong for the next response.
 	pb_backupbuddy::status( 'message', __( 'Pong! Server replied.', 'it-l10n-backupbuddy' ), $serial );
 }

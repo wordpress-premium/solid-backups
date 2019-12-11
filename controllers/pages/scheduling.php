@@ -54,12 +54,24 @@ if ( 'delete_schedule' == pb_backupbuddy::_POST( 'bulk_action' ) ) {
 	} // end foreach.
 
 	if ( count( $deleted_schedules ) ) {
-		pb_backupbuddy::alert( __( 'Deleted schedule(s):', 'it-l10n-backupbuddy' ) . ' ' . implode( ', ', $deleted_schedules ), false, '', '', '', array( 'class' => 'below-h2' ) );
+		pb_backupbuddy::alert( __( 'Deleted schedule(s):', 'it-l10n-backupbuddy' ) . ' ' . implode( ', ', $deleted_schedules ) );
 	} elseif ( count( $schedule_deletion_errors ) ) {
 		pb_backupbuddy::alert( __( 'There were problems deleting the following schedule(s):', 'it-l10n-backupbuddy' ) . ' ' . implode( ', ', $schedule_deletion_errors ), true );
 	}
 }
 /***** END SCHEDULE DELETION */
+
+
+/***** BEGIN MANUALLY RUNNING SCHEDULE */
+if ( '' != pb_backupbuddy::_GET( 'run' ) ) {
+	$alert_text  = __( 'Manually running scheduled backup', 'it-l10n-backupbuddy' );
+	$alert_text .= ' "' . pb_backupbuddy::$options['schedules'][ pb_backupbuddy::_GET( 'run' ) ]['title'] . '" ';
+	$alert_text .= __( 'in the background.', 'it-l10n-backupbuddy' ) . '<br>';
+	$alert_text .= __( 'Note: If there is no site activity there may be delays between steps in the backup. Access the site or use a 3rd party service, such as a free pinging service, to generate site activity.', 'it-l10n-backupbuddy' );
+	pb_backupbuddy::alert( $alert_text );
+	pb_backupbuddy_cron::_run_scheduled_backup( (int) pb_backupbuddy::_GET( 'run' ) );
+}
+/***** END MANUALLY RUNNING SCHEDULE */
 
 /**
  * Build Remote Destinations
@@ -100,8 +112,9 @@ global $private_interval_tag_prefix;
 $private_interval_tag_prefix = 'itbub-';
 
 // EDIT existing schedule.
-if ( 'edit' === $mode ) {
-	$savepoint = 'schedules#' . pb_backupbuddy::_GET( 'edit' );
+if ( 'edit' == $mode ) {
+	$data['mode_title'] = __( 'Edit Schedule', 'it-l10n-backupbuddy' );
+	$savepoint          = 'schedules#' . pb_backupbuddy::_GET( 'edit' );
 
 	// We need to know this on an edit in case we are showing only private schedule periods for selection but the
 	// schedule we are editing is using a non-private schedule period - we need to include this in the list otherwise
@@ -123,7 +136,8 @@ if ( 'edit' === $mode ) {
 	}
 	$remote_destinations = bb_build_remote_destinations( $destination_list );
 } else { // ADD new schedule.
-	$savepoint = false;
+	$data['mode_title'] = __( 'Add New Schedule', 'it-l10n-backupbuddy' );
+	$savepoint          = false;
 
 	// We don't actually have a schedule tag but this represents what the default is for
 	// when we are adding a new bsckup schedule.
@@ -134,7 +148,7 @@ if ( 'edit' === $mode ) {
 	$remote_destinations = '<ul id="pb_backupbuddy_remotedestinations_list" style="margin: 0;"></ul>';
 }
 
-$schedule_form = new pb_backupbuddy_settings( 'scheduling', $savepoint, 'edit=' . pb_backupbuddy::_GET( 'edit' ) . '&tab=edit-schedule', 250 );
+$schedule_form = new pb_backupbuddy_settings( 'scheduling', $savepoint, 'edit=' . pb_backupbuddy::_GET( 'edit' ), 250 );
 
 $schedule_form->add_setting(
 	array(
@@ -680,33 +694,32 @@ if ( ! empty( $submitted_schedule ) && count( $submitted_schedule['errors'] ) ==
 				pb_backupbuddy::save();
 				$schedule_form->clear_values();
 				$schedule_form->set_value( 'on_off', 1 );
-				pb_backupbuddy::alert( 'Added new schedule `' . htmlentities( $submitted_schedule['data']['title'] ) . '`.', false, '', '', '', array( 'class' => 'below-h2' ) );
+				pb_backupbuddy::alert( 'Added new schedule `' . htmlentities( $submitted_schedule['data']['title'] ) . '`.' );
 			}
 		}
 	} else { // EDIT SCHEDULE. Form handles saving; just need to update timestamp.
-		$edit_id   = (int) pb_backupbuddy::_GET( 'edit' );
 		$first_run = pb_backupbuddy::$format->unlocalize_time( strtotime( $submitted_schedule['data']['first_run'] ) );
 		if ( 0 == $first_run || 18000 == $first_run ) {
-			pb_backupbuddy::alert( sprintf( __( 'Invalid time format. Please use the specified format / example %s', 'it-l10n-backupbuddy' ), $date_format_example ), true, '', '', '', array( 'class' => 'below-h2' ) );
+			pb_backupbuddy::alert( sprintf( __( 'Invalid time format. Please use the specified format / example %s', 'it-l10n-backupbuddy' ), $date_format_example ) );
 			$error = true;
 		}
 
-		pb_backupbuddy::$options['schedules'][ $edit_id ]['first_run'] = $first_run;
+		pb_backupbuddy::$options['schedules'][ pb_backupbuddy::_GET( 'edit' ) ]['first_run'] = $first_run;
 
-		$next_scheduled_time = wp_next_scheduled( 'backupbuddy_cron', array( 'run_scheduled_backup', array( $edit_id ) ) );
+		$next_scheduled_time = wp_next_scheduled( 'backupbuddy_cron', array( 'run_scheduled_backup', array( (int) $_GET['edit'] ) ) );
 		$result              = backupbuddy_core::unschedule_event(
 			$next_scheduled_time, 'backupbuddy_cron', array(
 				'run_scheduled_backup',
-				array( $edit_id ),
+				array( (int) $_GET['edit'] ),
 			)
 		); // Remove old schedule.
 		if ( false === $result ) {
 			pb_backupbuddy::alert( 'Error #589689. Unable to unschedule scheduled cron job with WordPress. Please see your BackupBuddy error log for details.' );
 		}
-		pb_backupbuddy::log( 'details', 'Attempting to scheudle with the following parameters: ' . print_r( $first_run, true ) . print_r( $submitted_schedule['data']['interval'], true ). print_r( $edit_id, true ) );
-		$result = backupbuddy_core::schedule_event( $first_run, $submitted_schedule['data']['interval'], 'run_scheduled_backup', array( $edit_id ) ); // Add new schedule.
+		pb_backupbuddy::log( 'details', 'Attempting to scheudle with the following parameters: ' . print_r( $first_run, true ) . print_r( $submitted_schedule['data']['interval'], true ). print_r( $_GET['edit'], true ) );
+		$result = backupbuddy_core::schedule_event( $first_run, $submitted_schedule['data']['interval'], 'run_scheduled_backup', array( (int) $_GET['edit'] ) ); // Add new schedule.
 		if ( false === $result ) {
-			pb_backupbuddy::alert( 'Error scheduling event with WordPress. Your schedule may not work properly. Please try again. Error #3488439. Check your BackupBuddy error log for details.', true, '', '', '', array( 'class' => 'below-h2' ) );
+			pb_backupbuddy::alert( 'Error scheduling event with WordPress. Your schedule may not work properly. Please try again. Error #3488439. Check your BackupBuddy error log for details.', true );
 		}
 		pb_backupbuddy::save();
 

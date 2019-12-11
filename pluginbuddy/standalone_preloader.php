@@ -451,48 +451,46 @@ if ( ! function_exists( 'ngettext' ) ) {
 	}
 } // End ngettext().
 
-if ( ! function_exists( 'human_time_diff' ) ) {
-	/**
-	 * Determines the difference between two timestamps.
-	 *
-	 * The difference is returned in a human readable format such as "1 hour",
-	 * "5 mins", "2 days".
-	 *
-	 * @since 1.5.0
-	 *
-	 * @param int $from  Unix timestamp from which the difference begins.
-	 * @param int $to    Optional. Unix timestamp to end the time difference. Default becomes time() if not set.
-	 *
-	 * @return string  Human readable time difference.
-	 */
-	function human_time_diff( $from, $to = 0 ) {
-		if ( empty( $to ) ) {
-			$to = function_exists( 'current_time' ) ? current_time( 'timestamp' ) : time();
-		}
-		$diff = (int) abs( $to - $from );
-		if ( $diff <= 3600 ) {
-			$mins = round( $diff / 60 );
-			if ( $mins <= 1 ) {
-				$mins = 1;
-			}
-			/* translators: min=minute */
-			$since = sprintf( ngettext( '%s min', '%s mins', $mins ), $mins );
-		} elseif ( ( $diff <= 86400 ) && ( $diff > 3600 ) ) {
-			$hours = round( $diff / 3600 );
-			if ( $hours <= 1 ) {
-				$hours = 1;
-			}
-			$since = sprintf( ngettext( '%s hour', '%s hours', $hours ), $hours );
-		} elseif ( $diff >= 86400 ) {
-			$days = round( $diff / 86400 );
-			if ( $days <= 1 ) {
-				$days = 1;
-			}
-			$since = sprintf( ngettext( '%s day', '%s days', $days ), $days );
-		}
-		return $since;
+/**
+ * Determines the difference between two timestamps.
+ *
+ * The difference is returned in a human readable format such as "1 hour",
+ * "5 mins", "2 days".
+ *
+ * @since 1.5.0
+ *
+ * @param int $from Unix timestamp from which the difference begins.
+ * @param int $to Optional. Unix timestamp to end the time difference. Default becomes time() if not set.
+ * @return string Human readable time difference.
+ */
+function human_time_diff( $from, $to = '' ) {
+	if ( empty( $to ) ) {
+		$to = time();
 	}
+	$diff = (int) abs( $to - $from );
+	if ( $diff <= 3600 ) {
+		$mins = round( $diff / 60 );
+		if ( $mins <= 1 ) {
+			$mins = 1;
+		}
+		/* translators: min=minute */
+		$since = sprintf( ngettext( '%s min', '%s mins', $mins ), $mins );
+	} elseif ( ( $diff <= 86400 ) && ( $diff > 3600 ) ) {
+		$hours = round( $diff / 3600 );
+		if ( $hours <= 1 ) {
+			$hours = 1;
+		}
+		$since = sprintf( ngettext( '%s hour', '%s hours', $hours ), $hours );
+	} elseif ( $diff >= 86400 ) {
+		$days = round( $diff / 86400 );
+		if ( $days <= 1 ) {
+			$days = 1;
+		}
+		$since = sprintf( ngettext( '%s day', '%s days', $days ), $days );
+	}
+	return $since;
 }
+
 
 /**
  * Unserialize value only if it was serialized.

@@ -21,11 +21,11 @@ $client_secret = '';
 set_include_path( pb_backupbuddy::plugin_path() . '/destinations/gdrive/' . PATH_SEPARATOR . get_include_path());
 
 if ( 'add' == $mode ) {
-
+	
 	if ( 'service' != pb_backupbuddy::_GET( 'account' ) ) {
 		if ( 'auth_gdrive' != pb_backupbuddy::_POST( 'gaction' ) ) {
 			?>
-
+			
 			<ol>
 				<li><a href="https://console.developers.google.com/project?authuser=0" target="_blank" class="button secondary-button" style="vertical-align: 0;">Open Google API Console in a new window</a> (If using a <a href="https://developers.google.com/identity/protocols/OAuth2ServiceAccount" target="_new">Service Account</a> for more tokens <a href="<?php echo pb_backupbuddy::ajax_url( 'destination_picker' ) . '&add=gdrive&account=service&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ); ?>">click here</a>.)</li>
 				<li>In the new window select <span class="pb_label pb_label-subtle">Create Project</span> and name it something like "BackupBuddy" (If you have more than 50 sites please use Service Accounts above due to Google token limits) & <span class="pb_label pb_label-subtle">Create</span>. Wait for the next screen to display.</li>
@@ -39,7 +39,7 @@ if ( 'add' == $mode ) {
 				<li>Select Application type of <span class="pb_label pb_label-subtle">Other</span> and title it whatever you'd prefer and select the Create button.</li>
 				<li>Copy & paste the <span class="pb_label pb_label-subtle">Client ID</span> & <span class="pb_label pb_label-subtle">Client Secret</span> below and select OK on the Google page.</li>
 			</ol>
-
+			
 			<br><br>
 			<h3>Enter Google Drive Client ID & Secret</h3>
 			<form method="post" action="<?php echo pb_backupbuddy::ajax_url( 'destination_picker' ) . '&add=gdrive&account=normal&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ); ?>">
@@ -59,12 +59,12 @@ if ( 'add' == $mode ) {
 					</tr>
 				</table>
 			</form>
-
+			
 			<?php
 			return;
 		}
-
-
+		
+		
 		if ( 'auth_gdrive' == pb_backupbuddy::_POST( 'gaction' ) ) {
 			$client_id = trim( pb_backupbuddy::_POST( 'client_id' ) );
 			$client_secret = trim( pb_backupbuddy::_POST( 'client_secret' ) );
@@ -73,14 +73,14 @@ if ( 'add' == $mode ) {
 				pb_backupbuddy::alert( 'Error #484834: Missing fields. All fields required.', true );
 			}
 		}
-
-
+		
+		
 		if ( 'auth_gdrive' == pb_backupbuddy::_POST( 'gaction' ) ) {
-
+			
 			require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive/Google/Client.php' );
 			require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive/Google/Http/MediaFileUpload.php' );
 			require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive/Google/Service/Drive.php' );
-
+			
 			$redirect_uri = 'urn:ietf:wg:oauth:2.0:oob';
 
 			$client = new Google_Client();
@@ -90,7 +90,7 @@ if ( 'add' == $mode ) {
 			$client->setAccessType('offline'); // Required so that Google will return the refresh token.
 			$client->addScope("https://www.googleapis.com/auth/drive");
 			$service = new Google_Service_Drive($client);
-
+			
 			$auth_code = pb_backupbuddy::_POST( 'auth_code' );
 			if ( '' != $auth_code ) {
 				try {
@@ -100,31 +100,31 @@ if ( 'add' == $mode ) {
 					pb_backupbuddy::alert( 'Error Authenticating. Make sure you entered the code exactly. Details: `' . $e->getMessage() . '`. Please check codes and try again.' );
 					$destination_settings['tokens'] = '';
 				}
-
+				
 				/*
 				echo '<br>';
 				echo 'token: ' . $client->getAccessToken();
 				echo '<br><br>';
 				*/
-
-
-
+				
+				
+				
 			}
-
-
+			
+			
 			if ( '' == $destination_settings['tokens'] ) {
 				?>
 				<ol>
 					<li><a href="<?php echo $client->createAuthUrl(); ?>" target="_blank" class="button secondary-button" style="vertical-align: 0;">Click here & click "Accept" to authorize BackupBuddy access to your Google Drive</a></li>
 					<li>Copy & paste the provided code into the box below</li>
 				</ol>
-
+				
 				<br>
 				<form method="post">
 					<input type="hidden" name="gaction" value="auth_gdrive">
 					<input type="hidden" name="client_id" value="<?php echo $client_id; ?>">
 					<input type="hidden" name="client_secret" value="<?php echo $client_secret; ?>">
-
+					
 					<table class="form-table">
 						<tr>
 							<th scope="row">Auth Code</th>
@@ -135,15 +135,15 @@ if ( 'add' == $mode ) {
 							<td><input class="button-primary" type="submit" value="Continue"></td>
 						</tr>
 					</table>
-
+					
 				</form>
-
+				
 				<?php
-
+				
 				return;
 			}
-
-
+			
+			
 		}
 	} else { // service account
 		$service_form_ok = true;
@@ -161,24 +161,24 @@ if ( 'add' == $mode ) {
 					$service_account_file = '';
 				}
 			}
-
+			
 			if ( true === $service_form_ok ) { // Test credentials.
 				$destination_settings['service_account_file'] = $service_account_file;
 				$destination_settings['service_account_email'] = $service_account_email;
-
+				
 				if ( false === ( $info = pb_backupbuddy_destination_gdrive::getDriveInfo( $destination_settings ) ) ) {
 					pb_backupbuddy::alert( 'Error #84934834: Unable to authenticate to Google Drive Service Account for Storage Access with supplied credentials. NOTE: You must use the P12 file format and NOT json.' . '<br>Account Name: ' . $service_account_email . '<br>P12 File Path: ' . $service_account_file, true );
 					$service_form_ok = false;
 				}
 			}
-
+			
 		} else {
 			$service_form_ok = false;
 		}
-
+		
 		if ( false === $service_form_ok ) {
 			?>
-
+			
 			<br>
 			<b>&nbsp;&nbsp;Service Account Setup:</b><br>
 			<ol>
@@ -191,15 +191,15 @@ if ( 'add' == $mode ) {
 				<li>Copy the "Service Account ID" which looks like an email to the box below</li>
 				<li>Upload the .p12 key file onto your server, preferably outside a web-accessible directory and enter its path below</li>
 			</ol>
-
-
-
+			
+			
+			
 			<br>
 			<form method="post">
 				<input type="hidden" name="gaction" value="auth_gdrive">
 				<input type="hidden" name="client_id" value="<?php echo $client_id; ?>">
 				<input type="hidden" name="client_secret" value="<?php echo $client_secret; ?>">
-
+				
 				<table class="form-table">
 					<tr>
 						<th scope="row">Service Account ID</th>
@@ -214,7 +214,7 @@ if ( 'add' == $mode ) {
 						<td><input class="button-primary" type="submit" value="Continue"></td>
 					</tr>
 				</table>
-
+				
 			</form>
 			<?php
 			return;
@@ -319,9 +319,10 @@ $settings_form->add_setting( array(
 
 
 // Hide when saving or if disabling file management enabled.
-if ( 'save' != $mode && isset( $destination_settings['disable_file_management'] ) && '1' != $destination_settings['disable_file_management'] ) {
+if ( ( 'save' != $mode ) && ( '1' != $destination_settings['disable_file_management'] ) ) {
 	pb_backupbuddy_destination_gdrive::printFolderSelector( $destination_id );
 }
+
 
 
 $settings_form->add_setting( array(
@@ -427,7 +428,7 @@ $settings_form->add_setting( array(
     'row_class' =>      'advanced-toggle',
 ) );
 
-if ( ( $mode !== 'edit' ) || ( isset( $destination_settings['disable_file_management'] ) && '0' == $destination_settings['disable_file_management'] ) ) {
+if ( ( $mode !== 'edit' ) || ( '0' == $destination_settings['disable_file_management'] ) ) {
 	$settings_form->add_setting( array(
 		'type'		=>		'checkbox',
 		'name'		=>		'disable_file_management',
@@ -462,7 +463,7 @@ if ( 'save' != $mode ) {
 <script>
 	jQuery(document).ready(function() {
 		destinationWrap = backupbuddy_gdrive_getDestinationWrap( '<?php echo $destination_id; ?>' );
-
+		
 		jQuery( '.backupbuddy-gdrive-folderSelector[data-isTemplate="true"]' ).clone().attr('data-isTemplate','false').show().appendTo( destinationWrap.find( 'td.backupbuddy-gdrive-folder-row' ) ).attr( 'data-destinationID', '<?php echo $destination_id; ?>' );
 		backupbuddy_gdrive_folderSelect( '<?php echo $destination_id; ?>' );
 	});

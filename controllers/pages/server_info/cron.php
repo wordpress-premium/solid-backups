@@ -21,8 +21,8 @@ $timestamp           = current_time( 'timestamp' );
 echo '<center>' . esc_html__( 'Current Time', 'it-l10n-backupbuddy' ) . ': ' . esc_html( $date_time_formatted ) . ' (' . esc_html( $timestamp ) . ')</center>';
 echo '<center>' . esc_html__( 'Currently running last cron', 'it-l10n-backupbuddy' ) . ': ' . esc_html( $last_cron_run ) . '</center>';
 ?>
-<div style="float: right; margin-bottom: 1px;" class="delete-all-cron-entries">
-	<a href="<?php echo pb_backupbuddy::page_url(); ?>&clear_cron=yes&tab=cron" style="background-color: #ffebc6; !important;" class="button secondary-button" onClick="return confirm( '<?php echo esc_attr( __( 'Are you sure you want to clear all cron entries? WordPress will automatically regenerate crons but some 3rd party plugins may not.', 'it-l10n-backupbuddy' ) ); ?>' );"><?php esc_html_e( 'Delete All Cron Entries', 'it-l10n-backupbuddy' ); ?></a>
+<div style="float: right; margin-bottom: 1px;">
+	<a style="background-color: #ffebc6; !important;" href="<?php echo pb_backupbuddy::page_url(); ?>&clear_cron=yes&tab=3" class="button secondary-button" onClick="return confirm( '<?php esc_html_e( 'Are you sure you want to clear all cron entries? WordPress will automatically regenerate crons but some 3rd party plugins may not.', 'it-l10n-backupbuddy' ); ?>' );"><?php esc_html_e( 'Delete All Cron Entries', 'it-l10n-backupbuddy' ); ?></a>
 </div>
 <?php
 
@@ -108,13 +108,12 @@ pb_backupbuddy::$ui->list_table(
 		),
 		'bulk_actions'            => array( 'delete_cron' => 'Delete' ),
 		'hover_action_column_key' => '0',
-		'wrapper_class'           => 'backupbuddy-cron-diagnostics',
 	)
 );
 ?>
 
-<div style="float: right; margin-bottom: 1px;" class="delete-all-cron-entries bottom-button">
-	<a href="<?php echo pb_backupbuddy::page_url(); ?>&clear_cron=yes&tab=cron" style="background-color: #ffebc6; !important;" class="button secondary-button" onClick="return confirm( '<?php echo esc_attr( __( 'Are you sure you want to clear all cron entries? WordPress will automatically regenerate crons but some 3rd party plugins may not.', 'it-l10n-backupbuddy' ) ); ?>' );"><?php esc_html_e( 'Delete All Cron Entries', 'it-l10n-backupbuddy' ); ?></a>
+<div style="float: right; margin-bottom: 1px;">
+	<a style="background-color: #ffebc6; !important;" href="<?php echo pb_backupbuddy::page_url(); ?>&clear_cron=yes&tab=3" class="button secondary-button" onClick="if ( false === confirm( '<?php _e( 'Are you sure you want to clear all cron entries? WordPress will automatically regenerate crons but some 3rd party plugins may not.', 'it-l10n-backupbuddy' ); ?>' ) ) { return false; }"><?php _e( 'Delete All Cron Entries', 'it-l10n-backupbuddy' ); ?></a>
 </div>
 
 <br><br><br><br>
@@ -171,14 +170,14 @@ if ( empty( $_GET['show_cron_array'] ) ) {
 	?>
 	<p>
 		<center>
-			<a href="<?php echo pb_backupbuddy::page_url(); ?>&tab=cron&show_cron_array=true#cron_array" style="text-decoration: none;">
+			<a href="<?php echo pb_backupbuddy::page_url(); ?>&tab=3&show_cron_array=true#pb_backupbuddy_getting_started_tab_tools" style="text-decoration: none;">
 				<?php esc_html_e( 'Display CRON Debugging Array', 'it-l10n-backupbuddy' ); ?>
 			</a>
 		</center>
 	</p>
 	<?php
 } else {
-	echo '<br><textarea readonly="readonly" id="cron_array" style="width: 793px;" rows="13" cols="75" wrap="off">';
+	echo '<br><textarea readonly="readonly" style="width: 793px;" rows="13" cols="75" wrap="off">';
 	print_r( $cron );
 	echo '</textarea><br><br>';
 }

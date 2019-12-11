@@ -46,7 +46,7 @@ if ( '' != pb_backupbuddy::_POST( 'import_settings' ) ) {
 					}
 				}
 
-				// Delete Diagnostics data stored in settings.
+				// Delete Server Tools data stored in settings.
 				$import['tested_php_runtime']      = 0;
 				$import['tested_php_memory']       = 0;
 				$import['last_tested_php_runtime'] = 0;

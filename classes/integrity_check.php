@@ -132,11 +132,9 @@ class backupbuddy_integrity_check {
 		$this->additional_options = $additional_options;
 		$this->skip_log_redirect  = $skip_log_redirect;
 
-		$suppress_rescan_alert = isset( $this->additional_options['suppress_rescan_alert'] ) ? $this->additional_options['suppress_rescan_alert'] : false;
-
 		// Set calculated properties.
 		$this->set_serial();
-		$this->set_is_rescan( $suppress_rescan_alert );
+		$this->set_is_rescan();
 		$this->determine_backup_type();
 		$this->set_integrity_array();
 
@@ -174,13 +172,11 @@ class backupbuddy_integrity_check {
 	/**
 	 * Sets the rescan property
 	 */
-	public function set_is_rescan( $suppress_alert = false ) {
+	public function set_is_rescan() {
 		if ( pb_backupbuddy::_GET( 'reset_integrity' ) == $this->serial ) {
 			$this->is_rescan = true;
-			if ( true !== $suppress_alert ) {
-				pb_backupbuddy::alert( 'Rescanning backup integrity for backup file `' . basename( $this->file ) . '`' );
-				pb_backupbuddy::flush();
-			}
+			pb_backupbuddy::alert( 'Rescanning backup integrity for backup file `' . basename( $this->file ) . '`' );
+			pb_backupbuddy::flush();
 		}
 	}
 
@@ -568,11 +564,7 @@ class backupbuddy_integrity_check {
 			$count = count( $files );
 			$pass  = $count > 0;
 		}
-		$browse_tool = 'zip_viewer';
-		if ( backupbuddy_data_file()->locate( $this->file ) ) {
-			$browse_tool = 'dat_viewer';
-		}
-		$href = admin_url( 'admin.php' ) . '?page=pb_backupbuddy_backup&' . $browse_tool . '=' . basename( $this->file ) . '&value=' . basename( $this->file ) . '&bub_rand=' . rand( 100, 999 );
+		$href = admin_url( 'admin.php' ) . '?page=pb_backupbuddy_backup&zip_viewer=' . basename( $this->file ) . '&value=' . basename( $this->file ) . '&bub_rand=' . rand( 100, 999 );
 
 		return array(
 			'test'      => 'Basic file list scan (' . $count . ' files found inside) - <a target="_top" href="' . $href . '">Browse Files</a>',

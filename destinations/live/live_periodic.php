@@ -1184,7 +1184,7 @@ class backupbuddy_live_periodic {
 			pb_backupbuddy::status( 'error', 'Error #84393434: Halting Stash Live due to error returned by deepscandir: `' . $files . '`.' );
 			return $files;
 		}
-		if ( empty( $files ) || false === $files[0] ) { // Format when chunking: array( $finished = false, array( $startAt, $items ) )
+		if ( false === $files[0] ) { // Format when chunking: array( $finished = false, array( $startAt, $items ) )
 			pb_backupbuddy::status( 'details', 'Deep file scan requires chunking.' );
 			$startAtNext = 0;
 			if ( isset( $files[1][0] ) ) {

@@ -42,7 +42,7 @@ if ( ! is_admin() ) {
 </style>
 
 <?php
-$settings_form = new pb_backupbuddy_settings( 'advanced_settings', '', 'tab=advanced', 320 );
+$settings_form = new pb_backupbuddy_settings( 'advanced_settings', '', 'tab=1', 320 );
 
 $settings_form->add_setting(
 	array(
@@ -477,7 +477,6 @@ $settings_form->add_setting(
 		'rules'   => 'required',
 	)
 );
-
 $settings_form->add_setting(
 	array(
 		'type'    => 'checkbox',
@@ -493,21 +492,6 @@ $settings_form->add_setting(
 		'rules'   => 'required',
 	)
 );
-
-$settings_form->add_setting(
-	array(
-		'type'    => 'checkbox',
-		'name'    => 'disable_dat_file_creation',
-		'options' => array(
-			'unchecked' => '0',
-			'checked'   => '1',
-		),
-		'title'   => __( 'Disable .dat file creation', 'it-l10n-backupbuddy' ),
-		'tip'     => __( '[Default: unchecked] - Dat files enable additional restore features and are used to quickly get information about local and remote backup files.', 'it-l10n-backupbuddy' ),
-		'after'   => '<span class="description"> ' . __( 'Check if directed by support.', 'it-l10n-backupbuddy' ) . '</span>',
-	)
-);
-
 $settings_form->add_setting(
 	array(
 		'type'    => 'checkbox',
@@ -558,7 +542,7 @@ $settings_form->add_setting(
 		'name'  => 'backup_cron_passed_force_time',
 		'title' => __( 'Force cron if behind by X seconds', 'it-l10n-backupbuddy' ),
 		'tip'   => __( '[Default: blank] - When in the default modern mode BackupBuddy schedules each backup step with the WordPress simulated cron. If cron steps are not running when they should and the Status Log reports steps should have run many seconds ago, this may help to force BackupBuddy to demand WordPress run the cron step now. Manual backups only; not scheduled.', 'it-l10n-backupbuddy' ),
-		'css'   => 'width: 80px;',
+		'css'   => 'width: 50px;',
 		'after' => ' secs. <span class="description"> ' . __( 'Leave blank for default of no forcing.', 'it-l10n-backupbuddy' ) . '</span>',
 		'rules' => '',
 	)
@@ -569,7 +553,7 @@ $settings_form->add_setting(
 		'name'  => 'php_runtime_test_minimum_interval',
 		'title' => __( 'PHP runtime test interval', 'it-l10n-backupbuddy' ),
 		'tip'   => __( '[Default: 604800 (weekly)] - By default BackupBuddy will regularly perform an actual test of your PHP maximum execution time limit. Many hosts misreport this value so it is tested via a real test to confirm. The lesser of reported or tested values is used for most BackupBuddy operations. Set to 0 (zero) to disable this test.', 'it-l10n-backupbuddy' ),
-		'css'   => 'width: 80px;',
+		'css'   => 'width: 50px;',
 		'after' => ' secs. <span class="description"> ' . __( 'Set to zero (0) to disable.', 'it-l10n-backupbuddy' ) . '</span>',
 		'rules' => '',
 	)
@@ -580,29 +564,12 @@ $settings_form->add_setting(
 		'name'  => 'php_memory_test_minimum_interval',
 		'title' => __( 'PHP memory test interval', 'it-l10n-backupbuddy' ),
 		'tip'   => __( '[Default: 604800 (weekly)] - By default BackupBuddy will regularly perform an actual test of your PHP maximum memory limit. Many hosts misreport this value or have other global limits in place so it is tested via a real test to confirm. Set to 0 (zero) to disable this test.', 'it-l10n-backupbuddy' ),
-		'css'   => 'width: 80px;',
+		'css'   => 'width: 50px;',
 		'after' => ' secs. <span class="description"> ' . __( 'Set to zero (0) to disable.', 'it-l10n-backupbuddy' ) . '</span>',
 		'rules' => '',
 	)
 );
 
-ob_start();
-pb_backupbuddy::load_view( 'settings/permission-modes' );
-$permission_modes = ob_get_clean();
-$settings_form->add_setting(
-	array(
-		'type'    => 'select',
-		'name'    => 'default_restores_permissions',
-		'title'   => __( 'Default Restore Permissions', 'it-l10n-backupbuddy' ),
-		'tip'     => __( '[Default: standard] - When using the restore feature, if a file or folder is restored with incorrect or unsafe permissions, the mode of the directory or file will be automatically corrected based on a set of permissions (see below).', 'it-l10n-backupbuddy' ),
-		'options' => array(
-			'standard' => __( 'Standard (default) - Used by most hosts.', 'it-l10n-backupbuddy' ),
-			'loose'    => __( 'Loose', 'it-l10n-backupbuddy' ),
-			'strict'   => __( 'Strict', 'it-l10n-backupbuddy' ),
-		),
-		'after'   => $permission_modes,
-	)
-);
 
 $settings_form->add_setting(
 	array(

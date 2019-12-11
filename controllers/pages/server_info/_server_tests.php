@@ -14,115 +14,112 @@
  * @package  BackupBuddy
  */
 
-if ( ! function_exists( 'phpinfo_array' ) ) {
-	/**
-	 * Gets PHP Info as an Array
-	 *
-	 * @param int $mode  Mode, passed into phpinfo().
-	 *
-	 * @return array  PHP Info contents, array( local, master ).
-	 */
-	function phpinfo_array( $mode = -1 ) {
+
+/**
+ * Gets PHP Info as an Array
+ *
+ * @param int $mode  Mode, passed into phpinfo().
+ *
+ * @return array  PHP Info contents, array( local, master ).
+ */
+function phpinfo_array( $mode = -1 ) {
+	ob_start();
+	phpinfo( $mode );
+	$s = ob_get_contents();
+	ob_end_clean();
+	$a = $mtc = array();
+	if ( preg_match_all( '/<tr><td class="e">(.*?)<\/td><td class="v">(.*?)<\/td>(:?<td class="v">(.*?)<\/td>)?<\/tr>/', $s, $mtc, PREG_SET_ORDER ) ) {
+		foreach ( $mtc as $v ) {
+			if ( '<i>no value</i>' == $v[2] ) {
+				continue;
+			}
+			$master = '';
+			if ( isset( $v[3] ) ) {
+				$master = strip_tags( $v[3] );
+			}
+			$a[ $v[1] ] = array( $v[2], $master );
+		}
+	}
+	return $a;
+}
+
+
+/**
+ * Get normalized boolean value from ini_get()
+ *
+ * @author nicolas dot grekas+php at gmail dot com
+ *
+ * @param string $a  ini_get Parameter.
+ *
+ * @return bool  Boolean value.
+ */
+function ini_get_bool( $a ) {
+	$b = ini_get( $a );
+	switch ( strtolower( $b ) ) {
+		case 'on':
+		case 'yes':
+		case 'true':
+			return 'assert.active' !== $a;
+
+		case 'stdout':
+		case 'stderr':
+			return 'display_errors' === $a;
+
+		default:
+			return (bool) (int) $b;
+	}
+}
+
+/**
+ * Gets Load average
+ *
+ * @return array  Load Average array.
+ */
+function pb_backupbuddy_get_loadavg() {
+	$result = array_fill( 0, 3, 'n/a' );
+	if ( function_exists( 'sys_getloadavg' ) ) {
+		$load = @sys_getloadavg();
+		if ( is_array( $load ) ) {
+			$count = count( $load );
+			if ( 3 === $count ) {
+				return $load;
+			} else {
+				for ( $i = 0; $i < $count; $i++ ) {
+					$result[ $i ] = $load[ $i ];
+				}
+			}
+		}
+	}
+	if ( substr( PHP_OS, 0, 3 ) == 'WIN' ) { // WINDOWS.
 		ob_start();
-		phpinfo( $mode );
-		$s = ob_get_contents();
+		$status = null;
+		@passthru( 'typeperf -sc 1 "\processor(_total)\% processor time"', $status );
+		$content = ob_get_contents();
 		ob_end_clean();
-		$a = $mtc = array();
-		if ( preg_match_all( '/<tr><td class="e">(.*?)<\/td><td class="v">(.*?)<\/td>(:?<td class="v">(.*?)<\/td>)?<\/tr>/', $s, $mtc, PREG_SET_ORDER ) ) {
-			foreach ( $mtc as $v ) {
-				if ( '<i>no value</i>' == $v[2] ) {
-					continue;
-				}
-				$master = '';
-				if ( isset( $v[3] ) ) {
-					$master = strip_tags( $v[3] );
-				}
-				$a[ $v[1] ] = array( $v[2], $master );
+		if ( 0 === $status ) {
+			if ( preg_match( '/\,"([0-9]+\.[0-9]+)"/', $content, $load ) ) {
+				$result[0] = number_format_i18n( $load[1], 2 ) . ' %';
+				$result[1] = 'n/a';
+				$result[2] = 'n/a';
+				return $result;
 			}
 		}
-		return $a;
-	}
-}
-
-if ( ! function_exists( 'ini_get_bool' ) ) {
-	/**
-	 * Get normalized boolean value from ini_get()
-	 *
-	 * @author nicolas dot grekas+php at gmail dot com
-	 *
-	 * @param string $a  ini_get Parameter.
-	 *
-	 * @return bool  Boolean value.
-	 */
-	function ini_get_bool( $a ) {
-		$b = ini_get( $a );
-		switch ( strtolower( $b ) ) {
-			case 'on':
-			case 'yes':
-			case 'true':
-				return 'assert.active' !== $a;
-
-			case 'stdout':
-			case 'stderr':
-				return 'display_errors' === $a;
-
-			default:
-				return (bool) (int) $b;
+	} else {
+		if ( function_exists( 'file_get_contents' ) && @file_exists( '/proc/loadavg' ) ) {
+			$load = explode( chr( 32 ), @file_get_contents( '/proc/loadavg' ) );
+			if ( is_array( $load ) && ( count( $load ) >= 3 ) ) {
+				$result = array_slice( $load, 0, 3 );
+				return $result;
+			}
+		}
+		if ( function_exists( 'shell_exec' ) ) {
+			$str = substr( strrchr( @shell_exec( 'uptime' ), ':' ), 1 );
+			return array_map( 'trim', explode( ',', $str ) );
 		}
 	}
+	return $result;
 }
 
-if ( ! function_exists( 'pb_backupbuddy_get_loadavg' ) ) {
-	/**
-	 * Gets Load average
-	 *
-	 * @return array  Load Average array.
-	 */
-	function pb_backupbuddy_get_loadavg() {
-		$result = array_fill( 0, 3, 'n/a' );
-		if ( function_exists( 'sys_getloadavg' ) ) {
-			$load = @sys_getloadavg();
-			if ( is_array( $load ) ) {
-				$count = count( $load );
-				if ( 3 === $count ) {
-					return $load;
-				} else {
-					for ( $i = 0; $i < $count; $i++ ) {
-						$result[ $i ] = $load[ $i ];
-					}
-				}
-			}
-		}
-		if ( substr( PHP_OS, 0, 3 ) == 'WIN' ) { // WINDOWS.
-			ob_start();
-			$status = null;
-			@passthru( 'typeperf -sc 1 "\processor(_total)\% processor time"', $status );
-			$content = ob_get_contents();
-			ob_end_clean();
-			if ( 0 === $status ) {
-				if ( preg_match( '/\,"([0-9]+\.[0-9]+)"/', $content, $load ) ) {
-					$result[0] = number_format_i18n( $load[1], 2 ) . ' %';
-					$result[1] = 'n/a';
-					$result[2] = 'n/a';
-					return $result;
-				}
-			}
-		} else {
-			if ( function_exists( 'file_get_contents' ) && @file_exists( '/proc/loadavg' ) ) {
-				$load = explode( chr( 32 ), @file_get_contents( '/proc/loadavg' ) );
-				if ( is_array( $load ) && ( count( $load ) >= 3 ) ) {
-					$result = array_slice( $load, 0, 3 );
-					return $result;
-				}
-			}
-			if ( function_exists( 'shell_exec' ) ) {
-				$str = substr( strrchr( @shell_exec( 'uptime' ), ':' ), 1 );
-				return array_map( 'trim', explode( ',', $str ) );
-			}
-		}
-		return $result;
-	}
-}
 
 $tests = array();
 

@@ -1,68 +1,87 @@
 <?php
-/**
- * Manage Amazon S3v2 Destination
- *
- * Incoming variables:
- *     $destination
- *
- * @author Dustin Bolton 2015.
- * @package BackupBuddy
- */
-
+// @author Dustin Bolton 2015.
+// Incoming variables: $destination
 if ( isset( $destination['disabled'] ) && ( '1' == $destination['disabled'] ) ) {
 	die( __( '<span class="description">This destination is currently disabled based on its settings. Re-enable it under its Advanced Settings.</span>', 'it-l10n-backupbuddy' ) );
 }
-$destination_id = pb_backupbuddy::_GET( 'destination_id' );
 
 // Welcome text.
-$site_only = 'true' != pb_backupbuddy::_GET( 'listAll' );
-$action    = $site_only ? 'true' : 'false';
-$text      = $site_only ? __( 'List all site\'s files', 'it-l10n-backupbuddy' ) : __( 'Only list this site\'s files', 'it-l10n-backupbuddy' );
-$swap_list = sprintf( '<a href="%s&destination_id=%s&listAll=%s" style="text-decoration: none;">%s</a>',
-	esc_attr( pb_backupbuddy::ajax_url( 'remoteClient' ) ),
-	esc_attr( htmlentities( $destination_id ) ),
-	esc_attr( $action ),
-	esc_html( $text )
-);
-printf( '<center>%s</center>', wp_kses_post( $swap_list ) );
+if ( 'true' != pb_backupbuddy::_GET( 'listAll' ) ) {
+	$listAll = '<a href="' . pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . htmlentities( pb_backupbuddy::_GET( 'destination_id' ) ) . '&listAll=true" style="text-decoration: none;">List all site\'s files</a>';
+} else {
+	$listAll = '<a href="' . pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . htmlentities( pb_backupbuddy::_GET( 'destination_id' ) ) . '&listAll=false" style="text-decoration: none;">Only list this site\'s files</a>';
+}
+echo '<center>' . $listAll . '</center>';
+?>
 
+
+
+
+<script type="text/javascript">
+	jQuery(document).ready(function() {
+
+		jQuery( '.pb_backupbuddy_hoveraction_copy' ).click( function() {
+			var backup_file = jQuery(this).attr( 'rel' );
+			var backup_url = '<?php echo pb_backupbuddy::page_url(); ?>&custom=remoteclient&destination_id=<?php echo pb_backupbuddy::_GET( 'destination_id' ); ?>&remote_path=<?php echo htmlentities( pb_backupbuddy::_GET( 'remote_path' ) ); ?>&cpy_file=' + backup_file;
+
+			window.location.href = backup_url;
+
+			return false;
+		} );
+
+		jQuery( '.pb_backupbuddy_hoveraction_download_link' ).click( function() {
+			var backup_file = jQuery(this).attr( 'rel' );
+			var backup_url = '<?php echo pb_backupbuddy::page_url(); ?>&custom=remoteclient&destination_id=<?php echo pb_backupbuddy::_GET( 'destination_id' ); ?>&remote_path=<?php echo htmlentities( pb_backupbuddy::_GET( 'remote_path' ) ); ?>&downloadlink_file=' + backup_file;
+
+			window.location.href = backup_url;
+
+			return false;
+		} );
+
+	});
+</script>
+
+
+<?php
 // Load required files.
-require_once pb_backupbuddy::plugin_path() . '/destinations/s32/init.php';
+require_once( pb_backupbuddy::plugin_path() . '/destinations/s32/init.php' );
 
-$settings = array();
 
 // Settings.
-if ( $destination_id || '0' === $destination_id || 0 === $destination_id ) {
-	if ( empty( pb_backupbuddy::$options['remote_destinations'][ $destination_id ] ) ) {
+if ( isset( pb_backupbuddy::$options['remote_destinations'][pb_backupbuddy::_GET('destination_id')] ) ) {
+	$destinationID = pb_backupbuddy::_GET('destination_id');
+	if ( ! isset( pb_backupbuddy::$options['remote_destinations'][ $destinationID ] ) ) {
 		die( 'Error #9828332: Destination not found.' );
 	}
-	$settings = &pb_backupbuddy::$options['remote_destinations'][ $destination_id ];
+	$settings = &pb_backupbuddy::$options['remote_destinations'][ $destinationID ];
 	$settings = pb_backupbuddy_destination_s32::_formatSettings( $settings );
 }
 
+
 // Handle deletion.
-if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
+if ( pb_backupbuddy::_POST( 'bulk_action' ) == 'delete_backup' ) {
 	pb_backupbuddy::verify_nonce();
-	$delete_files = array();
-	foreach ( (array) pb_backupbuddy::_POST( 'items' ) as $item ) {
-		$delete_files[] = $item;
+	$deleteFiles = array();
+	foreach( (array)pb_backupbuddy::_POST( 'items' ) as $item ) {
+		$deleteFiles[] = $item;
 	}
-	$response = pb_backupbuddy_destination_s32::deleteFiles( $settings, $delete_files );
+	$response = pb_backupbuddy_destination_s32::deleteFiles( $settings, $deleteFiles );
 
 	if ( true === $response ) {
-		pb_backupbuddy::alert( 'Deleted ' . implode( ', ', $delete_files ) . '.' );
+		pb_backupbuddy::alert( 'Deleted ' . implode( ', ', $deleteFiles ) . '.' );
 	} else {
 		pb_backupbuddy::alert( 'Failed to delete one or more files. Details: `' . $response . '`.' );
 	}
 	echo '<br>';
 } // end deletion.
 
-// Handle copying files to local.
-if ( pb_backupbuddy::_GET( 'cpy' ) ) {
+
+// Handle copying files to local
+if ( pb_backupbuddy::_GET( 'cpy_file' ) != '' ) {
 	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
 	echo '<br>';
-	pb_backupbuddy::status( 'details', 'Scheduling Cron for creating S3 copy.' );
-	backupbuddy_core::schedule_single_event( time(), 'process_remote_copy', array( 's32', pb_backupbuddy::_GET( 'cpy' ), $settings ) );
+	pb_backupbuddy::status( 'details',  'Scheduling Cron for creating S3 copy.' );
+	backupbuddy_core::schedule_single_event( time(), 'process_remote_copy', array( 's32', pb_backupbuddy::_GET( 'cpy_file' ), $settings ) );
 
 	if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
 		update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
@@ -70,64 +89,125 @@ if ( pb_backupbuddy::_GET( 'cpy' ) ) {
 	}
 } // end copying to local.
 
+
+// Handle download link
+if ( pb_backupbuddy::_GET( 'downloadlink_file' ) != '' ) {
+	$link = pb_backupbuddy_destination_s32::getFileURL( $settings, pb_backupbuddy::_GET( 'downloadlink_file' ) );
+	pb_backupbuddy::alert( 'You may download this backup (' . pb_backupbuddy::_GET( 'downloadlink_file' ) . ') with <a href="' . $link . '">this link</a>. The link is valid for one hour.' );
+	echo '<br>';
+} // end download link.
+
 // Handle pagination.
 $marker = null;
-if ( pb_backupbuddy::_GET( 'marker' ) ) { // Jump to specific spot.
+if ( '' != pb_backupbuddy::_GET( 'marker' ) ) { // Jump to specific spot.
 	$marker = base64_decode( urldecode( pb_backupbuddy::_GET( 'marker' ) ) );
 }
 
 // Get list of files for this site.
-$remote_path = $site_only ? $settings['directory'] . 'backup-' . backupbuddy_core::backup_prefix() : $settings['directory'];
-// Find backups in directory.
-backupbuddy_backups()->set_destination_id( $destination_id );
-$settings['remote_path'] = $remote_path;
-$settings['marker']      = $marker;
-$backups                 = pb_backupbuddy_destinations::listFiles( $settings );
+if ( 'true' != pb_backupbuddy::_GET( 'listAll' ) ) {
+	$remotePath = $settings['directory'] . 'backup-' . backupbuddy_core::backup_prefix();
+} else {
+	$remotePath = $settings['directory'];
+}
+$files = pb_backupbuddy_destination_s32::listFiles( $settings, $remotePath, $marker );
+if ( ! is_array( $files ) ) {
+	die( 'Error listing files: `' . $files . '`.' );
+}
+$backup_list_temp = array();
 
-if ( ! is_array( $backups ) ) {
-	die( 'Error listing files: `' . esc_html( $backups ) . '`.' );
+foreach( $files as $object ) {
+	$file = str_ireplace( $settings['directory'], '', $object['Key'] );
+	if ( FALSE !== stristr( $file, '/' ) ) { // Do NOT display any files within a deeper subdirectory.
+		continue;
+	}
+	if ( ( ! preg_match( pb_backupbuddy_destination_s32::BACKUP_FILENAME_PATTERN, $file ) ) && ( 'importbuddy.php' !== $file ) ) { // Do not display any files that do not appear to be a BackupBuddy backup file (except importbuddy.php).
+		continue;
+	}
+
+	$backup_type = backupbuddy_core::getBackupTypeFromFile( $file );
+
+	if ( ! $backup_type ) {
+		continue;
+	}
+
+	$last_modified = strtotime( $object['LastModified'] );
+	$size = (double) $object['Size'];
+
+
+	// Generate array of table rows.
+	while( isset( $backup_list_temp[$last_modified] ) ) { // Avoid collisions.
+		$last_modified += 0.1;
+	}
+	$backup_list_temp[$last_modified] = array(
+		$file,
+		pb_backupbuddy::$format->date(
+			pb_backupbuddy::$format->localize_time( $last_modified )
+		) . '<br /><span class="description">(' .
+		pb_backupbuddy::$format->time_ago( $last_modified ) .
+		' ago)</span>',
+		pb_backupbuddy::$format->file_size( $size ),
+		backupbuddy_core::pretty_backup_type( $backup_type )
+	);
+
 }
 
-// Handle pagination.
-$marker = end( $backups );
-reset( $backups );
-$marker = base64_encode( $marker[0][0] );
 
-$url_prefix   = pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . htmlentities( $destination_id );
-$backup_count = count( $backups );
+krsort( $backup_list_temp );
+$backup_list = array();
+foreach( $backup_list_temp as $backup_item ) {
+	$backup_list[ $backup_item[0] ] = $backup_item;
+}
+unset( $backup_list_temp );
+
+// Handle pagination.
+$marker = end( $backup_list );
+reset( $backup_list );
+$marker = base64_encode( $marker[0] );
+
+
+$urlPrefix = pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . htmlentities( pb_backupbuddy::_GET( 'destination_id' ) );
 ?>
+
+
 <center>
-	<b><?php echo esc_html( number_format_i18n( $backup_count ) ); ?> <?php echo esc_html( _n( 'file', 'files', $backup_count, 'it-l10n-backupbuddy' ) ); ?> displayed.</b><br><br>
-	<?php if ( pb_backupbuddy::_GET( 'marker' ) ) { ?>
-		<a href="<?php echo esc_attr( $url_prefix ); ?>&marker=<?php echo rawurlencode( pb_backupbuddy::_GET( 'back' ) ); ?>" class="button button-secondary button-tertiary">Previous Page</a>
+	<b><?php $backup_count = count( $backup_list ); echo $backup_count; ?> files displayed.</b><br><br>
+	<?php if ( '' != pb_backupbuddy::_GET( 'marker' ) ) { ?>
+		<a href="<?php echo $urlPrefix; ?>&marker=<?php echo urlencode( pb_backupbuddy::_GET( 'back' ) ); ?>" class="button button-secondary button-tertiary">Previous Page</a>
 	<?php } ?>
 	<?php if ( $backup_count >= $settings['max_filelist_keys'] ) { ?>
 		&nbsp;
-		<a href="<?php echo esc_attr( $url_prefix ); ?>&marker=<?php echo esc_attr( rawurlencode( $marker ) ); ?>&back=<?php echo esc_attr( rawurlencode( pb_backupbuddy::_GET( 'marker' ) ) ); ?>" class="button button-secondary button-tertiary">Next Page</a>
+		<a href="<?php echo $urlPrefix; ?>&marker=<?php echo urlencode( $marker ); ?>&back=<?php echo urlencode( pb_backupbuddy::_GET( 'marker' ) ); ?>" class="button button-secondary button-tertiary">Next Page</a>
 	<?php } ?>
 </center>
+
+
 <?php
 // Render table listing files.
-if ( 0 === $backup_count ) {
+if ( count( $backup_list ) == 0 ) {
 	echo '<b>';
-	if ( $site_only ) { // Only this site.
-		esc_html_e( 'You have not completed sending any backups to this S3 v2 destination (bucket + directory) for this site yet.', 'it-l10n-backupbuddy' );
-	} else { // All sites.
-		esc_html_e( 'You have not completed sending any backups to this S3 v2 destination (bucket + directory).', 'it-l10n-backupbuddy' );
+	if ( 'true' != pb_backupbuddy::_GET( 'listAll' ) ) { // ALL sites.
+		_e( 'You have not completed sending any backups to this S3 v2 destination (bucket + directory).', 'it-l10n-backupbuddy' );
+	} else { // Only this site.
+		_e( 'You have not completed sending any backups to this S3 v2 destination (bucket + directory) for this site yet.', 'it-l10n-backupbuddy' );
 	}
 	echo '</b>';
 } else {
-	pb_backupbuddy::load_script( 'backupbuddy.min.js' );
-	pb_backupbuddy::load_style( 'backupbuddy-core.css' );
-
-	backupbuddy_backups()->table( 'default', $backups, array(
-		'action'         => $url_prefix . '&remote_path=' . htmlentities( pb_backupbuddy::_GET( 'remote_path' ) ),
-		'destination_id' => $destination_id,
-		'class'          => 'minimal',
-	) );
+	pb_backupbuddy::$ui->list_table(
+		$backup_list,
+		array(
+			'action'		=>	pb_backupbuddy::ajax_url( 'remoteClient' ) . '&function=remoteClient&destination_id=' . htmlentities( pb_backupbuddy::_GET( 'destination_id' ) ) . '&remote_path=' . htmlentities( pb_backupbuddy::_GET( 'remote_path' ) ),
+			'columns'		=>	array( 'Backup File', 'Uploaded <img src="' . pb_backupbuddy::plugin_url() . '/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent first">', 'File Size', 'Type' ),
+			'hover_actions'	=>	array( $urlPrefix . '&cpy_file=' => 'Copy to Local', $urlPrefix . '&downloadlink_file=' => 'Get download link' ),
+			'hover_action_column_key'	=>	'0',
+			'bulk_actions'	=>	array( 'delete_backup' => 'Delete' ),
+			'css'			=>		'width: 100%;',
+		)
+	);
 }
 
 // Display troubleshooting subscriber key.
 echo '<br style="clear: both;">';
+
+
 
 return;

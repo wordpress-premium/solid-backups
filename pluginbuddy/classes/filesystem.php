@@ -21,7 +21,7 @@ class pb_backupbuddy_filesystem {
 	 * @return bool  Returns TRUE on success or FALSE on failure.
 	 */
 	public static function mkdir( $pathname, $mode = 0755, $recursive = true ) {
-		// Attempt to make the directory with the passed mode.
+		// Attempt to make the directory with the passed mode
 		$result = @mkdir( $pathname, $mode, $recursive );
 
 		// Specifically chmod the directory to the correct mode. This is needed on some systems.
@@ -34,54 +34,34 @@ class pb_backupbuddy_filesystem {
 	/**
 	 * Unlink a directory recursively. Files all files and directories within. USE WITH CAUTION.
 	 *
-	 * @param string $dir             Directory to delete -- all contents within, subdirectories, files, etc will be permanently deleted.
-	 * @param bool   $keep_directory  Keep base directory.
+	 * @param string $dir  Directory to delete -- all contents within, subdirectories, files, etc will be permanently deleted.
 	 *
 	 * @return bool  True on success; else false.
 	 */
-	public function unlink_recursive( $dir, $keep_directory = false ) {
+	public function unlink_recursive( $dir ) {
 		if ( defined( 'PB_DEMO_MODE' ) ) {
-			pb_backupbuddy::status( 'details', sprintf( 'Unable to recursively delete directory `%s`. PB_DEMO_MODE is enabled.', $dir ) );
 			return false;
-		}
-
-		if ( '/' === $dir ) { // Prevent removal of root directory.
-			pb_backupbuddy::status( 'details', sprintf( 'Unable to recursively delete directory `%s`. It is the root directory.', $dir ) );
-			return false;
-		}
-
-		if ( is_link( $dir ) ) { // Handle symlinks BEFORE file_exists check.
-			return @unlink( $dir );
 		}
 
 		if ( ! file_exists( $dir ) ) {
-			pb_backupbuddy::status( 'details', sprintf( 'Unable to recursively delete directory/file `%s`. It doesn\'t exist.', $dir ) );
 			return true;
 		}
-
-		if ( is_file( $dir ) ) {
-			return @unlink( $dir );
+		if ( ! is_dir( $dir ) || is_link( $dir ) ) {
+			@chmod( $dir, 0777 );
+			return unlink( $dir );
 		}
-
-		if ( ! is_dir( $dir ) ) {
-			pb_backupbuddy::status( 'details', sprintf( 'Unexpected non-directory found when trying to unlink recursively `%s`.', $dir ) );
-			return false;
-		}
-
-		$files = scandir( $dir ) ?: array();
-		$files = array_diff( $files, array( '.', '..' ) );
-
-		foreach ( $files as $item ) {
-			if ( ! $this->unlink_recursive( rtrim( $dir, '/' ) . '/' . $item ) ) {
-				return false;
+		foreach ( scandir( $dir ) as $item ) {
+			if ( '.' == $item || '..' == $item ) {
+				continue;
+			}
+			if ( ! $this->unlink_recursive( $dir . '/' . $item ) ) {
+				@chmod( $dir . '/' . $item, 0777 );
+				if ( ! $this->unlink_recursive( $dir . '/' . $item ) ) {
+					return false;
+				}
 			}
 		}
-
-		if ( true !== $keep_directory ) {
-			return @rmdir( $dir );
-		}
-
-		return true;
+		return @rmdir( $dir );
 	} // End unlink_recursive().
 
 	/**
@@ -143,13 +123,16 @@ class pb_backupbuddy_filesystem {
 		$dir_len  = strlen( $dir );
 
 		// If not resuming a chunked process then get items.
-		if ( ! is_array( $items ) || 0 === count( $items ) ) {
-			$items = scandir( $dir ) ?: array();
-			$items = array_diff( $items, array( '.', '..' ) );
+		if ( ! is_array( $items ) || 0 == count( $items ) ) {
+			$items = scandir( $dir );
 			if ( false === $items ) {
 				$items = array();
 			} else {
 				foreach ( $items as $i => &$item ) {
+					if ( '.' == $item || '..' == $item ) {
+						unset( $items[ $i ] );
+						continue;
+					}
 					$item = $dir . '/' . $item; // Add directory.
 				}
 			}
@@ -169,10 +152,17 @@ class pb_backupbuddy_filesystem {
 			}
 
 			if ( is_dir( $items[ $i ] ) ) {
-				$adds = scandir( $items[ $i ] ) ?: array();
-				$adds = array_diff( $adds, array( '.', '..' ) );
-				foreach ( $adds as $j => &$add_item ) {
-					$add_item = $items[ $i ] . '/' . $add_item; // Add directory.
+				$adds = scandir( $items[ $i ] );
+				if ( ! is_array( $adds ) ) {
+					$adds = array();
+				} else {
+					foreach ( $adds as $j => &$add_item ) {
+						if ( '.' == $add_item || '..' == $add_item ) {
+							unset( $adds[ $j ] );
+							continue;
+						}
+						$add_item = $items[ $i ] . '/' . $add_item; // Add directory.
+					}
 				}
 				$items = array_merge( $items, $adds );
 			}
@@ -207,13 +197,12 @@ class pb_backupbuddy_filesystem {
 	public function recursive_copy( $src, $dst ) {
 		if ( is_dir( $src ) ) {
 			pb_backupbuddy::status( 'details', 'Copying directory `' . $src . '` to `' . $dst . '` recursively.' );
-			@$this->mkdir( $dst );
-			$files = scandir( $src ) ?: array();
-			$files = array_diff( $files, array( '.', '..' ) );
+			@$this->mkdir( $dst, 0777 );
+			$files = scandir( $src );
 			foreach ( $files as $file ) {
-				$src = rtrim( $src, '/' );
-				$dst = rtrim( $dst, '/' );
-				$this->recursive_copy( "$src/$file", "$dst/$file" );
+				if ( '.' != $file && '..' != $file ) {
+					$this->recursive_copy( "$src/$file", "$dst/$file" );
+				}
 			}
 		} elseif ( file_exists( $src ) ) {
 			@copy( $src, $dst ); // Todo: should this need suppression? Media copying was throwing $dst is directory errors.

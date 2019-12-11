@@ -271,13 +271,11 @@ pb_backupbuddy::load_style( 'quicksetup.css' );
 								endif;
 							endif;
 
-							if ( ! empty( $destination['name'] ) ) {
-								printf( '<option value="%s" %s>%s</option>',
-									esc_attr( $destination_slug ),
-									selected( 'stash2', $destination_slug, false ),
-									esc_html( $destination['name'] )
-								) . "\r\n";
-							}
+							printf( '<option value="%s" %s>%s</option>',
+								esc_attr( $destination_slug ),
+								selected( 'stash2', $destination_slug, false ),
+								esc_html( $destination['name'] )
+							) . "\r\n";
 						endforeach;
 						unset( $destinations );
 						?>

@@ -1,13 +1,12 @@
 <?php
-/**
- * BackupBuddy Stash Live Setup & Configuration -- shown on first run
+/* BackupBuddy Stash Live Setup & Configuration -- shown on first run
  *
  * @author Dustin Bolton
  * @since 7.0
- * @package BackupBuddy
+ *
  */
-
-pb_backupbuddy::$ui->title( __( 'BackupBuddy Stash Live', 'it-l10n-backupbuddy' ), true, false, 'backupbuddy-stash-live-icon' );
+ 
+pb_backupbuddy::$ui->title( __( 'BackupBuddy Stash Live', 'it-l10n-backupbuddy' ) );
 pb_backupbuddy::load_style( 'backupbuddy_live.css' );
 
 require_once( pb_backupbuddy::plugin_path() . '/destinations/live/init.php' );
@@ -28,14 +27,14 @@ if ( '' != pb_backupbuddy::$options['email_notify_scheduled_complete'] ) {
 	jQuery(document).ready(function() {
 		jQuery( '.backupbuddy_live_setup_form' ).submit( function(e) {
 			e.preventDefault();
-
+			
 			backupbuddy_loading_spinner = setTimeout( function(){ jQuery( '.pb_backupbuddy_destpicker_saveload' ).show() }, 500 );
-			jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'live_setup' ); ?>', jQuery(this).serialize(),
+			jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'live_setup' ); ?>', jQuery(this).serialize(), 
 				function(data) {
 					clearTimeout( backupbuddy_loading_spinner );
 					jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
 					data = jQuery.trim( data );
-
+					
 					if ( data == 'Success.' ) {
 						<?php
 						if ( is_network_admin() ) {
@@ -52,7 +51,7 @@ if ( '' != pb_backupbuddy::$options['email_notify_scheduled_complete'] ) {
 					} else {
 						alert( "Error #5001: \n\n" + data );
 					}
-
+					
 				}
 			);
 		});
@@ -66,10 +65,10 @@ if ( '' != pb_backupbuddy::$options['email_notify_scheduled_complete'] ) {
 		<h4><?php _e( 'Real-time, cloud-based backups directly to your BackupBuddy Stash Storage.', 'it-l10n-backupbuddy' ); ?></h4>
 		<a href="https://ithemes.com/stash-live" class="backupbuddy-live-button blue" target="_new"><?php _e( 'Learn More', 'it-l10n-backupbuddy' ); ?></a>
 	</div>
-
+	
 	<form class="backupbuddy_live_setup_form">
 		<?php pb_backupbuddy::nonce( true ); ?>
-
+		
 		<div class="backupbuddy-live-setup-login backupbuddy-live-setup-fieldset">
 			<div class="backupbuddy-live-setup-login-field">
 				<label><?php _e( 'iThemes Username', 'it-l10n-backupbuddy' ); ?><?php pb_backupbuddy::tip( __( 'This is the same username and password you used to purchase your iThemes products and to log in to the iThemes Member Panel.', 'it-l10n-backupbuddy' ) ); ?></label>
@@ -80,17 +79,17 @@ if ( '' != pb_backupbuddy::$options['email_notify_scheduled_complete'] ) {
 				<input type="password" name="live_password" />
 			</div>
 		</div>
-
+		
 		<div class="backupbuddy-live-setup-storage-settings backupbuddy-live-setup-fieldset">
 			<h4>
 				<?php _e( 'Backup Storage Settings', 'it-l10n-backupbuddy' ); ?>
 			</h4>
-
+			
 			<p>
 				<?php _e( 'Stash Live will create Backup files in ZIP format and store them in your BackupBuddy Stash Account. By default we are storing <strong>5 daily, 2 weekly, and 1 monthly</strong> database backups and <strong>1 daily, 1 weekly, and 1 monthly</strong> for full backups.', 'it-l10n-backupbuddy' ); ?>
 				<a href="#" class="backupbuddy-live-setup-toggle-storage-settings"><?php _e( 'Modify Limits', 'it-l10n-backupbuddy' ); ?></a>
 			</p>
-
+			
 			<div class="backupbuddy-live-setup-storage-settings-details">
 				<table>
 					<tbody>
@@ -101,7 +100,7 @@ if ( '' != pb_backupbuddy::$options['email_notify_scheduled_complete'] ) {
 							<th><?php _e( 'Monthly', 'it-l10n-backupbuddy' ); ?></th>
 							<th><?php _e( 'Yearly', 'it-l10n-backupbuddy' ); ?></th>
 						</tr>
-
+						
 						<?php
 						$archive_types = array(
 							'db' => __( 'Database Backups', 'it-l10n-backupbuddy' ),
@@ -109,14 +108,14 @@ if ( '' != pb_backupbuddy::$options['email_notify_scheduled_complete'] ) {
 							'plugins' => __( 'Plugins Backups', 'it-l10n-backupbuddy' ),
 							'themes' => __( 'Themes Backups', 'it-l10n-backupbuddy' ),
 						);
-
+						
 						$archive_periods = array(
 							'daily',
 							'weekly',
 							'monthly',
 							'yearly',
 						);
-
+						
 						foreach( $archive_types as $archive_type => $archive_type_name ) {
 							echo '<tr>';
 							echo '<td class="label">' . $archive_type_name . '</td>';
@@ -127,7 +126,7 @@ if ( '' != pb_backupbuddy::$options['email_notify_scheduled_complete'] ) {
 							echo '</tr>';
 						}
 						?>
-
+						
 					</tbody>
 				</table>
 				<span class="description" style="display: inline-block; margin-top: 11px; margin-left: 3px;">Set blank for unlimited backups of a type or 0 (zero) to limit to none.</span>
@@ -136,7 +135,7 @@ if ( '' != pb_backupbuddy::$options['email_notify_scheduled_complete'] ) {
 					jQuery(document).ready( function() {
 						jQuery('#backupbuddy-live-storage-settings-restore-defaults').on( 'click', function(e){
 							e.preventDefault();
-
+							
 							jQuery( '.backupbuddy_live_archive_limit' ).each(
 								function(){
 									jQuery(this).val( jQuery(this).attr( 'data-default' ) );
@@ -147,7 +146,7 @@ if ( '' != pb_backupbuddy::$options['email_notify_scheduled_complete'] ) {
 				</script>
 			</div>
 		</div>
-
+		
 		<div class="backupbuddy-live-setup-email-settings backupbuddy-live-setup-fieldset">
 			<h4>
 				<?php _e( 'Email Settings', 'it-l10n-backupbuddy' ); ?>
@@ -165,7 +164,7 @@ if ( '' != pb_backupbuddy::$options['email_notify_scheduled_complete'] ) {
 				<p class="backupbuddy-live-setup-email-warning"><?php _e( 'Note: by turning off Snapshot notification emails, you lose access to your Stash Live Snapshot downloads via email in the event you go over your Stash storage quota.', 'it-l10n-backupbuddy' ); ?></p>
 			</p>
 		</div>
-
+		
 		<div class="backupbuddy-live-setup-submit backupbuddy-live-setup-fieldset">
 			<button class="backupbuddy_live_setup_button backupbuddy-live-button red"><?php _e( 'Save Settings & Start Backup', 'it-l10n-backupbuddy' ); ?></button>
 			<img class="pb_backupbuddy_destpicker_saveload" src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/loading.gif" title="Saving... This may take a few seconds..." style="display: none; margin-left: 12px; vertical-align: -3px;">
@@ -197,7 +196,7 @@ if ( '' != pb_backupbuddy::$options['email_notify_scheduled_complete'] ) {
 	<div>
 		<h3><?php _e( 'Getting Started with Stash Live', 'it-l10n-backupbuddy' ); ?></h3>
 		<p><?php _e( 'Stash Live is a whole new way to backup your WordPress sites. You might have questions like:', 'it-l10n-backupbuddy' ); ?></p>
-
+		
 		<ul>
 			<li><em><a href="https://ithemes.com/stash-live/faqs/#live-work" target="_blank"><?php _e( 'How does Stash Live work?', 'it-l10n-backupbuddy' ); ?></a></em></li>
 			<li><em><a href="https://ithemes.com/stash-live/faqs/#traditional-vs-live" target="_blank"><?php _e( 'How is this different than traditional BackupBuddy backups?', 'it-l10n-backupbuddy' ); ?></a></em></li>

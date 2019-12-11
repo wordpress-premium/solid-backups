@@ -15,14 +15,14 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 	 *
 	 * @var int
 	 */
-	public $_methods_ran = 0;
+	var $_methods_ran = 0;
 
 	/**
 	 * Previous method ran.
 	 *
 	 * @var string
 	 */
-	public $_prev_method = '';
+	var $_prev_method = '';
 
 	/**
 	 * Master cron handling function as of v6.4.0.9. Wraps all cron functions so we can limit to one cron run per PHP load.
@@ -327,20 +327,59 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 		}
 		pb_backupbuddy::status( 'details', 'Filename of resulting local copy: `' . $destination_file . '`.' );
 
-		pb_backupbuddy::status( 'details', '_process_remote_copy with `' . print_r( array(
-			'destination_type' => $destination_type,
-			'settings'         => $settings,
-			'file'             => $file,
-			'destination_file' => $destination_file,
-		), true ) . '`' );
-
 		if ( 'stash2' == $destination_type ) {
-			require_once pb_backupbuddy::plugin_path() . '/destinations/stash2/init.php';
-			return pb_backupbuddy_destination_stash2::download_file( $settings, $file, $destination_file );
-		} elseif ( 'stash3' == $destination_type ) {
-			require_once pb_backupbuddy::plugin_path() . '/destinations/stash3/init.php';
-			return pb_backupbuddy_destination_stash3::download_file( $settings, $file, $destination_file );
-		} elseif ( 'gdrive' == $destination_type ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+
+			pb_backupbuddy::status( 'details', 'About to begin downloading from URL.' );
+			$download = download_url( $url );
+			pb_backupbuddy::status( 'details', 'Download process complete.' );
+			if ( is_wp_error( $download ) ) {
+				$error = 'Error #832989323: Unable to download file `' . $file . '` from URL: `' . $url . '`. Details: `' . $download->get_error_message() . '`.';
+				pb_backupbuddy::status( 'error', $error );
+				pb_backupbuddy::alert( $error );
+				return false;
+			} else {
+				if ( false === copy( $download, $destination_file ) ) {
+					$error = 'Error #3329383: Unable to copy file from `' . $download . '` to `' . $destination_file . '`.';
+					pb_backupbuddy::status( 'error', $error );
+					pb_backupbuddy::alert( $error );
+					@unlink( $download );
+					return false;
+				} else {
+					pb_backupbuddy::status( 'details', 'File saved to `' . $destination_file . '`.' );
+					@unlink( $download );
+					return true;
+				}
+			}
+		} // end stash2.
+
+		if ( 'stash3' == $destination_type ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+
+			pb_backupbuddy::status( 'details', 'About to begin downloading from URL.' );
+			$download = download_url( $url );
+			pb_backupbuddy::status( 'details', 'Download process complete.' );
+			if ( is_wp_error( $download ) ) {
+				$error = 'Error #83444: Unable to download file `' . $file . '` from URL: `' . $url . '`. Details: `' . $download->get_error_message() . '`.';
+				pb_backupbuddy::status( 'error', $error );
+				pb_backupbuddy::alert( $error );
+				return false;
+			} else {
+				if ( false === copy( $download, $destination_file ) ) {
+					$error = 'Error #3344433: Unable to copy file from `' . $download . '` to `' . $destination_file . '`.';
+					pb_backupbuddy::status( 'error', $error );
+					pb_backupbuddy::alert( $error );
+					@unlink( $download );
+					return false;
+				} else {
+					pb_backupbuddy::status( 'details', 'File saved to `' . $destination_file . '`.' );
+					@unlink( $download );
+					return true;
+				}
+			}
+		} // end stash3.
+
+		if ( 'gdrive' == $destination_type ) {
 			die( 'Not implemented here.' );
 			// @TODO Does the rest of this code execute? Can it be removed?
 			require_once pb_backupbuddy::plugin_path() . '/destinations/gdrive/init.php';
@@ -354,6 +393,7 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 				return false;
 			}
 		} elseif ( 's3' == $destination_type ) {
+
 			require_once pb_backupbuddy::plugin_path() . '/destinations/s3/init.php';
 			if ( true === pb_backupbuddy_destination_s3::download_file( $settings, $file, $destination_file ) ) { // success.
 				pb_backupbuddy::status( 'details', 'S3 copy to local success.' );
@@ -363,6 +403,7 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 				return false;
 			}
 		} elseif ( 's32' == $destination_type ) {
+
 			require_once pb_backupbuddy::plugin_path() . '/destinations/s32/init.php';
 			if ( true === pb_backupbuddy_destination_s32::download_file( $settings, $file, $destination_file ) ) { // success.
 				pb_backupbuddy::status( 'details', 'S3 (v2) copy to local success.' );
@@ -372,6 +413,7 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 				return false;
 			}
 		} elseif ( 's33' == $destination_type ) {
+
 			require_once pb_backupbuddy::plugin_path() . '/destinations/s33/init.php';
 			if ( true === pb_backupbuddy_destination_s33::download_file( $settings, $file, $destination_file ) ) { // success.
 				pb_backupbuddy::status( 'details', 'S3 (v3) copy to local success.' );
@@ -534,15 +576,6 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 	} // End _process_ftp_copy().
 
 	/**
-	 * Process Restore Queue.
-	 *
-	 * @return bool  If processed or not.
-	 */
-	public function _process_restore_queue() {
-		return backupbuddy_restore()->process();
-	}
-
-	/**
 	 * Run BackupBuddy Housekeeping
 	 *
 	 * @uses run_periodic
@@ -579,7 +612,7 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 		}
 
 		if ( ! isset( pb_backupbuddy::$options ) ) {
-			pb_backupbuddy::load();
+			$this->load();
 		}
 
 		// Verify directories.
