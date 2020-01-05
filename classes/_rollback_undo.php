@@ -43,7 +43,7 @@ function site_url() {
 	} else {
 		$pageURL .= $_SERVER["SERVER_NAME"] . rtrim( dirname($_SERVER['PHP_SELF']), '/\\' );
 	}
-	
+
 	return $pageURL;
 }
 
@@ -136,7 +136,7 @@ function wp_print_styles( $name ) {
 	global $pb_styles;
 	if ( $pb_styles[$name]['printed'] === false ) {
 		$pb_styles[$name]['printed'] = true;
-		
+
 		echo '<link rel="stylesheet" type="text/css" href="' . $pb_styles[$name]['file'] . '?ver=' . $pb_styles[$name]['version'] . '">';
 	}
 }
@@ -155,7 +155,7 @@ function wp_print_scripts( $name ) {
 	global $pb_scripts;
 	if ( $pb_scripts[$name]['printed'] === false ) {
 		$pb_scripts[$name]['printed'] = true;
-		
+
 		echo '<script src="' . $pb_scripts[$name]['file'] . '?ver=' . $pb_scripts[$name]['version'] . '" type="text/javascript"></script>';
 	}
 }
@@ -270,47 +270,48 @@ if ( ! function_exists( 'ngettext' ) ) {
 } // End ngettext().
 
 
-
-/**
- * Determines the difference between two timestamps.
- *
- * The difference is returned in a human readable format such as "1 hour",
- * "5 mins", "2 days".
- *
- * @since 1.5.0
- *
- * @param int $from Unix timestamp from which the difference begins.
- * @param int $to Optional. Unix timestamp to end the time difference. Default becomes time() if not set.
- * @return string Human readable time difference.
- */
-function human_time_diff( $from, $to = '' ) {
-	if ( empty($to) )
-		$to = time();
-	$diff = (int) abs($to - $from);
-	if ($diff <= 3600) {
-		$mins = round($diff / 60);
-		if ($mins <= 1) {
-			$mins = 1;
+if ( ! function_exists( 'human_time_diff' ) ) {
+	/**
+	 * Determines the difference between two timestamps.
+	 *
+	 * The difference is returned in a human readable format such as "1 hour",
+	 * "5 mins", "2 days".
+	 *
+	 * @since 1.5.0
+	 *
+	 * @param int $from  Unix timestamp from which the difference begins.
+	 * @param int $to    Optional. Unix timestamp to end the time difference. Default becomes time() if not set.
+	 *
+	 * @return string  Human readable time difference.
+	 */
+	function human_time_diff( $from, $to = 0 ) {
+		if ( empty( $to ) ) {
+			$to = function_exists( 'current_time' ) ? current_time( 'timestamp' ) : time();
 		}
-		/* translators: min=minute */
-		$since = sprintf( ngettext( '%s min', '%s mins', $mins ), $mins);
-	} else if (($diff <= 86400) && ($diff > 3600)) {
-		$hours = round($diff / 3600);
-		if ($hours <= 1) {
-			$hours = 1;
+		$diff = (int) abs( $to - $from );
+		if ( $diff <= 3600 ) {
+			$mins = round( $diff / 60 );
+			if ( $mins <= 1 ) {
+				$mins = 1;
+			}
+			/* translators: min=minute */
+			$since = sprintf( ngettext( '%s min', '%s mins', $mins ), $mins );
+		} elseif ( ( $diff <= 86400 ) && ( $diff > 3600 ) ) {
+			$hours = round( $diff / 3600 );
+			if ( $hours <= 1 ) {
+				$hours = 1;
+			}
+			$since = sprintf( ngettext( '%s hour', '%s hours', $hours ), $hours );
+		} elseif ( $diff >= 86400 ) {
+			$days = round( $diff / 86400 );
+			if ( $days <= 1 ) {
+				$days = 1;
+			}
+			$since = sprintf( ngettext( '%s day', '%s days', $days ), $days );
 		}
-		$since = sprintf( ngettext('%s hour', '%s hours', $hours ), $hours);
-	} elseif ($diff >= 86400) {
-		$days = round($diff / 86400);
-		if ($days <= 1) {
-			$days = 1;
-		}
-		$since = sprintf( ngettext('%s day', '%s days', $days ), $days);
+		return $since;
 	}
-	return $since;
 }
-
-
 
 /**
  * Unserialize value only if it was serialized.
@@ -341,19 +342,19 @@ function current_user_can( $role ) {
 	return true;
 }
 function get_temp_dir() {
-	
+
 	if ( function_exists('sys_get_temp_dir') ) {
 		$temp = sys_get_temp_dir();
 		if ( @is_dir( $temp ) && is_writable( $temp ) )
 			return rtrim( $temp, '/\\' ) . '/';
 	}
-	
+
 	$temp = ABSPATH . 'temp/';
 	@mkdir( $temp );
 	if ( is_dir( $temp ) && is_writable( $temp ) ) {
 		return $temp;
 	}
-	
+
 	$temp = '/tmp/';
 	@mkdir( $temp );
 	return $temp;
@@ -1534,7 +1535,7 @@ class wpdb {
 				}
 			}
 		}
-		
+
 		$this->charset = $charset; // Added for BackupBuddy
 		$this->collate = $collate; // Added for BackupBuddy
 	}
@@ -4309,7 +4310,7 @@ if ( empty( $tempTables ) ) {
 // Loop through all bbold-SERIAL_ tables, renaming them back to live, deleting collisions as they occur.
 foreach( (array)$tempTables as $tempTable ) {
 	$nonTempName = str_replace( $tempPrefix, '', $tempTable['table_name'] );
-	
+
 	// CHECK if $nonTempName table exists in db. If it does then DROP the table.
 	$sql = "SELECT table_name AS `table_name` FROM information_schema.tables WHERE table_name LIKE '" . str_replace( '_', '\_', $nonTempName ) . "%' AND table_schema = DATABASE()";
 	$tempTables = $wpdb->get_results( $sql, ARRAY_A );
@@ -4323,7 +4324,7 @@ foreach( (array)$tempTables as $tempTable ) {
 			echo 'Error #24873: `' . $mysql_error . '`.<br>';
 		}
 	}
-	
+
 	// RENAME $tempTable to $nonTempName
 	$sql = "RENAME TABLE `" . rollback_dbEscape( $tempTable['table_name'] ) . "` TO `" . rollback_dbEscape( $nonTempName ) . "`";
 	echo $sql . '<br>';

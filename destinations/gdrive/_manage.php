@@ -4,14 +4,13 @@ if ( isset( $destination['disabled'] ) && ( '1' == $destination['disabled'] ) ) 
 }
 
 // Settings.
-if ( isset( pb_backupbuddy::$options['remote_destinations'][pb_backupbuddy::_GET('destination_id')] ) ) {
+if ( isset( pb_backupbuddy::$options['remote_destinations'][ pb_backupbuddy::_GET('destination_id') ] ) ) {
 	$destinationID = (int) pb_backupbuddy::_GET('destination_id');
-	$settings = &pb_backupbuddy::$options['remote_destinations'][ $destinationID ];
+	$settings      = (array) pb_backupbuddy::$options['remote_destinations'][ $destinationID ];
 } else {
 	die( 'Error #844893: Invalid destination ID.' );
 }
 $urlPrefix = pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . $destinationID;
-
 
 require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive/init.php' );
 $settings = array_merge( pb_backupbuddy_destination_gdrive::$default_settings, $settings );

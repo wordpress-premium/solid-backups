@@ -120,7 +120,6 @@
 			jQuery( '#pb_backupbuddy_backup_remotedestination' ).val( destination_id );
 			jQuery( '#pb_backupbuddy_backup_deleteafter' ).val( delete_after );
 			jQuery( '#pb_backupbuddy_backup_remotetitle' ).html( 'Destination: "' + destination_title + '".' );
-			jQuery( '#pb_backupbuddy_backup_remotetitle' ).slideDown();
 		} else {
 			<?php $admin_url = is_network_admin() ? network_admin_url( 'admin.php' ) : admin_url( 'admin.php' ); ?>
 			window.location.href = '<?php echo $admin_url; ?>?page=pb_backupbuddy_backup&custom=remoteclient&destination_id=' + destination_id;
@@ -143,8 +142,46 @@ $backup_directory = rtrim( $backup_directory, '/\\' ) . '/'; // Enforce single t
 $hover_actions[ pb_backupbuddy::ajax_url( 'download_archive' ) . '&backupbuddy_backup=' ] = __( 'Download', 'it-l10n-backupbuddy' );
 $hover_actions['send']       = __( 'Send', 'it-l10n-backupbuddy' );
 $hover_actions['note']       = __( 'Note', 'it-l10n-backupbuddy' );
-$hover_actions['zip_viewer'] = '' . __( 'Browse & Restore Files', 'it-l10n-backupbuddy' );
+$hover_actions['zip_viewer'] = __( 'Browse & Restore Files', 'it-l10n-backupbuddy' );
 $hover_actions['rollback']   = __( 'Database Rollback', 'it-l10n-backupbuddy' );
+
+add_filter( 'backupbuddy_list_table_hover_actions', 'backupbuddy_list_table_use_dat_viewer', 10, 3 );
+
+/**
+ * For local backups, use dat Browse & Restore.
+ *
+ * @param array  $hover_actions  Array of hover actions.
+ * @param string $item_id        Table row item id.
+ * @param array  $item           Table row contents array.
+ *
+ * @return array  Modified hover actions.
+ */
+function backupbuddy_list_table_use_dat_viewer( $hover_actions, $item_id, $item ) {
+	// Skip items that are backup tables.
+	if ( ! is_string( $item_id ) || empty( $hover_actions['zip_viewer'] ) ) {
+		return $hover_actions;
+	}
+
+	$backups_directory = backupbuddy_core::getBackupDirectory(); // Normalize for Windows paths.
+	$backups_directory = str_replace( '\\', '/', $backups_directory );
+	$backups_directory = rtrim( $backups_directory, '/\\' ) . '/'; // Enforce single trailing slash.
+
+	$path_to_zip = $backups_directory . $item_id;
+
+	if ( backupbuddy_data_file()->locate( $path_to_zip ) ) {
+		$new_hover_actions = array();
+		foreach ( $hover_actions as $key => $val ) {
+			if ( 'zip_viewer' === $key ) {
+				$new_hover_actions['dat_viewer'] = $val;
+			} else {
+				$new_hover_actions[ $key ] = $val;
+			}
+		}
+		return $new_hover_actions;
+	}
+
+	return $hover_actions;
+}
 
 $bulk_actions = array( 'delete_backup' => __( 'Delete', 'it-l10n-backupbuddy' ) );
 
@@ -152,7 +189,6 @@ if ( count( $backups ) === 0 ) {
 	esc_html_e( 'No backups have been created yet.', 'it-l10n-backupbuddy' );
 	echo '<br>';
 } else {
-
 	$columns = array(
 		__( 'Local Backups', 'it-l10n-backupbuddy' ) . ' <img src="' . pb_backupbuddy::plugin_url() . '/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent first">',
 		__( 'Type', 'it-l10n-backupbuddy' ) . ' | ' . __( 'Profile', 'it-l10n-backupbuddy' ),
@@ -172,4 +208,3 @@ if ( count( $backups ) === 0 ) {
 		)
 	);
 }
-?>

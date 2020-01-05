@@ -1,9 +1,10 @@
 <?php
-/* BackupBuddy Stash Live Main Page
+/**
+ * BackupBuddy Stash Live Main Page
  *
  * @author Dustin Bolton
  * @since 7.0
- *
+ * @package BackupBuddy
  */
 
 pb_backupbuddy::load_style( 'backupProcess2.css' );
@@ -18,14 +19,12 @@ if ( is_network_admin() ) {
 
 pb_backupbuddy::alert( '{error placeholder}', false, $error_code = '', $rel_tag = 'stash_live_error_alert' );
 ?>
-
-
 <script>
 	var loadingIndicator = '';
-	jQuery(document).ready(function() {
-		loadingIndicator = jQuery( '.pb_backupbuddy_loading' );
+	jQuery(function( $ ) {
+		loadingIndicator = $( '.pb_backupbuddy_loading' );
 
-		jQuery( '.backupbuddy-live-stats-container' ).on( 'click', '.backupbuddy-stats-help-link', function(){
+		$( '.backupbuddy-live-stats-container' ).on( 'click', '.backupbuddy-stats-help-link', function(){
 			tb_show( 'BackupBuddy', '<?php echo pb_backupbuddy::ajax_url( 'live_last_snapshot_details' ); ?>&TB_iframe=1&width=640&height=455', null );
 			return false;
 		});
@@ -35,10 +34,7 @@ pb_backupbuddy::alert( '{error placeholder}', false, $error_code = '', $rel_tag 
 		newHeight = obj.contentWindow.document.body.scrollHeight;
 		obj.style.height = newHeight + 'px';
 	}
-
-
 </script>
-
 <?php
 // Incoming vars: $destination, $destination_id
 if ( isset( $destination['disabled'] ) && ( '1' == $destination['disabled'] ) ) {
@@ -139,7 +135,7 @@ if ( '' != pb_backupbuddy::_GET( 'live_action' ) ) {
 		*/
 
 		if ( true === backupbuddy_api::runLiveSnapshot() ) {
-			pb_backupbuddy::alert( '<h3>' . __( 'Verifying everything is up to date before Snapshot', 'it-l10n-backupbuddy' ) . '</h3><p class="description" style="max-width: 700px; display: inline-block;">' . __( 'Please wait while we verify your backup is completely up to date before we create the Snapshot. This may take a few minutes...', 'it-l10n-backupbuddy' ) . '</p>', false, '', 'backupbuddy_live_snapshot_verify_uptodate' );
+			pb_backupbuddy::alert( '<h3>' . __( 'Verifying everything is up to date before Snapshot', 'it-l10n-backupbuddy' ) . '</h3><p class="description">' . __( 'Please wait while we verify your backup is completely up to date before we create the Snapshot. This may take a few minutes...', 'it-l10n-backupbuddy' ) . '</p>', false, '', 'backupbuddy_live_snapshot_verify_uptodate' );
 			require( '_manual_snapshot.php' );
 		}
 
@@ -1187,11 +1183,9 @@ foreach ( pb_backupbuddy::$options['schedules'] as $schedule_id => $schedule ) {
 
 </div>
 
-
-
 <?php
 // Handles thickbox auto-resizing. Keep at bottom of page to avoid issues.
-if ( !wp_script_is( 'media-upload' ) ) {
+if ( ! wp_script_is( 'media-upload' ) ) {
 	wp_enqueue_script( 'media-upload' );
 	wp_print_scripts( 'media-upload' );
 }

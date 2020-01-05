@@ -10,42 +10,6 @@ if ( ! is_admin() ) {
 }
 ?>
 <script type="text/javascript">
-	jQuery(function() {
-
-		jQuery( '.pb_backupbuddy_customize_email_scheduled_start' ).click( function() {
-			jQuery( '.pb_backupbuddy_customize_email_scheduled_start_row' ).slideToggle();
-			return false;
-		});
-		jQuery( '.pb_backupbuddy_customize_send_finish' ).click( function() {
-			jQuery( '.pb_backupbuddy_customize_email_send_finish_row' ).slideToggle();
-			return false;
-		});
-		jQuery( '.pb_backupbuddy_customize_email_scheduled_complete' ).click( function() {
-			jQuery( '.pb_backupbuddy_customize_email_scheduled_complete_row' ).slideToggle();
-			return false;
-		});
-		jQuery( '.pb_backupbuddy_customize_email_error' ).click( function() {
-			jQuery( '.pb_backupbuddy_customize_email_error_row' ).slideToggle();
-			return false;
-		});
-
-		jQuery( '#pb_backupbuddy_email_error_test' ).on( 'click', function() {
-			jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'email_error_test' ); ?>', {
-				email: jQuery( '#pb_backupbuddy_email_notify_error' ).val() },
-				function(data) {
-					data = jQuery.trim( data );
-					if ( data.charAt(0) != '1' ) {
-						alert( "<?php esc_html_e( 'Error testing', 'it-l10n-backupbuddy' ); ?>:" + "\n\n" + data );
-					} else {
-						alert( "<?php esc_html_e( 'Email has been sent. If you do not receive it check your WordPress and server settings.', 'it-l10n-backupbuddy' ); ?>" + "\n\n" + data.slice(1) );
-					}
-				}
-			);
-			return false;
-		});
-
-	});
-
 	function pb_backupbuddy_selectdestination( destination_id, destination_title, callback_data, delete_after, mode ) {
 		window.location.href = '<?php echo esc_url( pb_backupbuddy::page_url() ); ?>&custom=remoteclient&destination_id=' + destination_id;
 	}
@@ -53,7 +17,7 @@ if ( ! is_admin() ) {
 <?php
 /* BEGIN CONFIGURING PLUGIN SETTINGS FORM */
 
-$settings_form = new pb_backupbuddy_settings( 'settings', '', 'tab=0', 350 );
+$settings_form = new pb_backupbuddy_settings( 'settings', '', 'tab=general', 350 );
 
 $settings_form->add_setting(
 	array(
@@ -75,7 +39,7 @@ $settings_form->add_setting(
 );
 
 if ( true !== apply_filters( 'itbub_hide_custom_backup_directory_option', false ) ) {
-$settings_form->add_setting(
+	$settings_form->add_setting(
 		array(
 			'type'   => 'text',
 			'name'   => 'backup_directory',

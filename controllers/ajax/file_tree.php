@@ -8,46 +8,71 @@
 
 backupbuddy_core::verifyAjaxAccess();
 
-// How long to cache the specific backup file tree information for (seconds).
-$max_cache_time = 86400;
 
-// This is the root directory we want the listing for.
-$root     = trim( urldecode( pb_backupbuddy::_POST( 'dir' ) ) );
-$root_len = strlen( $root );
-
-// This will identify the backup zip file we want to list.
-$serial = pb_backupbuddy::_GET( 'serial' );
-
-// The fileoptions file that contains the file tree information.
-require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-$fileoptions_file = backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '-filetree.txt';
-
-// Purge cache if too old.
-if ( file_exists( $fileoptions_file ) && ( ( time() - filemtime( $fileoptions_file ) ) > $max_cache_time ) ) {
-	if ( false === unlink( $fileoptions_file ) ) {
-		pb_backupbuddy::alert( 'Error #456765545. Unable to wipe cached fileoptions file `' . $fileoptions_file . '`.' );
-	}
-}
-
-pb_backupbuddy::status( 'details', 'Fileoptions instance #28.' );
-$fileoptions = new pb_backupbuddy_fileoptions( $fileoptions_file );
-
-// Either we are getting cached file tree information or we need to create afresh.
-$result = $fileoptions->is_ok();
-if ( true !== $result ) {
-	// Get file listing.
-	require_once pb_backupbuddy::plugin_path() . '/lib/zipbuddy/zipbuddy.php';
-	pb_backupbuddy::$classes['zipbuddy'] = new pluginbuddy_zipbuddy( ABSPATH, array(), 'unzip' );
-	$files                               = pb_backupbuddy::$classes['zipbuddy']->get_file_list( backupbuddy_core::getBackupDirectory() . str_replace( '\\/', '', pb_backupbuddy::_GET( 'zip_viewer' ) ) );
-	$fileoptions->options                = ! is_array( $files ) ? array() : $files;
-	$fileoptions->save();
+if ( pb_backupbuddy::_GET( 'dat_viewer' ) ) {
+	$zip_file       = str_replace( '\\/', '', pb_backupbuddy::_GET( 'dat_viewer' ) );
+	$destination_id = pb_backupbuddy::_GET( 'destination' );
+	$parent         = pb_backupbuddy::_GET( 'path' ) ? pb_backupbuddy::_GET( 'path' ) : false;
+	$files          = backupbuddy_data_file()->get_file_zip_contents( backupbuddy_core::getBackupDirectory() . $zip_file, $parent, $destination_id );
 } else {
-	$files = &$fileoptions->options;
+	// How long to cache the specific backup file tree information for (seconds).
+	$max_cache_time = 86400;
+
+	// This is the root directory we want the listing for.
+	$root     = trim( urldecode( pb_backupbuddy::_POST( 'dir' ) ) );
+	$root_len = strlen( $root );
+
+	// This will identify the backup zip file we want to list.
+	$serial = pb_backupbuddy::_GET( 'serial' );
+
+	// The fileoptions file that contains the file tree information.
+	require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
+	$fileoptions_file = backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '-filetree.txt';
+
+	// Purge cache if too old.
+	if ( file_exists( $fileoptions_file ) && ( ( time() - filemtime( $fileoptions_file ) ) > $max_cache_time ) ) {
+		if ( false === unlink( $fileoptions_file ) ) {
+			pb_backupbuddy::alert( 'Error #456765545. Unable to wipe cached fileoptions file `' . $fileoptions_file . '`.' );
+		}
+	}
+
+	pb_backupbuddy::status( 'details', 'Fileoptions instance #28.' );
+	$fileoptions = new pb_backupbuddy_fileoptions( $fileoptions_file );
+
+	// Either we are getting cached file tree information or we need to create afresh.
+	$result = $fileoptions->is_ok();
+	if ( true !== $result ) {
+		// Get file listing.
+		require_once pb_backupbuddy::plugin_path() . '/lib/zipbuddy/zipbuddy.php';
+		pb_backupbuddy::$classes['zipbuddy'] = new pluginbuddy_zipbuddy( ABSPATH, array(), 'unzip' );
+		$zip_file                            = str_replace( '\\/', '', pb_backupbuddy::_GET( 'zip_viewer' ) );
+		$files                               = pb_backupbuddy::$classes['zipbuddy']->get_file_list( backupbuddy_core::getBackupDirectory() . $zip_file );
+		$fileoptions->options                = ! is_array( $files ) ? array() : $files;
+		$fileoptions->save();
+	} else {
+		$files = &$fileoptions->options;
+	}
 }
 
 // Just make sure we have a sensible files listing.
 if ( ! is_array( $files ) ) {
-	die( 'Error #548484.  Unable to retrieve file listing from backup file `' . htmlentities( pb_backupbuddy::_GET( 'zip_viewer' ) ) . '`.' );
+	die( 'Error #548484.  Unable to retrieve file listing from backup file `' . htmlentities( $zip_file ) . '`.' );
+}
+
+if ( pb_backupbuddy::_GET( 'dat_viewer' ) ) {
+	if ( ! class_exists( 'BackupBuddy_File_Tree' ) ) {
+		require_once pb_backupbuddy::plugin_path() . '/classes/class-backupbuddy-file-tree.php';
+	}
+
+	$file_tree = new BackupBuddy_File_Tree( $files, array(
+		'skip_empty'  => pb_backupbuddy::_GET( 'path' ) ? pb_backupbuddy::_GET( 'path' ) : true,
+		'plugin_info' => backupbuddy_data_file()->get_plugin_info( backupbuddy_core::getBackupDirectory() . $zip_file ),
+		'theme_info'  => backupbuddy_data_file()->get_theme_info( backupbuddy_core::getBackupDirectory() . $zip_file ),
+		'backup_file' => $zip_file,
+	) );
+
+	$file_tree->get_html( true );
+	return;
 }
 
 // To record subdirs of this root.
@@ -116,27 +141,29 @@ foreach ( $files as $key => $file ) {
 	}
 }
 
-/**
- * Simple sort function to bubble dirs up to the top of list and
- * have dirs and files in simple alpha order.
- *
- * @param array $a  Array A to compare.
- * @param array $b  Array B to compare.
- *
- * @return int  Comparison result.
- */
-function pb_backupbuddy_sort_file_list( $a, $b ) {
+if ( ! function_exists( 'pb_backupbuddy_sort_file_list' ) ) {
+	/**
+	 * Simple sort function to bubble dirs up to the top of list and
+	 * have dirs and files in simple alpha order.
+	 *
+	 * @param array $a  Array A to compare.
+	 * @param array $b  Array B to compare.
+	 *
+	 * @return int  Comparison result.
+	 */
+	function pb_backupbuddy_sort_file_list( $a, $b ) {
 
-	// If both are dirs or files then result is 0
-	// If $a is dir and $b is file then result is -1
-	// If $a is file and $b is dir then result is 1.
-	$res = substr_count( $b[0], '/' ) - substr_count( $a[0], '/' );
-	if ( 0 == $res ) {
-		// Both same type so sort alpha.
-		$res = strcmp( rtrim( $a[0], '/' ), rtrim( $b[0], '/' ) );
+		// If both are dirs or files then result is 0
+		// If $a is dir and $b is file then result is -1
+		// If $a is file and $b is dir then result is 1.
+		$res = substr_count( $b[0], '/' ) - substr_count( $a[0], '/' );
+		if ( 0 == $res ) {
+			// Both same type so sort alpha.
+			$res = strcmp( rtrim( $a[0], '/' ), rtrim( $b[0], '/' ) );
+		}
+
+		return $res;
 	}
-
-	return $res;
 }
 
 // Try and sort the files to put dirs first and all in alpha

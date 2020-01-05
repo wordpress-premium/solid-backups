@@ -12,6 +12,11 @@ if ( version_compare( PHP_VERSION, 5.3, '<' ) ) { // Server's PHP is insufficien
 	die( '-1' );
 }
 
+// Prevent this request and future requests during a restore.
+if ( backupbuddy_restore()->in_progress() ) {
+	die( '-1' );
+}
+
 $stats = backupbuddy_api::getLiveStats();
 if ( false === $stats ) { // Live is disconnected.
 	die( '-1' );

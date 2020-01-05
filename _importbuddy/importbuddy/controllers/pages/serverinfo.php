@@ -11,7 +11,7 @@ require_once( ABSPATH .'importbuddy/views/_header.php' );
 <div class="wrap">
 	<?php
 	global $detected_max_execution_time;
-	require_once( 'server_tools.php' );
+	require_once( 'diagnostics.php' );
 	?>
 </div>
 

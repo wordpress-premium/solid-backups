@@ -640,7 +640,7 @@ class pb_backupbuddy {
 	 * @return bool  True if save succeeded, false otherwise.
 	 */
 	public static function save() {
-		if ( pb_is_standalone() ) {
+		if ( pb_is_standalone() || backupbuddy_is_restoring() ) {
 			$options_content = base64_encode( json_encode( pb_backupbuddy::$options ) );
 			$result          = file_put_contents( ABSPATH . 'importbuddy/_settings_dat.php', "<?php die('<!-- // Silence is golden. -->'); ?>\n" . $options_content );
 			// FIXME: Could we just return $result?
@@ -1294,12 +1294,12 @@ class pb_backupbuddy {
 	 * @param bool   $error       OPTIONAL! true indicates this alert is an error and displays as red. Default: false.
 	 * @param string $error_code  OPTIONAL! Error code number to use in linking in the wiki for easy reference.
 	 * @param string $rel_tag     If not echoing alert then the string will be returned. When echoing there is no return.
-	 *
-	 * @return mixed  String or null.
+	 * @param string $more_css    Inline css to be added to message.
+	 * @param array  $args        Additional array of args to pass to alert.
 	 */
-	public static function alert( $message, $error = false, $error_code = '', $rel_tag = '' ) {
+	public static function alert( $message, $error = false, $error_code = '', $rel_tag = '', $more_css = '', $args = array() ) {
 		self::init_class_controller( 'ui' ); // $ui class required pages controller and may not be set up if not in our own pages.
-		self::$ui->alert( $message, $error, $error_code, $rel_tag );
+		self::$ui->alert( $message, $error, $error_code, $rel_tag, $more_css, $args );
 	} // End alert().
 
 	/**
@@ -1311,10 +1311,11 @@ class pb_backupbuddy {
 	 * @param string $message    Message you want to display to the user.
 	 * @param bool   $error      Optional. Error code number to use in linking to the wiki for easy reference.
 	 * @param string $more_css   Additional css to apply to alert.
+	 * @param array  $args       Additional args to be passed.
 	 */
-	public static function disalert( $unique_id, $message, $error = false, $more_css = '' ) {
+	public static function disalert( $unique_id, $message, $error = false, $more_css = '', $args = array() ) {
 		self::init_class_controller( 'ui' ); // $ui class required pages controller and may not be set up if not in our own pages.
-		self::$ui->disalert( $unique_id, $message, $error, $more_css );
+		self::$ui->disalert( $unique_id, $message, $error, $more_css, $args );
 	} // End disalert().
 
 	/**
@@ -1686,8 +1687,9 @@ class pb_backupbuddy {
 	 *                             Ex: load_script( 'sort.js' ) will load /wp-content/plugins/my_plugin/js/sort.js;
 	 *                             load_script( 'jquery' ) will load internal jquery library in WordPress if it exists.
 	 * @param bool   $core_script  If true scripts are loaded from /pluginbuddy/js/SCRIPT.js. Else scripts loaded from plugin's js directory.
+	 * @param array  $vars         Localized variables.
 	 */
-	public static function load_script( $script, $core_script = false ) {
+	public static function load_script( $script, $core_script = false, $vars = array() ) {
 		if ( strstr( $script, '.js' ) ) { // Loading a file specifically.
 			if ( true === $core_script ) {
 				if ( pb_is_standalone() ) {
@@ -1717,6 +1719,9 @@ class pb_backupbuddy {
 			}
 		} else { // Not a specific file.
 			if ( ! wp_script_is( $script, 'done' ) ) { // Only PRINT script once. Checks the done wpscript list to see if it's been printed yet or not.
+				if ( count( $vars ) ) {
+					wp_localize_script( $script, 'backupbuddy_vars', $vars );
+				}
 				wp_enqueue_script( $script );
 				wp_print_scripts( $script );
 			}

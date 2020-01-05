@@ -108,22 +108,20 @@ class pb_backupbuddy_format {
 		return $timestamp - ( get_option( 'gmt_offset' ) * 3600 );
 	} // End unlocalize_time().
 
-
-
-	/*	pluginbuddy_format->time_ago()
+	/**
+	 * Alias function for human_time_diff().
+	 * Accepts NON-localized timestamps.
 	 *
-	 *	Accepts NON-localized timestamps.
-	 *	@see time_duration
+	 * @see time_duration
 	 *
-	 *	@param
-	 *	@return
+	 * @param int    $timestamp     The timestamp.
+	 * @param string $current_time  Relative current time.
+	 *
+	 * @return string  Human readable time difference.
 	 */
-	 // TODO: deprecated?
-	function time_ago( $timestamp ) {
-		return human_time_diff( $timestamp, time() );
+	public function time_ago( $timestamp, $current_time = 0 ) {
+		return human_time_diff( $timestamp, $current_time );
 	} // End time_ago().
-
-
 
 	/*	pluginbuddy_format->duration()
 	 *

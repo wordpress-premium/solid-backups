@@ -234,7 +234,6 @@ class pb_backupbuddy_destinations {
 	 * @return bool  False and error echo'd, or true.
 	 */
 	public static function manage( $destination_settings, $destination_id = '' ) {
-
 		$destination = self::_init_destination( $destination_settings );
 		if ( false === $destination ) {
 			echo '{Error #546893498ad. Destination configuration file missing.}';
@@ -245,7 +244,7 @@ class pb_backupbuddy_destinations {
 		$destination_info     = $destination['info'];
 
 		if ( '0' != $destination_settings['disable_file_management'] ) {
-			esc_html_e( 'Remote file management has been disabled for this destination. Its files cannot be viewed & managed from within BackupBuddy. To re-enable you must create a new destination.', 'it-l10n-backupbuddy' );
+			esc_html_e( 'Remote file management has been disabled for this destination. Its files cannot be viewed or managed from within BackupBuddy. To re-enable you must create a new destination.', 'it-l10n-backupbuddy' );
 			return false;
 		}
 
@@ -265,14 +264,20 @@ class pb_backupbuddy_destinations {
 	/**
 	 * List all files / directories in a destination.
 	 *
-	 * @param array $destination_settings  Array of destination settings.
+	 * @param array  $destination_settings  Array of destination settings.
+	 * @param string $mode                  Array mode (default, restore, legacy).
+	 * @param bool   $return                Return or echo result.
 	 *
-	 * @return array|false  Array of files on sucess, else bool FALSE.
+	 * @return array|false  Array of files on success, else bool FALSE.
 	 */
-	public static function listFiles( $destination_settings ) {
+	public static function listFiles( $destination_settings, $mode = 'default', $return = false ) {
 		$destination = self::_init_destination( $destination_settings );
 		if ( false === $destination ) {
-			echo '{Error #546893498c. Destination configuration file missing.}';
+			$error = '{Error #546893498c. Destination configuration file missing.}';
+			if ( true === $return ) {
+				return $error;
+			}
+			echo $error;
 			return false;
 		}
 
@@ -280,13 +285,50 @@ class pb_backupbuddy_destinations {
 		$destination_class    = $destination['class'];
 
 		if ( false === method_exists( $destination_class, 'listFiles' ) ) {
-			pb_backupbuddy::status( 'error', 'listFiles destination function called on destination not supporting it.' );
+			$error = esc_html__( 'listFiles destination function called on destination not supporting it.', 'it-l10n-backupbuddy' );
+			pb_backupbuddy::status( 'error', $error );
+			if ( true === $return ) {
+				return $error;
+			}
 			return false;
 		}
 
-		return call_user_func_array( "{$destination_class}::listFiles", array( $destination_settings ) );
+		return call_user_func_array( "{$destination_class}::listFiles", array( $destination_settings, $mode ) );
+	} // listFiles.
 
-	} // End listFiles().
+	/**
+	 * Download ALL Backup Dat files.
+	 *
+	 * @param array $destination_settings  Destination Settings array.
+	 * @param bool  $return                Return or echo result.
+	 *
+	 * @return bool|string  If successful or not, or error on error.
+	 */
+	public static function download_dat_files( $destination_settings, $return = false ) {
+		$destination = self::_init_destination( $destination_settings );
+		if ( false === $destination ) {
+			$error = '{Error #546893498c. Destination configuration file missing.}';
+			if ( true === $return ) {
+				return $error;
+			}
+			echo $error;
+			return false;
+		}
+
+		$destination_settings = $destination['settings']; // Settings with defaults applied, normalized, etc.
+		$destination_class    = $destination['class'];
+
+		if ( false === method_exists( $destination_class, 'download_dat_files' ) ) {
+			$error = esc_html__( 'download_dat_files destination function called on destination not supporting it.', 'it-l10n-backupbuddy' );
+			pb_backupbuddy::status( 'error', $error );
+			if ( true === $return ) {
+				return $error;
+			}
+			return false;
+		}
+
+		return call_user_func_array( "{$destination_class}::download_dat_files", array( $destination_settings ) );
+	}
 
 	/**
 	 * Delete one or more files.
@@ -344,8 +386,22 @@ class pb_backupbuddy_destinations {
 			return false;
 		}
 
-		return call_user_func_array( "{$destination_class}::getFile", array( $destination_settings, $remote_file, $local_file ) );
+		$result = call_user_func_array( "{$destination_class}::getFile", array( $destination_settings, $remote_file, $local_file ) );
 
+		if ( $result && file_exists( $local_file ) ) {
+			if ( ! backupbuddy_data_file()->locate( basename( $local_file ) ) ) {
+				// Fake the backup fileoptions array for now.
+				$backup_array = array(
+					'archive_file' => $local_file,
+					'profile'      => array(
+						'type' => backupbuddy_core::parse_file( $local_file, 'type' ),
+					),
+				);
+				backupbuddy_data_file()->create( $backup_array );
+			}
+		}
+
+		return $result;
 	} // End getFile().
 
 
@@ -636,6 +692,11 @@ class pb_backupbuddy_destinations {
 						$unlink_result = @unlink( $file );
 						if ( true !== $unlink_result ) {
 							pb_backupbuddy::status( 'error', 'Unable to unlink local file `' . $file . '`.' );
+						} else {
+							$data_file = backupbuddy_data_file()->locate( $file );
+							if ( false !== $data_file ) {
+								backupbuddy_data_file()->delete( $data_file );
+							}
 						}
 					}
 					if ( file_exists( $file ) ) { // File still exists.

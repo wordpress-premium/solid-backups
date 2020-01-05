@@ -111,24 +111,28 @@ if ( 'disconnect' == pb_backupbuddy::_GET( 'live_action' ) && false !== $live_de
 	if ( false === $disconnected ) {
 		$admin_url = is_multisite() ? network_admin_url( 'admin.php' ) : admin_url( 'admin.php' );
 		?>
-		<h3><?php esc_html_e( 'Disconnect from Stash Live', 'it-l10n-backupbuddy' ); ?></h3>
+		<h1 style="zoom: 1.05;">
+			<span class="backupbuddy-stash-live-icon"></span>
+			<?php esc_html_e( 'Disconnect from Stash Live', 'it-l10n-backupbuddy' ); ?>
+		</h1>
 		<?php esc_html_e( 'To disconnect you must verify you have access to this account. Please authenticate with your iThemes Member Login to validate your access and disconnect this site from Stash Live.', 'it-l10n-backupbuddy' ); ?><br><br>
 		<form method="post" action="<?php echo pb_backupbuddy::nonce_url( $admin_url . '?page=pb_backupbuddy_live&live_action=disconnect' ); ?>">
 			<input type="hidden" name="disconnect" value="yes">
 			<table>
 				<tr>
 					<td>iThemes Username:</td>
-					<td><input type="text" name="username" value="<?php echo esc_attr( $destination_settings['itxapi_username'] ); ?>" readonly="true"></td>
+					<td><input type="text" name="username" value="<?php echo esc_attr( $destination_settings['itxapi_username'] ); ?>" readonly="true" style="width: 100%;"></td>
 				</tr>
 				<tr>
 					<td>iThemes Password:</td>
-					<td><input type="password" name="password"></td>
+					<td><input type="password" name="password" style="width: 100%;"></td>
 				</tr>
 				<tr><td colspan="2">&nbsp;</td></tr>
 				<tr>
 					<td>&nbsp;</td>
 					<td>
 						<input type="submit" name="submit" value="Disconnect Stash Live" class="button-primary">
+						<a href="<?php echo esc_attr( $admin_url . '?page=pb_backupbuddy_live' ); ?>" class="button button-secondary"><?php esc_html_e( 'Cancel', 'it-l10n-backupbuddy' ); ?></a>
 					</td>
 				</tr>
 			</table>
@@ -145,7 +149,7 @@ if ( false === $live_destination_id ) {
 }
 
 // Load normal manage page.
-pb_backupbuddy::$ui->title( esc_html__( 'Stash Live', 'it-l10n-backupbuddy' ) );
+pb_backupbuddy::$ui->title( esc_html__( 'Stash Live', 'it-l10n-backupbuddy' ), true, false, 'backupbuddy-stash-live-icon' );
 ?>
 <br>
 

@@ -26,6 +26,9 @@ if ( 'migration' === $mode ) {
 	} else {
 		$picker_url = pb_backupbuddy::ajax_url( 'destinationTabs' );
 	}
+	if ( pb_backupbuddy::_GET( 'tab' ) ) {
+		$picker_url .= pb_backupbuddy::_GET( 'tab' );
+	}
 }
 
 $action_verb = '';
@@ -71,28 +74,30 @@ pb_backupbuddy::load_style( 'filetree.css' );
 			jQuery(this).closest('form').find( '.pb_backupbuddy_destpicker_saveload' ).show();
 			jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'remote_save' ); ?>&pb_backupbuddy_destinationid=' + pb_remote_id, jQuery(this).parent( 'form' ).serialize(),
 				function(data) {
-					data = jQuery.trim( data );
+					 // data = jQuery.trim( data );
 
-					if ( data == 'Destination Added.' ) {
-						<?php
-						if ( pb_backupbuddy::_GET( 'quickstart' ) != '' ) {
-						?>
-						var win = window.dialogArguments || opener || parent || top;
-						win.pb_backupbuddy_quickstart_destinationselected();
-						win.tb_remove();
-						return false;
-						<?php
+					if ( data.success ) {
+						if ( 'added' === data.status ) {
+							<?php
+							if ( pb_backupbuddy::_GET( 'quickstart' ) != '' ) {
+							?>
+							var win = window.dialogArguments || opener || parent || top;
+							win.pb_backupbuddy_quickstart_destinationselected();
+							win.tb_remove();
+							return false;
+							<?php
+							}
+							?>
+							console.log( data.new_tab );
+							window.location.href = '<?php echo $picker_url . '&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ); ?>&tab='+data.new_tab+'&sending=<?php echo pb_backupbuddy::_GET( 'sending' ); ?>&selecting=<?php echo pb_backupbuddy::_GET( 'selecting' ); ?>&alert_notice=' + encodeURIComponent( 'New destination successfully added.' );
+							win.scrollTo(0,0);
+						} else if ( 'saved' === data.status ) {
+							jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
+							jQuery( '.nav-tab-active' ).find( '.destination_title' ).text( new_title );
 						}
-						?>
-						destinationCount = jQuery('.destination_title').length; // Count is 0 based but includes add-new tab so int will match our new tab on reload.
-						window.location.href = '<?php echo $picker_url . '&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ); ?>&tab='+destinationCount+'&sending=<?php echo pb_backupbuddy::_GET( 'sending' ); ?>&selecting=<?php echo pb_backupbuddy::_GET( 'selecting' ); ?>&alert_notice=' + encodeURIComponent( 'New destination successfully added.' );
-						win.scrollTo(0,0);
-					} else if ( data == 'Settings saved.' ) {
-						jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
-						jQuery( '.nav-tab-active' ).find( '.destination_title' ).text( new_title );
 					} else {
 						jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
-						alert( "Error: \n\n" + data );
+						alert( "Error: \n\n" + data.error );
 					}
 
 				}
@@ -356,9 +361,12 @@ function pb_bb_add_box( $mode, $picker_url, $hide_back = false ) {
 					}
 				}
 
-				$i++;
+				if ( ! empty( $destination['name'] ) ) {
+					$i++;
 
-				echo '<li class="bb_destination-item bb_destination-' . $destination_name . ' bb_destination-new-item"><a href="' . $picker_url . '&add=' . $destination_name . '&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ) . '&sending=' . pb_backupbuddy::_GET( 'sending' ) . '&selecting=' . pb_backupbuddy::_GET( 'selecting' ) . '" rel="' . $destination_name . '">' . $destination['name'] . '</a></li>';
+					echo '<li class="bb_destination-item bb_destination-' . $destination_name . ' bb_destination-new-item"><a href="' . $picker_url . '&add=' . $destination_name . '&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ) . '&sending=' . pb_backupbuddy::_GET( 'sending' ) . '&selecting=' . pb_backupbuddy::_GET( 'selecting' ) . '" rel="' . $destination_name . '">' . $destination['name'] . '</a></li>';
+				}
+
 				if ( $i >= 5 ) {
 					echo '<span class="bb_destination-break"></span>';
 					$i = 0;
@@ -382,6 +390,8 @@ if ( 'true' != pb_backupbuddy::_GET( 'show_add' ) && $destination_list_count > 0
 	if ( '' != pb_backupbuddy::_GET( 'alert_notice' ) ) {
 		pb_backupbuddy::alert( htmlentities( stripslashes( pb_backupbuddy::_GET( 'alert_notice' ) ) ) );
 	}
+
+	$is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanitize_text_field( wp_unslash( $_GET['callback_data'] ) );
 	?>
 
 	<div class="bb_actions bb_actions_after slidedown">
@@ -389,7 +399,7 @@ if ( 'true' != pb_backupbuddy::_GET( 'show_add' ) && $destination_list_count > 0
 		<div class="bb_destinations" style="display: block;">
 			<div class="bb_destinations-group bb_destinations-existing">
 				<h3>Send to one of your existing destinations?</h3><br>
-				<?php if ( '' != pb_backupbuddy::_GET( 'sending' ) ) { ?>
+				<?php if ( '' != pb_backupbuddy::_GET( 'sending' ) && ! $is_importbuddy ) { ?>
 					<label><input type="checkbox" name="delete_after" id="pb_backupbuddy_remote_delete" value="1">Delete local backup after successful delivery?</label>
 					<br><br>
 				<?php } ?>

@@ -1,6 +1,6 @@
 <?php
 /**
- * Site Size Info on Server Tools Page
+ * Site Size Info on Diagnostics Page
  *
  * @package BackupBuddy
  */
@@ -60,6 +60,7 @@ pb_backupbuddy::load_style( 'jit_icicle.css' );
 	<b>Backup profile for calculating exclusions:</b>
 	<select id="pb_backupbuddy_filelistingprofile">
 		<?php
+		$profile_id = '' != pb_backupbuddy::_GET( 'profile' ) ? pb_backupbuddy::_GET( 'profile' ) : 0;
 		foreach ( pb_backupbuddy::$options['profiles'] as $this_profile_id => $profile ) {
 			if ( 'db' == $profile['type'] ) {
 				continue;

@@ -205,8 +205,13 @@ if ( isset( $options['type'] ) && ( ( 'files' == $options['type'] ) || ( 'media'
 		$count = count( $files );
 		$pass  = $count > 0;
 	}
+	$browse_tool = 'zip_viewer';
+	if ( backupbuddy_data_file()->locate( $file ) ) {
+		$browse_tool = 'dat_viewer';
+	}
+	$url = admin_url( 'admin.php' ) . '?page=pb_backupbuddy_backup&' . $browse_tool . '=' . basename( $file ) . '&value=' . basename( $file ) . '&bub_rand=' . rand( 100, 999 );
 	$tests[] = array(
-		'test'      => 'Basic file list scan (' . $count . ' files found inside) - <a target="_top" href="' . admin_url('admin.php') . '?page=pb_backupbuddy_backup&zip_viewer=' . basename( $file ). '&value=' . basename( $file ) . '&bub_rand=' . rand( 100, 999 ) . '">Browse Files</a>', // rand is because some hosts block URLs with a .zip at the end of the url.
+		'test'      => 'Basic file list scan (' . $count . ' files found inside) - <a target="_top" href="' . $url . '">Browse Files</a>', // rand is because some hosts block URLs with a .zip at the end of the url.
 		'pass'      => $pass,
 		'fileCount' => $count,
 	);

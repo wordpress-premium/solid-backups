@@ -3,7 +3,7 @@
  * Plugin Name: BackupBuddy
  * Plugin URI: http://ithemes.com/purchase/backupbuddy/
  * Description: The most complete WordPress solution for Backup, Restoration, Migration, and Deployment to the same host or a new domain. Backs up a customizable selection of files, settings, and content for a complete snapshot of your site. Stash Live feature allows for real-time live backups to the cloud.
- * Version: 8.4.19.0
+ * Version: 8.5.2.1
  * Author: iThemes
  * Author URI: http://ithemes.com/
  * iThemes Package: backupbuddy
@@ -156,6 +156,9 @@ $pluginbuddy_settings = array(
 		'last_tested_php_runtime'                 => 0,              // Timestamp PHP runtime was last tested.
 		'last_tested_php_memory'                  => 0,              // Timestamp PHP memory was last tested.
 		'use_internal_cron'                       => '0',            // When 1, we will try to use our own cron system to work around cron caching issues.
+		'umask_check'                             => false,          // Stores umask server tests.
+		'default_restores_permissions'            => 'standard',     // Permission set to be used during backup restores.
+		'disable_dat_file_creation'               => 0,              // Allows support/users to turn of dat file creation for debugging.
 
 		'php_runtime_test_minimum_interval'       => '604800',     // How often to perform the automated test via the housekeeping function. This must elapse before automated test will run. Zero (0) to disable.
 		'php_memory_test_minimum_interval'        => '604800',     // How often to perform the automated test via the housekeeping function. This must elapse before automated test will run. Zero (0) to disable.
@@ -270,22 +273,42 @@ $pluginbuddy_settings = array(
 	),
 );
 
+define( 'BACKUPBUDDY_PLUGIN_FILE', __FILE__ );
+define( 'BACKUPBUDDY_PLUGIN_PATH', dirname( BACKUPBUDDY_PLUGIN_FILE ) );
+
 // Main plugin file.
-$pluginbuddy_init = 'backupbuddy.php';
+$pluginbuddy_init = basename( BACKUPBUDDY_PLUGIN_FILE );
+
+// Load composer autoload.
+require_once BACKUPBUDDY_PLUGIN_PATH . '/vendor/autoload.php';
+
+// Load PHP7 helpers.
+require_once BACKUPBUDDY_PLUGIN_PATH . '/helpers/php7.php';
+
+// Load admin helpers.
+require_once BACKUPBUDDY_PLUGIN_PATH . '/helpers/admin.php';
+
+// Load class helpers.
+require_once BACKUPBUDDY_PLUGIN_PATH . '/helpers/classes.php';
 
 // Load compatibility functions.
-require_once dirname( __FILE__ ) . '/helpers/compat.php';
-
-// $settings is expected to be populated prior to including PluginBuddy framework. Do not edit below.
-require dirname( __FILE__ ) . '/pluginbuddy/_pluginbuddy.php';
+require_once BACKUPBUDDY_PLUGIN_PATH . '/helpers/compat.php';
 
 // Load privacy functions.
-require_once dirname( __FILE__ ) . '/helpers/privacy.php';
+require_once BACKUPBUDDY_PLUGIN_PATH . '/helpers/privacy.php';
 
 // Helper functions to style Filetree icons.
-require_once dirname( __FILE__ ) . '/helpers/file-icons.php';
+require_once BACKUPBUDDY_PLUGIN_PATH . '/helpers/file-icons.php';
 
-// Cron looback test.
+// Restore helpers.
+require_once BACKUPBUDDY_PLUGIN_PATH . '/helpers/restore.php';
+
+// $settings is expected to be populated prior to including PluginBuddy framework. Do not edit below.
+require_once BACKUPBUDDY_PLUGIN_PATH . '/pluginbuddy/_pluginbuddy.php';
+
+/**
+ * Cron looback test.
+ */
 function itbub_cron_test() {
 	global $wpdb;
 	$option           = 'itbub_doing_cron_test';
@@ -297,12 +320,16 @@ function itbub_cron_test() {
 
 add_action( 'itbub_cron_test', 'itbub_cron_test' );
 
-// Updater & Licensing System - Aug 23, 2013.
+/**
+ * Updater & Licensing System - Aug 23, 2013.
+ *
+ * @param object $updater  Updater Class instance.
+ */
 function ithemes_backupbuddy_updater_register( $updater ) {
-	$updater->register( 'backupbuddy', __FILE__ );
+	$updater->register( 'backupbuddy', BACKUPBUDDY_PLUGIN_FILE );
 }
 add_action( 'ithemes_updater_register', 'ithemes_backupbuddy_updater_register' );
-$updater = dirname( __FILE__ ) . '/lib/updater/load.php';
+$updater = BACKUPBUDDY_PLUGIN_PATH . '/lib/updater/load.php';
 if ( file_exists( $updater ) ) {
 	require $updater;
 }

@@ -54,10 +54,9 @@ foreach ( $directories as $directory ) {
 	array_push( $tests, $this_test );
 
 } // end foreach.
-
 ?>
 
-<table class="widefat">
+<table class="widefat" id="backupbuddy-server-permissions">
 	<thead>
 		<tr class="thead">
 			<th><?php esc_html_e( 'Relative Path', 'it-l10n-backupbuddy' ); ?></th>

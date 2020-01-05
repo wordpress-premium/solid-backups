@@ -372,11 +372,11 @@ class pb_backupbuddy_form {
 
 			if ( 'text' == $input['type'] ) {
 
-				$return .= '<input type="text" class="' . $classes . '" name="' . $prefix . $name . '" value="' . $input['value'] . '" id="' . esc_attr( $id ) . '"' . $css . '>';
+				$return .= '<input type="text" class="' . esc_attr( $classes ) . '" name="' . esc_attr( $prefix . $name ) . '" value="' . esc_attr( $input['value'] ) . '" id="' . esc_attr( $id ) . '"' . $css . '>';
 
 			} elseif ( 'plaintext' == $input['type'] ) {
 
-				$return .= '<span class="' . $classes . '" ' . $css . '>' . $input['value'] . '</span>';
+				$return .= '<span class="' . esc_attr( $classes ) . '" ' . $css . '>' . $input['value'] . '</span>';
 
 			} elseif ( 'color' == $input['type'] ) {
 
@@ -413,11 +413,11 @@ class pb_backupbuddy_form {
 					$css = ' style="width: 60px;"';
 				}
 
-				$return .= '<input class="pb_colorpicker ' . $classes . '" type="text" name="' . $prefix . $name . '" value="' . $input['value'] . '" id="' . esc_attr( $id ) . '"' . $css . '>';
+				$return .= '<input class="pb_colorpicker ' . $classes . '" type="text" name="' . esc_attr( $prefix . $name ) . '" value="' . esc_attr( $input['value'] ) . '" id="' . esc_attr( $id ) . '"' . $css . '>';
 
 			} elseif ( 'hidden' == $input['type'] ) {
 
-				$return .= '<input type="hidden" name="' . $prefix . $name . '" value="' . $input['value'] . '" class="' . $classes . '" id="' . esc_attr( $id ) . '"' . $css . '>';
+				$return .= '<input type="hidden" name="' . esc_attr( $prefix . $name ) . '" value="' . esc_attr( $input['value'] ) . '" class="' . esc_attr( $classes ) . '" id="' . esc_attr( $id ) . '"' . $css . '>';
 
 			} elseif ( 'wysiwyg' == $input['type'] ) {
 
@@ -694,6 +694,8 @@ class pb_backupbuddy_form {
 						}
 					}
 				}
+			} elseif ( in_array( $rule_type, array( 'no-th', 'th-rowspan-2' ), true ) ) {
+				// Do nothing, these are used for table modification.
 			} else {
 				// TODO: Add custom callback functionality here.
 				// Unknown rule so notify the developer.

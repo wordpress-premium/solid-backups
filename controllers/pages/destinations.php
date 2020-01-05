@@ -5,11 +5,6 @@
  * @package BackupBuddy
  */
 
-$default_tab = 0;
-if ( is_numeric( pb_backupbuddy::_GET( 'tab' ) ) ) {
-	$default_tab = pb_backupbuddy::_GET( 'tab' );
-}
-
 wp_enqueue_script( 'thickbox' );
 wp_print_scripts( 'thickbox' );
 wp_print_styles( 'thickbox' );
@@ -58,13 +53,6 @@ if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && true == BACKUPBUDDY_API_ENABLE ) {
 			'</div>'
 		);
 
-		jQuery('#screen-meta-links').append(
-			'<div id="backupbuddy-meta-link-wrap" class="hide-if-no-js screen-meta-toggle">' +
-				'<a href="javascript:void(0)" class="show-settings bb-toggle-meta" onClick="jQuery(\'.backupbuddy-destination-sends\').slideToggle(); jQuery(this).toggleClass(\'screen-meta-active\'); return false;"><?php esc_html_e( 'Recently Sent Files', 'it-l10n-backupbuddy' ); ?></a>' +
-			'</div>'
-		);
-
-
 		jQuery( '.backupbuddy-progressbar' ).each( function(){
 			percentDone = jQuery(this).attr( 'data-percent' );
 			jQuery(this).progressbar( { value: parseInt( percentDone, 10 ) } );
@@ -102,19 +90,13 @@ if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && true == BACKUPBUDDY_API_ENABLE ) {
 	});
 </script>
 
+<div class="backupbuddy_destinations_iframe_load">
+	<span class="spinner"></span> <?php esc_html_e( 'Loading remote destinations...', 'it-l10n-backupbuddy' ); ?>
+</div>
+
 <?php pb_backupbuddy::$ui->title( esc_html__( 'Destinations', 'it-l10n-backupbuddy' ), true, false ); ?>
 
-<br>
-
-<div class="backupbuddy_api_key-hide" style="
-	display: none;
-	border: 1px solid #e5e5e5;
-	-webkit-box-shadow: 0 1px 1px rgba(0,0,0,.04);
-	box-shadow: 0 1px 1px rgba(0,0,0,.04);
-	padding: 20px;
-	background: #fff;
-	margin-bottom: 40px;
-">
+<div class="backupbuddy_api_key-hide" style="display: none;">
 	<?php
 	if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && true == BACKUPBUDDY_API_ENABLE ) {
 		require_once pb_backupbuddy::plugin_path() . '/classes/remote_api.php';
@@ -157,20 +139,13 @@ define( 'BACKUPBUDDY_API_ENABLE', true ); // Enable BackupBuddy Deployment acces
 	}
 	echo '</div>';
 
-	echo '<div class="backupbuddy-destination-sends" style="display: none;"><br>';
-		require_once 'server_info/remote_sends.php';
-	echo '<br></div>';
+	$destination_tabs_url = pb_backupbuddy::ajax_url( 'destinationTabs' );
+	if ( pb_backupbuddy::_GET( 'tab' ) ) {
+		$destination_tabs_url .= pb_backupbuddy::_GET( 'tab' );
+	}
+
+	echo '<iframe id="pb_backupbuddy_iframe-dest-wrap" src="' . $destination_tabs_url . '&action_verb=to%20manage%20files" width="100%" height="4000" frameBorder="0" onLoad="jQuery( \'.backupbuddy_destinations_iframe_load\' ).fadeOut(\'fast\');">Error #4584594579. Browser not compatible with iframes.</iframe>';
 ?>
-
-<div class="backupbuddy_destinations_iframe_load">
-	<img src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/loading.gif" title="Loading... This may take a few seconds..." style="vertical-align: -3px; margin-left: 5px;"> <?php esc_html_e( 'Loading remote destinations...', 'it-l10n-backupbuddy' ); ?>
-</div>
-
-<?php
-echo '<iframe id="pb_backupbuddy_iframe-dest-wrap" src="' . pb_backupbuddy::ajax_url( 'destinationTabs' ) . '&tab=' . esc_attr( $default_tab ) . '&action_verb=to%20manage%20files" width="100%" height="4000" frameBorder="0" onLoad="jQuery( \'.backupbuddy_destinations_iframe_load\' ).css(\'visibility\',\'hidden\');">Error #4584594579. Browser not compatible with iframes.</iframe>';
-?>
-
-<br style="clear: both;"><br style="clear: both;">
 
 <?php
 // Handles thickbox auto-resizing. Keep at bottom of page to avoid issues.

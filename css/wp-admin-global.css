@@ -1,0 +1,80 @@
+@font-face {
+	font-family: 'backupbuddy';
+	src:url('fonts/backupbuddy.eot');
+	src:url('fonts/backupbuddy.eot?#iefix') format('embedded-opentype'),
+		url('fonts/backupbuddy.ttf') format('truetype'),
+		url('fonts/backupbuddy.woff') format('woff'),
+		url('fonts/backupbuddy.svg#backupbuddy') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+#toplevel_page_pb_backupbuddy_backup div.wp-menu-image::before,
+#toplevel_page_pb_backupbuddy_multisite_export div.wp-menu-image::before,
+.backupbuddy-icon-drive::before {
+	font-family: 'backupbuddy' !important;
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+
+	content: "\e600" !important;
+}
+
+.backupbuddy-icon-drive {
+	font-size: 1.2em;
+	vertical-align: -4px;
+}
+
+.pb_backupbuddy_alert[rel="backupbuddy_version_eight"] {
+	border-left: 10px solid #2D5058;
+	background: #B0EAFF;
+	color: #2D5058;
+	padding-left: 25px;
+	padding-bottom: 25px;
+	padding-right: 0;
+	padding-top: 20px;
+}
+.pb_backupbuddy_alert[rel="backupbuddy_version_eight"] p {
+	font-size: 1.4em;
+	font-weight: bold;
+	margin: 0;
+	padding: 0;
+	margin-bottom: 10px;
+}
+
+.pb_backupbuddy_alert[rel="backupbuddy_version_eight"] .backupbuddy-nag-button {
+	background: #2D5058;
+	border-radius: 8px;
+	display: inline-block;
+	margin: 0 0 10px 10px;
+	padding: 6px 14px;
+	-webkit-transition: all .1s linear;
+	-moz-transition: all .1s linear;
+	transition: all .1s linear;
+	color: #fff;
+	font-weight: bold;
+	text-decoration: none;
+	text-transform: uppercase;
+	font-size: 0.7em;
+}
+
+.pb_backupbuddy_alert[rel="backupbuddy_version_eight"] .backupbuddy-nag-button:hover,
+.pb_backupbuddy_alert[rel="backupbuddy_version_eight"] .backupbuddy-nag-button:focus {
+	background: #3fc7eb;
+}
+
+.pb_backupbuddy_alert[rel="backupbuddy_version_eight"] .pb_backupbuddy_disalert:not(.backupbuddy-nag-button) {
+	margin: 20px;
+	margin-top: 5px;
+}
+
+.pb_backupbuddy_alert[rel="backupbuddy_version_eight"] span {
+	display: inline-block;
+	font-size: 1.05em;
+}
