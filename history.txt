@@ -2028,3 +2028,19 @@
 	Bug Fix: Corrected minor PHP notices.
 8.5.2.1 - 2019-11-26 - Brian DiChiara, Tyler Gilbert
 	Bug Fix: Send Importbuddy to remote destination bug.
+8.5.3.0 - 2020-02-10 - Brian DiChiara, Josh Benham, Saylor Rain, Ronald van Weerd, Yobani Mendoza, Tyler Gilbert
+	Enhancement: Better handling of WordPress and Third-party admin notices on BackupBuddy pages.
+	Enhancement: Updated Amazon S3 Bucket Regions.
+	Bug Fix: Backups loading in Restore tab when no local backups exist.
+	Bug Fix: Restore from Amazon S3 now working.
+	Bug Fix: Clicking on date of snapshot now downloads the backup.
+	Bug Fix: Resolved issue with Stash Restore buttons not working.
+	Bug Fix: Resolved issue with Importbuddy not sending to remote destination.
+	Bug Fix: Dashboard widget now links to Create Backup tab.
+	Bug Fix: Tweaks/fixes to Scheduling pages and admin notices.
+	Bug Fix: Resolved issue with Malware scan not reporting scan results.
+8.5.3.1 - 2020-02-10 - Brian DiChiara, Tyler Gilbert
+	Bug Fix: Resolved PHP Fatal Notice in Importbuddy related to wp_strip_all_tags.
+	Bug Fix: Adjustment to admin notices on Backup screen.
+8.5.3.2 - 2020-02-11 - Brian DiChiara, Tyler Gilbert
+	Bug Fix: Resolved Javascript conflict with Jetpack related to admin notices.

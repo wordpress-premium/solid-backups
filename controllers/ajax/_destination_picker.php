@@ -88,7 +88,6 @@ pb_backupbuddy::load_style( 'filetree.css' );
 							<?php
 							}
 							?>
-							console.log( data.new_tab );
 							window.location.href = '<?php echo $picker_url . '&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ); ?>&tab='+data.new_tab+'&sending=<?php echo pb_backupbuddy::_GET( 'sending' ); ?>&selecting=<?php echo pb_backupbuddy::_GET( 'selecting' ); ?>&alert_notice=' + encodeURIComponent( 'New destination successfully added.' );
 							win.scrollTo(0,0);
 						} else if ( 'saved' === data.status ) {
@@ -107,9 +106,9 @@ pb_backupbuddy::load_style( 'filetree.css' );
 		} );
 
 		// Select a destionation to return to parent page.
-		jQuery('.bb_destinations-existing .bb_destination-item a').click(function(e) {
+		jQuery( '.bb_destinations-existing .bb_destination-item a' ).on( 'click', function(e) {
 			e.preventDefault();
-			if ( jQuery(this).parent().hasClass( 'bb_destination-item-disabled' ) ) {
+			if ( jQuery( this ).parent().hasClass( 'bb_destination-item-disabled' ) ) {
 				alert( 'This remote destination is unavailable.  It is either disabled in its Advanced Settings or not compatible with this server.' );
 				return false;
 			}
@@ -117,7 +116,7 @@ pb_backupbuddy::load_style( 'filetree.css' );
 			<?php
 			if ( 'migration' === $mode ) {
 				?>
-				destination_url = jQuery(this).nextAll('.settings').find('.migration_url').val();
+				destination_url = jQuery( this ).nextAll('.settings').find('.migration_url').val();
 				if ( destination_url == '' ) {
 					alert( 'Please enter a destination URL in the settings for the destination, test it, then save before selecting this destination.' );
 					jQuery(this).nextAll('.settings').find('.migration_url').css( 'background', '#ffffe0' );
@@ -129,7 +128,7 @@ pb_backupbuddy::load_style( 'filetree.css' );
 			?>
 
 			destinationID = jQuery(this).attr( 'rel' );
-			console.log( 'Send to destinationID: `' + destinationID + '`.' );
+			// console.log( 'Send to destinationID: `' + destinationID + '`.' );
 
 			<?php
 			if ( '' != pb_backupbuddy::_GET( 'quickstart' ) ) {
@@ -144,7 +143,7 @@ pb_backupbuddy::load_style( 'filetree.css' );
 
 			var delete_after = jQuery( '#pb_backupbuddy_remote_delete' ).is( ':checked' );
 
-			var win = window.dialogArguments || opener || parent || top;
+			var win = window.dialogArguments || parent || opener || top;
 			win.pb_backupbuddy_selectdestination( destinationID, jQuery(this).attr( 'title' ), '<?php echo pb_backupbuddy::_GET( 'callback_data' ); ?>', jQuery('#pb_backupbuddy_remote_delete').is(':checked'), '<?php echo $mode; ?>' );
 			win.tb_remove();
 			return false;
@@ -364,7 +363,17 @@ function pb_bb_add_box( $mode, $picker_url, $hide_back = false ) {
 				if ( ! empty( $destination['name'] ) ) {
 					$i++;
 
-					echo '<li class="bb_destination-item bb_destination-' . $destination_name . ' bb_destination-new-item"><a href="' . $picker_url . '&add=' . $destination_name . '&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ) . '&sending=' . pb_backupbuddy::_GET( 'sending' ) . '&selecting=' . pb_backupbuddy::_GET( 'selecting' ) . '" rel="' . $destination_name . '">' . $destination['name'] . '</a></li>';
+					printf(
+						'<li class="bb_destination-item bb_destination-%s bb_destination-new-item"><a href="%s&add=%s&callback_data=%s&sending=%s&selecting=%s" rel="%s">%s</a></li>',
+						esc_attr( $destination_name ),
+						esc_attr( $picker_url ),
+						esc_attr( $destination_name ),
+						esc_attr( pb_backupbuddy::_GET( 'callback_data' ) ),
+						esc_attr( pb_backupbuddy::_GET( 'sending' ) ),
+						esc_attr( pb_backupbuddy::_GET( 'selecting' ) ),
+						esc_attr( $destination_name ),
+						esc_html( $destination['name'] )
+					);
 				}
 
 				if ( $i >= 5 ) {
@@ -433,7 +442,15 @@ if ( 'true' != pb_backupbuddy::_GET( 'show_add' ) && $destination_list_count > 0
 							$disabled_class = 'bb_destination-item-disabled';
 						}
 
-						echo '<li class="bb_destination-item bb_destination-' . esc_attr( $destination['type'] ) . ' ' . esc_attr( $disabled_class ) . '"><a href="javascript:void(0)" title="' . esc_attr( $destination['title'] ) . '" rel="' . esc_attr( $destination_id ) . '">' . esc_html( $destination['title'] ) . '</a></li>';
+						printf(
+							'<li class="bb_destination-item bb_destination-%s %s"><a href="#send-to-%s" title="%s" rel="%s">%s</a></li>',
+							esc_attr( $destination['type'] ),
+							esc_attr( $disabled_class ),
+							esc_attr( $destination['type'] ),
+							esc_attr( $destination['title'] ),
+							esc_attr( $destination_id ),
+							esc_html( $destination['title'] )
+						);
 					}
 					?>
 					<br><br><br>
@@ -454,6 +471,5 @@ if ( 'true' != pb_backupbuddy::_GET( 'show_add' ) && $destination_list_count > 0
 	<br><br>
 	<?php
 }
-?>
 
-<?php itbub_file_icon_styles( '6px 6px', true ); ?>
+itbub_file_icon_styles( '6px 6px', true );

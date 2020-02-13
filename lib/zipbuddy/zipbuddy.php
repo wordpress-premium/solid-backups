@@ -794,6 +794,46 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 		}
 
 		/**
+		 * Get zip methods based on BackupBuddy settings.
+		 *
+		 * @return array  Array of available zip methods.
+		 */
+		public function backupbuddy_zip_methods() {
+			// Make sure we have a valid zip method strategy setting to use otherwise fall back to emergency compatibility.
+			if ( isset( pb_backupbuddy::$options['zip_method_strategy'] ) && '0' !== pb_backupbuddy::$options['zip_method_strategy'] ) {
+				$zip_method_strategy = pb_backupbuddy::$options['zip_method_strategy'];
+
+				switch ( $zip_method_strategy ) {
+					case '1':
+						// Best Available.
+						$zip_methods = $this->get_best_zip_methods( array( 'is_archiver' ) );
+						pb_backupbuddy::status( 'details', __( 'Using Best Available zip method based on settings.', 'it-l10n-backupbuddy' ) );
+						break;
+					case '2':
+						// All Available.
+						$zip_methods = $this->_zip_methods;
+						pb_backupbuddy::status( 'details', __( 'Using All Available zip methods in preferred order based on settings.', 'it-l10n-backupbuddy' ) );
+						break;
+					case '3':
+						// Force Compatibility.
+						$zip_methods = $this->get_compatibility_zip_methods();
+						pb_backupbuddy::status( 'message', __( 'Using Forced Compatibility zip method based on settings.', 'it-l10n-backupbuddy' ) );
+						break;
+					default:
+						// Hmm...unrecognized value - emergency compatibility.
+						$zip_methods = $this->get_compatibility_zip_methods();
+						pb_backupbuddy::status( 'message', __( 'Forced Compatibility Mode as Zip Method Strategy setting not recognized: ', 'it-l10n-backupbuddy' ) . $zip_method_strategy );
+				}
+			} else {
+				// We got no or an invalid zip method strategy which is a bad situation - emergency compatibility is the order of the day.
+				$zip_methods = $this->get_compatibility_zip_methods();
+				pb_backupbuddy::status( 'message', __( 'Forced Compatibility Mode as Zip Method Strategy not set or setting not recognized.', 'it-l10n-backupbuddy' ) );
+			}
+
+			return $zip_methods;
+		}
+
+		/**
 		 *	get_zip_methods()
 		 *
 		 *	Returns the array of zip methods previously deduced
@@ -1305,44 +1345,12 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 			$sanitized_excludes = array();
 			$listmaker = NULL;
 
-			// Set some additional system excludes here for now - these are all from the site install root
+			// Set some additional system excludes here for now - these are all from the site install root.
 			$additional_excludes = array();
 
-			// Make sure we have a valid zip method strategy setting to use otherwise fall back to emergency compatibility
-			if ( isset( pb_backupbuddy::$options[ 'zip_method_strategy' ] ) && 	( '0' !== pb_backupbuddy::$options[ 'zip_method_strategy' ] ) ) {
+			$zip_methods = $this->backupbuddy_zip_methods();
 
-				$zip_method_strategy = pb_backupbuddy::$options[ 'zip_method_strategy' ];
-				switch ( $zip_method_strategy ) {
-					case "1":
-						// Best Available
-						$zip_methods = $this->get_best_zip_methods( array( 'is_archiver' ) );
-						pb_backupbuddy::status( 'details', __('Using Best Available zip method based on settings.','it-l10n-backupbuddy' ) );
-						break;
-					case "2":
-						// All Available
-						$zip_methods = $this->_zip_methods;
-						pb_backupbuddy::status( 'details', __('Using All Available zip methods in preferred order based on settings.','it-l10n-backupbuddy' ) );
-						break;
-					case "3":
-						// Force Compatibility
-						$zip_methods = $this->get_compatibility_zip_methods();
-						pb_backupbuddy::status( 'message', __('Using Forced Compatibility zip method based on settings.','it-l10n-backupbuddy' ) );
-						break;
-					default:
-						// Hmm...unrecognized value - emergency compatibility
-						$zip_methods = $this->get_compatibility_zip_methods();
-						pb_backupbuddy::status( 'message', sprintf( __('Forced Compatibility Mode as Zip Method Strategy setting not recognized: %1$s','it-l10n-backupbuddy' ), $zip_method_strategy ) );
-				}
-
-			} else {
-
-				// We got no or an invalid zip method strategy which is a bad situation - emergency compatibility is the order of the day
-				$zip_methods = $this->get_compatibility_zip_methods();
-				pb_backupbuddy::status( 'message', __('Forced Compatibility Mode as Zip Method Strategy not set or setting not recognized.','it-l10n-backupbuddy' ) );
-
-			}
-
-			// Better make sure we have some available methods
+			// Better make sure we have some available methods.
 			if ( empty( $zip_methods ) ) {
 
 				// Hmm, we don't seem to have any available methods, oops, best go no further
@@ -1477,84 +1485,75 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 
 			$zip_methods = array();
 
-			// The following is just to match current functionality for importbuddy - ideally would rather
-			// do it by selecting available compatibility methods based on method attributes - may do that later
-			// (would also need get_compatibility_zip_methods() to be updated to take parameter to check
-			// whether compatibility method for that particular function.
-
-			// Decide which methods we are going to try
-			if ( $force_compatibility_mode == 'ziparchive' ) {
-
-				$zip_methods = array( 'ziparchive' );
-				pb_backupbuddy::status( 'message', __('Forced compatibility unzip method (ZipArchive; medium speed) based on settings.','it-l10n-backupbuddy' ) );
-
-			} elseif ( $force_compatibility_mode == 'pclzip' ) {
-
-				$zip_methods = array( 'pclzip' );
-				pb_backupbuddy::status( 'message', __('Forced compatibility unzip method (PCLZip; slow speed) based on settings.','it-l10n-backupbuddy' ) );
-
+			if ( false === $force_compatibility_mode ) {
+				$zip_methods = $this->backupbuddy_zip_methods();
 			} else {
-
-				$zip_methods = $this->_zip_methods;
-				pb_backupbuddy::status( 'details', __('Using all available unzip methods in preferred order.','it-l10n-backupbuddy' ) );
+				// The following is just to match current functionality for importbuddy - ideally would rather
+				// do it by selecting available compatibility methods based on method attributes - may do that later
+				// (would also need get_compatibility_zip_methods() to be updated to take parameter to check
+				// whether compatibility method for that particular function.
+				// Decide which methods we are going to try.
+				if ( 'ziparchive' === $force_compatibility_mode ) {
+					$zip_methods = array( 'ziparchive' );
+					pb_backupbuddy::status( 'message', __( 'Forced compatibility unzip method (ZipArchive; medium speed) based on settings.', 'it-l10n-backupbuddy' ) );
+				} elseif ( 'pclzip' === $force_compatibility_mode ) {
+					$zip_methods = array( 'pclzip' );
+					pb_backupbuddy::status( 'message', __( 'Forced compatibility unzip method (PCLZip; slow speed) based on settings.', 'it-l10n-backupbuddy' ) );
+				} else {
+					$zip_methods = $this->_zip_methods;
+					pb_backupbuddy::status( 'details', __( 'Using all available unzip methods in preferred order.', 'it-l10n-backupbuddy' ) );
+				}
 			}
 
-			// Better make sure we have some available methods
+			// Better make sure we have some available methods.
 			if ( empty( $zip_methods ) ) {
-
-				// Hmm, we don't seem to have any available methods, oops, best go no further
-				pb_backupbuddy::status( 'details', sprintf( __('Unable to extract backup file contents (%1$s to %2$s): No available unzip methods found.','it-l10n-backupbuddy' ), $zip_file, $destination_directory ) );
-
+				// Hmm, we don't seem to have any available methods, oops, best go no further.
+				pb_backupbuddy::status( 'details', sprintf( __( 'Unable to extract zip file contents (%1$s to %2$s): No available unzip methods found.', 'it-l10n-backupbuddy' ), $zip_file, $destination_directory ) );
 				return false;
-
 			}
 
-			// Make sure we have a normalized directory separator suffix
+			// Make sure we have a normalized directory separator suffix.
 			$destination_directory = rtrim( $destination_directory, self::DIRECTORY_SEPARATORS ) . self::NORM_DIRECTORY_SEPARATOR;
 
-			// Iterate over the methods - once we succeed just return directly otherwise drop through
+			// Iterate over the methods - once we succeed just return directly otherwise drop through.
 			foreach ( $zip_methods as $method_tag ) {
 
 				// First make sure we can check file existence with this method (ignore silently if not)
 				// Note: has to be able to unzip as well but if that functionality wasn't available in
-				// the method the is_checker attribute will have been set false
-				if ( $this->_zip_methods_details[ $method_tag ][ 'attr' ][ 'is_unarchiver' ] === true ) {
+				// the method the is_checker attribute will have been set false.
+				if ( $this->_zip_methods_details[ $method_tag ]['attr']['is_unarchiver'] === true ) {
 
 					$class_name = 'pluginbuddy_zbzip' . $method_tag;
 
 					$zipper = new $class_name( $this );
 
-					// We need to tell the method what details belong to it
+					// We need to tell the method what details belong to it.
 					$zipper->set_method_details( $this->_zip_methods_details[ $method_tag ] );
 
-					// Now we are ready to try and extract the backup
+					// Now we are ready to try and extract the backup.
 					$result = $zipper->extract( $zip_file, $destination_directory );
 
-					// Will be false if we couldn't extract the backup
-					if ( $result === true ) {
+					// Will be false if we couldn't extract the backup.
+					if ( true === $result ) {
 
-						// Must assume that we extracted ok
+						// Must assume that we extracted ok.
 						unset( $zipper );
 
-						// We have to return here because we cannot break out of foreach
+						// We have to return here because we cannot break out of foreach.
 						return true;
 
 					} else {
 
 						// The zipper encountered an error so we need to drop through and loop round to try another
-						// We'll not process the result here, just drop through silently (the method will have logged it)
+						// We'll not process the result here, just drop through silently (the method will have logged it).
 						unset( $zipper );
-
 					}
-
 				}
-
 			}
 
-			// If we got this far then no method to extract backup content was available or worked
-			pb_backupbuddy::status( 'details', sprintf( __('Unable to extract backup file contents (%1$s to %2$s): No compatible zip method found.','it-l10n-backupbuddy' ), $zip_file, $destination_directory ) );
+			// If we got this far then no method to extract backup content was available or worked.
+			pb_backupbuddy::status( 'details', sprintf( __( 'Unable to extract backup file contents (%1$s to %2$s): No compatible zip method found.', 'it-l10n-backupbuddy' ), $zip_file, $destination_directory ) );
 			return false;
-
 		}
 
 		/**

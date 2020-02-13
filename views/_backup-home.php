@@ -41,12 +41,14 @@ $restore_url  = '#restore-backup';
 $dat_zip_file = str_replace( '\\', '', pb_backupbuddy::_GET( 'dat_viewer' ) );
 $dat_zip_file = str_replace( '/', '', $dat_zip_file );
 
-wp_enqueue_code_editor( array(
-	'type'       => 'application/x-httpd-php',
-	'codemirror' => array(
-		'theme' => 'tomorrow-night-eighties',
-	),
-) );
+if ( function_exists( 'wp_enqueue_code_editor' ) ) {
+	wp_enqueue_code_editor( array(
+		'type'       => 'application/x-httpd-php',
+		'codemirror' => array(
+			'theme' => 'tomorrow-night-eighties',
+		),
+	) );
+}
 
 $v = date( 'Ymdhis' ); // pb_backupbuddy::settings( 'version' ).
 wp_register_style( 'backupbuddy-restore', pb_backupbuddy::plugin_url() . '/css/backupbuddy-restore.css', array(), $v );

@@ -13,13 +13,19 @@ $screen->add_help_tab(
 	array(
 		'id'      => 'pb_backupbuddy_backuptypes',
 		'title'   => __( 'Backup Types', 'it-l10n-backupbuddy' ),
-		'content' => '<p>' . __( '<strong>Database backups</strong> by default contain WordPress tables which includes posts, pages, comments widget content,
+		'content' => '<p>' . __( '<strong>Full backups</strong> by default contain everything found in Database backups as well as all files in your WordPress installation directory
+			and its subdirectories. This includes files such as media, plugins, themes, images, and any other files found in your WordPress directory and subdirectories.
+			Additional inclusions or exclusions may be defined on the Settings page or by modifying the profile below.
+			<br><br>
+			<strong>Database backups</strong> by default contain WordPress tables which includes posts, pages, comments widget content,
 			media titles & descriptions (but not the media files themselves), and other WordPress settings.
 			Additional inclusions or exclusions may be defined on the Settings page or by modifying the profile below.
 			<br><br>
-			<strong>Full backups</strong> by default contain everything found in Database backups as well as all files in your WordPress installation directory
-			and its subdirectories. This includes files such as media, plugins, themes, images, and any other files found in your WordPress directory and subdirectories.
-			Additional inclusions or exclusions may be defined on the Settings page or by modifying the profile below.
+			<strong>Themes Only backups</strong> only backup the site\'s themes folder which contains all themes installed on your site..
+			<br><br>
+			<strong>Plugins Only backups</strong> only backup the site\'s plugins folder which contains all plugins installed on your site. Optionally, you can backup only plugins that have been activated by enable Active Plugins Only from the Settings page.
+			<br><br>
+			<strong>Media Only backups</strong> only backup the site\'s uploads folder.
 			<br><br>
 			<strong>Files Only backups</strong> omit the database and only backup files. You may customize which files are included or excluded from files only
 			backups using Profiles to customize this to your needs.', 'it-l10n-backupbuddy' ) . '</p>',

@@ -413,7 +413,7 @@ class pb_backupbuddy_destination_stash2 {
 
 			$uploaded    = $file['uploaded_timestamp'];
 			$backup_date = backupbuddy_core::parse_file( $backup, 'timestamp' );
-			$size        = (double) $file['size'];
+			$size        = (float) $file['size'];
 
 			add_filter( 'backupbuddy_backup_columns', array( 'pb_backupbuddy_destination_stash2', 'set_table_column_header' ), 10, 2 );
 
@@ -437,12 +437,13 @@ class pb_backupbuddy_destination_stash2 {
 					$copy_link = '&cpy=' . rawurlencode( $backup );
 				}
 
-				$download_link  = admin_url() . sprintf( '?stash2-destination-id=%s&stash2-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
-				$actions        = array(
+				$download_link      = admin_url() . sprintf( '?stash2-destination-id=%s&stash2-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
+				$actions            = array(
 					$download_link => __( 'Download Backup', 'it-l10n-backupbuddy' ),
 					$copy_link     => __( 'Copy to Local', 'it-l10n-backupbuddy' ),
 				);
-				$backup_array[] = backupbuddy_backups()->get_action_menu( $backup, $actions );
+				$backup_array[]     = backupbuddy_backups()->get_action_menu( $backup, $actions );
+				$backup_array[0][0] = $download_link;
 			} elseif ( 'restore' === $mode ) {
 				$backup_array[] = backupbuddy_backups()->get_restore_buttons( $backup, $backup_type );
 			}

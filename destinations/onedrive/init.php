@@ -485,7 +485,7 @@ class pb_backupbuddy_destination_onedrive {
 				// Returns UploadSessionProxy object.
 				$upload = $folder->startUpload( basename( $file ), fopen( $file, 'rb' ), $args );
 			} catch ( \Exception $e ) {
-				self::error( __( 'Error #201910150859: Could not initiate upload for `' . basename( $file ) . '`. Details: ', 'it-l10n-backupbuddy' ) . $e->getMessage() );
+				self::error( __( 'Error', 'it-l10n-backupbuddy' ) . ' #201910150859: ' . __( 'Could not initiate upload for', 'it-l10n-backupbuddy' ) . ' `' . basename( $file ) . '`. ' . __( 'Details', 'it-l10n-backupbuddy' ) . ': ' . $e->getMessage() );
 				return false;
 			}
 
@@ -493,7 +493,7 @@ class pb_backupbuddy_destination_onedrive {
 				// Potentially returns DriveItemProxy object.
 				$status = $upload->complete();
 			} catch ( \Exception $e ) {
-				self::error( __( 'Error #201910161524: OneDrive upload for `' . basename( $file ) . '` has failed. Details: ', 'it-l10n-backupbuddy' ) . $e->getMessage() );
+				self::error( __( 'Error', 'it-l10n-backupbuddy' ) . ' #201910161524: ' . __( 'OneDrive upload failed for', 'it-l10n-backupbuddy' ) . ' `' . basename( $file ) . '`. ' . __( 'Details', 'it-l10n-backupbuddy' ) . ': ' . $e->getMessage() );
 				return false;
 			}
 

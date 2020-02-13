@@ -285,7 +285,7 @@ class pb_backupbuddy_ui {
 			if ( count( $settings['bulk_actions'] ) > 0 ) {
 				echo '<th scope="row" class="check-column"><input type="checkbox" name="items[]" class="entries" value="' . esc_attr( $item_id ) . '"></th>';
 			}
-			$column_class   = sanitize_title( strip_tags( $settings['columns'][0] ) );
+			$column_class   = sanitize_title( wp_strip_all_tags( $settings['columns'][0] ) );
 			$column_comment = self::get_comment( $item );
 			echo sprintf( '<td class="%s"%s>', esc_attr( $column_class ), $column_comment );
 			self::first_column_content( $item, $item_id, $itemi, $settings, true );

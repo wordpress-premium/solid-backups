@@ -88,31 +88,31 @@ $settings_form->add_setting(
 		'name'    => 'region',
 		'title'   => __( 'Bucket region', 'it-l10n-backupbuddy' ),
 		'options' => array(
-			's3.amazonaws.com'                   => 'us-east-1 &nbsp;|&nbsp; US East 1 (US Standard); N. Virginia',
+			's3.amazonaws.com'                   => 'us-east-1 &nbsp;|&nbsp; US East 1 (US Standard; N. Virginia)',
 			's3-us-east-2.amazonaws.com'         => 'us-east-2 &nbsp;|&nbsp; US East 2 (Ohio)',
-
 			's3-us-west-1.amazonaws.com'         => 'us-west-1 &nbsp;|&nbsp; US West 1 (N. California)',
 			's3-us-west-2.amazonaws.com'         => 'us-west-2 &nbsp;|&nbsp; US West 2 (Oregon)',
 
 			's3-ca-central-1.amazonaws.com'      => 'ca-central-1 &nbsp;|&nbsp; Canada Central 1',
 
 			's3-ap-south-1.amazonaws.com'        => 'ap-south-1 &nbsp;|&nbsp; Asia Pacific South 1 (Mumbai)',
-
 			's3-ap-northeast-1.amazonaws.com'    => 'ap-northeast-1 &nbsp;|&nbsp; Asia Pacific Northeast 1 (Tokyo)',
 			's3-ap-northeast-2.amazonaws.com'    => 'ap-northeast-2 &nbsp;|&nbsp; Asia Pacific Northeast 2 (Seoul)',
-
 			's3-ap-southeast-1.amazonaws.com'    => 'ap-southeast-1 &nbsp;|&nbsp; Asia Pacific Southeast 1 (Singapore)',
 			's3-ap-southeast-2.amazonaws.com'    => 'ap-southeast-2 &nbsp;|&nbsp; Asia Pacific Southeast 2 (Sydney)',
+			'sts.ap-south-1.amazonaws.com'       => 'ap-south-1 &nbsp;|&nbsp; Asia Pacific South 1 (Mumbai)',
 
 			's3-eu-central-1.amazonaws.com'      => 'eu-central-1 &nbsp;|&nbsp; EU Central 1 (Frankfurt)',
-
 			's3-eu-west-1.amazonaws.com'         => 'eu-west-1 &nbsp;|&nbsp; EU West 1 (Ireland)',
 			's3-eu-west-2.amazonaws.com'         => 'eu-west-2 &nbsp;|&nbsp; EU West 2 (London)',
+			'sts.eu-west-3.amazonaws.com'        => 'eu-west-3 &nbsp;|&nbsp; EU West 3 (Paris)',
+			'sts.eu-north-1.amazonaws.com'       => 'eu-north-1 &nbsp;|&nbsp; EU North 1 (Stockholm)',
 
 			's3-sa-east-1.amazonaws.com'         => 'sa-east-1 &nbsp;|&nbsp; South America East 1 (Sao Paulo)',
 
 			's3-cn-north-1.amazonaws.com.cn'     => 'cn-north-1 &nbsp;|&nbsp; China North 1 (Beijing)',
 			's3-cn-northwest-1.amazonaws.com.cn' => 'cn-northwest-1 &nbsp;|&nbsp; China Northwest 1 (Ningxia)',
+
 			/*
 			's3-us-gov-west-1.amazonaws.com'            => 'US GovCloud',
 			's3-fips-us-gov-west-1.amazonaws.com'       => 'US GovCloud (FIPS 140-2)',

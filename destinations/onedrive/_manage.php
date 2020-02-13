@@ -108,7 +108,7 @@ if ( is_array( $files ) && count( $files ) ) {
 }
 
 if ( ! count( $backup_files ) ) {
-	esc_html_e( 'No backup files found.', 'it-l10n-backupbuddy' );
+	printf( '<p>%s</p>', esc_html__( 'No backup files found.', 'it-l10n-backupbuddy' ) );
 } else {
 	$url_prefix          = pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . $destination_id;
 	$download_url_prefix = admin_url() . sprintf( '?onedrive-destination-id=%s&onedrive-download=', $destination_id );

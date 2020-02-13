@@ -575,8 +575,8 @@ class backupbuddy_housekeeping {
 									}
 								}
 
-								$backup_check_spot = __( 'Select "View recently made backups" from the BackupBuddy Backups page to find this backup and view its log details and/or manually create a backup to test for problems.', 'it-l10n-backupbuddy' );
-								$send_check_spot   = __( 'Select "View recently sent files" on the Destinations page to find this backup and view its log details and/or manually create a backup to test for problems.', 'it-l10n-backupbuddy' );
+								$backup_check_spot = __( 'Select Recent Activity > Recent Backups from the BackupBuddy Diagnostics page to find this backup and view its log details and/or manually create a backup to test for problems.', 'it-l10n-backupbuddy' );
+								$send_check_spot   = __( 'Select Recent Activity > Recent Remote Sends/File Transfers on the BackupBuddy Diagnostics page to find this backup and view its log details and/or manually create a backup to test for problems.', 'it-l10n-backupbuddy' );
 
 								$timeout_message = '';
 								if ( '' != $timeout_step ) {

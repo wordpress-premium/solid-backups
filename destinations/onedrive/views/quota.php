@@ -67,7 +67,7 @@ $disk_available = pb_backupbuddy::$format->file_size( $avail_space );
 	}
 </style>
 <div class="onedrive-quota-wrapper">
-	<div class="percentage-bar" title="Total Available: <?php echo esc_attr( $disk_available ); ?>?>">
+	<div class="percentage-bar" title="Total Available: <?php echo esc_attr( $disk_available ); ?>">
 		<div class="used" style="width: <?php echo esc_attr( $pct_used ); ?>%;">
 			<?php if ( $pct_used >= 20 ) : ?>
 				<div class="disk-used"><?php echo esc_html( pb_backupbuddy::$format->file_size( $used_space ) ); ?></div>

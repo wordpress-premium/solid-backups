@@ -21,6 +21,8 @@ if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && true == BACKUPBUDDY_API_ENABLE ) {
 }
 ?>
 
+<?php pb_backupbuddy::$ui->title( esc_html__( 'Destinations', 'it-l10n-backupbuddy' ), true, false ); ?>
+
 <script type="text/javascript">
 	function pb_backupbuddy_selectdestination( destination_id, destination_title, callback_data, delete_after, mode ) {
 		if ( callback_data != '' ) {
@@ -47,7 +49,7 @@ if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && true == BACKUPBUDDY_API_ENABLE ) {
 	jQuery(document).ready(function() {
 
 		jQuery('#screen-meta-links').append(
-			'<div id="backupbuddy-meta-link-wrap" class="hide-if-no-js screen-meta-toggle">' +
+			'<div class="backupbuddy-meta-link-wrap hide-if-no-js screen-meta-toggle">' +
 				'<a href="javascript:void(0)" class="show-settings" onClick="jQuery(\'.backupbuddy_api_key-hide\').slideToggle(); jQuery(this).toggleClass(\'screen-meta-active\'); return false; return false;"><?php esc_html_e( 'Deployment Key', 'it-l10n-backupbuddy' );
 					echo ' (' . esc_html( $deployment_enabled_status ) . ')'; ?></a>' +
 			'</div>'
@@ -87,14 +89,10 @@ if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && true == BACKUPBUDDY_API_ENABLE ) {
 				}
 			);
 		}); // End jQuery( '#backupbuddy-deployment-regenerateKey' ).click().
+
+		jQuery( '#wpbody-content > .wrap > h1:first' ).append( '<div class="backupbuddy_destinations_iframe_load"><span class="spinner"></span> <?php esc_html_e( 'Loading remote destinations...', 'it-l10n-backupbuddy' ); ?></div>' );
 	});
 </script>
-
-<div class="backupbuddy_destinations_iframe_load">
-	<span class="spinner"></span> <?php esc_html_e( 'Loading remote destinations...', 'it-l10n-backupbuddy' ); ?>
-</div>
-
-<?php pb_backupbuddy::$ui->title( esc_html__( 'Destinations', 'it-l10n-backupbuddy' ), true, false ); ?>
 
 <div class="backupbuddy_api_key-hide" style="display: none;">
 	<?php

@@ -766,6 +766,7 @@ class pb_backupbuddy_destination_s32 {
 
 		foreach ( $backups as $object ) {
 			$backup = str_ireplace( $settings['directory'], '', $object['Key'] );
+			$backup = ltrim( $backup, '/' );
 			if ( false !== stristr( $backup, '/' ) ) { // Do NOT display any files within a deeper subdirectory.
 				continue;
 			}

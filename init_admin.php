@@ -26,6 +26,7 @@ function backupbuddy_admin_body_class( $body_classes = '' ) {
 if ( false !== stristr( pb_backupbuddy::_GET( 'page' ), 'backupbuddy' ) ) {
 	add_action( 'in_admin_header', 'bb_admin_head' );
 }
+
 /**
  * Insert BackupBuddy Header logo/bar and version.
  */
@@ -263,9 +264,19 @@ if ( is_multisite() && backupbuddy_core::is_network_activated() && ! defined( 'P
 
 
 
-/********** OTHER (admin) */
-add_filter( 'contextual_help', 'pb_backupbuddy_contextual_help', 10, 3 );
-function pb_backupbuddy_contextual_help( $contextual_help, $screen_id, $screen ) {
+/**
+ * Add Contextual Help when necessary.
+ */
+
+add_action( 'admin_head', 'pb_backupbuddy_contextual_help' );
+
+/**
+ * Add contextual Help to BackupBuddy pages.
+ */
+function pb_backupbuddy_contextual_help() {
+	// Get the current screen object.
+	$screen = get_current_screen();
+
 	// Loads help from file in controllers/help/:PAGENAME:.php
 	if ( ! current_user_can( pb_backupbuddy::$options['role_access'] ) ) {
 		return;
@@ -273,19 +284,20 @@ function pb_backupbuddy_contextual_help( $contextual_help, $screen_id, $screen )
 
 	// WordPress pre-v3.3 so no contextual help.
 	if ( ! method_exists( $screen, 'add_help_tab' ) ) {
-		return $contextual_help;
+		return;
 	}
 
 	// Not a backupbuddy page.
-	if ( false === stristr( $screen_id, 'backupbuddy' ) ) {
-		return $contextual_help;
+	if ( false === stristr( $screen->id, 'backupbuddy' ) ) {
+		return;
 	}
 
 	// Load page-specific help.
-	$page     = str_replace( 'pb_backupbuddy_', '', str_replace( 'toplevel_page_', '', str_replace( 'backupbuddy_page_pb_backupbuddy_', '', $screen_id ) ) );
-	$helpFile = dirname( __FILE__ ) . '/controllers/help/' . $page . '.php';
-	if ( file_exists( $helpFile ) ) {
-		include $helpFile;
+	$page      = str_replace( 'pb_backupbuddy_', '', str_replace( 'toplevel_page_', '', str_replace( 'backupbuddy_page_pb_backupbuddy_', '', $screen->id ) ) );
+	$help_file = dirname( __FILE__ ) . '/controllers/help/' . $page . '.php';
+
+	if ( file_exists( $help_file ) ) {
+		include $help_file;
 	}
 
 	// Global help.
@@ -302,11 +314,7 @@ function pb_backupbuddy_contextual_help( $contextual_help, $screen_id, $screen )
 				</p>',
 		)
 	);
-
-	return $contextual_help;
-
 } // End pb_backupbuddy_contextual_help().
-
 
 
 /***** BEGIN STASH LIVE ADMIN BAR *****/
@@ -424,8 +432,7 @@ if ( ( ! is_multisite() ) || ( is_multisite() && is_network_admin() ) ) { // Onl
  * Global admin javascript files.
  */
 function backupbuddy_global_admin_scripts() {
-	wp_register_script( 'backupbuddy_global_admin_scripts', pb_backupbuddy::plugin_url() . '/js/global_admin.js', array( 'jquery' ) );
-	wp_enqueue_script( 'backupbuddy_global_admin_scripts' );
+	wp_enqueue_script( 'backupbuddy_global_admin_scripts', pb_backupbuddy::plugin_url() . '/js/global_admin.js', array( 'jquery' ), pb_backupbuddy::settings( 'version' ), true );
 
 	if ( ! backupbuddy_is_admin_page() ) {
 		return;
@@ -435,54 +442,85 @@ function backupbuddy_global_admin_scripts() {
 		'ajax_url'             => admin_url( 'admin-ajax.php' ),
 		'admin_url'            => is_network_admin() ? network_admin_url( 'admin.php' ) : admin_url( 'admin.php' ),
 		'ajax_base'            => pb_backupbuddy::ajax_url( '' ),
-		'strings'              => array(
-			'error'                          => esc_html__( 'Error', 'it-l10n-backupbuddy' ),
-			'quick_setup'                    => esc_html__( 'Quick Setup', 'it-l10n-backupbuddy' ),
-			'importbuddy'                    => esc_html__( 'ImportBuddy', 'it-l10n-backupbuddy' ),
-			'importbuddy_download'           => esc_html__( 'Download importbuddy.php', 'it-l10n-backupbuddy' ),
-			'importbuddy_send'               => esc_html__( 'Send importbuddy.php to a remote destination', 'it-l10n-backupbuddy' ),
-			'importbuddy_prompt_nopass'      => esc_html__( 'To download, enter a password to lock the ImportBuddy script from unauthorized access. You will be prompted for this password when you go to importbuddy.php in your browser. Since you have not defined a default password yet this will be used as your default and can be changed later from the Settings page.', 'it-l10n-backupbuddy' ),
-			'importbuddy_prompt_haspass'     => esc_html__( 'To download, either enter a new password for just this download OR LEAVE BLANK to use your default ImportBuddy password (set on the Settings page) to lock the ImportBuddy script from unauthorized access.', 'it-l10n-backupbuddy' ),
-			'importbuddy_no_password'        => esc_html__( 'You have not set a default password on the Settings page so you must provide a password here to download ImportBuddy.', 'it-l10n-backupbuddy' ),
-			'remote_send_error'              => esc_html__( 'Error starting remote send', 'it-l10n-backupbuddy' ),
-			'local_delete_upon_success'      => esc_html__( 'The local backup will be deleted upon successful transfer as selected.', 'it-l10n-backupbuddy' ),
-			'remote_send_confirmed'          => esc_html__( 'Your file has been scheduled to be sent now. It should arrive shortly. You will be notified by email if any problems are encountered.', 'it-l10n-backupbuddy' ),
-			'note_instructions'              => esc_html__( 'Enter a short descriptive note to apply to this archive for your reference. (175 characters max)', 'it-l10n-backupbuddy' ),
-			'file'                           => esc_html__( 'file', 'it-l10n-backupbuddy' ),
-			'files'                          => esc_html__( 'files', 'it-l10n-backupbuddy' ),
-			'folder'                         => esc_html__( 'folder', 'it-l10n-backupbuddy' ),
-			'folders'                        => esc_html__( 'folders', 'it-l10n-backupbuddy' ),
-			'wp_version'                     => esc_html__( 'WordPress version', 'it-l10n-backupbuddy' ),
-			'confirm_restore_title'          => esc_html__( 'WARNING', 'it-l10n-backupbuddy' ),
-			'select_restore_title'           => esc_html__( 'Restore', 'it-l10n-backupbuddy' ),
-			'confirm_full_restore'           => '<p>' . esc_html__( 'Any existing database tables and files will be overwritten.', 'it-l10n-backupbuddy' ) . ' <strong>' . __( 'This cannot be undone.', 'it-l10n-backupbuddy' ) . '</strong></p><p>' . esc_html__( 'Are you sure you want to restore this entire backup?', 'it-l10n-backupbuddy' ) . '</p>',
-			'confirm_full_db_restore'        => '<p>' . esc_html__( 'Any existing database tables will be overwritten.', 'it-l10n-backupbuddy' ) . ' <strong>' . __( 'This cannot be undone.', 'it-l10n-backupbuddy' ) . '</strong></p><p>' . esc_html__( 'Are you sure you want to restore this entire database?', 'it-l10n-backupbuddy' ) . '</p>',
-			'confirm_full_files_restore'     => '<p>' . esc_html__( 'Any existing files will be overwritten.', 'it-l10n-backupbuddy' ) . ' <strong>' . __( 'This cannot be undone.', 'it-l10n-backupbuddy' ) . '</strong></p><p>' . esc_html__( 'Are you sure you want to restore this entire backup?', 'it-l10n-backupbuddy' ) . '</p>',
-			'confirm_partial_restore'        => '<p>' . esc_html__( 'Any existing files will be overwritten.', 'it-l10n-backupbuddy' ) . ' <strong>' . __( 'This cannot be undone.', 'it-l10n-backupbuddy' ) . '</strong></p><p>' . esc_html__( 'Are you sure you want to restore the selected files/folders?', 'it-l10n-backupbuddy' ) . '</p>',
-			'confirm_full_restore_cbx'       => esc_html__( 'Yes, restore this entire backup.', 'it-l10n-backupbuddy' ),
-			'confirm_full_files_restore_cbx' => esc_html__( 'Yes, restore all files in this backup.', 'it-l10n-backupbuddy' ),
-			'confirm_full_db_restore_cbx'    => esc_html__( 'Yes, restore this entire database.', 'it-l10n-backupbuddy' ),
-			'confirm_partial_restore_cbx'    => esc_html__( 'Yes, restore the selected files/folders.', 'it-l10n-backupbuddy' ),
-			'confirm_restore_affirmative'    => esc_html__( 'Yes, Proceed', 'it-l10n-backupbuddy' ),
-			'continue'                       => esc_html__( 'Continue', 'it-l10n-backupbuddy' ),
-			'confirm_restore_error'          => esc_html__( 'You must check this box in order to proceed:', 'it-l10n-backupbuddy' ),
-			'select_restore_type_error'      => esc_html__( 'Please select an option.', 'it-l10n-backupbuddy' ),
-			'aborting_restore'               => esc_html__( 'Aborting...', 'it-l10n-backupbuddy' ),
-			'starting_restore'               => esc_html__( 'Starting backup restore...', 'it-l10n-backupbuddy' ),
-			'error_testing'                  => esc_html__( 'Error testing', 'it-l10n-backupbuddy' ),
-			'email_test_sent'                => esc_html__( 'Email has been sent. If you do not receive it check your WordPress and server settings.', 'it-l10n-backupbuddy' ),
-			'local_backups'                  => esc_html__( 'Local Backups' ),
-			'remote_backups'                 => esc_html__( 'Remote Backups' ),
-		),
+		'strings'              => backupbuddy_admin_get_strings(),
 		'hide_quick_setup'     => true === apply_filters( 'itbub_hide_quickwizard', false ),
 		'importbuddy_pass_set' => '' == pb_backupbuddy::$options['importbuddy_pass_hash'] ? 0 : 1,
 		'page_url'             => pb_backupbuddy::page_url(),
+		'destination_ids'      => backupbuddy_admin_get_destination_ids(),
 	);
 
-	wp_register_script( 'backupbuddy-min', pb_backupbuddy::plugin_url() . '/js/backupbuddy.min.js', array( 'jquery' ), pb_backupbuddy::settings( 'version' ) );
+	wp_register_script( 'backupbuddy-min', pb_backupbuddy::plugin_url() . '/js/backupbuddy.min.js', array( 'jquery' ), pb_backupbuddy::settings( 'version' ), true );
 	pb_backupbuddy::load_script( 'backupbuddy-min', false, $js_vars );
 }
 add_action( 'admin_enqueue_scripts', 'backupbuddy_global_admin_scripts' );
+
+/**
+ * Get Strings for use in JS.
+ *
+ * @return array  Array of I18n strings.
+ */
+function backupbuddy_admin_get_strings() {
+	return array(
+		'error'                          => esc_html__( 'Error', 'it-l10n-backupbuddy' ),
+		'quick_setup'                    => esc_html__( 'Quick Setup', 'it-l10n-backupbuddy' ),
+		'importbuddy'                    => esc_html__( 'ImportBuddy', 'it-l10n-backupbuddy' ),
+		'importbuddy_download'           => esc_html__( 'Download importbuddy.php', 'it-l10n-backupbuddy' ),
+		'importbuddy_send'               => esc_html__( 'Send importbuddy.php to a remote destination', 'it-l10n-backupbuddy' ),
+		'sending_importbuddy'            => esc_html__( 'Sending ImportBuddy file. This may take several seconds. Please wait ...', 'it-l10n-backupbuddy' ),
+		'importbuddy_prompt_nopass'      => esc_html__( 'To download, enter a password to lock the ImportBuddy script from unauthorized access. You will be prompted for this password when you go to importbuddy.php in your browser. Since you have not defined a default password yet this will be used as your default and can be changed later from the Settings page.', 'it-l10n-backupbuddy' ),
+		'importbuddy_prompt_haspass'     => esc_html__( 'To download, either enter a new password for just this download OR LEAVE BLANK to use your default ImportBuddy password (set on the Settings page) to lock the ImportBuddy script from unauthorized access.', 'it-l10n-backupbuddy' ),
+		'importbuddy_no_password'        => esc_html__( 'You have not set a default password on the Settings page so you must provide a password here to download ImportBuddy.', 'it-l10n-backupbuddy' ),
+		'remote_send_error'              => esc_html__( 'Error starting remote send', 'it-l10n-backupbuddy' ),
+		'local_delete_upon_success'      => esc_html__( 'The local backup will be deleted upon successful transfer as selected.', 'it-l10n-backupbuddy' ),
+		'remote_send_confirmed'          => esc_html__( 'Your file has been scheduled to be sent now. It should arrive shortly. You will be notified by email if any problems are encountered.', 'it-l10n-backupbuddy' ),
+		'note_instructions'              => esc_html__( 'Enter a short descriptive note to apply to this archive for your reference. (175 characters max)', 'it-l10n-backupbuddy' ),
+		'file'                           => esc_html__( 'file', 'it-l10n-backupbuddy' ),
+		'files'                          => esc_html__( 'files', 'it-l10n-backupbuddy' ),
+		'folder'                         => esc_html__( 'folder', 'it-l10n-backupbuddy' ),
+		'folders'                        => esc_html__( 'folders', 'it-l10n-backupbuddy' ),
+		'wp_version'                     => esc_html__( 'WordPress version', 'it-l10n-backupbuddy' ),
+		'confirm_restore_title'          => esc_html__( 'WARNING', 'it-l10n-backupbuddy' ),
+		'select_restore_title'           => esc_html__( 'Restore', 'it-l10n-backupbuddy' ),
+		'confirm_full_restore'           => '<p>' . esc_html__( 'Any existing database tables and files will be overwritten.', 'it-l10n-backupbuddy' ) . ' <strong>' . __( 'This cannot be undone.', 'it-l10n-backupbuddy' ) . '</strong></p><p>' . esc_html__( 'Are you sure you want to restore this entire backup?', 'it-l10n-backupbuddy' ) . '</p>',
+		'confirm_full_db_restore'        => '<p>' . esc_html__( 'Any existing database tables will be overwritten.', 'it-l10n-backupbuddy' ) . ' <strong>' . __( 'This cannot be undone.', 'it-l10n-backupbuddy' ) . '</strong></p><p>' . esc_html__( 'Are you sure you want to restore this entire database?', 'it-l10n-backupbuddy' ) . '</p>',
+		'confirm_full_files_restore'     => '<p>' . esc_html__( 'Any existing files will be overwritten.', 'it-l10n-backupbuddy' ) . ' <strong>' . __( 'This cannot be undone.', 'it-l10n-backupbuddy' ) . '</strong></p><p>' . esc_html__( 'Are you sure you want to restore this entire backup?', 'it-l10n-backupbuddy' ) . '</p>',
+		'confirm_partial_restore'        => '<p>' . esc_html__( 'Any existing files will be overwritten.', 'it-l10n-backupbuddy' ) . ' <strong>' . __( 'This cannot be undone.', 'it-l10n-backupbuddy' ) . '</strong></p><p>' . esc_html__( 'Are you sure you want to restore the selected files/folders?', 'it-l10n-backupbuddy' ) . '</p>',
+		'confirm_full_restore_cbx'       => esc_html__( 'Yes, restore this entire backup.', 'it-l10n-backupbuddy' ),
+		'confirm_full_files_restore_cbx' => esc_html__( 'Yes, restore all files in this backup.', 'it-l10n-backupbuddy' ),
+		'confirm_full_db_restore_cbx'    => esc_html__( 'Yes, restore this entire database.', 'it-l10n-backupbuddy' ),
+		'confirm_partial_restore_cbx'    => esc_html__( 'Yes, restore the selected files/folders.', 'it-l10n-backupbuddy' ),
+		'confirm_restore_affirmative'    => esc_html__( 'Yes, Proceed', 'it-l10n-backupbuddy' ),
+		'continue'                       => esc_html__( 'Continue', 'it-l10n-backupbuddy' ),
+		'confirm_restore_error'          => esc_html__( 'You must check this box in order to proceed:', 'it-l10n-backupbuddy' ),
+		'select_restore_type_error'      => esc_html__( 'Please select an option.', 'it-l10n-backupbuddy' ),
+		'aborting_restore'               => esc_html__( 'Aborting...', 'it-l10n-backupbuddy' ),
+		'starting_restore'               => esc_html__( 'Starting backup restore...', 'it-l10n-backupbuddy' ),
+		'error_testing'                  => esc_html__( 'Error testing', 'it-l10n-backupbuddy' ),
+		'email_test_sent'                => esc_html__( 'Email has been sent. If you do not receive it check your WordPress and server settings.', 'it-l10n-backupbuddy' ),
+		'local_backups'                  => esc_html__( 'Local Backups', 'it-l10n-backupbuddy' ),
+		'remote_backups'                 => esc_html__( 'Remote Backups', 'it-l10n-backupbuddy' ),
+		'admin_notices'                  => esc_html__( 'Admin Notices', 'it-l10n-backupbuddy' ),
+		'stash_table_header'             => esc_html__( 'Stash Traditional Backup Files', 'it-l10n-backupbuddy' ),
+		'backups_table_header'           => esc_html__( 'Backups', 'it-l10n-backupbuddy' ),
+	);
+}
+
+/**
+ * Get array of destination IDs.
+ *
+ * @return array  Array of destination IDs.
+ */
+function backupbuddy_admin_get_destination_ids() {
+	$destinations = array();
+	foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => $destination_settings ) {
+		if ( 'live' === $destination_settings['type'] ) {
+			continue;
+		}
+		$destinations[] = $destination_id;
+	}
+
+	return $destinations;
+}
 
 /**
  * Stash3 Download Backup.

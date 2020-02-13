@@ -157,13 +157,13 @@ pb_backupbuddy::$ui->title( esc_html__( 'Stash Live', 'it-l10n-backupbuddy' ), t
 	jQuery(function() {
 
 		jQuery('#screen-meta-links').append(
-			'<div id="backupbuddy-meta-link-wrap" class="hide-if-no-js screen-meta-toggle">' +
+			'<div class="backupbuddy-meta-link-wrap hide-if-no-js screen-meta-toggle">' +
 				'<a href="<?php echo pb_backupbuddy::nonce_url( $admin_url . '?page=pb_backupbuddy_live&live_action=troubleshooting' ); ?>" class="add-new-h2 show-settings no-dropdown"><?php esc_html_e( 'Troubleshooting Scan', 'it-l10n-backupbuddy' ); ?></a>' +
 			'</div>'
 		);
 
 		jQuery('#screen-meta-links').append(
-			'<div id="backupbuddy-meta-link-wrap" class="hide-if-no-js screen-meta-toggle">' +
+			'<div class="backupbuddy-meta-link-wrap hide-if-no-js screen-meta-toggle">' +
 				'<a href="<?php echo pb_backupbuddy::ajax_url( 'live_settings' ); ?>&#038;TB_iframe=1&#038;width=640&#038;height=600" class="add-new-h2 thickbox show-settings no-dropdown"><?php esc_html_e( 'Live Settings', 'it-l10n-backupbuddy' ); ?></a>' +
 			'</div>'
 		);

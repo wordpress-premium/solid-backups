@@ -331,16 +331,16 @@ tr.tDnD_whileDrag td, tr.tDnD_whileDrag th {
 	margin: 0.1em 0;
 }
 
-#backupbuddy-meta-link-wrap a.show-settings {
+.backupbuddy-meta-link-wrap a.show-settings {
 	float: right;
 	margin: 0;
 }
 
-#screen-meta-links #backupbuddy-meta-link-wrap a {
+#screen-meta-links .backupbuddy-meta-link-wrap a {
 	background: none;
 }
 
-#screen-meta-links #backupbuddy-meta-link-wrap a:after {
+#screen-meta-links .backupbuddy-meta-link-wrap a:after {
 	color: #0073aa;
 	margin-right: 5px;
 }
@@ -350,10 +350,12 @@ tr.tDnD_whileDrag td, tr.tDnD_whileDrag th {
 	background: #2ea2cc;
 	padding: 1em;
 	color: #fff;
-	text-transform: uppercase;
 	padding-left: 29px;
 	font-size: 28px;
 	font-weight: 200;
+}
+.bb-topbar-title > a {
+	text-transform: uppercase;
 }
 
 .bb-topbar-title strong {
@@ -392,7 +394,7 @@ tr.tDnD_whileDrag td, tr.tDnD_whileDrag th {
 	color: #fff;
 }
 
-#screen-meta-links #backupbuddy-meta-link-wrap a.show-settings {
+#screen-meta-links .backupbuddy-meta-link-wrap a.show-settings {
 	display: inline-block;
 	text-decoration: none;
 	padding: 10px;
@@ -407,8 +409,8 @@ tr.tDnD_whileDrag td, tr.tDnD_whileDrag th {
 	color: #0073aa;
 }
 
-#backupbuddy-meta-link-wrap a.show-settings:hover,
-#backupbuddy-meta-link-wrap a.show-settings:focus {
+.backupbuddy-meta-link-wrap a.show-settings:hover,
+.backupbuddy-meta-link-wrap a.show-settings:focus {
 	border-color: #008EC2;
 	background: #00a0d2;
 	color: #fff;

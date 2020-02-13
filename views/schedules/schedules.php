@@ -54,4 +54,6 @@ if ( count( $schedules ) > 0 && '' == pb_backupbuddy::_GET( 'edit' ) ) {
 	printf( '<h1>%s</h1>', esc_html__( 'Edit Schedule', 'it-l10n-backupbuddy' ) );
 	$schedule_form->display_settings( 'Save Schedule' );
 	echo '<span style="display: inline-block; position: relative; margin-left: 130px; top: -28px;"><a href="' . pb_backupbuddy::page_url() . '" class="button secondary-button">&larr; ' . esc_html__( 'back', 'it-l10n-backupbuddy' ) . '</a>';
+} else {
+	echo '<p>' . esc_html__( 'No backup schedules setup yet.', 'it-l10n-backupbuddy' ) . ' <a href="' . esc_attr( pb_backupbuddy::page_url() ) . '&tab=add">' . esc_html__( 'Click here to set one up!', 'it-l10n-backupbuddy' ) . '</a></p>';
 }

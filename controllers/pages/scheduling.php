@@ -146,8 +146,22 @@ $schedule_form->add_setting(
 	)
 );
 
-$profile_list = array();
+$profile_list    = array();
+$backup_profiles = array();
+// Rearrange backup profiles, move Full and DB up to the top.
+if ( isset( pb_backupbuddy::$options['profiles'][2] ) ) {
+	$backup_profiles[2] = pb_backupbuddy::$options['profiles'][2]; // Full (Complete Backup).
+}
+if ( isset( pb_backupbuddy::$options['profiles'][1] ) ) {
+	$backup_profiles[1] = pb_backupbuddy::$options['profiles'][1]; // DB (Database Only).
+}
 foreach ( pb_backupbuddy::$options['profiles'] as $profile_id => $profile ) {
+	if ( isset( $backup_profiles[ $profile_id ] ) ) {
+		continue;
+	}
+	$backup_profiles[ $profile_id ] = $profile;
+}
+foreach ( $backup_profiles as $profile_id => $profile ) {
 	if ( 0 == $profile_id ) {
 		continue;
 	} // default profile.

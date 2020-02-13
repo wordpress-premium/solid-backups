@@ -19,7 +19,8 @@ $destination_id = pb_backupbuddy::_GET( 'destination_id' );
 $site_only = 'true' != pb_backupbuddy::_GET( 'listAll' );
 $action    = $site_only ? 'true' : 'false';
 $text      = $site_only ? __( 'List all site\'s files', 'it-l10n-backupbuddy' ) : __( 'Only list this site\'s files', 'it-l10n-backupbuddy' );
-$swap_list = sprintf( '<a href="%s&destination_id=%s&listAll=%s" style="text-decoration: none;">%s</a>',
+$swap_list = sprintf(
+	'<a href="%s&destination_id=%s&listAll=%s" style="text-decoration: none;">%s</a>',
 	esc_attr( pb_backupbuddy::ajax_url( 'remoteClient' ) ),
 	esc_attr( htmlentities( $destination_id ) ),
 	esc_attr( $action ),
@@ -123,11 +124,15 @@ if ( 0 === $backup_count ) {
 	pb_backupbuddy::load_script( 'backupbuddy.min.js' );
 	pb_backupbuddy::load_style( 'backupbuddy-core.css' );
 
-	backupbuddy_backups()->table( 'default', $backups, array(
-		'action'         => $url_prefix . '&remote_path=' . htmlentities( pb_backupbuddy::_GET( 'remote_path' ) ),
-		'destination_id' => $destination_id,
-		'class'          => 'minimal',
-	) );
+	backupbuddy_backups()->table(
+		'default',
+		$backups,
+		array(
+			'action'         => $url_prefix . '&remote_path=' . htmlentities( pb_backupbuddy::_GET( 'remote_path' ) ),
+			'destination_id' => $destination_id,
+			'class'          => 'minimal',
+		)
+	);
 }
 
 // Display troubleshooting subscriber key.

@@ -24,7 +24,7 @@ class pb_backupbuddy_dashboard extends pb_backupbuddy_dashboardcore {
 		} else {
 			$backup_url = admin_url( 'admin.php' );
 		}
-		$backup_url .= '?page=pb_backupbuddy_backup';
+		$backup_url .= '?page=pb_backupbuddy_backup&tab=create-backup';
 
 		if ( is_network_admin() ) {
 			$stashlive_url = network_admin_url( 'admin.php' );

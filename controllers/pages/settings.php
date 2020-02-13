@@ -8,14 +8,14 @@
 ?>
 
 <style type="text/css">
-	#backupbuddy-meta-link-wrap a.show-settings {
+	.backupbuddy-meta-link-wrap a.show-settings {
 		float: right;
 		margin: 0 0 0 6px;
 	}
-	#screen-meta-links #backupbuddy-meta-link-wrap a {
+	#screen-meta-links .backupbuddy-meta-link-wrap a {
 		background: none;
 	}
-	#screen-meta-links #backupbuddy-meta-link-wrap a::after {
+	#screen-meta-links .backupbuddy-meta-link-wrap a::after {
 		content: '';
 		margin-right: 5px;
 	}

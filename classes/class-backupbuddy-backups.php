@@ -195,9 +195,9 @@ class BackupBuddy_Backups {
 
 		if ( $total_backups <= 0 ) {
 			if ( isset( $settings['destination_id'] ) ) {
-				printf( '<p><strong>%s</strong></p>', esc_html__( 'No backups were found at this destination.', 'it-l10n-backupbuddy' ) );
+				printf( '<p class="no-backups-at-destination"><strong>%s</strong></p>', esc_html__( 'No backups were found at this destination.', 'it-l10n-backupbuddy' ) );
 			} else {
-				printf( '<p>%s</p>', esc_html__( 'No backups have been created yet.', 'it-l10n-backupbuddy' ) );
+				printf( '<p class="no-backups-created">%s</p>', esc_html__( 'No backups have been created yet.', 'it-l10n-backupbuddy' ) );
 			}
 			return;
 		}
@@ -459,8 +459,12 @@ class BackupBuddy_Backups {
 			}
 
 			$integrity_data['modified_time'] = $backup_integrity['modified'];
-			$integrity_data['file_size']     = $backup_integrity['size'];
-			$integrity_data['modified']      = pb_backupbuddy::$format->date( $integrity_data['modified_time'], 'l, F j, Y - g:i a' );
+			if ( $backup_integrity['size'] ) {
+				$integrity_data['file_size'] = $backup_integrity['size'];
+			}
+			if ( $integrity_data['modified_time'] ) {
+				$integrity_data['modified'] = pb_backupbuddy::$format->date( $integrity_data['modified_time'], 'l, F j, Y - g:i a' );
+			}
 
 			if ( isset( $backup_integrity['status'] ) ) { // Pre-v4.0.
 				$integrity_data['status'] = $backup_integrity['status'];
@@ -696,11 +700,15 @@ class BackupBuddy_Backups {
 		$filename = basename( $file );
 		$label    = pb_backupbuddy::$format->date( $modified, 'l, F j, Y - g:i a' );
 		$label   .= ' (' . pb_backupbuddy::$format->time_ago( $modified, (int) current_time( 'timestamp' ) ) . ' ago)';
+		$url      = pb_backupbuddy::ajax_url( 'download_archive' ) . '&backupbuddy_backup=' . $filename;
+		if ( 'http' === substr( $file, 0, 4 ) ) {
+			$url = $file;
+		}
 
 		if ( 'default' === $mode ) { // Default backup listing.
-			$output = '<a href="' . pb_backupbuddy::ajax_url( 'download_archive' ) . '&backupbuddy_backup=' . $filename . '" class="backupbuddyFileTitle" title="' . $filename . '">' . $label . '</a>';
+			$output = '<a href="' . esc_attr( $url ) . '" class="backupbuddyFileTitle" title="' . $filename . '">' . $label . '</a>';
 		} elseif ( 'legacy' === $mode ) { // Copied default in case of changes.
-			$output = '<a href="' . pb_backupbuddy::ajax_url( 'download_archive' ) . '&backupbuddy_backup=' . $filename . '" class="backupbuddyFileTitle" title="' . $filename . '">' . $label . '</a>';
+			$output = '<a href="' . esc_attr( $url ) . '" class="backupbuddyFileTitle" title="' . $filename . '">' . $label . '</a>';
 			$integrity_data = $this->get_integrity_data( $file );
 			if ( ! empty( $integrity_data['comment'] ) ) {
 				$output .= '<br><span class="description">Note: <span class="pb_backupbuddy_notetext">' . htmlentities( $integrity_data['comment'] ) . '</span></span>';

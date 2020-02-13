@@ -1161,7 +1161,7 @@ class BackupBuddy_Restore {
 	private function unzip() {
 		$this->log( 'Starting Unzip...' );
 
-		$this->log( '✓ Setting temp directory to unzip.' );
+		$this->log( 'Setting temp directory to unzip...' );
 
 		// Calculate temp directory & lock it down.
 		if ( empty( $this->restore['temp_dir'] ) ) {

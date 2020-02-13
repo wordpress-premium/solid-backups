@@ -3,7 +3,7 @@
  * Plugin Name: BackupBuddy
  * Plugin URI: http://ithemes.com/purchase/backupbuddy/
  * Description: The most complete WordPress solution for Backup, Restoration, Migration, and Deployment to the same host or a new domain. Backs up a customizable selection of files, settings, and content for a complete snapshot of your site. Stash Live feature allows for real-time live backups to the cloud.
- * Version: 8.5.2.1
+ * Version: 8.5.3.2
  * Author: iThemes
  * Author URI: http://ithemes.com/
  * iThemes Package: backupbuddy
@@ -165,6 +165,15 @@ $pluginbuddy_settings = array(
 		'cron_request_timeout_override'           => '',           // Overrides cron loopback timeout time. 0 for no override. Useful if server too slow to respond in WP's default 0.01sec to get cron working.
 
 		'profiles'                                => array( // TODO: Add comments to show what each of these indexes mean.
+			2  => array(
+				'type'  => 'full',
+				'title' => 'Complete Backup',
+			),
+			1  => array(
+				'type'  => 'db',
+				'title' => 'Database Only',
+				'tip'   => 'Just your database. I like your minimalist style.',
+			),
 			-3  => array( // @codingStandardsIgnoreLine: ok.
 				'type'  => 'themes',
 				'title' => 'Themes Only',
@@ -195,15 +204,6 @@ $pluginbuddy_settings = array(
 				'exclude_themes'                => '0',
 				'exclude_plugins'               => '0',
 				'active_plugins_only'           => '0',                   // Only backup active plugins.
-			),
-			1  => array(
-				'type'  => 'db',
-				'title' => 'Database Only',
-				'tip'   => 'Just your database. I like your minimalist style.',
-			),
-			2  => array(
-				'type'  => 'full',
-				'title' => 'Complete Backup',
 			),
 		),
 		'show_all_cron_schedules'                 => 0,             // Show cron schedules defined by all plugins/theme or only private schedules defiend by BackupBuddy (prefix itbub-) (default).

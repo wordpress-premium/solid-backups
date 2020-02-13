@@ -213,7 +213,7 @@ class pb_backupbuddy_destination_s33 {
 			}
 
 			self::$_client = new S3Client( $s3Config );
-			//self::$_client->getConfig()->set( 'curl.options', array( 'body_as_string' => true ) ); // Work around "[curl] 65: necessary data rewind wasn't possible" issue. See https://github.com/aws/aws-sdk-php/issues/284
+			// self::$_client->getConfig()->set( 'curl.options', array( 'body_as_string' => true ) ); // Work around "[curl] 65: necessary data rewind wasn't possible" issue. See https://github.com/aws/aws-sdk-php/issues/284
 
 		}
 
@@ -237,14 +237,18 @@ class pb_backupbuddy_destination_s33 {
 
 		// Format directory.
 		$settings['directory'] = trim( $settings['directory'], '/\\' );
-		if ( $settings['directory'] != '' ) {
+		if ( '' != $settings['directory'] ) {
 			$settings['directory'] .= '/';
 		}
 
 		if ( ! empty( $settings['settings_override'] ) ) {
 			foreach ( $settings['settings_override'] as $setting => $value ) {
-				$settings[$setting] = $value;
+				$settings[ $setting ] = $value;
 			}
+		}
+
+		if ( empty( $settings['remote_path'] ) ) {
+			$settings['remote_path'] = $settings['directory'] . 'backup-' . backupbuddy_core::backup_prefix();
 		}
 
 		return $settings;
@@ -822,6 +826,7 @@ class pb_backupbuddy_destination_s33 {
 
 		foreach ( $backups as $object ) {
 			$backup = str_ireplace( $settings['directory'], '', $object['Key'] );
+			$backup = ltrim( $backup, '/' );
 			if ( false !== stristr( $backup, '/' ) ) { // Do NOT display any files within a deeper subdirectory.
 				continue;
 			}
