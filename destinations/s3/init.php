@@ -606,18 +606,16 @@ class pb_backupbuddy_destination_s3 { // Change class name end to match destinat
 
 	} // End test().
 
-
-
-	/* download_file()
-	 *
+	/**
 	 * Download remote file to local system.
 	 *
-	 * @param	array 		$settings				Destination settings.
-	 * @param	string		$remoteFile				Remote filename.
-	 * @param	string		$localDestinationFile	Full path & filename of destination file.
+	 * @param array  $settings              Destination settings.
+	 * @param string $remoteFile            Remote filename.
+	 * @param string $localDestinationFile  Full path & filename of destination file.
 	 *
+	 * @return bool  If downloaded successfully.
 	 */
-	public static function download_file( $settings, $remoteFile, $localDestinationFile ) {
+	public static function getFile( $settings, $remoteFile, $localDestinationFile ) {
 
 		require_once( dirname( dirname( __FILE__ ) ) . '/_s3lib/aws-sdk/sdk.class.php' );
 
@@ -648,9 +646,7 @@ class pb_backupbuddy_destination_s3 { // Change class name end to match destinat
 			return true;
 		}
 
-	} // end download_file().
-
-
+	} // end getFile().
 
 	/*	get_credentials()
 	 *

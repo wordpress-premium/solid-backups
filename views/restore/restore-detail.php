@@ -2,7 +2,8 @@
 /**
  * Restore Detail Shown in Recent Restores Table
  *
- * Incoming var: $restore
+ * Incoming var:
+ *   $restore
  *
  * @package BackupBuddy
  */
@@ -22,9 +23,13 @@ if ( ! in_array( $restore['status'], backupbuddy_restore()->get_completed_status
 		<div>Restore Path: <?php echo esc_html( $restore['restore_path'] ); ?></div>
 		<?php
 		if ( ! empty( $restore['destination_id'] ) ) :
-			$destination = pb_backupbuddy::$options['remote_destinations'][ $restore['destination_id'] ];
-			?>
-			<div>Destination: <?php echo esc_html( $destination['title'] ); ?> (<?php echo esc_html( $restore['destination_id'] ); ?>)</div>
+			if ( ! empty( pb_backupbuddy::$options['remote_destinations'][ $restore['destination_id'] ] ) ) :
+				$destination = pb_backupbuddy::$options['remote_destinations'][ $restore['destination_id'] ];
+				?>
+				<div>Destination: <?php echo esc_html( $destination['title'] ); ?> (<?php echo esc_html( $restore['destination_id'] ); ?>)</div>
+			<?php else : ?>
+				<div>Destination ID: <?php echo esc_html( $restore['destination_id'] ); ?></div>
+			<?php endif; ?>
 			<div>Download Required? <?php echo ! empty( $restore['download'] ) ? 'Yes' : 'No'; ?></div>
 		<?php endif; ?>
 		<div>Initialized: <?php echo esc_html( pb_backupbuddy::$format->date( $restore['initialized'] ) ); ?></div>
@@ -123,7 +128,7 @@ if ( ! in_array( $restore['status'], backupbuddy_restore()->get_completed_status
 			?>
 		<?php endif; ?>
 
-		<?php if ( in_array( $restore['what'], array( 'both', 'db' ), true ) ) : ?>
+		<?php if ( in_array( $restore['what'], array( 'both', 'db' ), true ) && ! empty( $restore['tables'] ) ) : ?>
 			<hr style="max-width: 90%;margin:5px 0;">
 			<div>Tables:
 				<?php

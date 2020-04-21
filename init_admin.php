@@ -585,6 +585,57 @@ function backupbuddy_stash2_download() {
 add_action( 'admin_init', 'backupbuddy_stash2_download' );
 
 /**
+ * SFTP Download Backup.
+ */
+function backupbuddy_sftp_download() {
+	if ( ! pb_backupbuddy::_GET( 'sftp-download' ) ) {
+		return;
+	}
+
+	$file        = pb_backupbuddy::_GET( 'sftp-download' );
+	$destination = pb_backupbuddy::_GET( 'sftp-destination-id' );
+
+	if ( empty( pb_backupbuddy::$options['remote_destinations'][ $destination ] ) ) {
+		return false;
+	}
+
+	if ( ! class_exists( 'pb_backupbuddy_destination_sftp' ) ) {
+		require_once pb_backupbuddy::plugin_path() . '/destinations/sftp/init.php';
+	}
+
+	$settings = pb_backupbuddy::$options['remote_destinations'][ $destination ];
+
+	pb_backupbuddy_destination_sftp::stream_download( $settings, $file );
+}
+add_action( 'admin_init', 'backupbuddy_sftp_download' );
+
+
+/**
+ * FTP Download Backup.
+ */
+function backupbuddy_ftp_download() {
+	if ( ! pb_backupbuddy::_GET( 'ftp-download' ) ) {
+		return;
+	}
+
+	$file        = pb_backupbuddy::_GET( 'ftp-download' );
+	$destination = pb_backupbuddy::_GET( 'ftp-destination-id' );
+
+	if ( empty( pb_backupbuddy::$options['remote_destinations'][ $destination ] ) ) {
+		return false;
+	}
+
+	if ( ! class_exists( 'pb_backupbuddy_destination_ftp' ) ) {
+		require_once pb_backupbuddy::plugin_path() . '/destinations/ftp/init.php';
+	}
+
+	$settings = pb_backupbuddy::$options['remote_destinations'][ $destination ];
+
+	pb_backupbuddy_destination_ftp::stream_download( $settings, $file );
+}
+add_action( 'admin_init', 'backupbuddy_ftp_download' );
+
+/**
  * OneDrive OAuth Redirect.
  */
 function backupbuddy_onedrive_redirect() {
@@ -619,3 +670,39 @@ function backupbuddy_onedrive_download() {
 	pb_backupbuddy_destination_onedrive::force_download( $settings, $file_id );
 }
 add_action( 'admin_init', 'backupbuddy_onedrive_download' );
+
+/**
+ * Dropbox OAuth Redirect.
+ */
+function backupbuddy_dropbox_redirect() {
+	if ( ! pb_backupbuddy::_GET( 'dropbox-authorize' ) ) {
+		return;
+	}
+
+	if ( ! class_exists( 'pb_backupbuddy_destination_dropbox3' ) ) {
+		require_once pb_backupbuddy::plugin_path() . '/destinations/dropbox3/init.php';
+	}
+
+	pb_backupbuddy_destination_dropbox3::oauth_redirect();
+}
+add_action( 'admin_init', 'backupbuddy_dropbox_redirect' );
+
+/**
+ * Dropbox Force Download.
+ */
+function backupbuddy_dropbox_download() {
+	if ( ! pb_backupbuddy::_GET( 'dropbox-download' ) ) {
+		return;
+	}
+
+	$file        = pb_backupbuddy::_GET( 'dropbox-download' );
+	$destination = pb_backupbuddy::_GET( 'dropbox-destination-id' );
+
+	if ( ! class_exists( 'pb_backupbuddy_destination_dropbox3' ) ) {
+		require_once pb_backupbuddy::plugin_path() . '/destinations/dropbox3/init.php';
+	}
+
+	$settings = pb_backupbuddy::$options['remote_destinations'][ $destination ];
+	pb_backupbuddy_destination_dropbox3::force_download( $settings, $file );
+}
+add_action( 'admin_init', 'backupbuddy_dropbox_download' );

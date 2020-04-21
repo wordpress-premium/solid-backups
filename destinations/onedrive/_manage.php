@@ -1,6 +1,6 @@
 <?php
 /**
- * One Drive File Listing
+ * OneDrive File Listing
  *
  * Incoming vars:
  *     $destination (destination defaults)
@@ -46,8 +46,8 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 
 if ( '' !== pb_backupbuddy::_GET( 'download' ) ) {
 	// TODO: Use download feature to stream download contents instead of this link.
-	$file_id    = pb_backupbuddy::_GET( 'download' );
-	$drive_file = pb_backupbuddy_destination_onedrive::get_drive_item( false, $file_id );
+	$download   = pb_backupbuddy::_GET( 'download' );
+	$drive_file = pb_backupbuddy_destination_onedrive::get_drive_item( false, $download );
 
 	if ( $drive_file ) {
 		$permission_proxy = $drive_file->createLink( 'view' );
@@ -58,14 +58,14 @@ if ( '' !== pb_backupbuddy::_GET( 'download' ) ) {
 }
 
 if ( '' !== pb_backupbuddy::_GET( 'copy' ) ) {
-	$file_id    = pb_backupbuddy::_GET( 'copy' );
-	$drive_file = pb_backupbuddy_destination_onedrive::get_drive_item( false, $file_id );
+	$copy       = pb_backupbuddy::_GET( 'copy' );
+	$drive_file = pb_backupbuddy_destination_onedrive::get_drive_item( false, $copy );
 
 	if ( $drive_file ) {
 		pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
 
 		pb_backupbuddy::status( 'details', 'Scheduling Cron for OneDrive file copy to local.' );
-		backupbuddy_core::schedule_single_event( time(), 'process_destination_copy', array( $settings, $drive_file->name, $file_id ) );
+		backupbuddy_core::schedule_single_event( time(), 'process_destination_copy', array( $settings, $drive_file->name, $copy ) );
 
 		if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
 			update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.

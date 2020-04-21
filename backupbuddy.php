@@ -3,7 +3,7 @@
  * Plugin Name: BackupBuddy
  * Plugin URI: http://ithemes.com/purchase/backupbuddy/
  * Description: The most complete WordPress solution for Backup, Restoration, Migration, and Deployment to the same host or a new domain. Backs up a customizable selection of files, settings, and content for a complete snapshot of your site. Stash Live feature allows for real-time live backups to the cloud.
- * Version: 8.5.3.2
+ * Version: 8.5.5.0
  * Author: iThemes
  * Author URI: http://ithemes.com/
  * iThemes Package: backupbuddy
@@ -29,7 +29,8 @@
  *      Dustin Bolton (creation, lead BB dev, anything & everything 2010-present), Chris Jean (early zip), Josh Benham (misc code, support, testing),
  *      Skyler Moore (ftp, misc code, support, testing), Jeremy Trask (xzip, misc code, support), Ronald Huereca (early multisite)
  *      Dustin Akers (lead BB support, testing), Daniel Harzheim (testing, settings form verification, PB framework contributions),
- *      Bradford Ulrich (UI, graphics), Glenn Ansley (misc code, support), Thomas Oliver (support), Ty Carlson (Stash UI, graphics).
+ *      Bradford Ulrich (UI, graphics), Glenn Ansley (misc code, support), Thomas Oliver (support), Ty Carlson (Stash UI, graphics),
+ *      Brian DiChiara (lead BackupBuddy Dev 2018), Tyler Gilbet (support, testing), Yobani Mendoza (support, testing).
  */
 
 // Plugin defaults. Settings stored in wp_options under "pb_backupbuddy". Auditing notifications stored in "pb_backupbuddy_notificiations" as of 6.1.0.0.
@@ -284,6 +285,9 @@ require_once BACKUPBUDDY_PLUGIN_PATH . '/vendor/autoload.php';
 
 // Load PHP7 helpers.
 require_once BACKUPBUDDY_PLUGIN_PATH . '/helpers/php7.php';
+
+// Load license helpers.
+require_once BACKUPBUDDY_PLUGIN_PATH . '/helpers/license.php';
 
 // Load admin helpers.
 require_once BACKUPBUDDY_PLUGIN_PATH . '/helpers/admin.php';

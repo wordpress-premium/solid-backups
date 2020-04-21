@@ -64,7 +64,7 @@ define('SYSTEM_SSH_AGENT_FAILURE', 5);
 define('SYSTEM_SSH_AGENTC_SIGN_REQUEST', 13);
 // the SSH1 response is SSH_AGENT_RSA_RESPONSE (4)
 define('SYSTEM_SSH_AGENT_SIGN_RESPONSE', 14);
-
+/**#@-*/
 
 /**@+
  * Agent forwarding status
@@ -77,7 +77,17 @@ define('SYSTEM_SSH_AGENT_FORWARD_NONE', 0);
 define('SYSTEM_SSH_AGENT_FORWARD_REQUEST', 1);
 // forwarding has been request and is active
 define('SYSTEM_SSH_AGENT_FORWARD_ACTIVE', 2);
+/**#@-*/
 
+/**@+
+ * Signature Flags
+ *
+ * See https://tools.ietf.org/html/draft-miller-ssh-agent-00#section-5.3
+ *
+ * @access private
+ */
+define('SYSTEM_SSH_AGENT_RSA2_256', 2);
+define('SYSTEM_SSH_AGENT_RSA2_512', 4);
 /**#@-*/
 
 /**
@@ -101,42 +111,60 @@ class System_SSH_Agent_Identity
      *
      * @var Crypt_RSA
      * @access private
-     * @see System_SSH_Agent_Identity::getPublicKey()
+     * @see self::getPublicKey()
      */
     var $key;
 
     /**
      * Key Blob
      *
-     * @var String
+     * @var string
      * @access private
-     * @see System_SSH_Agent_Identity::sign()
+     * @see self::sign()
      */
     var $key_blob;
 
     /**
      * Socket Resource
      *
-     * @var Resource
+     * @var resource
      * @access private
-     * @see System_SSH_Agent_Identity::sign()
+     * @see self::sign()
      */
     var $fsock;
-    
-    function __construct($fsock) {
-        return $this->System_SSH_Agent_Identity($fsock);
-    }
-    
+
+    /**
+     * Signature flags
+     *
+     * @var int
+     * @access private
+     * @see self::sign()
+     * @see self::setHash()
+     */
+    var $flags = 0;
+
     /**
      * Default Constructor.
      *
-     * @param Resource $fsock
+     * @param resource $fsock
      * @return System_SSH_Agent_Identity
      * @access private
      */
-    function System_SSH_Agent_Identity($fsock)
+    function __construct($fsock)
     {
         $this->fsock = $fsock;
+    }
+
+    /**
+     * PHP4 compatible Default Constructor.
+     *
+     * @see self::__construct()
+     * @param resource $fsock
+     * @access public
+     */
+    function System_SSH_Agent_Identity($fsock)
+    {
+        $this->__construct($fsock);
     }
 
     /**
@@ -159,7 +187,7 @@ class System_SSH_Agent_Identity
      * Called by System_SSH_Agent::requestIdentities(). The key blob could be extracted from $this->key
      * but this saves a small amount of computation.
      *
-     * @param String $key_blob
+     * @param string $key_blob
      * @access private
      */
     function setPublicKeyBlob($key_blob)
@@ -172,8 +200,8 @@ class System_SSH_Agent_Identity
      *
      * Wrapper for $this->key->getPublicKey()
      *
-     * @param Integer $format optional
-     * @return Mixed
+     * @param int $format optional
+     * @return mixed
      * @access public
      */
     function getPublicKey($format = null)
@@ -187,7 +215,7 @@ class System_SSH_Agent_Identity
      * Doesn't do anything as ssh-agent doesn't let you pick and choose the signature mode. ie.
      * ssh-agent's only supported mode is CRYPT_RSA_SIGNATURE_PKCS1
      *
-     * @param Integer $mode
+     * @param int $mode
      * @access public
      */
     function setSignatureMode($mode)
@@ -195,18 +223,43 @@ class System_SSH_Agent_Identity
     }
 
     /**
+     * Set Hash
+     *
+     * ssh-agent doesn't support using hashes for RSA other than SHA1
+     *
+     * @param string $hash
+     * @access public
+     */
+    function setHash($hash)
+    {
+        $this->flags = 0;
+        switch ($hash) {
+            case 'sha1':
+                break;
+            case 'sha256':
+                $this->flags = SYSTEM_SSH_AGENT_RSA2_256;
+                break;
+            case 'sha512':
+                $this->flags = SYSTEM_SSH_AGENT_RSA2_512;
+                break;
+            default:
+                user_error('The only supported hashes for RSA are sha1, sha256 and sha512');
+        }
+    }
+
+    /**
      * Create a signature
      *
      * See "2.6.2 Protocol 2 private key signature request"
      *
-     * @param String $message
-     * @return String
+     * @param string $message
+     * @return string
      * @access public
      */
     function sign($message)
     {
         // the last parameter (currently 0) is for flags and ssh-agent only defines one flag (for ssh-dss): SSH_AGENT_OLD_SIGNATURE
-        $packet = pack('CNa*Na*N', SYSTEM_SSH_AGENTC_SIGN_REQUEST, strlen($this->key_blob), $this->key_blob, strlen($message), $message, 0);
+        $packet = pack('CNa*Na*N', SYSTEM_SSH_AGENTC_SIGN_REQUEST, strlen($this->key_blob), $this->key_blob, strlen($message), $message, $this->flags);
         $packet = pack('Na*', strlen($packet), $packet);
         if (strlen($packet) != fputs($this->fsock, $packet)) {
             user_error('Connection closed during signing');
@@ -219,9 +272,35 @@ class System_SSH_Agent_Identity
         }
 
         $signature_blob = fread($this->fsock, $length - 1);
-        // the only other signature format defined - ssh-dss - is the same length as ssh-rsa
-        // the + 12 is for the other various SSH added length fields
-        return substr($signature_blob, strlen('ssh-rsa') + 12);
+        $length = current(unpack('N', $this->_string_shift($signature_blob, 4)));
+        if ($length != strlen($signature_blob)) {
+            user_error('Malformed signature blob');
+        }
+        $length = current(unpack('N', $this->_string_shift($signature_blob, 4)));
+        if ($length > strlen($signature_blob) + 4) {
+            user_error('Malformed signature blob');
+        }
+        $type = $this->_string_shift($signature_blob, $length);
+        $this->_string_shift($signature_blob, 4);
+
+        return $signature_blob;
+    }
+
+    /**
+     * String Shift
+     *
+     * Inspired by array_shift
+     *
+     * @param string $string
+     * @param int $index
+     * @return string
+     * @access private
+     */
+    function _string_shift(&$string, $index = 1)
+    {
+        $substr = substr($string, 0, $index);
+        $string = substr($string, $index);
+        return $substr;
     }
 }
 
@@ -232,14 +311,14 @@ class System_SSH_Agent_Identity
  *
  * @package System_SSH_Agent
  * @author  Jim Wigginton <terrafrost@php.net>
- * @access  internal
+ * @access  public
  */
 class System_SSH_Agent
 {
     /**
      * Socket Resource
      *
-     * @var Resource
+     * @var resource
      * @access private
      */
     var $fsock;
@@ -266,29 +345,27 @@ class System_SSH_Agent
      * channel
      */
     var $expected_bytes = 0;
-    
-    function __construct() {
-        $this->System_SSH_Agent();
-    }
-    
+
     /**
      * Default Constructor
      *
      * @return System_SSH_Agent
      * @access public
      */
-    function System_SSH_Agent()
+    function __construct($address = null)
     {
-        switch (true) {
-            case isset($_SERVER['SSH_AUTH_SOCK']):
-                $address = $_SERVER['SSH_AUTH_SOCK'];
-                break;
-            case isset($_ENV['SSH_AUTH_SOCK']):
-                $address = $_ENV['SSH_AUTH_SOCK'];
-                break;
-            default:
-                user_error('SSH_AUTH_SOCK not found');
-                return false;
+        if (!$address) {
+            switch (true) {
+                case isset($_SERVER['SSH_AUTH_SOCK']):
+                    $address = $_SERVER['SSH_AUTH_SOCK'];
+                    break;
+                case isset($_ENV['SSH_AUTH_SOCK']):
+                    $address = $_ENV['SSH_AUTH_SOCK'];
+                    break;
+                default:
+                    user_error('SSH_AUTH_SOCK not found');
+                    return false;
+            }
         }
 
         $this->fsock = fsockopen('unix://' . $address, 0, $errno, $errstr);
@@ -298,12 +375,23 @@ class System_SSH_Agent
     }
 
     /**
+     * PHP4 compatible Default Constructor.
+     *
+     * @see self::__construct()
+     * @access public
+     */
+    function System_SSH_Agent($address = null)
+    {
+        $this->__construct($address);
+    }
+
+    /**
      * Request Identities
      *
      * See "2.5.2 Requesting a list of protocol 2 keys"
      * Returns an array containing zero or more System_SSH_Agent_Identity objects
      *
-     * @return Array
+     * @return array
      * @access public
      */
     function requestIdentities()
@@ -315,12 +403,14 @@ class System_SSH_Agent
         $packet = pack('NC', 1, SYSTEM_SSH_AGENTC_REQUEST_IDENTITIES);
         if (strlen($packet) != fputs($this->fsock, $packet)) {
             user_error('Connection closed while requesting identities');
+            return array();
         }
 
         $length = current(unpack('N', fread($this->fsock, 4)));
         $type = ord(fread($this->fsock, 1));
         if ($type != SYSTEM_SSH_AGENT_IDENTITIES_ANSWER) {
             user_error('Unable to request identities');
+            return array();
         }
 
         $identities = array();
@@ -328,8 +418,11 @@ class System_SSH_Agent
         for ($i = 0; $i < $keyCount; $i++) {
             $length = current(unpack('N', fread($this->fsock, 4)));
             $key_blob = fread($this->fsock, $length);
+            $key_str = 'ssh-rsa ' . base64_encode($key_blob);
             $length = current(unpack('N', fread($this->fsock, 4)));
-            $key_comment = fread($this->fsock, $length);
+            if ($length) {
+                $key_str.= ' ' . fread($this->fsock, $length);
+            }
             $length = current(unpack('N', substr($key_blob, 0, 4)));
             $key_type = substr($key_blob, 4, $length);
             switch ($key_type) {
@@ -338,7 +431,7 @@ class System_SSH_Agent
                         include_once 'Crypt/RSA.php';
                     }
                     $key = new Crypt_RSA();
-                    $key->loadKey('ssh-rsa ' . base64_encode($key_blob) . ' ' . $key_comment);
+                    $key->loadKey($key_str);
                     break;
                 case 'ssh-dss':
                     // not currently supported
@@ -362,7 +455,7 @@ class System_SSH_Agent
      * be requested when a channel is opened
      *
      * @param Net_SSH2 $ssh
-     * @return Boolean
+     * @return bool
      * @access public
      */
     function startSSHForwarding($ssh)
@@ -376,7 +469,7 @@ class System_SSH_Agent
      * Request agent forwarding of remote server
      *
      * @param Net_SSH2 $ssh
-     * @return Boolean
+     * @return bool
      * @access private
      */
     function _request_forwarding($ssh)
@@ -432,7 +525,7 @@ class System_SSH_Agent
     /**
      * Forward data to SSH Agent and return data reply
      *
-     * @param String $data
+     * @param string $data
      * @return data from SSH Agent
      * @access private
      */

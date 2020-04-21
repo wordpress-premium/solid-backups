@@ -92,8 +92,16 @@ if ( 'migration' == $mode ) {
 							configToggler.closest('.backupbuddy-destination-wrap').find( 'iframe' ).attr( 'src', function ( i, val ) { return val; }); // Refresh iframe.
 						}
 					} else {
-						jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
-						alert( "Error: \n\n" + data.error );
+						if ( data.status ) {
+							jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
+							alert( "Error: \n\n" + data.status );
+						} else if ( data.error ) {
+							jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
+							alert( "Error: \n\n" + data.error );
+						} else {
+							jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
+							alert( 'An unknown error has occurred. Please contact support.' );
+						}
 					}
 
 				}

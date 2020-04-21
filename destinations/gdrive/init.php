@@ -4,15 +4,15 @@
 
 // As of BackupBuddy v5.0 by Dustin Bolton.
 class pb_backupbuddy_destination_gdrive {
-	
+
 	const TIME_WIGGLE_ROOM = 5;								// Number of seconds to fudge up the time elapsed to give a little wiggle room so we don't accidently hit the edge and time out.
-	
+
 	public static $destination_info = array(
 		'name'			=>		'Google Drive',
 		'description'	=>		'Send files to Google Drive. <a href="https://drive.google.com" target="_blank">Learn more here.</a>',
 		'category'		=>		'best', // best, normal, legacy
 	);
-	
+
 	// Default settings. Should be public static for auto-merging.
 	public static $default_settings = array(
 		'type'					=> 'gdrive',	// MUST MATCH your destination slug.
@@ -24,29 +24,29 @@ class pb_backupbuddy_destination_gdrive {
 		'folderTitle'			=> '', // Friend title of the folder at the time of creation.
 		'service_account_file'	=>	'',		// If specified then load this file as a Gooel Service Account instead of normal api key pair. See https://developers.google.com/api-client-library/php/auth/service-accounts
 		'service_account_email'	=>	'',		// Account ID/name
-		
+
 		'db_archive_limit'		=> '10',		// Maximum number of db backups for this site in this directory for this account. No limit if zero 0.
 		'full_archive_limit' 	=> '4',		// Maximum number of full backups for this site in this directory for this account. No limit if zero 0.
 		'files_archive_limit' 	=> '4',		// Maximum number of files only backups for this site in this directory for this account. No limit if zero 0.
-		
+
 		'max_time'				=> '',	// Default max time in seconds to allow a send to run for. Set to 0 for no time limit. Aka no chunking.
 		'max_burst'				=> '25',	// Max size in mb of each burst within the same page load.
 		'disable_gzip'          => 0, // Setting to 1 will disable gzip compression
 		'disabled'				=> '0',		// When 1, disable this destination.
-		
+
 		'_chunks_sent'			=> 0,			// Internal chunk counting.
 		'_chunks_total'			=> 0,			// Internal chunk counting.
 		'_media_resumeUri'		=> '',
 		'_media_progress'		=> '',			// fseek to here
 	);
-	
+
 	private static $_isConnectedClientID = false;
 	private static $_client = '';
 	private static $_drive = '';
 	private static $_timeStart = 0;
 	private static $_chunksSentThisRound = 0;
-	
-	
+
+
 	/* _normalizeSettings()
 	 *
 	 * Call on any incoming settings to normalize defaults, tokens format, etc.
@@ -55,7 +55,7 @@ class pb_backupbuddy_destination_gdrive {
 	private static function _normalizeSettings( $settings ) {
 		$settings = array_merge( self::$default_settings, $settings ); // Apply defaults.
 		//echo 'TOKEN: ' .$settings['tokens'] . "\n\n\n";
-		
+
 		if ( strlen( $settings['tokens'] ) > 0 ) {
 			// Currently base64 encoded. Unencode.
 			if ( 0 !== strpos( $settings['tokens'], '{' ) ) {
@@ -66,7 +66,7 @@ class pb_backupbuddy_destination_gdrive {
 				pb_backupbuddy::status( 'details', 'Tokens do not need base64 decoded. Already done.' );
 			}
 		}
-		
+
 		// If token are set but still in string format, change them into arrays.
 		/*
 		if ( strlen( $settings['tokens'] ) > 0 ) {
@@ -84,14 +84,14 @@ class pb_backupbuddy_destination_gdrive {
 			}
 		}
 		*/
-		
+
 		//print_r( $settings['tokens'] );
-		
+
 		return $settings;
 	} // End _normalizeSettings().
-	
-	
-	
+
+
+
 	/* _connect()
 	 *
 	 * See http://stackoverflow.com/questions/15905104/automatically-refresh-token-using-google-drive-api-with-php-script
@@ -103,17 +103,17 @@ class pb_backupbuddy_destination_gdrive {
 		if ( $settings['client_id'] === self::$_isConnectedClientID ) { // Already connected to this account.
 			return $settings;
 		}
-		
+
 		set_include_path( pb_backupbuddy::plugin_path() . '/destinations/gdrive/' . PATH_SEPARATOR . get_include_path() );
-		
+
 		require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive/Google/Client.php' );
 		require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive/Google/Http/MediaFileUpload.php' );
 		require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive/Google/Service/Drive.php' );
-		
+
 		//$settings['service_account_file'] = '/Users/dustin/Sites/backupbuddy/BackupBuddy-949ad159c32e.p12';
 		//$settings['service_account_email'] = 'backupbuddyp12-2@bold-mantis-677.iam.gserviceaccount.com';
-		
-		
+
+
 		pb_backupbuddy::status( 'details', 'Connecting to Google Drive.' );
 		self::$_client = new Google_Client();
 		self::$_client->setApplicationName( 'BackupBuddy v' . pb_backupbuddy::settings( 'version' ) );
@@ -121,9 +121,9 @@ class pb_backupbuddy_destination_gdrive {
 		$disable_gzip = $settings['disable_gzip'];
 		self::$_client->setClassConfig('Google_Http_Request', 'disable_gzip', $disable_gzip);
 		self::$_client->setAccessType('offline'); // Required so that Google will use the refresh token.
-		
+
 		if ( '' != $settings['service_account_file'] ) { // Service account.
-			
+
 			if ( false === ( $account_file = @file_get_contents( $settings['service_account_file'] ) ) ) {
 				$message = 'Error #4430439433: Unable to read/access p12 service account file `' . $settings['service_account_file'] . '`.';
 				pb_backupbuddy::status( 'error', $message );
@@ -135,7 +135,7 @@ class pb_backupbuddy_destination_gdrive {
 			if ( '' != $settings['tokens'] ) {
 				self::$_client->setAccessToken( $settings['tokens'] );
 			}*/
-			
+
 			$cred = new Google_Auth_AssertionCredentials(
 				$settings['service_account_email'], // service account name
 				array('https://www.googleapis.com/auth/drive'),
@@ -154,20 +154,20 @@ class pb_backupbuddy_destination_gdrive {
 					return false;
 				}
 			}
-			
+
 			$settings['tokens'] = self::$_client->getAccessToken();
-			
+
 		} else { // Normal account authentication.
-			
+
 			$client_id = $settings['client_id'];
 			$client_secret = $settings['client_secret'];
 			$redirect_uri = 'urn:ietf:wg:oauth:2.0:oob';
-			
+
 			// Apply credentials.
 			self::$_client->setClientId($client_id);
 			self::$_client->setClientSecret($client_secret);
 			self::$_client->setRedirectUri($redirect_uri);
-			
+
 			pb_backupbuddy::status( 'details', 'Setting Google Drive Access Token.' );
 			try {
 				pb_backupbuddy::status( 'details', 'TOKENS: ' . print_r( $settings['tokens'], true ) );
@@ -180,20 +180,20 @@ class pb_backupbuddy_destination_gdrive {
 				$bb_gdrive_error = $message;
 				return false;
 			}
-			
+
 			$newAccessToken = self::$_client->getAccessToken();
 			$settings['tokens'] = $newAccessToken;
 		}
-		
+
 		self::$_drive = new Google_Service_Drive( self::$_client );
-		
+
 		self::$_isConnectedClientID = $settings['client_id'];
 		return $settings;
-		
+
 	} // End _connect().
-	
-	
-	
+
+
+
 	/* _error()
 	 *
 	 * Logs error & places in error array. Always returns false.
@@ -201,19 +201,19 @@ class pb_backupbuddy_destination_gdrive {
 	 */
 	public static function _error( $error ) {
 		pb_backupbuddy::status( 'error', $error );
-		
+
 		global $pb_backupbuddy_destination_errors;
 		$pb_backupbuddy_destination_errors[] =  $error;
-		
+
 		return false;
 	} // End _error().
-	
-	
-	
+
+
+
 	/*	send()
-	 *	
+	 *
 	 *	Send one or more files.
-	 *	
+	 *
 	 *	@param		array			$files					Array of one or more files to send.
 	 @	@param		bool			$delete_after			Delete LOCAL file after send.
 	 @	@param		bool			$delete_remote_after	Delete REMOTE file after send.
@@ -228,31 +228,31 @@ class pb_backupbuddy_destination_gdrive {
 		if ( ! is_array( $files ) ) {
 			$files = array( $files );
 		}
-		
+
 		pb_backupbuddy::status( 'details', 'Google Drive send() function started. Settings: `' . print_r( $settings, true ) . '`.' );
 		self::$_timeStart = microtime( true );
-		
+
 		$settings = self::_normalizeSettings( $settings );
-		if ( false === ( $settings = self::_connect( $settings ) ) ) { // $settings = 
+		if ( false === ( $settings = self::_connect( $settings ) ) ) { // $settings =
 			return self::_error( 'Error #38923923: Unable to connect with Google Drive. See log for details.' );
 		}
-		
+
 		$folderID = $settings['folderID'];
 		if ( '' == $folderID ) {
 			$folderID = 'root';
 		}
-		
+
 		$chunkSizeBytes = $settings['max_burst'] * 1024 * 1024; // Send X mb at a time to limit memory usage.
-		
+
 		foreach( $files as $file ) {
-			
+
 			// Determine backup type for limiting later.
 			$backup_type = backupbuddy_core::getBackupTypeFromFile( $file );
-			
+
 			if ( ! file_exists( $file ) ) {
 				return self::_error( 'Error #37792: File selected to send not found: `' . $file . '`.' );
 			}
-			
+
 			$fileSize = filesize( $file );
 			$fileinfo = pathinfo( $file );
 			$fileextension = $fileinfo['extension'];
@@ -276,14 +276,14 @@ class pb_backupbuddy_destination_gdrive {
 			$driveFile->setTitle( basename( $file ) );
 			$driveFile->setDescription( 'BackupBuddy file' );
 			$driveFile->setMimeType( $mimeType );
-			
+
 			// Set the parent folder.
 			if ( 'root' != $folderID ) {
 				$parentsCollectionData = new Google_Service_Drive_ParentReference();
 				$parentsCollectionData->setId( $folderID );
 				$driveFile->setParents( array( $parentsCollectionData ) );
 			}
-			
+
 			self::$_client->setDefer( true );
 			try {
 				$insertRequest = self::$_drive->files->insert( $driveFile );
@@ -292,12 +292,12 @@ class pb_backupbuddy_destination_gdrive {
 				pb_backupbuddy::status( 'error', 'Error #3232783268336: initiating upload to Google Drive (v1). Details: ' . $e->getMessage() );
 				return false;
 			}
-			
-			
-			
-			
-			
-			
+
+
+
+
+
+
 			// Handle getting resume information to see if resuming is still an option.
 			$resumable = false;
 			if ( '' != $settings['_media_resumeUri'] ) {
@@ -326,14 +326,14 @@ class pb_backupbuddy_destination_gdrive {
 					return true;
 				}
 			}
-			
-			
-			
-			
-			
-			
-			
-			
+
+
+
+
+
+
+
+
 			// See https://developers.google.com/api-client-library/php/guide/media_upload
 			try {
 				$media = new Google_Http_MediaFileUpload(
@@ -349,19 +349,19 @@ class pb_backupbuddy_destination_gdrive {
 				return;
 			}
 			$media->setFileSize( $fileSize );
-			
-			
+
+
 			// Reset these internal variables. NOTE: These are by default private. Must modify MediaFileUpload.php to make this possible by setting these vars public. Thanks Google!
 			if ( '' != $settings['_media_resumeUri'] ) {
 				$media->resumeUri = $settings['_media_resumeUri'];
 				$media->progress = $settings['_media_progress'];
 			}
-			
-			
+
+
 			pb_backupbuddy::status( 'details', 'Opening file for sending in binary mode.' );
 			$fs = fopen( $file , 'rb' );
-			
-			
+
+
 			// If chunked resuming then seek to the correct place in the file.
 			if ( ( '' != $settings['_media_progress'] ) && ( $settings['_media_progress'] > 0 ) ) { // Resuming send of a partially transferred file.
 				if ( 0 !== fseek( $fs, $settings['_media_progress'] ) ) { // Go off the resume point as given by Google in case it didnt all make it. //$settings['resume_point'] ) ) { // Returns 0 on success.
@@ -372,14 +372,14 @@ class pb_backupbuddy_destination_gdrive {
 			} else { // New file send.
 				$prevPointer = 0;
 			}
-			
+
 			$needProcessChunking = false; // Set true if we need to spawn off resuming to a new PHP page load.
 			$uploadStatus = false;
 			while (!$uploadStatus && !feof($fs)) {
 				$chunk = fread($fs, $chunkSizeBytes);
 				pb_backupbuddy::status( 'details', 'Chunk of size `' . pb_backupbuddy::$format->file_size( $chunkSizeBytes ) . '` read into memory. Total bytes summed: `' . ( (int)$settings['_media_progress'] + (int)strlen( $chunk) ) . '` of filesize: `' . $fileSize . '`.' );
 				pb_backupbuddy::status( 'details', 'Sending burst file data next. If next message is not "Burst file data sent" then the send likely timed out. Try reducing burst size. Sending now...' );
-				
+
 				// Send chunk of data.
 				try {
 					$uploadStatus = $media->nextChunk( $chunk );
@@ -390,22 +390,22 @@ class pb_backupbuddy_destination_gdrive {
 					pb_backupbuddy::status( 'error', 'Error #8239832: Error sending burst data. Details: `' . $error . '`.' );
 					return false;
 				}
-				$settings['_chunks_sent']++; 
+				$settings['_chunks_sent']++;
 				self::$_chunksSentThisRound++;
 				pb_backupbuddy::status( 'details', 'Burst file data sent.' );
-				
+
 				$maxTime = $settings['max_time'];
 				if ( ( '' == $maxTime ) || ( ! is_numeric( $maxTime ) ) ) {
 					pb_backupbuddy::status( 'details', 'Max time not set in settings so detecting server max PHP runtime.' );
 					$maxTime = backupbuddy_core::detectMaxExecutionTime();
 				}
-				
+
 				//return;
-				
+
 				// Handle splitting up across multiple PHP page loads if needed.
 				if ( !feof($fs) && ( 0 != $maxTime ) ) { // More data remains so see if we need to consider chunking to a new PHP process.
 					// If we are within X second of reaching maximum PHP runtime then stop here so that it can be picked up in another PHP process...
-					
+
 					$totalSizeSent = self::$_chunksSentThisRound * $chunkSizeBytes; // Total bytes sent this PHP load.
 					$bytesPerSec = $totalSizeSent / ( microtime( true ) - self::$_timeStart );
 					$timeRemaining = $maxTime - ( ( microtime( true ) - self::$_timeStart ) + self::TIME_WIGGLE_ROOM );
@@ -413,47 +413,47 @@ class pb_backupbuddy_destination_gdrive {
 						$timeRemaining = 0;
 					}
 					$bytesWeCouldSendWithTimeLeft = $bytesPerSec * $timeRemaining;
-					
+
 					pb_backupbuddy::status( 'details', 'Total sent: `' . pb_backupbuddy::$format->file_size( $totalSizeSent ) .'`. Speed (per sec): `' . pb_backupbuddy::$format->file_size( $bytesPerSec ) . '`. Time Remaining (w/ wiggle): `' . $timeRemaining . '`. Size that could potentially be sent with remaining time: `' . pb_backupbuddy::$format->file_size( $bytesWeCouldSendWithTimeLeft ) . '` with chunk size of `' . pb_backupbuddy::$format->file_size( $chunkSizeBytes ) . '`.' );
 					if ( $bytesWeCouldSendWithTimeLeft < $chunkSizeBytes ) { // We can send more than a whole chunk (including wiggle room) so send another bit.
 						pb_backupbuddy::status( 'message', 'Not enough time left (~`' . $timeRemaining  . '`) with max time of `' . $maxTime . '` sec to send another chunk at `' . pb_backupbuddy::$format->file_size( $bytesPerSec ) . '` / sec. Ran for ' . round( microtime( true ) - self::$_timeStart, 3 ) . ' sec. Proceeding to use chunking.' );
 						@fclose( $fs );
-						
+
 						// Tells next chunk where to pick up.
 						if ( isset( $chunksTotal ) ) {
 							$settings['_chunks_total'] = $chunksTotal;
 						}
-						
+
 						// Grab these vars from the class.  Note that we changed these vars from private to public to make chunked resuming possible.
 						$settings['_media_resumeUri'] = $media->resumeUri;
 						$settings['_media_progress'] = $media->progress;
-						
+
 						// Schedule cron.
 						$cronTime = time();
 						$cronArgs = array( $settings, $files, $send_id, $delete_after );
 						$cronHashID = md5( $cronTime . serialize( $cronArgs ) );
 						$cronArgs[] = $cronHashID;
-						
+
 						$schedule_result = backupbuddy_core::schedule_single_event( $cronTime, 'destination_send', $cronArgs );
 						if ( true === $schedule_result ) {
 							pb_backupbuddy::status( 'details', 'Next Site chunk step cron event scheduled.' );
 						} else {
 							pb_backupbuddy::status( 'error', 'Next Site chunk step cron event FAILED to be scheduled.' );
 						}
-						
+
 						if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
 							update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
 							spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
 						}
-						
-						
+
+
 						return array( $prevPointer, 'Sent part ' . $settings['_chunks_sent'] . ' of ~' . $settings['_chunks_total'] . ' parts.' ); // filepointer location, elapsed time during the import
 					} else { // End if.
 						pb_backupbuddy::status( 'details', 'Not approaching limits.' );
 					}
 				} else {
 					pb_backupbuddy::status( 'details', 'No more data remains (eg for chunking) so finishing up.' );
-					
+
 					if ( '' != $send_id ) {
 						require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
 						$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', $read_only = false, $ignore_lock = false, $create_file = false );
@@ -463,7 +463,7 @@ class pb_backupbuddy_destination_gdrive {
 						}
 						pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
 						$fileoptions = &$fileoptions_obj->options;
-						
+
 						$fileoptions['_multipart_status'] = 'Sent part ' . $settings['_chunks_sent'] . ' of ~' . $settings['_chunks_total'] . ' parts.';
 						$fileoptions['finish_time'] = microtime(true);
 						$fileoptions['status'] = 'success';
@@ -471,13 +471,13 @@ class pb_backupbuddy_destination_gdrive {
 						unset( $fileoptions_obj );
 					}
 				}
-				
-				
+
+
 			}
 			fclose($fs);
-			
+
 			self::$_client->setDefer( false );
-			
+
 			if ( false == $uploadStatus ) {
 				global $pb_backupbuddy_destination_errors;
 				$pb_backupbuddy_destination_errors[] = 'Error #84347474 sending. Details: ' . $uploadStatus;
@@ -487,9 +487,9 @@ class pb_backupbuddy_destination_gdrive {
 					self::deleteFile( $settings, $uploadStatus->id );
 				}
 			}
-			
+
 		} // end foreach.
-		
+
 		// BEGIN FILE LIMIT PROCESSING. Enforce archive limits if applicable.
 		if ( $backup_type == 'full' ) {
 			$limit = $settings['full_archive_limit'];
@@ -508,11 +508,11 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'warning', 'Warning #34352453244. Google Drive was unable to determine backup type (reported: `' . $backup_type . '`) so archive limits NOT enforced for this backup.' );
 		}
 		pb_backupbuddy::status( 'details', 'Google Drive database backup archive limit of `' . $limit . '` of type `' . $backup_type . '` based on destination settings.' );
-		
+
 		if ( $limit > 0 ) {
-			
+
 			pb_backupbuddy::status( 'details', 'Google Drive archive limit enforcement beginning.' );
-			
+
 			// Get file listing.
 			$searchCount = 1;
 			$remoteFiles = array();
@@ -522,7 +522,7 @@ class pb_backupbuddy_destination_gdrive {
 				sleep( 1 );
 				$searchCount++;
 			}
-			
+
 			// List backups associated with this site by date.
 			$backups = array();
 			$prefix = backupbuddy_core::backup_prefix();
@@ -535,8 +535,8 @@ class pb_backupbuddy_destination_gdrive {
 				}
 			}
 			arsort( $backups );
-			
-			
+
+
 			pb_backupbuddy::status( 'details', 'Google Drive found `' . count( $backups ) . '` backups of this type when checking archive limits.' );
 			if ( ( count( $backups ) ) > $limit ) {
 				pb_backupbuddy::status( 'details', 'More archives (' . count( $backups ) . ') than limit (' . $limit . ') allows. Trimming...' );
@@ -546,7 +546,7 @@ class pb_backupbuddy_destination_gdrive {
 					$i++;
 					if ( $i > $limit ) {
 						pb_backupbuddy::status ( 'details', 'Trimming excess file `' . $buname . '`...' );
-						
+
 						if ( true !== self::deleteFile( $settings, $buname ) ) {
 							pb_backupbuddy::status( 'details',  'Unable to delete excess Google Drive file `' . $buname . '`. Details: `' . print_r( $pb_backupbuddy_destination_errors, true ) . '`.' );
 							$delete_fail_count++;
@@ -560,21 +560,21 @@ class pb_backupbuddy_destination_gdrive {
 					backupbuddy_core::mail_error( $error_message );
 				}
 			}
-			
+
 			pb_backupbuddy::status( 'details', 'Google Drive completed archive limiting.' );
-			
+
 		} else {
 			pb_backupbuddy::status( 'details',  'No Google Drive archive file limit to enforce.' );
 		} // End remote backup limit
-		
-		
+
+
 		// Made it this far then success.
 		return true;
-		
+
 	} // End send().
-	
-	
-	
+
+
+
 	public static function getDriveInfo( $settings ) {
 		$settings = self::_normalizeSettings( $settings );
 		if ( false === ( $settings = self::_connect( $settings ) ) ) {
@@ -583,9 +583,9 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 		$service = &self::$_drive;
-		
+
 		try {
 			$about = $service->about->get();
 		} catch (Exception $e) {
@@ -596,21 +596,21 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 		$info = array();
 		$info['quotaTotal'] = $about->quotaBytesTotal;
 		$info['quotaUsed'] = $about->quotaBytesUsed;
 		$info['name'] = $about->name;
-		
+
 		return $info;
-		
+
 	} // End getDriveInfo().
-	
-	
+
+
 	/*	test()
-	 *	
+	 *
 	 *	Sends a text email with ImportBuddy.php zipped up and attached to it.
-	 *	
+	 *
 	 *	@param		array			$settings	Destination settings.
 	 *	@return		bool|string					True on success, string error message on failure.
 	 */
@@ -622,16 +622,16 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
-		
+
+
 		pb_backupbuddy::status( 'details', 'Testing Google Drive destination. Sending ImportBuddy.php.' );
 		pb_backupbuddy::anti_directory_browsing( backupbuddy_core::getTempDirectory(), $die = false );
 		$files = array( dirname( dirname( __FILE__ ) ) . '/remote-send-test.php' );
-		
+
 		$results = self::send( $settings, $files, '', $delete_local = false, $delete_remote_after = true );
-		
+
 		@unlink( $importbuddy_temp );
-		
+
 		if ( true === $results ) {
 			echo 'Success sending test file to Google Drive. ';
 			return true;
@@ -639,11 +639,11 @@ class pb_backupbuddy_destination_gdrive {
 			echo 'Failure sending test file to Google Drive.'; // Detailed errors are send via remote_test.php response.
 			return false;
 		}
-		
+
 	} // End test().
-	
-	
-	
+
+
+
 	/* listFiles()
 	 *
 	 * List files in destination. See https://developers.google.com/drive/v2/reference/files/list
@@ -660,9 +660,9 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 		$service = &self::$_drive;
-		
+
 		$result = array();
 		$pageToken = NULL;
 
@@ -681,13 +681,13 @@ class pb_backupbuddy_destination_gdrive {
 			  $pageToken = NULL;
 			}
 		} while ($pageToken);
-		
+
 		return $result;
-		
+
 	} // End listFiles().
-	
-	
-	
+
+
+
 	/* listParents()
 	 *
 	 * List files in destination. See https://developers.google.com/drive/v2/reference/files/list
@@ -704,13 +704,13 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 		if ( '' == $folderID ) {
 			$folderID = 'root';
 		}
-		
+
 		$service = &self::$_drive;
-		
+
 		$result = array();
 		$pageToken = NULL;
 
@@ -729,13 +729,13 @@ class pb_backupbuddy_destination_gdrive {
 			  $pageToken = NULL;
 			}
 		} while ($pageToken);
-		
+
 		return $result;
-		
+
 	} // End listParents().
-	
-	
-	
+
+
+
 	public static function getFileMeta( $settings, $fileID ) {
 		$settings = self::_normalizeSettings( $settings );
 		if ( false === ( $settings = self::_connect( $settings ) ) ) {
@@ -744,12 +744,12 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 		try {
-			
+
 			$fileMeta = self::$_drive->files->get( $fileID );
 			return $fileMeta;
-			
+
 		} catch (Exception $e) {
 			global $pb_backupbuddy_destination_errors;
 			$pb_backupbuddy_destination_errors[] =  $e->getMessage();
@@ -758,9 +758,9 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 	} // End getFileMeta();
-	
+
 	/* getFile()
 	 *
 	 * Download file from destination to this system.
@@ -775,8 +775,8 @@ class pb_backupbuddy_destination_gdrive {
 	public static function getFile( $settings, $fileID, $destinationFile ) {
 		error_log( 'BackupBuddy Gdrive getFile() not yet implemented.' );
 		die( 'BackupBuddy Gdrive getFile() not yet implemented.' );
-		
-		
+
+
 		pb_backupbuddy::status( 'details', 'About to get Google Drive File with ID `' . $fileID . '` to store in `' . $destinationFile . '`.' );
 		$settings = self::_normalizeSettings( $settings );
 		if ( false === ( $settings = self::_connect( $settings ) ) ) {
@@ -785,19 +785,19 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 		/*
 		if ( '' == $parentID ) {
 			$parentID = 'root';
 		}
 		*/
-		
+
 		$optParams = array(
 			'alt' => 'media', // Instruct that file contents be returned.
 		);
-		
+
 		try {
-			
+
 			$fileBody = self::$_drive->files->get( $fileID, $optParams );
 			if ( true !== file_put_contents( $destinationFile, $fileBody ) ) {
 				$error = 'Error #54832983: Unable to save requested Google Drive file contents into file `' . $destinationFile . '`.';
@@ -805,7 +805,7 @@ class pb_backupbuddy_destination_gdrive {
 				pb_backupbuddy::status( 'error', $error );
 				return false;
 			}
-			
+
 		} catch (Exception $e) {
 			global $pb_backupbuddy_destination_errors;
 			$pb_backupbuddy_destination_errors[] =  $e->getMessage();
@@ -814,12 +814,12 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 		return true;
 	} // End getFile().
-	
-	
-	
+
+
+
 	/* deleteFile()
 	 *
 	 * Deletes a file stored in destination.
@@ -828,18 +828,18 @@ class pb_backupbuddy_destination_gdrive {
 	public static function deleteFile( $settings, $fileID ) {
 		pb_backupbuddy::status( 'details', 'Deleting Google Drive file with ID `' . $fileID . '`.' );
 		$settings = self::_normalizeSettings( $settings );
-		
+
 		if ( false === ( $settings = self::_connect( $settings ) ) ) {
 			$error = 'Error #4839484: Unable to connect with Google Drive. See log for details.';
 			echo $error;
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 		try {
-			
+
 			self::$_drive->files->delete( $fileID );
-			
+
 		} catch (Exception $e) {
 			global $pb_backupbuddy_destination_errors;
 			$pb_backupbuddy_destination_errors[] =  $e->getMessage();
@@ -848,16 +848,16 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 		pb_backupbuddy::status( 'details', 'Google Drive file deleted.' );
 		return true;
 	} // End deleteFile().
-	
-	
-	
+
+
+
 	/* createFolder()
 	 *
-	 * Create a new folder in the user's Dropbox at specified parent location.
+	 * Create a new folder in the user's GDrive at specified parent location.
 	 *
 	 * @return	array 	Array( newItemID, newItemTitle ).
 	 */
@@ -865,7 +865,7 @@ class pb_backupbuddy_destination_gdrive {
 		if ( '' == $parentID ) {
 			$parentID = 'root';
 		}
-		
+
 		$settings = self::_normalizeSettings( $settings );
 		if ( false === ( $settings = self::_connect( $settings ) ) ) {
 			global $bb_gdrive_error;
@@ -874,20 +874,20 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 		//Insert a folder
 		$driveFile = new Google_Service_Drive_DriveFile();
 		$driveFile->setTitle( $folderName );
 		//$driveFile->setParents( array( $parentID ) );
 		$driveFile->setMimeType( 'application/vnd.google-apps.folder' );
-		
+
 		// Set the parent folder.
 		if ( 'root' != $parentID ) {
 			$parentsCollectionData = new Google_Service_Drive_ParentReference();
 			$parentsCollectionData->setId( $parentID );
 			$driveFile->setParents( array( $parentsCollectionData ) );
 		}
-		
+
 		try {
 			$insertRequest = self::$_drive->files->insert( $driveFile );
 			return array( $insertRequest->id, $insertRequest->title );
@@ -899,11 +899,11 @@ class pb_backupbuddy_destination_gdrive {
 			pb_backupbuddy::status( 'error', $error );
 			return false;
 		}
-		
+
 	} // End createFolder().
-	
-	
-	
+
+
+
 	public static function printFolderSelector( $destinationID ) {
 		// Only output into page once.
 		global $backupbuddy_gdrive_folderSelector_printed;
@@ -917,9 +917,9 @@ class pb_backupbuddy_destination_gdrive {
 			var backupbuddy_gdrive_folderSelect_path = [];
 			var backupbuddy_gdrive_folderSelect_pathNames = []; //{ 'root': '/' };
 			var backupbuddy_gdrive_disable_gzip = '<?php echo pb_backupbuddy::$options['remote_destinations'][$destinationID]['disable_gzip']; ?>';
-			
-			
-			
+
+
+
 			function backupbuddy_gdrive_getDestinationWrap( destinationID ) {
 				if ( 'NEW' != destinationID ) {
 					destinationWrap = jQuery( '.backupbuddy-destination-wrap[data-destination_id="' + destinationID + '"]' );
@@ -928,43 +928,43 @@ class pb_backupbuddy_destination_gdrive {
 				}
 				return destinationWrap;
 			}
-			
-			
-			
+
+
+
 			function backupbuddy_gdrive_folderSelect( destinationID, loadParentID, loadParentTitle, command, finishedCallback ) {
 				jQuery( '.backupbuddy-gdrive-statusText' ).text( '' );
-				
+
 				if ( 'undefined' == typeof backupbuddy_gdrive_folderSelect_path[ destinationID ] ) {
 					backupbuddy_gdrive_folderSelect_path[ destinationID ] = [];
 					backupbuddy_gdrive_folderSelect_pathNames[ destinationID ] = { 'root': '/' };
 				}
-				
+
 				if ( ( 'undefined' == typeof loadParentID ) || ( '' == loadParentID ) ) {
 					loadParentID = 'root';
 					loadParentTitle = '';
 				}
-				
+
 				destinationWrap = backupbuddy_gdrive_getDestinationWrap( destinationID );
-				
+
 				destinationWrap.find( '.pb_backupbuddy_loading' ).show();
-				
+
 				clientID = destinationWrap.find( '#pb_backupbuddy_client_id' ).val();
 				clientSecret = destinationWrap.find( '#pb_backupbuddy_client_secret' ).val();
 				tokens = destinationWrap.find( '#pb_backupbuddy_tokens' ).val();
 				service_account_email = destinationWrap.find( '#pb_backupbuddy_service_account_email' ).val();
 				service_account_file = destinationWrap.find( '#pb_backupbuddy_service_account_file' ).val();
-				
+
 				jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'gdrive_folder_select' ); ?>', { service_account_email: service_account_email, service_account_file: service_account_file, clientID: clientID, clientSecret: clientSecret, disable_gzip: backupbuddy_gdrive_disable_gzip, tokens: tokens, parentID: loadParentID },  backupbuddy_gdrive_folderSelect_ajaxResponse( destinationID, loadParentID, loadParentTitle, command ) );
 			}
-			
-			
-			
+
+
+
 			// Using closure callback so the destinationID can be passed into this and not be modified by other instances.
 			function backupbuddy_gdrive_folderSelect_ajaxResponse( destinationID, loadParentID, loadParentTitle, command ) {
 				return function(data, textStatus, jqXHR) {
 					destinationWrap = backupbuddy_gdrive_getDestinationWrap( destinationID );
 					//console.log( 'Gdrive response for destination ' + destinationID );
-					
+
 					destinationWrap.find( '.pb_backupbuddy_loading' ).hide();
 					data = jQuery.trim( data );
 					try {
@@ -977,7 +977,7 @@ class pb_backupbuddy_destination_gdrive {
 						alert( 'Error #838933: Unable to get folder data. Details: `' + data.message + '`.' );
 						return;
 					}
-					
+
 					if ( 'goback' == command ) {
 						removed = backupbuddy_gdrive_folderSelect_path[ destinationID ].pop();
 						delete backupbuddy_gdrive_folderSelect_pathNames[ removed ];
@@ -994,90 +994,90 @@ class pb_backupbuddy_destination_gdrive {
 					}
 					//console.dir( backupbuddy_gdrive_folderSelect_path[ destinationID ] );
 					//console.dir( backupbuddy_gdrive_folderSelect_pathNames[ destinationID ] );
-					
+
 					destinationWrap.find( '.backupbuddy-gdrive-folderList' ).empty(); // Clear current listing.
 					//console.log( 'GDrive Folders:' );
 					//console.dir( data );
-					
+
 					// Update breadcrumbs.
 					breadcrumbs = '';
 					jQuery.each( backupbuddy_gdrive_folderSelect_path[ destinationID ], function( index, crumb ) {
 						breadcrumbs = breadcrumbs + backupbuddy_gdrive_folderSelect_pathNames[ destinationID ][ crumb ] + '/';
 					});
 					destinationWrap.find( '.backupbuddy-gdrive-breadcrumbs' ).text( breadcrumbs );
-					
+
 					jQuery.each( data.folders, function( index, folder ) {
 						destinationWrap.find( '.backupbuddy-gdrive-folderList' ).append( '<span data-id="' + folder.id + '" class="backupbuddy-gdrive-folderList-folder"><span class="backupbuddy-gdrive-folderList-selected pb_label pb_label-info" title="Select this folder to use.">Select</span> <span class="backupbuddy-gdrive-folderList-open dashicons dashicons-plus" title="Expand folder & view folders within"></span> <span class="backupbuddy-gdrive-folderList-title backupbuddy-gdrive-folderList-open">' + folder.title + '</span><span class="backupbuddy-gdrive-folderList-createdWrap"><span class="backupbuddy-gdrive-folderList-created">' + folder.created + '</span>&nbsp;&nbsp;Modified <span class="backupbuddy-gdrive-folderList-createdAgo">' + folder.createdAgo + ' ago</span></span></span>' );
 					});
 					if ( 0 === data.folders.length ) {
 						destinationWrap.find( '.backupbuddy-gdrive-folderList' ).append( '<span class="description">No folders found at this location in your Google Drive.</span>' );
 					}
-					
+
 					if ( 'function' == typeof finishedCallback ) {
 						finishedCallback();
 					}
 				};
 			} // End backupbuddy_gdrive_folderSelect_ajaxResponse().
-			
-			
-			
+
+
+
 			function backupbuddy_gdrive_setFolder( destinationID, id, title ) {
 				destinationWrap = backupbuddy_gdrive_getDestinationWrap( destinationID );
-				
+
 				destinationWrap.find( '.backupbuddy-gdrive-folderTitleText' ).text( 'Selected folder name: "' + title + '"' );
 				destinationWrap.find( '#pb_backupbuddy_folderID' ).val( id );
 				destinationWrap.find( '#pb_backupbuddy_folderTitle' ).val( title );
 			} // End backupbuddy_gdrive_setFolder().
-			
-			
-			
+
+
+
 			jQuery(document).ready(function() {
 				//backupbuddy_gdrive_folderSelect();
-				
+
 				// OPEN a folder.
 				jQuery( '.pb_backupbuddy_settings_form' ).on( 'click', '.backupbuddy-gdrive-folderList-open', function(event){
 					destinationID = jQuery(this).closest( '.backupbuddy-gdrive-folderSelector' ).attr( 'data-destinationID' );
-					
+
 					folderObj = jQuery(this).closest( '.backupbuddy-gdrive-folderList-folder' );
 					id = folderObj.attr( 'data-id' );
 					title = folderObj.find('.backupbuddy-gdrive-folderList-title').text();
 					backupbuddy_gdrive_folderSelect( destinationID, id, title );
 				});
-				
+
 				// Go UP a folder
 				jQuery( '.pb_backupbuddy_settings_form' ).on( 'click', '.backupbuddy-gdrive-back', function(e){
 					e.preventDefault();
-					
+
 					destinationID = jQuery(this).closest( '.backupbuddy-gdrive-folderSelector' ).attr( 'data-destinationID' );
-					
+
 					prevFolderID = backupbuddy_gdrive_folderSelect_path[ destinationID ][ backupbuddy_gdrive_folderSelect_path[ destinationID ].length - 2 ];
 					backupbuddy_gdrive_folderSelect( destinationID, prevFolderID, '', 'goback' );
 				});
-				
+
 				// SELECT a folder.
 				jQuery( '.pb_backupbuddy_settings_form' ).on( 'click', '.backupbuddy-gdrive-folderList-selected', function(e){
 					destinationID = jQuery(this).closest( '.backupbuddy-gdrive-folderSelector' ).attr( 'data-destinationID' );
-					
+
 					folderObj = jQuery(this).closest( '.backupbuddy-gdrive-folderList-folder' );
 					id = folderObj.attr( 'data-id' );
 					title = folderObj.find('.backupbuddy-gdrive-folderList-title').text();
-					
+
 					backupbuddy_gdrive_setFolder( destinationID, id, title );
 				});
-				
+
 				// CREATE a folder.
 				jQuery( '.pb_backupbuddy_settings_form' ).on( 'click', '.backupbuddy-gdrive-createFolder', function(e){
 					e.preventDefault();
 					destinationID = jQuery(this).closest( '.backupbuddy-gdrive-folderSelector' ).attr( 'data-destinationID' );
 					destinationWrap = backupbuddy_gdrive_getDestinationWrap( destinationID );
-					
+
 					currentFolderID = backupbuddy_gdrive_folderSelect_path[ destinationID ][ backupbuddy_gdrive_folderSelect_path[ destinationID ].length - 1 ];
 					if ( null === ( newFolderName = prompt( 'What would you like the new folder to be named?' ) ) ) {
 						return false; // User hit cancek.
 					}
-					
+
 					jQuery( '.pb_backupbuddy_loading' ).show();
-					jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'gdrive_folder_create' ); ?>', { service_account_email: destinationWrap.find( '#pb_backupbuddy_service_account_email' ).val(), service_account_file: destinationWrap.find( '#pb_backupbuddy_service_account_file' ).val(), clientID: destinationWrap.find( '#pb_backupbuddy_client_id' ).val(), clientSecret: destinationWrap.find( '#pb_backupbuddy_client_secret' ).val(), tokens: destinationWrap.find( '#pb_backupbuddy_tokens' ).val(), parentID: currentFolderID, folderName: newFolderName }, 
+					jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'gdrive_folder_create' ); ?>', { service_account_email: destinationWrap.find( '#pb_backupbuddy_service_account_email' ).val(), service_account_file: destinationWrap.find( '#pb_backupbuddy_service_account_file' ).val(), clientID: destinationWrap.find( '#pb_backupbuddy_client_id' ).val(), clientSecret: destinationWrap.find( '#pb_backupbuddy_client_secret' ).val(), tokens: destinationWrap.find( '#pb_backupbuddy_tokens' ).val(), parentID: currentFolderID, folderName: newFolderName },
 						function(data) {
 							destinationWrap.find( '.pb_backupbuddy_loading' ).hide();
 							data = jQuery.trim( data );
@@ -1091,27 +1091,27 @@ class pb_backupbuddy_destination_gdrive {
 								alert( 'Error #32793793: Unable to create folder. Details: `' + data.message + '`.' );
 								return;
 							}
-							
+
 							/*
 							Gets back on success:
 							data.folderID
 							data.folderTitle
 							*/
 							backupbuddy_gdrive_setFolder( destinationID, data.folderID, data.folderTitle );
-							
+
 							finishedCallback = function(){
 								destinationWrap.find( '.backupbuddy-gdrive-statusText' ).text( 'Created & selected new folder.' );
 							};
-							
+
 							// Refresh current folder.
 							backupbuddy_gdrive_folderSelect( destinationID, currentFolderID, backupbuddy_gdrive_folderSelect_pathNames[ currentFolderID ], 'refresh', finishedCallback );
 						}
 					);
 				});
-				
-				
+
+
 			});
-			
+
 		</script>
 
 		<style>
@@ -1124,7 +1124,7 @@ class pb_backupbuddy_destination_gdrive {
 				max-height: 175px;
 				overflow: auto;
 			}
-			
+
 			.backupbuddy-gdrive-folderList::-webkit-scrollbar {
 				-webkit-appearance: none;
 				width: 11px;
@@ -1138,7 +1138,7 @@ class pb_backupbuddy_destination_gdrive {
 			.backupbuddy-gdrive-folderList::-webkit-scrollbar-corner{
 				background-color:rgba(0,0,0,0.0);
 			}
-			
+
 			.backupbuddy-gdrive-folderList > span {
 				display: block;
 				//padding: 0;
@@ -1196,9 +1196,9 @@ class pb_backupbuddy_destination_gdrive {
 		echo '&nbsp;<span class="backupbuddy-gdrive-statusText" style="vertical-align: -5px; font-style: italic;"></span>';
 		echo '</div>';
 	} // End printFolderSelector().
-	
-	
-	
-	
+
+
+
+
 } // End class.
 

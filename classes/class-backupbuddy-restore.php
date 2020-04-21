@@ -55,12 +55,21 @@ class BackupBuddy_Restore {
 
 	const STATUS_ABORTED = 500;
 
+	const STATUS_USER_ABORTED = 600;
+
 	/**
 	 * Path to storage file.
 	 *
 	 * @var string
 	 */
 	private $restore_storage;
+
+	/**
+	 * Current Restore Storage
+	 *
+	 * @var string
+	 */
+	private $current_restore;
 
 	/**
 	 * Array of completed statuses.
@@ -103,6 +112,13 @@ class BackupBuddy_Restore {
 	 * @var array
 	 */
 	private $files;
+
+	/**
+	 * Track number of files restored for each pass.
+	 *
+	 * @var int
+	 */
+	private $files_restored = 0;
 
 	/**
 	 * Tables to restore.
@@ -160,12 +176,16 @@ class BackupBuddy_Restore {
 			self::STATUS_COMPLETE,
 			self::STATUS_FAILED,
 			self::STATUS_ABORTED,
+			self::STATUS_USER_ABORTED,
 		);
 
-		$this->ignore_files = apply_filters( 'backupbuddy_restore_ignore_files', array(
-			'*.DS_Store',
-			'*.itbub',
-		) );
+		$this->ignore_files = apply_filters(
+			'backupbuddy_restore_ignore_files',
+			array(
+				'*.DS_Store',
+				'*.itbub',
+			)
+		);
 
 		return $this;
 	}
@@ -229,7 +249,7 @@ class BackupBuddy_Restore {
 		foreach ( $this->get_queue() as $restore_json ) {
 			$restore = json_decode( $restore_json, true );
 			if ( $restore['serial'] === $serial && ! in_array( $restore['status'], $this->get_completed_statuses(), true ) ) {
-				// Restore Error: Restore for this zip still in progress.
+				// Restore Error: Restore still in progress.
 				return false;
 			}
 		}
@@ -284,6 +304,10 @@ class BackupBuddy_Restore {
 			// TODO: Check remote destination to make sure backup file exists.
 			$restore['destination_id']   = $destination_id;
 			$restore['destination_args'] = pb_backupbuddy::$options['remote_destinations'][ $destination_id ];
+			$dat_file                    = backupbuddy_data_file()->get( $zip_file, $destination_id );
+			if ( $dat_file && ! empty( $dat_file['zip_size'] ) ) {
+				$restore['zip_size'] = $dat_file['zip_size'];
+			}
 		}
 
 		$restore['zip_path'] = $backups_dir . $zip_file;
@@ -331,6 +355,7 @@ class BackupBuddy_Restore {
 			'last_tables'       => array(), // array of tables that need to be imported last.
 			'restored_tables'   => array(), // array of tables that have been restored.
 			'cleanup_db'        => array(), // SQL queries to run during cleanup.
+			'finalize_db'       => array(), // SQL queries to run during cleanup.
 		);
 		$base_defaults = array(
 			'id'               => false, // restore id.
@@ -338,6 +363,7 @@ class BackupBuddy_Restore {
 
 			'backup_file'      => false, // backup filename.
 			'zip_path'         => false, // path to backup zip.
+			'zip_size'         => false, // Expected zip file size.
 			'temp_dir'         => false, // path for zip extraction.
 			'files'            => array(), // Files for restore.
 			'extract_files'    => array(), // files to extract from zip.
@@ -358,7 +384,7 @@ class BackupBuddy_Restore {
 			'download'         => false,
 
 			'initialized'      => current_time( 'timestamp' ),
-			'statarted'        => false,
+			'started'          => false,
 			'completed'        => false,
 			'elapsed'          => false,
 			'viewed'           => false,
@@ -376,25 +402,25 @@ class BackupBuddy_Restore {
 			$defaults = array_merge( $base_defaults, $file_defaults, $db_defaults );
 		}
 
-		$restore = array_merge( $defaults, $restore );
+		$this->restore = array_merge( $defaults, $restore );
 
 		// Trigger download if necessary.
-		if ( ! empty( $restore['destination_args'] ) && ! file_exists( $restore['zip_path'] ) ) {
-			$destination_copy_args = array(
-				$restore['destination_args'],
-				$restore['backup_file'],
-			);
-			$restore['download']   = $this->schedule_download( $destination_copy_args );
+		if ( ! empty( $this->restore['destination_args'] ) && ! file_exists( $this->restore['zip_path'] ) ) {
+			if ( ! $this->restore['download'] ) {
+				$this->schedule_download();
+			}
 		}
 
-		$restore_json = wp_json_encode( $restore );
 		$this->get_queue();
-		$this->restores = array_merge( array( $restore['id'] => $restore_json ), $this->restores ); // Put newest in front.
+		$this->restores = array_merge( array( $this->restore['id'] => wp_json_encode( $this->restore ) ), $this->restores ); // Put newest in front.
 		$this->save();
 
+		// Make sure we're starting fresh.
+		$this->unlock_cron();
+		$this->remove_abort_file();
 		$this->schedule_cron();
 
-		return $restore['id'];
+		return $this->restore['id'];
 	}
 
 	/**
@@ -403,9 +429,17 @@ class BackupBuddy_Restore {
 	 * @return bool  If scheduled.
 	 */
 	public function schedule_cron() {
+		if ( ! $this->in_progress() ) {
+			return false;
+		}
+
 		$scheduled = wp_next_scheduled( 'pb_backupbuddy_process_restore_queue' );
 		if ( false === $scheduled ) {
-			$scheduled = backupbuddy_core::schedule_single_event( time(), 'process_restore_queue', array() );
+			$scheduled = backupbuddy_core::schedule_single_event( time(), 'process_restore_queue' );
+		}
+		if ( $scheduled && '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
+			update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
+			spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
 		}
 		return $scheduled;
 	}
@@ -413,21 +447,44 @@ class BackupBuddy_Restore {
 	/**
 	 * Schedule Destination Zip download.
 	 *
-	 * @param array $schedule_args  Schedule args.
-	 *
 	 * @return bool  If scheduled.
 	 */
-	public function schedule_download( $schedule_args ) {
+	public function schedule_download() {
 		$this->log( 'Scheduling remote zip download...' );
-		$scheduled = wp_next_scheduled( 'process_destination_copy', $schedule_args );
-		if ( false === $scheduled ) {
-			$scheduled = backupbuddy_core::schedule_single_event( time(), 'process_destination_copy', $schedule_args );
+
+		$remote_types = array( 'stash2', 'stash3', 's3', 's32', 's33' );
+		if ( in_array( $this->restore['destination_args']['type'], $remote_types, true ) ) {
+			$schedule_args   = array(
+				$this->restore['destination_args']['type'],
+				$this->restore['backup_file'],
+				$this->restore['destination_args'],
+			);
+			$schedule_method = 'process_remote_copy';
+		} else {
+			$schedule_args   = array(
+				$this->restore['destination_args'],
+				$this->restore['backup_file'],
+			);
+			$schedule_method = 'process_destination_copy';
 		}
-		if ( ! empty( $this->restore ) ) {
+
+		$scheduled = wp_next_scheduled( $schedule_method, $schedule_args );
+		if ( false === $scheduled ) {
+			$scheduled = backupbuddy_core::schedule_single_event( time(), $schedule_method, $schedule_args );
+		}
+
+		if ( ! empty( $this->restore ) && $scheduled ) {
+			// The idea is this should always result in a true value.
 			$this->restore['download'] = $scheduled;
 			$this->log( '✓ Remote zip download scheduled.' );
 			$this->save();
+
+			if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
+				update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
+				spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
+			}
 		}
+
 		return $scheduled;
 	}
 
@@ -463,6 +520,36 @@ class BackupBuddy_Restore {
 	}
 
 	/**
+	 * Restore Archive
+	 *
+	 * @param array $exclude  Array of Restore IDs to exclude.
+	 *
+	 * @return array  Archive of Restores.
+	 */
+	public function get_archive( $exclude = array() ) {
+		$archive_files = glob( backupbuddy_core::getLogDirectory() . 'backupbuddy-restore-*.txt' ) ?: array();
+		$archive_files = array_diff( $archive_files, array( '.', '..' ) );
+		if ( ! count( $archive_files ) ) {
+			return array();
+		}
+
+		$archives = array();
+
+		foreach ( $archive_files as $archive_file ) {
+			$restore = file_get_contents( $archive_file );
+			$restore = json_decode( $restore, true );
+			if ( $restore && is_array( $restore ) ) {
+				if ( ! in_array( $restore['id'], $exclude, true ) ) {
+					$archives[] = $restore;
+				}
+			} else {
+				$archives[] = $archive_file;
+			}
+		}
+		return $archives;
+	}
+
+	/**
 	 * Get restore details.
 	 *
 	 * @param string $restore_id  Restore ID.
@@ -473,7 +560,8 @@ class BackupBuddy_Restore {
 		$this->get_queue();
 
 		if ( ! empty( $this->restores[ $restore_id ] ) ) {
-			return json_decode( $this->restores[ $restore_id ], true );
+			$restore = json_decode( $this->restores[ $restore_id ], true );
+			return $this->load_restore( $restore );
 		}
 
 		return false;
@@ -492,6 +580,10 @@ class BackupBuddy_Restore {
 		if ( $restore_id ) {
 			$restore = $this->details( $restore_id );
 			if ( ! is_array( $restore ) ) {
+				return false;
+			}
+
+			if ( in_array( $restore['status'], $this->get_completed_statuses(), true ) ) {
 				return false;
 			}
 
@@ -585,13 +677,25 @@ class BackupBuddy_Restore {
 				$status_js['text'] = esc_html__( 'Verifying extraction...', 'it-l10n-backupbuddy' );
 			} elseif ( self::STATUS_PERMISSIONS === $restore['status'] ) {
 				$status_js['text'] = esc_html__( 'Handling permissions...', 'it-l10n-backupbuddy' );
+			} elseif ( self::STATUS_READY === $restore['status'] ) {
+				$status_js['text'] = esc_html__( 'Beginning zip extraction...', 'it-l10n-backupbuddy' );
+			} elseif ( self::STATUS_UNZIPPED === $restore['status'] ) {
+				$status_js['text'] = esc_html__( 'Zip extraction complete.', 'it-l10n-backupbuddy' );
 			} else {
 				$status_js['text'] = esc_html__( 'Unzipping backup contents...', 'it-l10n-backupbuddy' );
 			}
 		} elseif ( in_array( $restore['status'], array( self::STATUS_DB_READY, self::STATUS_DB_TABLES ), true ) ) {
 			$status_js['dot'] = 'database';
-			$current_table    = count( array_merge( $restore['failed_tables'], $restore['last_tables'], $restore['imported_tables'] ) );
-			$total_tables     = count( $restore['table_queue'] );
+			if ( isset( $restore['failed_tables'] ) || isset( $restore['last_tables'] ) ) {
+				$current_table = count( array_merge( $restore['failed_tables'], $restore['last_tables'], $restore['imported_tables'] ) );
+			} else {
+				$current_table = 0;
+			}
+			if ( isset( $restore['table_queue'] ) ) {
+				$total_tables = count( $restore['table_queue'] );
+			} else {
+				$total_tables = 0;
+			}
 
 			if ( self::STATUS_DB_READY === $restore['status'] && ! $current_table ) {
 				if ( $total_tables ) {
@@ -631,6 +735,9 @@ class BackupBuddy_Restore {
 			} elseif ( self::STATUS_ABORTED === $restore['status'] ) {
 				$status_js['text']       = esc_html__( 'Restore aborted.', 'it-l10n-backupbuddy' );
 				$status_js['end_status'] = 'aborted';
+			} elseif ( self::STATUS_USER_ABORTED === $restore['status'] ) {
+				$status_js['text']       = esc_html__( 'Restore aborted by user.', 'it-l10n-backupbuddy' );
+				$status_js['end_status'] = 'aborted';
 			} else {
 				$status_js['text']       = esc_html__( 'Restore complete.', 'it-l10n-backupbuddy' );
 				$status_js['end_status'] = 'complete';
@@ -657,22 +764,26 @@ class BackupBuddy_Restore {
 				$status = sprintf( '%s%s Files Restored.', number_format( $restored ), $total_files );
 			}
 		} elseif ( true !== $restore['db_status'] && in_array( $restore['what'], array( 'both', 'db' ), true ) ) {
-			$status = sprintf( '%d/%d Database Tables Restored.', count( $restore['restored_tables'] ), count( $restore['imported_tables'] ) );
+			if ( isset( $restore['restored_tables'] ) && isset( $restore['imported_tables'] ) ) {
+				$status = sprintf( '%d/%d Database Tables Restored.', count( $restore['restored_tables'] ), count( $restore['imported_tables'] ) );
+			} else {
+				$status = '0/? Database Tables Restored.';
+			}
 		}
 
 		return $status;
 	}
 
 	/**
-	 * Check to see if a Restore Status request is currently in progress.
+	 * Check to see if a Restore cron is currently in progress.
 	 *
 	 * @param bool $create_lock  Create a lock file if one doesn't exist.
 	 *
-	 * @return bool  If status request is in progress.
+	 * @return bool  If restore cron is in progress.
 	 */
-	public function status_request_in_progress( $create_lock = true ) {
+	public function cron_in_progress( $create_lock = true ) {
 		$lock_dir  = backupbuddy_core::getLogDirectory();
-		$lock_file = 'backupbuddy-restore-lock.txt';
+		$lock_file = 'backupbuddy-restore.lock';
 		$lock_path = trailingslashit( $lock_dir ) . $lock_file;
 		if ( file_exists( $lock_path ) ) {
 			return true;
@@ -696,18 +807,106 @@ class BackupBuddy_Restore {
 	}
 
 	/**
-	 * Remove Status request lock file.
+	 * Remove cron lock file.
 	 *
-	 * @return bool  If lock file was removed.
+	 * @return bool  If removed.
 	 */
-	public function status_request_complete() {
+	public function unlock_cron() {
 		$lock_dir  = backupbuddy_core::getLogDirectory();
-		$lock_file = 'backupbuddy-restore-lock.txt';
+		$lock_file = 'backupbuddy-restore.lock';
 		$lock_path = trailingslashit( $lock_dir ) . $lock_file;
 		if ( ! file_exists( $lock_path ) ) {
 			return false;
 		}
 		return @unlink( $lock_path );
+	}
+
+	/**
+	 * Frees up memory and removes cron lock file.
+	 *
+	 * @param bool $schedule_new  Schedule a new cron.
+	 *
+	 * @return bool  If lock file was removed.
+	 */
+	public function cron_complete( $schedule_new = true ) {
+		// Reset these vars since we're done.
+		$this->restore         = array();
+		$this->current_restore = false;
+		pb_backupbuddy::flush();
+
+		$return = $this->unlock_cron();
+		if ( true === $schedule_new ) {
+			$this->schedule_cron();
+		}
+		return $return;
+	}
+
+	/**
+	 * Load Full restore data into restore array.
+	 *
+	 * @param array $restore_array  Restore array.
+	 * @param int   $attempts       Number of attempts to read file.
+	 *
+	 * @return array  Full restore array if avialable.
+	 */
+	public function load_restore( $restore_array = array(), $attempts = 1 ) {
+		$max_attempts_threshold = 10;
+
+		if ( empty( $restore_array ) && ! empty( $this->restore ) ) {
+			$restore_array = $this->restore;
+		}
+
+		if ( empty( $restore_array['id'] ) ) {
+			return false;
+		}
+
+		$this->current_restore = backupbuddy_core::getLogDirectory() . 'backupbuddy-restore-' . $restore_array['id'] . '.txt';
+
+		if ( file_exists( $this->current_restore ) ) {
+			$load_restore = json_decode( file_get_contents( $this->current_restore ), true );
+			if ( is_array( $load_restore ) ) {
+				$restore_array = array_merge( $restore_array, $load_restore );
+			} else {
+				// File unavailable maybe it's being written, try again after a few seconds.
+				$attempts++;
+				$sleep = $attempts < 5 ? 2 : $attempts;
+				sleep( $sleep );
+				if ( $attempts <= $max_attempts_threshold ) {
+					return $this->load_restore( $restore_array, $attempts );
+				}
+				if ( ! $this->restore ) {
+					$this->error( __( 'Could not load restore file.', 'it-l10n-backupbuddy' ) );
+					return false;
+				}
+			}
+		}
+
+		return $restore_array;
+	}
+
+	/**
+	 * Save individual restore file.
+	 *
+	 * @param array $restore_array  The restore array to write, defaults to $this->restore.
+	 *
+	 * @return bool  If save was successful.
+	 */
+	public function save_restore( $restore_array = array() ) {
+		if ( empty( $restore_array ) ) {
+			$restore_array = $this->restore;
+		}
+		if ( empty( $restore_array['id'] ) ) {
+			return false;
+		}
+
+		$this->current_restore = backupbuddy_core::getLogDirectory() . 'backupbuddy-restore-' . $restore_array['id'] . '.txt';
+
+		// Write the full restore detail to separate file.
+		if ( ! @file_put_contents( $this->current_restore, wp_json_encode( $restore_array ) ) ) {
+			pb_backupbuddy::status( 'details', 'Attempt to write to restore log failed. Check folder permissions for ' . backupbuddy_core::getLogDirectory() . '.' );
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -720,8 +919,33 @@ class BackupBuddy_Restore {
 			return false;
 		}
 
+		$restore_queue = $this->restores;
+
 		if ( ! empty( $this->restore ) ) {
-			$this->restores[ $this->restore['id'] ] = wp_json_encode( $this->restore );
+			$restore_array = $this->restore;
+
+			// Trim the larger chunks of data from the main queue file.
+			unset( $restore_array['extract_files'] );
+			unset( $restore_array['copied'] );
+			unset( $restore_array['skipped'] );
+			unset( $restore_array['cleanup'] );
+			unset( $restore_array['perms'] );
+			unset( $restore_array['perm_fails'] );
+			unset( $restore_array['tables'] );
+			unset( $restore_array['imported_tables'] );
+			unset( $restore_array['restored_tables'] );
+			unset( $restore_array['failed_tables'] );
+			unset( $restore_array['last_tables'] );
+			unset( $restore_array['incomplete_tables'] );
+			unset( $restore_array['cleanup_db'] );
+			unset( $restore_array['finalize_db'] );
+			unset( $restore_array['errors'] );
+			unset( $restore_array['log'] );
+
+			// Save Queue without extra data.
+			$restore_queue[ $this->restore['id'] ] = wp_json_encode( $restore_array );
+
+			$this->save_restore();
 
 			// Keep cron alive.
 			if ( ! in_array( $this->restore['status'], $this->get_completed_statuses(), true ) ) {
@@ -732,16 +956,17 @@ class BackupBuddy_Restore {
 			$this->prune();
 		}
 
-		if ( ! empty( $this->restore ) && ! file_exists( $this->restore_storage ) ) {
+		if ( ! empty( $this->restore ) && ( ! $this->current_restore || ! file_exists( $this->current_restore ) ) ) {
 			pb_backupbuddy::status( 'details', 'Attempted to write to restore log, but log was unavailable.' );
 			return false;
 		}
 
-		if ( @file_put_contents( $this->restore_storage, wp_json_encode( $this->restores ) ) ) {
-			return true;
+		if ( ! @file_put_contents( $this->restore_storage, wp_json_encode( $restore_queue ) ) ) {
+			pb_backupbuddy::status( 'details', 'Unable to write restore queue. Check folder permissions.' );
+			return false;
 		}
 
-		return false;
+		return true;
 	}
 
 	/**
@@ -783,9 +1008,22 @@ class BackupBuddy_Restore {
 	 * @return bool  If processed.
 	 */
 	public function process() {
+
 		$this->get_queue();
 
 		if ( empty( $this->restores ) ) {
+			return false;
+		}
+
+		// Prevent overlapping requests.
+		if ( $this->cron_in_progress() ) {
+			$this->schedule_cron();
+			return false;
+		}
+
+		// Handle user abort early.
+		if ( $this->check_for_user_abort() ) {
+			$this->cron_complete( false );
 			return false;
 		}
 
@@ -794,24 +1032,21 @@ class BackupBuddy_Restore {
 
 			// Don't re-process anything already complete.
 			if ( in_array( $this->restore['status'], $this->get_completed_statuses(), true ) ) {
+				// Handle all abort types first.
+				if ( $this->is_aborted() && ! $this->has_aborted() ) {
+					$this->abort( $this->is_user_aborted() );
+				}
 				continue;
 			}
+
+			$this->prevent_stalls();
 
 			if ( ! $this->restore_init() ) {
 				$this->abort();
 				return false;
 			}
 
-			if ( $this->is_aborted() ) {
-				return false;
-			}
-
-			// Once the files have been extracted and the database tables imported, we're ready to start actually changing files/tables.
-			if ( $this->is_ready_to_restore() ) {
-				$this->set_status( self::STATUS_RESTORING );
-			}
-
-			if ( self::STATUS_NOT_STARTED === $this->restore['status'] ) {
+			if ( ! $this->restore['status'] ) {
 				if ( $this->start() ) {
 					$this->save();
 				}
@@ -820,11 +1055,12 @@ class BackupBuddy_Restore {
 			if ( self::STATUS_STARTED === $this->restore['status'] || self::STATUS_DOWNLOADING === $this->restore['status'] ) {
 				if ( ! $this->ready() ) {
 					// Not ready yet. Still downloading zip file from remote.
+					$this->cron_complete();
 					return false;
 				}
 
 				$this->set_status( self::STATUS_READY );
-				pb_backupbuddy::flush();
+				$this->cron_complete();
 				return true; // Milestone.
 			}
 
@@ -837,7 +1073,7 @@ class BackupBuddy_Restore {
 				}
 
 				$this->set_status( self::STATUS_UNZIPPED );
-				pb_backupbuddy::flush();
+				$this->cron_complete();
 				return true; // Milestone.
 			}
 
@@ -853,7 +1089,7 @@ class BackupBuddy_Restore {
 				}
 
 				$this->set_status( self::STATUS_VERIFIED );
-				pb_backupbuddy::flush();
+				$this->cron_complete();
 				return true; // Milestone.
 			}
 
@@ -864,10 +1100,6 @@ class BackupBuddy_Restore {
 					return false;
 				}
 
-				if ( $this->is_aborted() ) {
-					return false;
-				}
-
 				$this->restore['files_ready'] = true;
 				if ( $this->restore_db() ) {
 					$this->set_status( self::STATUS_DB_READY );
@@ -875,7 +1107,7 @@ class BackupBuddy_Restore {
 					$this->restore['db_ready'] = true;
 					$this->save();
 				}
-				pb_backupbuddy::flush();
+				$this->cron_complete();
 				return true; // Milestone.
 			}
 
@@ -886,15 +1118,20 @@ class BackupBuddy_Restore {
 					$this->set_status( self::STATUS_DB_TABLES );
 
 					if ( false === $this->database() ) {
-						pb_backupbuddy::flush();
+						$this->cron_complete();
 						return true; // Milestone.
 					}
 				}
 
 				$this->restore['db_ready'] = true;
 				$this->save();
-				pb_backupbuddy::flush();
+				$this->cron_complete();
 				return true; // Milestone.
+			}
+
+			// Once the files have been extracted and the database tables imported, we're ready to start actually changing files/tables.
+			if ( $this->is_ready_to_restore() ) {
+				$this->set_status( self::STATUS_RESTORING );
 			}
 
 			if ( self::STATUS_RESTORING === $this->restore['status'] ) {
@@ -907,11 +1144,6 @@ class BackupBuddy_Restore {
 
 			// Final steps. No turning back now.
 			if ( self::STATUS_RESTORING_FILES === $this->restore['status'] ) {
-
-				if ( $this->is_aborted() ) {
-					return false;
-				}
-
 				if ( $this->restore_files() ) {
 					$this->set_status( self::STATUS_COPYING );
 
@@ -921,7 +1153,7 @@ class BackupBuddy_Restore {
 
 					if ( null === $files_status ) {
 						$this->set_status( self::STATUS_RESTORING_FILES );
-						pb_backupbuddy::flush();
+						$this->cron_complete();
 						return true;
 					}
 
@@ -939,17 +1171,12 @@ class BackupBuddy_Restore {
 				}
 
 				$this->set_status( self::STATUS_RESTORING );
-				pb_backupbuddy::flush();
+				$this->cron_complete();
 				return true;
 			}
 
 			// Final steps. No turning back now.
 			if ( self::STATUS_RESTORING_DB === $this->restore['status'] ) {
-
-				if ( $this->is_aborted() ) {
-					return false;
-				}
-
 				if ( $this->restore_db() ) {
 					$this->set_status( self::STATUS_DATABASE );
 
@@ -958,6 +1185,7 @@ class BackupBuddy_Restore {
 					$db_status = $this->finalize_database();
 					if ( null === $db_status ) {
 						$this->set_status( self::STATUS_RESTORING_DB );
+						$this->cron_complete();
 						return true; // Milestone.
 					}
 
@@ -974,7 +1202,7 @@ class BackupBuddy_Restore {
 				}
 
 				$this->set_status( self::STATUS_RESTORING );
-				pb_backupbuddy::flush();
+				$this->cron_complete();
 				return true;
 			}
 
@@ -982,7 +1210,7 @@ class BackupBuddy_Restore {
 			if ( $this->restore['file_status'] && $this->restore['db_status'] ) {
 				// Cleanup.
 				$this->set_status( self::STATUS_CLEANUP );
-				$this->cleanup();
+				$this->cleanup( false );
 
 				$this->restore['completed'] = current_time( 'timestamp' );
 				$this->restore['elapsed']   = $this->restore['completed'] - $this->restore['started'];
@@ -996,10 +1224,61 @@ class BackupBuddy_Restore {
 			$this->save();
 		}
 
-		// Reset these vars since we're done.
-		$this->restore = array();
-		pb_backupbuddy::flush();
+		$this->cron_complete();
+
 		return true;
+	}
+
+	/**
+	 * Try to prevent stalls in restore.
+	 *
+	 * @param array $restore  Restore array to load.
+	 */
+	public function prevent_stalls( $restore = false ) {
+		if ( false !== $restore ) {
+			// Load Restore File if available.
+			$this->restore = $this->load_restore( $restore );
+		}
+
+		if ( ! $this->restore ) {
+			return false;
+		}
+
+		$threshold = 10;
+		$log_file  = backupbuddy_core::getLogDirectory() . 'backupbuddy-stall.log';
+		$stall_log = array(
+			'updated'  => false,
+			'checksum' => false,
+		);
+
+		if ( file_exists( $log_file ) ) {
+			$stall_log_contents = file_get_contents( $log_file );
+			if ( json_decode( $stall_log_contents, true ) ) {
+				$stall_log = json_decode( $stall_log_contents, true );
+			}
+		}
+
+		// Increase counter.
+		if ( empty( $stall_log[ $this->restore['id'] ][ $this->restore['status'] ] ) ) {
+			$stall_log[ $this->restore['id'] ][ $this->restore['status'] ] = 0;
+		}
+		$stall_log[ $this->restore['id'] ][ $this->restore['status'] ]++;
+
+		$last_checksum = $stall_log['checksum'];
+		$this_checksum = md5( wp_json_encode( $this->get_js_status( $this->restore ) ) );
+		$stall_count   = $stall_log[ $this->restore['id'] ][ $this->restore['status'] ];
+
+		// Update the log.
+		$stall_log['updated']  = gmdate( 'Y-m-d H:i:s' );
+		$stall_log['checksum'] = $this_checksum;
+
+		file_put_contents( $log_file, wp_json_encode( $stall_log ) );
+
+		// If the status hasn't moved within the threshold, we may be stalled.
+		if ( $last_checksum === $this_checksum && $stall_count >= $threshold ) {
+			pb_backupbuddy::status( 'details', 'Restore cron maybe stalled. Rescheduling...' );
+			$this->schedule_cron();
+		}
 	}
 
 	/**
@@ -1031,11 +1310,24 @@ class BackupBuddy_Restore {
 			return false;
 		}
 
-		// Cleanup any lingering lock file from previous restore attempt.
-		backupbuddy_restore()->status_request_complete();
+		$this->log( 'Starting Restore...' );
+
+		// Wipe Stall log.
+		$this->wipe_stall_log();
 
 		$this->restore['started'] = current_time( 'timestamp' );
 		$this->restore['status']  = self::STATUS_STARTED;
+
+		if ( $this->restore_files() && is_array( $this->files ) ) {
+			$this->log( 'Total Files: ' . count( $this->files ) );
+		} elseif ( $this->restore_files() ) {
+			$this->log( 'Restore Path: ' . $this->restore_path );
+		}
+
+		if ( $this->restore_db() && is_array( $this->tables ) ) {
+			$this->log( 'Total Tables: ' . count( $this->tables ) );
+		}
+
 		return true;
 	}
 
@@ -1046,18 +1338,23 @@ class BackupBuddy_Restore {
 	 */
 	private function ready() {
 		if ( file_exists( $this->restore['zip_path'] ) ) {
-			// TODO: When using remote destination, maybe compare file sizes?
+			if ( true === $this->restore['download'] && ! empty( $this->restore['zip_size'] ) ) {
+				// Make sure file size is expected to ensure download is complete.
+				$size     = (int) filesize( $this->restore['zip_path'] );
+				$expected = (int) $this->restore['zip_size'];
+				if ( $size !== $expected ) {
+					$this->set_status( self::STATUS_DOWNLOADING );
+					return false;
+				}
+			}
+			$this->log( '✓ Zip download complete.' );
 			return true;
 		}
 
 		if ( ! empty( $this->restore['destination_args'] ) ) {
 			if ( false === $this->restore['download'] ) {
 				// Try to schedule the download again.
-				$destination_copy_args = array(
-					$this->restore['destination_args'],
-					$this->restore['backup_file'],
-				);
-				if ( ! $this->schedule_download( $destination_copy_args ) ) {
+				if ( ! $this->schedule_download() ) {
 					$this->error( 'Zip download failed to schedule from remote destination.' );
 					$this->set_status( self::STATUS_FAILED );
 				}
@@ -1112,6 +1409,7 @@ class BackupBuddy_Restore {
 
 	/**
 	 * Modified version of the original restore function.
+	 * Loads at the start of every restore pass.
 	 */
 	private function restore_init() {
 		// Prevent Core auto-updates during restore.
@@ -1119,6 +1417,15 @@ class BackupBuddy_Restore {
 			define( 'WP_AUTO_UPDATE_CORE', false );
 		}
 
+		// Load Restore File if available.
+		$this->restore = $this->load_restore();
+
+		if ( ! $this->restore ) {
+			$this->error( __( 'Could not load restore data.', 'it-l10n-backupbuddy' ) );
+			return false;
+		}
+
+		// Set class properties.
 		$this->archive      = $this->restore['zip_path'];
 		$this->files        = $this->restore['files'];
 		$this->tables       = empty( $this->restore['tables'] ) ? array() : $this->restore['tables'];
@@ -1134,20 +1441,6 @@ class BackupBuddy_Restore {
 		if ( $this->restore_db() && empty( $this->tables ) ) {
 			$this->error( __( 'Restore Failed, missing tables to restore.', 'it-l10n-backupbuddy' ) );
 			return false;
-		}
-
-		if ( self::STATUS_NOT_STARTED === $this->restore['status'] ) {
-			$this->log( 'Starting Restore...' );
-
-			if ( $this->restore_files() && is_array( $this->files ) ) {
-				$this->log( 'Total Files: ' . count( $this->files ) );
-			} elseif ( $this->restore_files() ) {
-				$this->log( 'Restore Path: ' . $this->restore_path );
-			}
-
-			if ( $this->restore_db() && is_array( $this->tables ) ) {
-				$this->log( 'Total Tables: ' . count( $this->tables ) );
-			}
 		}
 
 		return true;
@@ -1188,12 +1481,16 @@ class BackupBuddy_Restore {
 		$zipbuddy = new pluginbuddy_zipbuddy( backupbuddy_core::getBackupDirectory() );
 
 		$this->log( 'Generating file list...' );
-
 		$zip_file_list = $zipbuddy->get_file_list( $this->archive );
+
+		if ( ! $zip_file_list ) {
+			$this->error( 'Failed to generate file list from zip file.' );
+			return false;
+		}
 
 		// Generate array of literal files (no wildcards) to extract.
 		if ( $this->is_full_restore() ) { // Full Restores.
-			$this->log( '✓ Extracting all files inside zip.' );
+			$this->log( 'All files inside zip queued up for extraction.' );
 			// Only used to verify files.
 			$this->restore['extract_files'] = $this->flatten_file_array( $zip_file_list );
 			foreach ( $this->restore['extract_files'] as $key => &$file ) {
@@ -1203,6 +1500,7 @@ class BackupBuddy_Restore {
 				}
 			}
 		} else { // Partial Restores.
+			$this->log( 'Extracting selected files from zip.' );
 			foreach ( $this->files as $key => &$file ) {
 				$wildcard = false !== strpos( $file, '*' );
 				$file     = str_replace( '*', '', $file ); // Remove any wildcard.
@@ -1246,6 +1544,7 @@ class BackupBuddy_Restore {
 	 */
 	public function flatten_file_array( $file_array ) {
 		if ( ! is_array( $file_array ) || empty( $file_array ) ) {
+			$this->error( 'Unexpected data. `flatten_file_array` expected Array but got ' . gettype( $file_array ) );
 			return false;
 		}
 
@@ -1349,19 +1648,20 @@ class BackupBuddy_Restore {
 					continue;
 				}
 
-				$file   = str_replace( '*', '', $file ); // Remove any wildcard.
+				$file = str_replace( '*', '', $file ); // Remove any wildcard.
+				if ( ! $file ) {
+					continue;
+				}
+
 				$result = $this->recursive_copy( $this->restore['temp_dir'] . $file, $this->restore_path . $file );
 
 				if ( false === $result ) {
 					$success = false;
+					$this->error( 'Error #9035. Unable to move `' . $this->restore['temp_dir'] . $file . '` to `' . $this->restore_path . $file . '`. Verify permissions on temp folder location & destination directory.' );
 				} elseif ( null === $result ) {
 					// More work to do.
 					return null;
 				}
-			}
-
-			if ( ! $success ) {
-				$this->error( 'Error #9035. Unable to move `' . $this->restore['temp_dir'] . $file . '` to `' . $this->restore_path . $file . '`. Verify permissions on temp folder location & destination directory.' );
 			}
 		} elseif ( $this->is_full_restore() ) { // Full backup restore.
 			$result = $this->recursive_copy( $this->restore['temp_dir'], $this->restore_path );
@@ -1376,8 +1676,6 @@ class BackupBuddy_Restore {
 		}
 
 		if ( $success ) {
-			// Reset Status check just in case.
-			backupbuddy_restore()->status_request_complete();
 			$this->log( '✓ Files restored successfully.' );
 		}
 
@@ -1391,14 +1689,19 @@ class BackupBuddy_Restore {
 	 *
 	 * @param string $src    Source file/folder.
 	 * @param string $dest   Destination file/folder.
-	 * @param int    $depth  Level of directory depth.
 	 *
 	 * @return bool|null  If successful or null if more work to be done.
 	 */
-	private function recursive_copy( $src, $dest, $depth = 0 ) {
+	private function recursive_copy( $src, $dest ) {
 		$success = true;
+
+		// Break up file restore in batches of 500.
+		if ( $this->files_restored >= 500 ) {
+			return null;
+		}
+
 		if ( in_array( $dest, $this->restore['copied'], true ) ) {
-			return true;
+			return $success;
 		}
 
 		if ( is_dir( $src ) ) {
@@ -1412,34 +1715,35 @@ class BackupBuddy_Restore {
 			foreach ( $files as $file ) {
 				$src  = rtrim( $src, '/' );
 				$dest = rtrim( $dest, '/' );
-				if ( false === $this->recursive_copy( "$src/$file", "$dest/$file", ( $depth + 1 ) ) ) {
+				if ( false === $this->recursive_copy( "$src/$file", "$dest/$file" ) ) {
 					$success = false;
 					break;
 				}
-			}
-			if ( 1 === $depth && $success ) {
-				// Break up into chunks at 1 level deep.
-				return null;
+				$this->restore['copied'][] = $dest . '/' . $file;
 			}
 		} elseif ( file_exists( $src ) && is_file( $src ) ) {
 			// Skip identical files.
-			$src_size  = @filesize( $src );
-			$dest_size = @filesize( $dest );
-			$md5_src   = @md5_file( $src );
-			$md5_dest  = @md5_file( $dest );
+			if ( file_exists( $dest ) ) {
+				$src_size  = @filesize( $src );
+				$dest_size = @filesize( $dest );
+				$md5_src   = @md5_file( $src );
+				$md5_dest  = @md5_file( $dest );
 
-			if ( false !== $md5_src && false !== $src_size && $src_size === $dest_size && $md5_src === $md5_dest ) {
-				$this->restore['copied'][]  = $dest;
-				$this->restore['skipped'][] = $dest;
-				return true;
+				if ( false !== $md5_src && false !== $src_size && $src_size === $dest_size && $md5_src === $md5_dest ) {
+					$this->restore['copied'][]  = $dest;
+					$this->restore['skipped'][] = $dest;
+					$this->files_restored++;
+					return $success;
+				}
+
+				$rename = $this->get_backup_filename( $dest );
+				if ( file_exists( $dest ) && is_file( $dest ) && ! in_array( $rename, $this->restore['cleanup'], true ) ) {
+					// Make a backup of the original.
+					@rename( $dest, $rename );
+					$this->restore['cleanup'][ $dest ] = $rename; // Mark file for cleanup.
+				}
 			}
 
-			$rename = $this->get_backup_filename( $dest );
-			if ( file_exists( $dest ) && is_file( $dest ) && ! in_array( $rename, $this->restore['cleanup'], true ) ) {
-				// Make a backup of the original.
-				@rename( $dest, $rename );
-				$this->restore['cleanup'][ $dest ] = $rename; // Mark file for cleanup.
-			}
 			if ( ! @copy( $src, $dest ) ) {
 				$success = false;
 			} else {
@@ -1447,6 +1751,7 @@ class BackupBuddy_Restore {
 					$this->error( 'File copied but failed integrity check: ' . esc_html( $dest ) );
 					$success = false;
 				} else {
+					$this->files_restored++;
 					$this->restore['copied'][] = $dest;
 					$this->save();
 				}
@@ -1714,11 +2019,89 @@ class BackupBuddy_Restore {
 	 * @param array $restore  Restore array.
 	 */
 	public function user_abort( $restore ) {
-		$this->restore = $restore;
+		// Load Restore File if available.
+		$this->restore = $this->load_restore( $restore );
 
+		if ( ! $this->restore ) {
+			$this->log( '× Could not load retore during user abort.' );
+			return false;
+		}
+
+		$abort_dir  = backupbuddy_core::getLogDirectory();
+		$abort_file = 'backupbuddy-restore-abort.nfo';
+		$abort_path = trailingslashit( $abort_dir ) . $abort_file;
+		if ( ! file_exists( $abort_path ) ) {
+			$abort = fopen( $abort_path, 'w' );
+
+			// Wipe file first.
+			if ( is_resource( $abort ) ) {
+				fwrite( $abort, '' );
+			}
+
+			fwrite( $abort, $this->restore['id'] );
+			fclose( $abort );
+		}
+
+		$this->restore['status'] = self::STATUS_USER_ABORTED;
 		$this->restore['viewed'] = current_time( 'timestamp' );
-		$this->abort( true );
+		$this->save();
+
 		return $this->restore;
+	}
+
+	/**
+	 * Check for user abort file.
+	 *
+	 * @return bool  If valid user abort was found.
+	 */
+	public function check_for_user_abort() {
+		$abort_file = backupbuddy_core::getLogDirectory() . 'backupbuddy-restore-abort.nfo';
+		if ( ! file_exists( $abort_file ) ) {
+			return false;
+		}
+
+		$restore_id = file_get_contents( $abort_file );
+		if ( ! $restore_id ) {
+			return false;
+		}
+
+		$this->restore = $this->details( $restore_id );
+		if ( $this->has_aborted() ) {
+			return false;
+		}
+
+		$this->abort( true );
+		return true;
+	}
+
+	/**
+	 * Remove abort file for fresh restore.
+	 *
+	 * @return bool  If it was removed.
+	 */
+	public function remove_abort_file() {
+		$abort_file = backupbuddy_core::getLogDirectory() . 'backupbuddy-restore-abort.nfo';
+		if ( file_exists( $abort_file ) ) {
+			@unlink( $abort_file );
+		}
+
+		return file_exists( $abort_file );
+	}
+
+	/**
+	 * Check if restore is user initiated.
+	 *
+	 * @return bool  If aborted by user.
+	 */
+	public function is_user_aborted() {
+		if ( self::STATUS_USER_ABORTED === $this->restore['status'] ) {
+			return true;
+		}
+		if ( file_exists( backupbuddy_core::getLogDirectory() . 'backupbuddy-restore-abort.nfo' ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -1729,10 +2112,15 @@ class BackupBuddy_Restore {
 	private function set_status( $new_status ) {
 		$restore = $this->refresh( false );
 		if ( $this->is_aborted( $restore ) ) {
+			// Refresh the stored status.
+			$new_status = $restore['status'];
 			return false;
 		}
-		$this->restore['status'] = $new_status;
-		$this->save();
+
+		if ( $this->restore['status'] !== $new_status ) {
+			$this->restore['status'] = $new_status;
+			$this->save();
+		}
 	}
 
 	/**
@@ -1766,7 +2154,7 @@ class BackupBuddy_Restore {
 		$restore = ! empty( $restore ) ? $restore : $this->restore;
 
 		if ( empty( $restore ) ) {
-			return false;
+			return $aborted;
 		}
 
 		if ( ! empty( $restore['aborted'] ) ) {
@@ -1775,15 +2163,26 @@ class BackupBuddy_Restore {
 			$aborted = true;
 		}
 
-		if ( $aborted ) {
-			// Make sure status stays aborted.
-			if ( ! empty( $this->restore ) && $this->restore['id'] === $restore['id'] && self::STATUS_ABORTED !== $this->restore['status'] ) {
-				$this->restore['status'] = self::STATUS_ABORTED;
-				$this->save();
-			}
+		if ( ! $aborted ) {
+			$aborted = $this->is_user_aborted();
 		}
 
 		return $aborted;
+	}
+
+	/**
+	 * Check if restore has been properly aborted.
+	 *
+	 * @return bool  If aborted.
+	 */
+	public function has_aborted() {
+		if ( ! isset( $this->restore['aborted'] ) ) {
+			$this->restore = $this->load_restore();
+		}
+		if ( empty( $this->restore['aborted'] ) ) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -1794,11 +2193,62 @@ class BackupBuddy_Restore {
 	private function abort( $forced = false ) {
 		global $wpdb;
 
+		// Make sure we have a full restore array.
+		if ( empty( $this->restore['log'] ) ) {
+			$this->restore = $this->load_restore();
+		}
+
 		// Clean up tmp folder.
 		if ( ! empty( $this->restore['temp_dir'] ) ) {
 			pb_backupbuddy::$filesystem->unlink_recursive( $this->restore['temp_dir'] );
 		}
 
+		if ( true === $forced ) {
+			// Only write to log one time.
+			if ( empty( $this->restore['aborted'] ) ) {
+				$this->restore['aborted'] = current_time( 'timestamp' );
+				$this->log( 'Restore Aborted by user.' );
+			}
+			$this->set_status( self::STATUS_USER_ABORTED );
+		} elseif ( $this->is_aborted() ) {
+			if ( empty( $this->restore['aborted'] ) ) {
+				$this->restore['aborted'] = current_time( 'timestamp' );
+			}
+			$this->set_status( self::STATUS_ABORTED );
+		} else {
+			$this->log( 'Restore Failed.' );
+			$this->set_status( self::STATUS_FAILED );
+		}
+
+		$this->restore['completed'] = current_time( 'timestamp' );
+		if ( ! empty( $this->restore['started'] ) ) {
+			$this->restore['elapsed'] = $this->restore['completed'] - $this->restore['started'];
+		}
+
+		// Delete local backup if downloaded from remote.
+		if ( true === $this->restore['download'] ) {
+			if ( backupbuddy_backups()->exists( $this->restore['backup_file'] ) ) {
+				if ( backupbuddy_backups()->delete( $this->restore['backup_file'], true ) ) {
+					$this->log( '✓ Deleted local copy of remote backup zip file.' );
+				} else {
+					$this->log( '× Could not delete local copy of remote backup zip file.' );
+				}
+			}
+		}
+
+		$this->cleanup_files();
+		$this->cleanup_db();
+
+		$this->save();
+
+		$this->disable_maintenance_mode();
+		$this->cron_complete();
+	}
+
+	/**
+	 * Perform any necessary file cleanup.
+	 */
+	public function cleanup_files() {
 		if ( ! empty( $this->restore['cleanup'] ) ) {
 			foreach ( $this->restore['cleanup'] as $original_path => $tmp_path ) {
 				if ( file_exists( $tmp_path ) ) {
@@ -1811,26 +2261,35 @@ class BackupBuddy_Restore {
 
 			$this->log( 'Restored original files.' );
 		}
+	}
 
-		if ( true === $forced ) {
-			if ( empty( $this->restore['aborted'] ) ) {
-				$this->restore['aborted'] = current_time( 'timestamp' );
-				$this->log( 'Restore Aborted by user.' );
+	/**
+	 * Perform cleanup queries.
+	 */
+	public function cleanup_db() {
+		if ( ! empty( $this->restore['cleanup_db'] ) ) {
+			global $wpdb;
+			$this->enable_wpdb_errors();
+
+			$this->log( 'Processing database cleanup queries...' );
+			$success = true;
+			foreach ( $this->restore['cleanup_db'] as $label => $query ) {
+				if ( ! $query ) {
+					continue;
+				}
+				if ( false === $wpdb->query( $query ) ) {
+					$this->log_wpdb_error( '× Database cleanup query failed: ' . $label );
+					$success = false;
+				} else {
+					// Prevent accidental re-runs.
+					$this->restore['cleanup_db'][ $label ] = false;
+				}
 			}
-			$this->set_status( self::STATUS_ABORTED );
-		} elseif ( false === $this->is_aborted() ) {
-			$this->log( 'Restore Failed.' );
-			$this->set_status( self::STATUS_FAILED );
-		}
 
-		$this->restore['completed'] = current_time( 'timestamp' );
-		if ( ! empty( $this->restore['started'] ) ) {
-			$this->restore['elapsed'] = $this->restore['completed'] - $this->restore['started'];
+			if ( $success ) {
+				$this->log( '✓ Database cleanup complete.' );
+			}
 		}
-		$this->save();
-
-		$this->disable_maintenance_mode();
-		pb_backupbuddy::flush();
 	}
 
 	/**
@@ -1889,8 +2348,19 @@ class BackupBuddy_Restore {
 		// Preserve BackupBuddy Backups/Logs Directories.
 		if ( in_array( $preserve, array( 'both', 'uploads' ), true ) ) {
 			$uploads_path = 'media' === $this->restore['profile'] ? '/' : '/wp-content/uploads/';
+
+			// Move all backups in current install to temp_dir.
 			pb_backupbuddy::$filesystem->recursive_copy( backupbuddy_core::getBackupDirectory(), $this->restore['temp_dir'] . $uploads_path . 'backupbuddy_backups' );
+
+			// Move all logs in current install to temp_dir.
 			pb_backupbuddy::$filesystem->recursive_copy( backupbuddy_core::getLogDirectory(), $this->restore['temp_dir'] . $uploads_path . 'pb_backupbuddy' );
+
+			// Delete the current restore logs from temp_dir to prevent overwrite and loss of restore status.
+			unlink( $this->restore['temp_dir'] . $uploads_path . 'pb_backupbuddy/backupbuddy-restores.txt' );
+			if ( ! empty( $this->restore['id'] ) ) {
+				unlink( $this->restore['temp_dir'] . $uploads_path . 'pb_backupbuddy/backupbuddy-restore-' . $this->restore['id'] . '.txt' );
+			}
+
 			$this->restore['copied'][] = backupbuddy_core::getBackupDirectory();
 			$this->restore['copied'][] = backupbuddy_core::getLogDirectory();
 			$this->restore['copied'][] = backupbuddy_core::getTempDirectory(); // Ignore this folder in the backup.
@@ -1904,8 +2374,12 @@ class BackupBuddy_Restore {
 
 	/**
 	 * Post restore cleanup.
+	 *
+	 * Leave debugging should only be set to false whenever restore has completed successfully.
+	 *
+	 * @param bool $leave_debugging  Should debugging items remain.
 	 */
-	private function cleanup() {
+	private function cleanup( $leave_debugging = true ) {
 		$this->log( 'Performing cleanup...' );
 		$files_successful = $this->restore['file_status'];
 		$db_successful    = $this->restore['db_status'];
@@ -1923,11 +2397,13 @@ class BackupBuddy_Restore {
 		// Cleanup Folders.
 		if ( true === $files_successful ) {
 			if ( ! empty( $this->restore['cleanup'] ) ) {
-				foreach ( $this->restore['cleanup'] as $remove_dir ) {
+				foreach ( $this->restore['cleanup'] as $index => $remove_dir ) {
 					if ( false === pb_backupbuddy::$filesystem->unlink_recursive( $remove_dir ) ) {
 						$this->log( '× Unable to cleanup `' . $remove_dir . '`.' );
 						$error = error_get_last();
 						$this->log( '× Error was: ' . $error['message'] );
+					} else {
+						unset( $this->restore['cleanup'][ $index ] );
 					}
 				}
 			}
@@ -1935,7 +2411,6 @@ class BackupBuddy_Restore {
 			$file_count = count( $this->restore['extract_files'] );
 
 			unset( $this->restore['copied'] );
-			unset( $this->restore['cleanup'] );
 			$this->restore['extract_files'] = $file_count;
 
 			$this->log( '✓ Cleaned up restore temporary files.' );
@@ -1953,28 +2428,46 @@ class BackupBuddy_Restore {
 		$this->files  = array();
 		$this->tables = array();
 
-		// Database cleanup.
-		if ( ! empty( $this->restore['cleanup_db'] ) ) {
+		// Finalize Database changes.
+		if ( ! empty( $this->restore['finalize_db'] ) ) {
 			global $wpdb;
 			$this->enable_wpdb_errors();
 
 			$this->log( 'Processing final database queries.' );
 			$success = true;
-			foreach ( $this->restore['cleanup_db'] as $label => $query ) {
+			foreach ( $this->restore['finalize_db'] as $label => $query ) {
 				if ( false === $wpdb->query( $query ) ) {
-					$this->log_wpdb_error( '× Database cleanup query failed: ' . $label );
+					$this->log_wpdb_error( '× Database finalization query failed: ' . $label );
 					$success = false;
 				}
 			}
 
 			if ( $success ) {
-				$this->log( '✓ Database cleanup complete.' );
+				$this->log( '✓ Database finalization complete.' );
 			}
 		}
 
-		// Make sure a fresh status request is made.
-		$this->status_request_complete();
-		$this->log( 'Cleanup complete.' );
+		if ( true !== $leave_debugging ) {
+			$this->wipe_stall_log();
+		}
+
+		$this->log( '✓ Cleanup complete.' );
+	}
+
+	/**
+	 * Delete the Stall log if exists.
+	 *
+	 * @return bool  If deleted.
+	 */
+	private function wipe_stall_log() {
+		$stall_log = backupbuddy_core::getLogDirectory() . 'backupbuddy-stall.log';
+		if ( file_exists( $stall_log ) ) {
+			unlink( $stall_log );
+		}
+		if ( file_exists( $stall_log ) ) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -2019,7 +2512,7 @@ class BackupBuddy_Restore {
 	 *
 	 * @return bool  If logged.
 	 */
-	public function log( $message, $type = 'detail' ) {
+	public function log( $message, $type = 'details' ) {
 		if ( empty( $this->restore ) ) {
 			pb_backupbuddy::status( $type, $message );
 			return false;
@@ -2031,10 +2524,10 @@ class BackupBuddy_Restore {
 
 		$hidden = 'hidden' === $type;
 		if ( $hidden ) {
-			$type = 'detail';
+			$type = 'details';
 		}
 
-		pb_backupbuddy::status( $type, $message ); // Log globally for good measure.
+		pb_backupbuddy::status( $type, $message, $this->restore['id'] ); // Log globally for good measure.
 
 		if ( 'error' === $type ) {
 			$this->restore['errors'][] = $message;
@@ -2101,7 +2594,7 @@ class BackupBuddy_Restore {
 	 */
 	public function get_summary( $restore ) {
 		if ( '*' === $restore['files'] ) {
-			$extra = 'full' !== $restore['profile'] ? ' (' . $restore['profile'] . ')' : ( 'both' !== $restore['what'] ) ? ' (' . $restore['what'] . ')' : '';
+			$extra = 'full' !== $restore['profile'] ? ' (' . $restore['profile'] . ')' : ( 'both' !== $restore['what'] ? ' (' . $restore['what'] . ')' : '' );
 			return __( 'Full Backup', 'it-l10n-backupbuddy' ) . $extra;
 		}
 
@@ -2172,7 +2665,7 @@ class BackupBuddy_Restore {
 		} elseif ( $restore['status'] < self::STATUS_COMPLETE ) {
 			$html = sprintf( '<span data-restore-id="%s" class="restore-in-progress">%s</span>', esc_attr( $restore['id'] ), esc_html( $text ) );
 		} else {
-			$html = false === $use_text ? '' : $text;
+			$html = false === $use_text ? 'Unknown Status: ' . $restore['status'] : $text;
 		}
 
 		if ( true !== $echo ) {
@@ -2193,7 +2686,7 @@ class BackupBuddy_Restore {
 	public function get_status_text( $status_code, $echo = false ) {
 		$text = __( 'Unknown', 'it-l10n-backupbuddy' );
 
-		if ( self::STATUS_NOT_STARTED === $status_code ) {
+		if ( ! $status_code ) {
 			$text = __( 'Not Started', 'it-l10n-backupbuddy' );
 		} elseif ( self::STATUS_STARTED === $status_code ) {
 			$text = __( 'Started', 'it-l10n-backupbuddy' );
@@ -2229,6 +2722,8 @@ class BackupBuddy_Restore {
 			$text = __( 'Complete', 'it-l10n-backupbuddy' );
 		} elseif ( self::STATUS_FAILED === $status_code ) {
 			$text = __( 'Failed', 'it-l10n-backupbuddy' );
+		} elseif ( self::STATUS_USER_ABORTED === $status_code ) {
+			$text = __( 'Aborted by User', 'it-l10n-backupbuddy' );
 		} elseif ( self::STATUS_ABORTED === $status_code ) {
 			$text = __( 'Aborted', 'it-l10n-backupbuddy' );
 		}
@@ -2516,6 +3011,7 @@ class BackupBuddy_Restore {
 		}
 
 		$this->restore['imported_tables'][] = $table;
+		$this->restore['cleanup_db'][ 'Drop Temp Table `' . $this->table_prefix . $table_basename . '`.' ] = sprintf( "DROP TABLE IF EXISTS `%s`;", $this->table_prefix . $table_basename );
 		$this->save();
 		return true;
 	}
@@ -2578,7 +3074,7 @@ class BackupBuddy_Restore {
 				$contents = preg_replace( '/' . preg_quote( $constraint ) . '/', '', $contents );
 			}
 			$num = $i + 1;
-			$this->restore['cleanup_db'][ 'Constraint ' . $num . ' for `' . $table . '`' ] = sprintf( 'ALTER TABLE `%s` ADD %s;', $table, $constraint );
+			$this->restore['finalize_db'][ 'Constraint ' . $num . ' for `' . $table . '`' ] = sprintf( 'ALTER TABLE `%s` ADD %s;', $table, $constraint );
 		}
 
 		// Write changes to the SQL file.
@@ -2616,8 +3112,6 @@ class BackupBuddy_Restore {
 		if ( count( $this->restore['restored_tables'] ) === count( $this->restore['imported_tables'] ) ) {
 			$this->log( '✓ Database restored.' );
 			$this->save();
-			// Force new status check.
-			backupbuddy_restore()->status_request_complete();
 			return true;
 		}
 

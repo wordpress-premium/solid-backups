@@ -227,7 +227,7 @@ class pb_backupbuddy_destination_onedrive {
 			die( esc_html__( 'There was a problem creating the OneDrive client. Please contact support for assistance.', 'it-l10n-backupbuddy' ) );
 		}
 
-		$package = self::get_package_license();
+		$package = backupbuddy_get_package_license();
 
 		// Create the payload for validation.
 		$key     = $package['key'];
@@ -264,31 +264,6 @@ class pb_backupbuddy_destination_onedrive {
 		}
 
 		return $url;
-	}
-
-	/**
-	 * Retrieve the plugin license info.
-	 *
-	 * @return false|array  Array of license info or false on error.
-	 */
-	public static function get_package_license() {
-		require_once $GLOBALS['ithemes_updater_path'] . '/keys.php';
-		require_once $GLOBALS['ithemes_updater_path'] . '/packages.php';
-
-		$details     = Ithemes_Updater_Packages::get_full_details();
-		$packages    = $details['packages'];
-		$plugin_file = basename( dirname( BACKUPBUDDY_PLUGIN_FILE ) ) . '/' . basename( BACKUPBUDDY_PLUGIN_FILE );
-
-		if ( empty( $packages[ $plugin_file ] ) ) {
-			self::error( __( 'Unable to locate valid plugin license information. Please contact support for assistance.', 'it-l10n-backupbuddy' ) );
-			return false;
-		}
-		if ( empty( $packages[ $plugin_file ]['key'] ) || empty( $packages[ $plugin_file ]['user'] ) ) {
-			self::error( __( 'Unable to locate license information for this site. Please contact support for assistance.', 'it-l10n-backupbuddy' ) );
-			return false;
-		}
-
-		return $packages[ $plugin_file ];
 	}
 
 	/**
@@ -483,7 +458,7 @@ class pb_backupbuddy_destination_onedrive {
 				}
 
 				// Returns UploadSessionProxy object.
-				$upload = $folder->startUpload( basename( $file ), fopen( $file, 'rb' ), $args );
+				$upload = $folder->startUpload( basename( $file ), fopen( $file, 'r' ), $args );
 			} catch ( \Exception $e ) {
 				self::error( __( 'Error', 'it-l10n-backupbuddy' ) . ' #201910150859: ' . __( 'Could not initiate upload for', 'it-l10n-backupbuddy' ) . ' `' . basename( $file ) . '`. ' . __( 'Details', 'it-l10n-backupbuddy' ) . ': ' . $e->getMessage() );
 				return false;

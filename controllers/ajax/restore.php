@@ -11,9 +11,9 @@ $response = array(
 	'success' => false,
 );
 
+$archive      = pb_backupbuddy::_POST( 'backupbuddy_zip' );
 $files_array  = pb_backupbuddy::_POST( 'backupbuddy_restore' );
 $tables_array = pb_backupbuddy::_POST( 'backupbuddy_restore_tables' );
-$archive      = pb_backupbuddy::_POST( 'backupbuddy_zip' );
 $destination  = pb_backupbuddy::_POST( 'backupbuddy_restore_destination' );
 $what         = pb_backupbuddy::_POST( 'backupbuddy_restore_type' );
 

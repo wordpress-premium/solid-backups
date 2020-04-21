@@ -83,7 +83,7 @@ if ( pb_backupbuddy::_POST( 'bulk_action' ) == 'delete_backup' ) {
 if ( pb_backupbuddy::_GET( 'cpy' ) ) {
 	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
 	echo '<br>';
-	pb_backupbuddy::status( 'details',  'Scheduling Cron for creating S3 copy.' );
+	pb_backupbuddy::status( 'details', 'Scheduling Cron for creating S3 copy.' );
 	backupbuddy_core::schedule_single_event( time(), 'process_remote_copy', array( 's3', pb_backupbuddy::_GET( 'cpy' ), $settings ) );
 	if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
 		update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.

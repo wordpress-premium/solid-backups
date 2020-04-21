@@ -562,7 +562,11 @@ class BackupBuddy_Backups {
 	public function get_restore_buttons( $file, $backup_type = false ) {
 		$restore_buttons   = '';
 		$button            = '<a href="%s" class="button restore-button%s"%s>%s</a>';
-		$full_restore_attr = sprintf( ' data-zip="%s" data-destination-id="%s"', basename( $file ), $this->get_destination_id() );
+		$full_restore_attr = sprintf(
+			' data-zip="%s" data-destination-id="%s"',
+			basename( $file ),
+			$this->get_destination_id()
+		);
 		$full_restore_url  = admin_url( 'admin.php?page=pb_backupbuddy_backup' ) . '#restore-backup';
 
 		if ( false === $backup_type ) {
@@ -692,6 +696,7 @@ class BackupBuddy_Backups {
 		if ( ! empty( $item[0][1] ) ) {
 			$file     = $item[0][0];
 			$modified = $item[0][1];
+			$link_url = ! empty( $item[0][3] ) ? $item[0][3] : false;
 		} else {
 			return $output;
 		}
@@ -700,10 +705,7 @@ class BackupBuddy_Backups {
 		$filename = basename( $file );
 		$label    = pb_backupbuddy::$format->date( $modified, 'l, F j, Y - g:i a' );
 		$label   .= ' (' . pb_backupbuddy::$format->time_ago( $modified, (int) current_time( 'timestamp' ) ) . ' ago)';
-		$url      = pb_backupbuddy::ajax_url( 'download_archive' ) . '&backupbuddy_backup=' . $filename;
-		if ( 'http' === substr( $file, 0, 4 ) ) {
-			$url = $file;
-		}
+		$url      = $link_url ? $link_url : pb_backupbuddy::ajax_url( 'download_archive' ) . '&backupbuddy_backup=' . $filename;
 
 		if ( 'default' === $mode ) { // Default backup listing.
 			$output = '<a href="' . esc_attr( $url ) . '" class="backupbuddyFileTitle" title="' . $filename . '">' . $label . '</a>';
@@ -820,18 +822,32 @@ class BackupBuddy_Backups {
 	}
 
 	/**
+	 * Check if backup file exists.
+	 *
+	 * @param string $backup_file  Backup zip filename.
+	 *
+	 * @return bool  If exists.
+	 */
+	public function exists( $backup_file ) {
+		$path_to_backup = backupbuddy_core::getBackupDirectory() . $backup_file;
+		return file_exists( $path_to_backup );
+	}
+
+	/**
 	 * Delete Backup.
 	 *
 	 * @param string $backup_file  Zip file name.
+	 * @param bool   $keep_dat     Keep dat file after zip deletion.
 	 *
 	 * @return bool  If deleted.
 	 */
 	public function delete( $backup_file, $keep_dat = false ) {
-		$path_to_backup = backupbuddy_core::getBackupDirectory() . $backup_file;
-		if ( ! file_exists( $path_to_backup ) ) {
+		if ( ! $this->exists( $backup_file ) ) {
 			return false;
 		}
-		$data_file = backupbuddy_data_file()->locate( $path_to_backup );
+
+		$path_to_backup = backupbuddy_core::getBackupDirectory() . $backup_file;
+		$data_file      = backupbuddy_data_file()->locate( $path_to_backup );
 		if ( true === @unlink( $path_to_backup ) ) {
 			if ( true === $keep_dat ) {
 				return true;

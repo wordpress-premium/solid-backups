@@ -467,8 +467,8 @@ class pb_backupbuddy {
 		$savepoint_subsection = &self::$options;
 		$savepoint_levels     = explode( '#', $savepoint_root );
 		foreach ( $savepoint_levels as $savepoint_level ) {
-			if ( isset( $savepoint_subsection{$savepoint_level} ) ) {
-				$savepoint_subsection = &$savepoint_subsection{$savepoint_level};
+			if ( isset( $savepoint_subsection[ $savepoint_level ] ) ) {
+				$savepoint_subsection = &$savepoint_subsection[ $savepoint_level ];
 			} else {
 				echo '{Error #4489045: Invalid array in path: `' . $savepoint_root . '`}';
 				return false;
@@ -1252,10 +1252,10 @@ class pb_backupbuddy {
 	 */
 	public static function random_string( $length = 32, $chars = 'abcdefghijkmnopqrstuvwxyz1234567890' ) {
 		$chars_length = ( strlen( $chars ) - 1 );
-		$string       = $chars{rand( 0, $chars_length )};
+		$string       = $chars[ rand( 0, $chars_length ) ];
 		for ( $i = 1; $i < $length; $i = strlen( $string ) ) {
-			$r = $chars{rand( 0, $chars_length )};
-			if ( $r != $string{$i - 1} ) {
+			$r = $chars[ rand( 0, $chars_length ) ];
+			if ( $r != $string[ $i - 1 ] ) {
 				$string .= $r;
 			}
 		}

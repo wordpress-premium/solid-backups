@@ -43,7 +43,7 @@ if ( 'add' === $mode && ! $code ) {
 	$pb_hide_test = true;
 
 	// If plugin not licensed, throw error and stop.
-	if ( ! pb_backupbuddy_destination_onedrive::get_package_license() ) {
+	if ( ! backupbuddy_get_package_license() ) {
 		if ( count( $pb_backupbuddy_destination_errors ) ) {
 			pb_backupbuddy::alert( $pb_backupbuddy_destination_errors[0], true );
 		} else {

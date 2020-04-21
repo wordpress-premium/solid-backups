@@ -1031,19 +1031,6 @@ class pb_backupbuddy_destination_s33 {
 	} // End test().
 
 	/**
-	 * Alias for download_file.
-	 *
-	 * @param array  $settings              Destination settings.
-	 * @param string $remoteFile            Remote filename.
-	 * @param string $localDestinationFile  Full path & filename of destination file.
-	 *
-	 * @return bool|string  True if succesful, string if error.
-	 */
-	public static function getFile( $settings, $remoteFile, $localDestinationFile ) {
-		return self::download_file( $settings, $remoteFile, $localDestinationFile );
-	}
-
-	/**
 	 * Download remote file to local system.
 	 *
 	 * @param array  $settings              Destination settings.
@@ -1052,7 +1039,7 @@ class pb_backupbuddy_destination_s33 {
 	 *
 	 * @return bool|string  True if succesful, string if error.
 	 */
-	public static function download_file( $settings, $remoteFile, $localDestinationFile ) {
+	public static function getFile( $settings, $remoteFile, $localDestinationFile ) {
 		$settings = self::_init( $settings );
 
 		pb_backupbuddy::status( 'details', 'Downloading remote file `' . $remoteFile . '` from S3 to local file `' . $localDestinationFile . '`.' );
@@ -1068,7 +1055,7 @@ class pb_backupbuddy_destination_s33 {
 		}
 
 		return true;
-	} // end download_file().
+	} // end getFile().
 
 	/**
 	 * Download all backup dat files.
@@ -1091,7 +1078,7 @@ class pb_backupbuddy_destination_s33 {
 			$dat_file    = str_replace( '.zip', '.dat', $backup_file );
 			$local_file  = backupbuddy_core::getBackupDirectory() . $dat_file;
 
-			if ( true !== self::download_file( $settings, $dat_file, $local_file ) ) {
+			if ( true !== self::getFile( $settings, $dat_file, $local_file ) ) {
 				$success = false;
 			}
 		}

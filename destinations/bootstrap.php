@@ -386,6 +386,7 @@ class pb_backupbuddy_destinations {
 			return false;
 		}
 
+		pb_backupbuddy::status( 'error', 'Calling getFile on `' . $destination_class . '`.' );
 		$result = call_user_func_array( "{$destination_class}::getFile", array( $destination_settings, $remote_file, $local_file ) );
 
 		if ( $result && file_exists( $local_file ) ) {
@@ -768,6 +769,11 @@ class pb_backupbuddy_destinations {
 		$destination_settings = $destination['settings']; // Settings with defaults applied, normalized, etc.
 		$destination_type     = $destination_settings['type'];
 		$destination_class    = 'pb_backupbuddy_destination_' . $destination_type;
+
+		if ( ! method_exists( $destination_class, 'test' ) ) {
+			echo '{Error #546893498ab. Destination does not support testing.}';
+			return false;
+		}
 
 		// test() returns true on success, else error message.
 		$result = call_user_func_array( "{$destination_class}::test", array( $destination_settings ) );

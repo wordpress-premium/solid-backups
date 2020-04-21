@@ -56,19 +56,6 @@ if ( '' != pb_backupbuddy::_GET( 'delete_tempfiles_now' ) ) {
 	backupbuddy_core::deleteAllDataFiles();
 }
 
-// Reset log.
-if ( '' != pb_backupbuddy::_GET( 'reset_log' ) ) {
-	$log_file = backupbuddy_core::getLogDirectory() . 'log-' . pb_backupbuddy::$options['log_serial'] . '.txt';
-	if ( file_exists( $log_file ) ) {
-		@unlink( $log_file );
-	}
-	if ( file_exists( $log_file ) ) { // Didnt unlink.
-		pb_backupbuddy::alert( 'Unable to clear log file. Please verify permissions on file `' . $log_file . '`.', true, '', '', '', array( 'class' => 'below-h2' ) );
-	} else { // Unlinked.
-		pb_backupbuddy::alert( 'Cleared log file.', false, '', '', '', array( 'class' => 'below-h2' ) );
-	}
-}
-
 // Reset disalerts.
 if ( '' != pb_backupbuddy::_GET( 'reset_disalerts' ) ) {
 	pb_backupbuddy::$options['disalerts'] = array();
@@ -128,7 +115,8 @@ if ( '1' == pb_backupbuddy::_GET( 'cancel_running_backups' ) ) {
 <h1><?php esc_html_e( 'Version History', 'it-l10n-backupbuddy' ); ?></h1>
 <?php
 backupbuddy_plugin_information(
-	pb_backupbuddy::settings( 'slug' ), array(
+	pb_backupbuddy::settings( 'slug' ),
+	array(
 		'name' => pb_backupbuddy::settings( 'name' ),
 		'path' => pb_backupbuddy::plugin_path(),
 	)
@@ -170,20 +158,22 @@ backupbuddy_plugin_information(
 
 		<b>Anything logged here is typically not important. Only provide to tech support if specifically requested.</b> By default only errors are logged. Enable Full Logging on the <a href="?page=pb_backupbuddy_settings&tab=advanced">Advanced Settings</a> tab.
 		<?php
-		echo '<textarea readonly="readonly" style="width: 100%;" wrap="off" cols="65" rows="7" id="backupbuddy_logFile">';
+		echo '<textarea readonly="readonly" data-log-file="main" style="width: 100%;" wrap="off" cols="65" rows="7" id="backupbuddy_logFile">';
 		echo '*** Loading log file. Please wait ...';
 		echo '</textarea>';
 		?>
-		<a href="<?php echo esc_attr( pb_backupbuddy::page_url() ); ?>&reset_log=true&tab=other" class="button secondary-button"><?php esc_html_e( 'Clear Log', 'it-l10n-backupbuddy' ); ?></a>
+		<a href="#reset-log" class="button secondary-button" data-log="main"><?php esc_html_e( 'Clear Log', 'it-l10n-backupbuddy' ); ?></a>
+		<a href="#hide" class="button secondary-button" data-log="main"><?php esc_html_e( 'Hide', 'it-l10n-backupbuddy' ); ?></a>
 	</div>
 
 	<div id="backupbuddy-remoteapi-log" style="display: none;">
 		<h3><?php esc_html_e( 'Remote API Log (incoming calls)', 'it-l10n-backupbuddy' ); ?></h3>
 		<?php
-		echo '<textarea readonly="readonly" style="width: 100%;" wrap="off" cols="65" rows="7" id="backupbuddy_remoteapi_logFile">';
+		echo '<textarea readonly="readonly" data-log-file="remote" style="width: 100%;" wrap="off" cols="65" rows="7" id="backupbuddy_remoteapi_logFile">';
 		echo '*** Loading log file. Please wait ...';
 		echo '</textarea>';
 		?>
-		<a href="<?php echo esc_attr( pb_backupbuddy::page_url() ); ?>&reset_log=true&tab=other" class="button secondary-button"><?php esc_html_e( 'Clear Log', 'it-l10n-backupbuddy' ); ?></a>
+		<a href="#reset-log" data-log="remote" class="button secondary-button"><?php esc_html_e( 'Clear Log', 'it-l10n-backupbuddy' ); ?></a>
+		<a href="#hide" class="button secondary-button" data-log="remote"><?php esc_html_e( 'Hide', 'it-l10n-backupbuddy' ); ?></a>
 	</div>
 </div>

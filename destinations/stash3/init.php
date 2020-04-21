@@ -680,11 +680,15 @@ class pb_backupbuddy_destination_stash3 {
 		$ext   = substr( $remote_file, -4 );
 		$files = self::get_files( $settings, array( $ext ) );
 		foreach ( $files as $file ) {
+			$basename = $file['basename'];
 			$filename = $file['filename'];
 			if ( $remote_file === $filename ) {
 				return $file['url'];
+			} elseif ( $remote_file === $basename ) {
+				return $file['url'];
 			}
 		}
+		pb_backupbuddy::status( 'details', 'Unable to determine file URL for `' . $remote_file . '`. Options were: ' . print_r( $files, true ) );
 		return false;
 	}
 
@@ -697,13 +701,17 @@ class pb_backupbuddy_destination_stash3 {
 	 *
 	 * @return bool  If successful.
 	 */
-	public static function download_file( $settings, $remote_file, $destination_file ) {
+	public static function getFile( $settings, $remote_file, $destination_file ) {
 		if ( ! function_exists( 'download_url' ) ) {
 			require_once ABSPATH . 'wp-admin/includes/file.php';
 		}
 
 		pb_backupbuddy::status( 'details', 'About to begin downloading `' . $remote_file . '` from URL.' );
-		$url      = self::get_file_url( $settings, $remote_file );
+		$url = self::get_file_url( $settings, $remote_file );
+		if ( ! $url ) {
+			$error = 'Error #83443: Unable to create download file URL for `' . $remote_file . '`.';
+			return false;
+		}
 		$download = download_url( $url );
 		pb_backupbuddy::status( 'details', 'Download process complete.' );
 
@@ -746,7 +754,7 @@ class pb_backupbuddy_destination_stash3 {
 		foreach ( $dat_files as $dat_file ) {
 			$local_file = backupbuddy_core::getBackupDirectory() . basename( $dat_file['basename'] );
 
-			if ( true !== self::download_file( $settings, $dat_file['filename'], $local_file ) ) {
+			if ( true !== self::getFile( $settings, $dat_file['filename'], $local_file ) ) {
 				$success = false;
 			}
 		}

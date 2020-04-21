@@ -349,25 +349,29 @@ class pb_backupbuddy_destination_local {
 	/**
 	 * Download a remote file to local.
 	 *
-	 * @param string $file  Remote file name.
+	 * @param array  $settings          Destination settings array.
+	 * @param string $file              Remote file name.
+	 * @param string $destination_file  Local file destination to place remote file.
 	 *
 	 * @return bool  If successful.
 	 */
-	public static function getFile( $settings, $file ) {
+	public static function getFile( $settings, $file, $destination_file = false ) {
 		$remote_copy = $settings['path'] . $file;
 
 		if ( ! file_exists( $remote_copy ) ) {
 			return false;
 		}
 
-		$local_copy  = backupbuddy_core::getBackupDirectory() . $file;
 		$remote_time = filemtime( $remote_copy );
+		if ( ! $destination_file ) {
+			$destination_file = backupbuddy_core::getBackupDirectory() . $file;
+		}
 
-		if ( ! @copy( $remote_copy, $local_copy ) ) {
+		if ( ! @copy( $remote_copy, $destination_file ) ) {
 			return false;
 		}
 
-		touch( $local_copy, $remote_time );
+		touch( $destination_file, $remote_time );
 
 		// Download .dat file if necessary.
 		if ( '.zip' === substr( $file, -4 ) ) {

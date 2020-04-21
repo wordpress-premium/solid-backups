@@ -218,18 +218,19 @@ if ( '' != pb_backupbuddy::_GET( 'live_action' ) ) {
 
 	} elseif ( 'troubleshooting' == $action ) {
 
-		echo '<h3>Stash Live Troubleshooting Scan Details</h3>';
+		echo '<div class="backupbuddy-stashlive-troubleshooting-scan">';
+			echo '<h3>Stash Live Troubleshooting Scan Details</h3>';
 
-		require( '_troubleshooting.php' );
-		backupbuddy_live_troubleshooting::run();
-		$results = backupbuddy_live_troubleshooting::get_raw_results();
+			require( '_troubleshooting.php' );
+			backupbuddy_live_troubleshooting::run();
+			$results = backupbuddy_live_troubleshooting::get_raw_results();
 
-		echo '<button style="margin-bottom: 10px;" class="button button-primary" onClick="backupbuddy_save_textarea_as_file(\'#backupbuddy_live_troubleshooting_results\', \'stash_live_troubleshooting\' );">Download Troubleshooting Log (.txt)</button>';
-		echo '<textarea readonly="readonly" style="width: 100%;" wrap="off" cols="65" rows="10" id="backupbuddy_live_troubleshooting_results">' . print_r( $results, true ) . '</textarea><br>';
-		echo '<button style="margin-top: 10px;" class="button button-primary" onClick="backupbuddy_save_textarea_as_file(\'#backupbuddy_live_troubleshooting_results\', \'stash_live_troubleshooting\' );">Download Troubleshooting Log (.txt)</button>';
+			echo '<button style="margin-bottom: 10px;" class="button button-primary" onClick="backupbuddy_save_textarea_as_file(\'#backupbuddy_live_troubleshooting_results\', \'stash_live_troubleshooting\' );">Download Troubleshooting Log (.txt)</button>';
+			echo '<textarea readonly="readonly" style="width: 100%;" wrap="off" cols="65" rows="10" id="backupbuddy_live_troubleshooting_results">' . print_r( $results, true ) . '</textarea><br>';
+			echo '<button style="margin-top: 10px;" class="button button-primary" onClick="backupbuddy_save_textarea_as_file(\'#backupbuddy_live_troubleshooting_results\', \'stash_live_troubleshooting\' );">Download Troubleshooting Log (.txt)</button>';
 
-		echo '<br><br><br><br>';
-
+			echo '<br><br><br><br>';
+		echo '</div>';
 
 	} elseif ( 'last_snapshot_details' == $action ) {
 		if ( '' == $state['stats']['last_remote_snapshot_id'] ) {

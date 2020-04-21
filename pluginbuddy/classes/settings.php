@@ -278,7 +278,7 @@ class pb_backupbuddy_settings {
 					$savepoint_subsection = &pb_backupbuddy::$options;
 					$savepoint_levels     = explode( '#', $savepoint_root . $post_name );
 					foreach ( $savepoint_levels as $savepoint_level ) {
-						$savepoint_subsection = &$savepoint_subsection{$savepoint_level};
+						$savepoint_subsection = &$savepoint_subsection[ $savepoint_level ];
 					}
 					// Apply settings.
 					$savepoint_subsection = stripslashes_deep( $post_value ); // Remove WordPress' magic-quotes-nonsense.

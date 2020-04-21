@@ -1,0 +1,4 @@
+1.1.7 - Updated in BB on March 19, 2020.
+ - Added getSpaceUsage.
+ - Fixed createTemporaryDirectLink, now returns response array.
+1.1.6 - Updated in BB on April 13, 2006.

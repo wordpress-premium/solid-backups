@@ -51,7 +51,7 @@ backupbuddy-get-latestBackupProcess
 				Array (
 					id- Numeric identifier for this destination.
 					title- Friendly user-specified title of destination.
-					type- Type of destination. Valid values: dropbox, dropbox2, email, ftp, local, rackspace, s3, sftp, stash, + any future destinations.
+					type- Type of destination. Valid values: dropbox3, email, sftp, ftp, local, s32, s32, stash2, stash3 + any future destinations.
 				)
 
 
@@ -95,7 +95,7 @@ backupbuddy-list-destinations
 			message- Text status message.
 			destinations- Array of destinations
 				title- User-specified title of destination. Tags stripped.
-				type- Type of destination. Valid values: dropbox, dropbox2, email, ftp, local, rackspace, s3, sftp, stash, + any future destinations.
+				type- Type of destination. Valid values: dropbox3, email, sftp, ftp, local, s32, s32, stash2, stash3 + any future destinations.
 				id- Numeric identifier for this destination.
 
 

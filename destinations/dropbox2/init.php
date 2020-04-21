@@ -5,8 +5,8 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 
 	public static $destination_info = array(
 		'name'			=>		'Dropbox (v2)',
-		'description'	=>		'Dropbox.com support for servers running PHP v5.3 or newer. Supports multipart chunked uploads for larger file support, improved memory handling, and reliability.',
-		'category'		=>		'normal', // best, normal, legacy
+		'description'	=>		'Legacy Dropbox destination. Support will discontinued in the future. Use Dropbox (v3) for Dropbox Destination support.',
+		'category'		=>		'legacy', // best, normal, legacy
 	);
 
 	// Default settings. Should be public static for auto-merging.
@@ -36,7 +36,7 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 
 	public static function init() {
 
-		require_once( pb_backupbuddy::plugin_path() . '/destinations/dropbox2/lib/Dropbox/autoload.php' );
+		require_once( pb_backupbuddy::plugin_path() . '/destinations/dropbox3/lib/Dropbox/autoload.php' );
 		self::$appInfo = dbx\AppInfo::loadFromJsonFile( pb_backupbuddy::plugin_path() . '/destinations/dropbox2/_config.json' );
 
 	} // End init().

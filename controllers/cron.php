@@ -327,35 +327,28 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 		}
 		pb_backupbuddy::status( 'details', 'Filename of resulting local copy: `' . $destination_file . '`.' );
 
-		pb_backupbuddy::status( 'details', '_process_remote_copy with `' . print_r( array(
-			'destination_type' => $destination_type,
-			'settings'         => $settings,
-			'file'             => $file,
-			'destination_file' => $destination_file,
-		), true ) . '`' );
+		pb_backupbuddy::status(
+			'details',
+			'_process_remote_copy with `' . print_r(
+				array(
+					'destination_type' => $destination_type,
+					'settings'         => $settings,
+					'file'             => $file,
+					'destination_file' => $destination_file,
+				),
+				true
+			) . '`'
+		);
 
 		if ( 'stash2' == $destination_type ) {
 			require_once pb_backupbuddy::plugin_path() . '/destinations/stash2/init.php';
-			return pb_backupbuddy_destination_stash2::download_file( $settings, $file, $destination_file );
+			return pb_backupbuddy_destination_stash2::getFile( $settings, $file, $destination_file );
 		} elseif ( 'stash3' == $destination_type ) {
 			require_once pb_backupbuddy::plugin_path() . '/destinations/stash3/init.php';
-			return pb_backupbuddy_destination_stash3::download_file( $settings, $file, $destination_file );
-		} elseif ( 'gdrive' == $destination_type ) {
-			die( 'Not implemented here.' );
-			// @TODO Does the rest of this code execute? Can it be removed?
-			require_once pb_backupbuddy::plugin_path() . '/destinations/gdrive/init.php';
-			$settings = array_merge( pb_backupbuddy_destination_gdrive::$default_settings, $settings );
-
-			if ( true === pb_backupbuddy_destination_gdrive::getFile( $settings, $file, $destination_file ) ) { // success.
-				pb_backupbuddy::status( 'details', 'Google Drive copy to local success.' );
-				return true;
-			} else { // fail.
-				pb_backupbuddy::status( 'details', 'Error #2332903. Google Drive copy to local FAILURE.' );
-				return false;
-			}
+			return pb_backupbuddy_destination_stash3::getFile( $settings, $file, $destination_file );
 		} elseif ( 's3' == $destination_type ) {
 			require_once pb_backupbuddy::plugin_path() . '/destinations/s3/init.php';
-			if ( true === pb_backupbuddy_destination_s3::download_file( $settings, $file, $destination_file ) ) { // success.
+			if ( true === pb_backupbuddy_destination_s3::getFile( $settings, $file, $destination_file ) ) { // success.
 				pb_backupbuddy::status( 'details', 'S3 copy to local success.' );
 				return true;
 			} else { // fail.
@@ -364,7 +357,7 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 			}
 		} elseif ( 's32' == $destination_type ) {
 			require_once pb_backupbuddy::plugin_path() . '/destinations/s32/init.php';
-			if ( true === pb_backupbuddy_destination_s32::download_file( $settings, $file, $destination_file ) ) { // success.
+			if ( true === pb_backupbuddy_destination_s32::getFile( $settings, $file, $destination_file ) ) { // success.
 				pb_backupbuddy::status( 'details', 'S3 (v2) copy to local success.' );
 				return true;
 			} else { // fail.
@@ -373,7 +366,7 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 			}
 		} elseif ( 's33' == $destination_type ) {
 			require_once pb_backupbuddy::plugin_path() . '/destinations/s33/init.php';
-			if ( true === pb_backupbuddy_destination_s33::download_file( $settings, $file, $destination_file ) ) { // success.
+			if ( true === pb_backupbuddy_destination_s33::getFile( $settings, $file, $destination_file ) ) { // success.
 				pb_backupbuddy::status( 'details', 'S3 (v3) copy to local success.' );
 				return true;
 			} else { // fail.
@@ -381,7 +374,7 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 				return false;
 			}
 		} else {
-			pb_backupbuddy::status( 'error', 'Error #859485. Unknown destination type for remote copy `' . $destination_type . '`.' );
+			pb_backupbuddy::status( 'error', 'Error #859485. Unknown destination type for remote copy `' . $destination_type . '`. Did you mean to use `process_destination_copy`?' );
 			return false;
 		}
 
@@ -397,7 +390,12 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 	 * @return bool  True success, else false.
 	 */
 	public function _process_destination_copy( $destination_settings, $remote_file, $file_id = '' ) {
+		if ( false !== strstr( $remote_file, '?' ) ) {
+			$remote_file = basename( $remote_file );
+			$remote_file = substr( $remote_file, 0, strpos( $remote_file, '?' ) );
+		}
 
+		pb_backupbuddy::status( 'details', 'Copying destination `' . $destination_settings['type'] . '` file `' . $remote_file . '` down to local.' );
 		pb_backupbuddy::set_greedy_script_limits();
 
 		if ( ! class_exists( 'backupbuddy_core' ) ) {
@@ -418,12 +416,10 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 		if ( true === pb_backupbuddy_destinations::getFile( $destination_settings, $remote_file, $local_file ) ) {
 			pb_backupbuddy::status( 'message', 'Success copying remote file to local.' );
 			return true;
-		} else {
-			pb_backupbuddy::status( 'error', 'Failure copying remote file to local.' );
-			return false;
 		}
-
-	} // End _process_destination_copy().
+		pb_backupbuddy::status( 'error', 'Failure copying remote file to local.' );
+		return false;
+	} // _process_destination_copy.
 
 	/**
 	 * Copy Rackspace backup to local backup directory
@@ -463,75 +459,6 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 		$rsfile->stream( $fso );
 		fclose( $fso );
 	}
-
-	/**
-	 * Copy FTP backup to local backup directory
-	 *
-	 * @todo Merge into v3.1 destinations system in destinations directory.
-	 *
-	 * @param string $backup         Backup file.
-	 * @param string $ftp_server     FTP Server.
-	 * @param string $ftp_username   FTP Username.
-	 * @param string $ftp_password   FTP Password.
-	 * @param string $ftp_directory  FTP Directory.
-	 * @param string $port           FTP Port number.
-	 * @param string $ftps           Use FTPs or not.
-	 *
-	 * @return bool  False if Unable to connect, null if successful.
-	 */
-	public function _process_ftp_copy( $backup, $ftp_server, $ftp_username, $ftp_password, $ftp_directory, $port = '21', $ftps = '0' ) {
-		pb_backupbuddy::set_greedy_script_limits();
-
-		if ( ! class_exists( 'backupbuddy_core' ) ) {
-			require_once pb_backupbuddy::plugin_path() . '/classes/core.php';
-		}
-
-		// Connect to server.
-		if ( '1' == $ftps ) { // Connect with FTPs.
-			if ( function_exists( 'ftp_ssl_connect' ) ) {
-				$conn_id = ftp_ssl_connect( $ftp_server, $port );
-				if ( false === $conn_id ) {
-					pb_backupbuddy::status( 'details', 'Unable to connect to FTPS  (check address/FTPS support).', 'error' );
-					return false;
-				} else {
-					pb_backupbuddy::status( 'details', 'Connected to FTPs.' );
-				}
-			} else {
-				pb_backupbuddy::status( 'details', 'Your web server doesnt support FTPS in PHP.', 'error' );
-				return false;
-			}
-		} else { // Connect with FTP (normal).
-			if ( function_exists( 'ftp_connect' ) ) {
-				$conn_id = ftp_connect( $ftp_server, $port );
-				if ( false === $conn_id ) {
-					pb_backupbuddy::status( 'details', 'ERROR: Unable to connect to FTP (check address).', 'error' );
-					return false;
-				} else {
-					pb_backupbuddy::status( 'details', 'Connected to FTP.' );
-				}
-			} else {
-				pb_backupbuddy::status( 'details', 'Your web server doesnt support FTP in PHP.', 'error' );
-				return false;
-			}
-		}
-
-		// Login with username and password.
-		$login_result = ftp_login( $conn_id, $ftp_username, $ftp_password );
-
-		// Try to download $server_file and save to $local_file.
-		$destination_file = backupbuddy_core::getBackupDirectory() . $backup;
-		if ( file_exists( $destination_file ) ) {
-			$destination_file = str_replace( 'backup-', 'backup_copy_' . pb_backupbuddy::random_string( 5 ) . '-', $destination_file );
-		}
-		if ( ftp_get( $conn_id, $destination_file, $ftp_directory . $backup, FTP_BINARY ) ) {
-			pb_backupbuddy::status( 'message', 'Successfully wrote remote file locally to `' . $destination_file . '`.' );
-		} else {
-			pb_backupbuddy::status( 'error', 'Error writing remote file locally to `' . $destination_file . '`.' );
-		}
-
-		// close this connection.
-		ftp_close( $conn_id );
-	} // End _process_ftp_copy().
 
 	/**
 	 * Process Restore Queue.

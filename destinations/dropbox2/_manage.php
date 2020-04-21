@@ -20,7 +20,7 @@ if ( '' != pb_backupbuddy::_GET( 'cpy' ) ) {
 	// Copy dropbox backups to the local backup files
 	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
 	echo '<br>';
-	pb_backupbuddy::status( 'details',  'Scheduling Cron for creating Dropbox copy.' );
+	pb_backupbuddy::status( 'details', 'Scheduling Cron for creating Dropbox copy.' );
 	backupbuddy_core::schedule_single_event( time(), 'process_destination_copy', array( $destination, pb_backupbuddy::_GET( 'cpy' ) ) );
 
 	if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {

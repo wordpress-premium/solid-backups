@@ -1594,6 +1594,8 @@ class backupbuddy_core {
 			return 'sFTP';
 		} elseif ( 'dropbox2' === $type ) {
 			return 'Dropbox v2';
+		} elseif ( 'dropbox3' === $type ) {
+			return 'Dropbox v3';
 		} elseif ( 'gdrive' === $type ) {
 			return 'Google Drive';
 		} elseif ( 'site' === $type ) {
@@ -2303,7 +2305,7 @@ class backupbuddy_core {
 	 *
 	 * @return bool  True on verified schedule success, else false.
 	 */
-	public static function schedule_single_event( $time, $method, $args, $reschedule_count = 0 ) {
+	public static function schedule_single_event( $time, $method, $args = array(), $reschedule_count = 0 ) {
 		$tag = 'backupbuddy_cron';
 
 		// Make sure live_periodic never gets scheduled multiple times.

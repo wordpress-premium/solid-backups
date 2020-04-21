@@ -821,6 +821,9 @@ a:focus {
 .bb_destination-item.bb_destination-dropbox2 a {
     background: #fff url('../destinations/dropbox2/icon50.png') no-repeat center 22px;
 }
+.bb_destination-item.bb_destination-dropbox3 a {
+    background: #fff url('../destinations/dropbox3/icon50.png') no-repeat center 22px;
+}
 .bb_destination-item.bb_destination-ftp a {
     background: #fff url('../destinations/ftp/icon50.png') no-repeat center 22px;
 }

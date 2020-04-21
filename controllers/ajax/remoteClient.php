@@ -7,7 +7,7 @@
 
 backupbuddy_core::verifyAjaxAccess();
 
-pb_backupbuddy::$ui->ajax_header();
+pb_backupbuddy::$ui->ajax_header( true, true, 'backupbuddy-admin-iframe' );
 
 $destination_id = pb_backupbuddy::_GET( 'destination_id' );
 

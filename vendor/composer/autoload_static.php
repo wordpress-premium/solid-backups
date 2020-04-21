@@ -14,6 +14,10 @@ class ComposerStaticInitdd23c7c42d8e799472d379ff823a0ca6
     );
 
     public static $prefixLengthsPsr4 = array (
+        'S' => 
+        array (
+            'Stevenmaguire\\OAuth2\\Client\\' => 28,
+        ),
         'P' => 
         array (
             'Psr\\Http\\Message\\' => 17,
@@ -22,6 +26,10 @@ class ComposerStaticInitdd23c7c42d8e799472d379ff823a0ca6
         array (
             'Microsoft\\Graph\\Test\\' => 21,
             'Microsoft\\Graph\\' => 16,
+        ),
+        'L' => 
+        array (
+            'League\\OAuth2\\Client\\' => 21,
         ),
         'K' => 
         array (
@@ -36,6 +44,10 @@ class ComposerStaticInitdd23c7c42d8e799472d379ff823a0ca6
     );
 
     public static $prefixDirsPsr4 = array (
+        'Stevenmaguire\\OAuth2\\Client\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/stevenmaguire/oauth2-dropbox/src',
+        ),
         'Psr\\Http\\Message\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/http-message/src',
@@ -47,6 +59,10 @@ class ComposerStaticInitdd23c7c42d8e799472d379ff823a0ca6
         'Microsoft\\Graph\\' => 
         array (
             0 => __DIR__ . '/..' . '/microsoft/microsoft-graph/src',
+        ),
+        'League\\OAuth2\\Client\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/league/oauth2-client/src',
         ),
         'Krizalys\\Onedrive\\' => 
         array (

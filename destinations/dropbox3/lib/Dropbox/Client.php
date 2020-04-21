@@ -160,6 +160,27 @@ class Client
     }
 
     /**
+     * Make an API call to get space usage information.
+     *
+     * <code>
+     * $client = ...
+     * $spaceUsage = $client->getSpaceUsage();
+     * print_r($spaceUsage);
+     * </code>
+     *
+     * @return array
+     *    See <a href="https://www.dropbox.com/developers/documentation/http/documentation#users-get_space_usage">/users/get_space_usage</a>.
+     *
+     * @throws Exception
+     */
+    function getSpaceUsage()
+    {
+        $response = $this->doPost($this->apiHost, "2/users/get_space_usage",null,null,'application/json');
+        if ($response->statusCode !== 200) throw RequestUtil::unexpectedStatus($response);
+        return RequestUtil::parseResponseJson($response->body);
+    }
+
+    /**
      * Downloads a file from Dropbox.  The file's contents are written to the
      * given <code>$outStream</code> and the file's metadata is returned.
      *
@@ -1148,17 +1169,23 @@ class Client
     {
         Path::checkArgNonRoot("path", $path);
 
+    	$params = array( 'path' => $path );
+
         $response = $this->doPost(
             $this->apiHost,
-            $this->appendFilePath("2/files/get_temporary_link", $path));
+            "2/files/get_temporary_link",
+            $params,null,'application/json');
 
         if ($response->statusCode === 404) return null;
         if ($response->statusCode !== 200) throw RequestUtil::unexpectedStatus($response);
 
         $j = RequestUtil::parseResponseJson($response->body);
+        return $j;
+        /*
         $url = self::getField($j, "url");
         $expires = self::parseDateTime(self::getField($j, "expires"));
         return array($url, $expires);
+        */
     }
 
     /**
@@ -1355,6 +1382,43 @@ class Client
                 "root" => "auto",
                 "path" => $path,
             ));
+
+        if ($response->statusCode === 403) return null;
+        if ($response->statusCode !== 200) throw RequestUtil::unexpectedStatus($response);
+
+        return RequestUtil::parseResponseJson($response->body);
+    }
+
+    /**
+     * Creates a folder.
+     *
+     * See <a href="https://www.dropbox.com/developers/documentation/http/documentation#files-create_folder">/files/create_folder_v2</a>.
+     *
+     * @param string $path
+     *    The Dropbox path at which to create the folder (UTF-8).
+     *
+     * @param bool $autorename  If autorename should be enabled.
+     *
+     * @return array|null
+     *    If successful, you'll get back the
+     *    <a href="https://www.dropbox.com/developers/core/docs#metadata-details">metadata object</a>
+     *    for the newly-created folder.  If not successful, you'll get <code>null</code>.
+     *
+     * @throws Exception
+     */
+    function createFolderV2($path, $autorename = false)
+    {
+        Path::checkArgNonRoot("path", $path);
+
+    	$params = array(
+    		'path' => $path,
+    		'autorename' => $autorename,
+    	);
+
+        $response = $this->doPost(
+            $this->apiHost,
+            "2/files/create_folder_v2",
+            $params,null,'application/json');
 
         if ($response->statusCode === 403) return null;
         if ($response->statusCode !== 200) throw RequestUtil::unexpectedStatus($response);

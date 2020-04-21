@@ -47,14 +47,14 @@ if ( empty( $modes ) ) {
 	exit();
 }
 
-$supported = array( 'local', 's33', 's32', 'stash3', 'stash2' );
+$supported = array( 'local', 's33', 's32', 'stash3', 'stash2', 'sftp', 'ftp', 'dropbox3' );
 
 $destination_settings = pb_backupbuddy::$options['remote_destinations'][ $destination_id ];
 
 require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
 
 if ( ! in_array( $destination_settings['type'], $supported, true ) ) {
-	$response['log'][] = sprintf( __( 'Skipping unsupported destination type `%s` (%s).', 'it-l10n-backupbuddy' ), $destination_settings['type'], $destination_id );
+	$response['log'][] = __( 'Skipping unsupported destination type ', 'it-l10n-backupbuddy' ) . sprintf( '`%s` (%s).', $destination_settings['type'], $destination_id );
 	wp_send_json( $response );
 	exit();
 }

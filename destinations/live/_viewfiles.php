@@ -55,7 +55,7 @@ if ( pb_backupbuddy::_POST( 'bulk_action' ) == 'delete_backup' ) {
 if ( pb_backupbuddy::_GET( 'cpy' ) ) {
 	pb_backupbuddy::alert( 'The remote file is now being copied to your server.' );
 	echo '<br>';
-	pb_backupbuddy::status( 'details',  'Scheduling Cron for creating Stash copy.' );
+	pb_backupbuddy::status( 'details', 'Scheduling Cron for creating Stash copy.' );
 
 	$file = pb_backupbuddy::_GET( 'cpy' );
 	backupbuddy_core::schedule_single_event( time(), 'process_remote_copy', array( 'live', $file, $settings ) );

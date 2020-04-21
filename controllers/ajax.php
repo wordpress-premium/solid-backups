@@ -28,7 +28,7 @@ class pb_backupbuddy_ajax extends pb_backupbuddy_ajaxcore {
 		}
 
 		pb_backupbuddy::load();
-		require_once 'ajax/' . $function . '.php';
+		require_once $file;
 		die();
 	} // End backupbuddy().
 

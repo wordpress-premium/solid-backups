@@ -101,13 +101,13 @@ $settings_form->add_setting(
 			's3-ap-northeast-2.amazonaws.com'    => 'ap-northeast-2 &nbsp;|&nbsp; Asia Pacific Northeast 2 (Seoul)',
 			's3-ap-southeast-1.amazonaws.com'    => 'ap-southeast-1 &nbsp;|&nbsp; Asia Pacific Southeast 1 (Singapore)',
 			's3-ap-southeast-2.amazonaws.com'    => 'ap-southeast-2 &nbsp;|&nbsp; Asia Pacific Southeast 2 (Sydney)',
-			'sts.ap-south-1.amazonaws.com'       => 'ap-south-1 &nbsp;|&nbsp; Asia Pacific South 1 (Mumbai)',
+			's3-ap-south-1.amazonaws.com'        => 'ap-south-1 &nbsp;|&nbsp; Asia Pacific South 1 (Mumbai)',
 
 			's3-eu-central-1.amazonaws.com'      => 'eu-central-1 &nbsp;|&nbsp; EU Central 1 (Frankfurt)',
 			's3-eu-west-1.amazonaws.com'         => 'eu-west-1 &nbsp;|&nbsp; EU West 1 (Ireland)',
 			's3-eu-west-2.amazonaws.com'         => 'eu-west-2 &nbsp;|&nbsp; EU West 2 (London)',
-			'sts.eu-west-3.amazonaws.com'        => 'eu-west-3 &nbsp;|&nbsp; EU West 3 (Paris)',
-			'sts.eu-north-1.amazonaws.com'       => 'eu-north-1 &nbsp;|&nbsp; EU North 1 (Stockholm)',
+			's3-eu-west-3.amazonaws.com'         => 'eu-west-3 &nbsp;|&nbsp; EU West 3 (Paris)',
+			's3-eu-north-1.amazonaws.com'        => 'eu-north-1 &nbsp;|&nbsp; EU North 1 (Stockholm)',
 
 			's3-sa-east-1.amazonaws.com'         => 'sa-east-1 &nbsp;|&nbsp; South America East 1 (Sao Paulo)',
 

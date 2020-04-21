@@ -2044,3 +2044,13 @@
 	Bug Fix: Adjustment to admin notices on Backup screen.
 8.5.3.2 - 2020-02-11 - Brian DiChiara, Tyler Gilbert
 	Bug Fix: Resolved Javascript conflict with Jetpack related to admin notices.
+8.5.4.0 - 2020-03-09 - Brian DiChiara
+	Bug Fix: Fixed incorrect service URLs for S3 Bucket Regions.
+	Bug Fix: Resolved issue where BackupBuddy pages lock up related to admin notices.
+8.5.5.0 - 2020-03-19 - Brian DiChiara
+	Enhancement: New Dropbox (v3) Destination, supports latest API endpoints, OAuth2 and Restore functionality.
+	Enhancement: Updated sFTP Destination to include Restore support.
+	Enhancement: Updated FTP Destination to include Restore support.
+	Enhancement: Various improvements to Restore functionality.
+	Bug Fix: Resolved issue where OneDrive sometimes results in 503 Error when sending files.
+	Bug Fix: PHP 7.4 Compatibility fixes.
