@@ -147,7 +147,7 @@ class DriveItemProxyTest extends TestCase
                 $sandbox->upload(
                     "Test file #$i",
                     "Test content #$i",
-                    ['contentType' => 'text/plain']
+                    []
                 );
             }
 
@@ -177,7 +177,7 @@ class DriveItemProxyTest extends TestCase
             $driveItem = $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $driveItem->delete();
@@ -202,7 +202,7 @@ class DriveItemProxyTest extends TestCase
             $driveItem = $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $this->assertDriveItemProxy($driveItem);
@@ -226,7 +226,7 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $driveItem = $sandbox->upload(
@@ -243,16 +243,13 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $driveItem = $sandbox->upload(
                 'Test file',
                 'Test content',
-                [
-                    'conflictBehavior' => ConflictBehavior::RENAME,
-                    'contentType'      => 'text/plain',
-                ]
+                ['conflictBehavior' => ConflictBehavior::RENAME]
             );
 
             $this->assertDriveItemProxy($driveItem);
@@ -270,16 +267,13 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $driveItem = $sandbox->upload(
                 'Test file',
                 'Test content',
-                [
-                    'conflictBehavior' => ConflictBehavior::REPLACE,
-                    'contentType'      => 'text/plain',
-                ]
+                ['conflictBehavior' => ConflictBehavior::REPLACE]
             );
 
             $this->assertDriveItemProxy($driveItem);
@@ -301,7 +295,7 @@ class DriveItemProxyTest extends TestCase
             $driveItem = $sandbox->upload(
                 'Test file',
                 $content,
-                ['contentType' => 'text/plain']
+                []
             );
 
             $this->assertDriveItemProxy($driveItem);
@@ -328,7 +322,7 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $content = fopen('php://memory', 'rb+');
@@ -352,7 +346,7 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'test-file.txt',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $content = fopen('php://memory', 'rb+');
@@ -362,10 +356,7 @@ class DriveItemProxyTest extends TestCase
             $driveItem = $sandbox->upload(
                 'test-file.txt',
                 $content,
-                [
-                    'conflictBehavior' => ConflictBehavior::RENAME,
-                    'contentType'      => 'text/plain',
-                ]
+                ['conflictBehavior' => ConflictBehavior::RENAME]
             );
 
             $this->assertDriveItemProxy($driveItem);
@@ -386,7 +377,7 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $content = fopen('php://memory', 'rb+');
@@ -396,10 +387,7 @@ class DriveItemProxyTest extends TestCase
             $driveItem = $sandbox->upload(
                 'Test file',
                 $content,
-                [
-                    'conflictBehavior' => ConflictBehavior::REPLACE,
-                    'contentType'      => 'text/plain',
-                ]
+                ['conflictBehavior' => ConflictBehavior::REPLACE]
             );
 
             $this->assertDriveItemProxy($driveItem);
@@ -422,10 +410,7 @@ class DriveItemProxyTest extends TestCase
             $uploadSession = $sandbox->startUpload(
                 'Test file',
                 $string,
-                [
-                    'contentType' => 'text/plain',
-                    'description' => 'Test description',
-                ]
+                ['description' => 'Test description']
             );
 
             $this->assertUploadSessionProxy($uploadSession);
@@ -452,7 +437,7 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $string = str_repeat("Test content\n", 100000);
@@ -471,7 +456,7 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $string = str_repeat("Test content\n", 100000);
@@ -481,7 +466,6 @@ class DriveItemProxyTest extends TestCase
                 $string,
                 [
                     'conflictBehavior' => ConflictBehavior::RENAME,
-                    'contentType'      => 'text/plain',
                     'description'      => 'Test description',
                 ]
             );
@@ -504,7 +488,7 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $string = str_repeat("Test content\n", 100000);
@@ -514,7 +498,6 @@ class DriveItemProxyTest extends TestCase
                 $string,
                 [
                     'conflictBehavior' => ConflictBehavior::REPLACE,
-                    'contentType'      => 'text/plain',
                     'description'      => 'Test description',
                 ]
             );
@@ -542,10 +525,7 @@ class DriveItemProxyTest extends TestCase
             $uploadSession = $sandbox->startUpload(
                 'Test file',
                 $stream,
-                [
-                    'contentType' => 'text/plain',
-                    'description' => 'Test description',
-                ]
+                ['description' => 'Test description']
             );
 
             $this->assertUploadSessionProxy($uploadSession);
@@ -575,7 +555,7 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $content = str_repeat("Test content\n", 100000);
@@ -600,7 +580,7 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $content = str_repeat("Test content\n", 100000);
@@ -613,7 +593,6 @@ class DriveItemProxyTest extends TestCase
                 $stream,
                 [
                     'conflictBehavior' => ConflictBehavior::RENAME,
-                    'contentType'      => 'text/plain',
                     'description'      => 'Test description',
                 ]
             );
@@ -639,7 +618,7 @@ class DriveItemProxyTest extends TestCase
             $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $content = str_repeat("Test content\n", 100000);
@@ -652,7 +631,6 @@ class DriveItemProxyTest extends TestCase
                 $stream,
                 [
                     'conflictBehavior' => ConflictBehavior::REPLACE,
-                    'contentType'      => 'text/plain',
                     'description'      => 'Test description',
                 ]
             );
@@ -678,7 +656,7 @@ class DriveItemProxyTest extends TestCase
             $driveItem = $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $destination = $sandbox->createFolder('Test destination');
@@ -702,7 +680,7 @@ class DriveItemProxyTest extends TestCase
             $driveItem = $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $destination = $sandbox->createFolder('Test destination');
@@ -745,7 +723,7 @@ class DriveItemProxyTest extends TestCase
             $driveItem = $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $destination = $sandbox->createFolder('Test destination');
@@ -805,7 +783,7 @@ class DriveItemProxyTest extends TestCase
             $driveItem = $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $permission = $driveItem->createLink($type);
@@ -822,7 +800,7 @@ class DriveItemProxyTest extends TestCase
             $driveItem = $sandbox->upload(
                 'Test file',
                 'Test content',
-                ['contentType' => 'text/plain']
+                []
             );
 
             $driveItem->createLink($type);

@@ -62,31 +62,10 @@ if ( 'add' === $mode && ! $code ) {
 		( function( $ ) {
 			'use strict';
 
-			function open_window( url, title, w, h ) {
-				// Fixes dual-screen position                         Most browsers      Firefox
-				var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : window.screenX,
-					dualScreenTop = window.screenTop != undefined ? window.screenTop : window.screenY,
-
-					width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width,
-					height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height,
-
-					systemZoom = width / window.screen.availWidth,
-					left = (width - w) / 2 / systemZoom + dualScreenLeft,
-					top = (height - h) / 2 / systemZoom + dualScreenTop,
-					newWindow = window.open( url, title, 'scrollbars=no, width=' + w / systemZoom + ', height=' + h / systemZoom + ', top=' + top + ', left=' + left );
-
-				// Puts focus on the newWindow.
-				if ( window.focus ) {
-					newWindow.focus();
-				}
-
-				return newWindow;
-			}
-
 			function backupbuddy_onedrive_init() {
 				$( '.onedrive-authorize' ).on( 'click', function( e ) {
 					e.preventDefault();
-					var win = open_window( $( this ).attr( 'href' ), 'OneDrive Authorization', 400, 500 ),
+					var win = backupbuddy_oauth_window( $( this ).attr( 'href' ), 'OneDrive Authorization', 400, 500 ),
 						$btn = $( this ),
 						$input = $( '.onedrive-oauth-code' ),
 						$footer = $( '.form-footer' );

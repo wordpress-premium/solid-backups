@@ -349,24 +349,21 @@ class pb_backupbuddy_destination_ftp {
 				continue;
 			}
 
-			$backup_date = backupbuddy_core::parse_file( $backup, 'timestamp' );
-			$backup_size = self::get_size( $settings, $backup, $conn_id );
+			$backup_date   = backupbuddy_core::parse_file( $backup, 'datetime' );
+			$backup_size   = self::get_size( $settings, $backup, $conn_id );
+			$download_link = admin_url() . sprintf( '?ftp-destination-id=%s&ftp-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
 
 			$backup_array = array(
 				array(
 					$backup,
 					$backup_date,
+					$download_link,
 				),
 				backupbuddy_core::pretty_backup_type( $backup_type ),
 				pb_backupbuddy::$format->file_size( $backup_size ),
 			);
 
-			if ( 'restore' === $mode ) {
-				$backup_array[] = backupbuddy_backups()->get_details_link( $backup );
-			}
-
 			if ( 'default' === $mode ) {
-				$download_link  = admin_url() . sprintf( '?ftp-destination-id=%s&ftp-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
 				$copy_link      = '&cpy=' . rawurlencode( $backup );
 				$actions        = array(
 					$download_link => __( 'Download Backup', 'it-l10n-backupbuddy' ),
@@ -374,6 +371,7 @@ class pb_backupbuddy_destination_ftp {
 				);
 				$backup_array[] = backupbuddy_backups()->get_action_menu( $backup, $actions );
 			} elseif ( 'restore' === $mode ) {
+				$backup_array[] = backupbuddy_backups()->get_details_link( $backup );
 				$backup_array[] = backupbuddy_backups()->get_restore_buttons( $backup, $backup_type );
 			}
 

@@ -26,8 +26,10 @@ if ( isset( $save_result['errors'] ) ) {
 
 		if ( 'NEW' == $destination_id ) { // ADD NEW.
 
-			// Copy over dropbox token.
-			$save_result['data']['token'] = pb_backupbuddy::$options['dropboxtemptoken'];
+			// Copy over Dropbox token. - Really? Here??
+			if ( ! empty( pb_backupbuddy::$options['dropboxtemptoken'] ) ) {
+				$save_result['data']['token'] = pb_backupbuddy::$options['dropboxtemptoken'];
+			}
 
 			pb_backupbuddy::$options['remote_destinations'][] = $save_result['data'];
 

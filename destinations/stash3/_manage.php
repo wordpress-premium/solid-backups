@@ -112,9 +112,6 @@ if ( 0 === $backup_count ) {
 	}
 	echo '</b></center>';
 } else {
-	pb_backupbuddy::load_script( 'backupbuddy.min.js' );
-	pb_backupbuddy::load_style( 'backupbuddy-core.css' );
-
 	$table_args = array(
 		'action'         => $url_prefix,
 		'destination_id' => $destination_id,

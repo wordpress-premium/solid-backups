@@ -163,9 +163,9 @@ class backupbuddy_core {
 		$defaults = array(
 			'source'    => __( 'Unknown', 'it-l10n-backupbuddy' ),
 			'domain'    => __( 'Unknown', 'it-l10n-backupbuddy' ),
-			'profile'   => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'profile'   => __( 'None', 'it-l10n-backupbuddy' ),
 			'date'      => __( 'Unknown', 'it-l10n-backupbuddy' ),
-			'time'      => __( 'Unknown', 'it-l10n-backupbuddy' ),
+			'time'      => null,
 			'type'      => __( 'Unknown', 'it-l10n-backupbuddy' ),
 			'serial'    => __( 'Unknown', 'it-l10n-backupbuddy' ),
 			'timestamp' => __( 'Unknown', 'it-l10n-backupbuddy' ),
@@ -194,10 +194,10 @@ class backupbuddy_core {
 				$last_seg++; // Bump up one for missing date.
 			} elseif ( false !== strtotime( str_replace( '_', '-', $maybe_date ) ) || false !== strtotime( str_replace( '_', ':', $maybe_date ) ) ) {
 				if ( false !== strtotime( str_replace( '_', '-', $rev_segments[3] ) ) ) { // date and time.
-					$return['date'] = str_replace( '_', '-', $rev_segments[3] );
-					$return['time'] = str_replace( '_', ':', $maybe_date );
+					$return['date'] = str_replace( '_', '-', $rev_segments[3] ); // Date.
+					$return['time'] = str_replace( '_', ':', $maybe_date ); // Time.
 				} else { // just date.
-					$return['date'] = str_replace( '_', '-', $maybe_date );
+					$return['date'] = str_replace( '_', '-', $maybe_date ); // Date.
 					$last_seg--; // drop down one for missing time.
 				}
 			} else { // Support for profile.
@@ -224,14 +224,18 @@ class backupbuddy_core {
 				$return['timestamp'] = (int) strtotime( $return['date'] . $time );
 			}
 			if ( ! empty( $return['timestamp'] ) ) {
-				$return['datetime'] = date( 'Y-m-d H:i:s', $return['timestamp'] );
+				$format             = empty( $return['time'] ) ? 'Y-m-d' : 'Y-m-d H:i:s';
+				$return['datetime'] = date( $format, $return['timestamp'] );
 			}
 
 			// Normalize date/time.
 			if ( ! empty( $return['timestamp'] ) ) {
-				$return['date']     = date( 'Y-m-d', $return['timestamp'] );
-				$return['time']     = date( 'H:i:s', $return['timestamp'] );
-				$return['nicename'] = pb_backupbuddy::$format->date( $return['timestamp'], 'l, F j, Y g:ia' );
+				$return['date'] = date( 'Y-m-d', $return['timestamp'] );
+				if ( ! empty( $return['time'] ) ) {
+					$return['time'] = date( 'H:i:s', $return['timestamp'] );
+				}
+				$format             = empty( $return['time'] ) ? 'l, F j, Y' : 'l, F j, Y g:ia';
+				$return['nicename'] = pb_backupbuddy::$format->date( $return['timestamp'], $format );
 			}
 		}
 
@@ -3012,14 +3016,14 @@ class backupbuddy_core {
 		}
 
 		// Calculate customizable section of archive filename (date vs date+time).
-		if ( 'datetime' === pb_backupbuddy::$options['archive_name_format'] ) { // "datetime" = Date + time.
-			$backupfile_datetime = date( backupbuddy_constants::ARCHIVE_NAME_FORMAT_DATETIME, pb_backupbuddy::$format->localize_time( time() ) );
+		if ( 'date' === pb_backupbuddy::$options['archive_name_format'] ) { // "date" = Date only.
+			$backupfile_datetime = date( backupbuddy_constants::ARCHIVE_NAME_FORMAT_DATE, pb_backupbuddy::$format->localize_time( time() ) );
 		} elseif ( 'datetime24' === pb_backupbuddy::$options['archive_name_format'] ) { // "datetime" = Date + time in 24hr format.
 			$backupfile_datetime = date( backupbuddy_constants::ARCHIVE_NAME_FORMAT_DATETIME24, pb_backupbuddy::$format->localize_time( time() ) );
 		} elseif ( 'timestamp' === pb_backupbuddy::$options['archive_name_format'] ) { // "datetime" = Date + time in 24hr format.
 			$backupfile_datetime = pb_backupbuddy::$format->localize_time( time() );
-		} else { // "date" = date only (the default).
-			$backupfile_datetime = date( backupbuddy_constants::ARCHIVE_NAME_FORMAT_DATE, pb_backupbuddy::$format->localize_time( time() ) );
+		} else { // "datetime" = date + time (the default).
+			$backupfile_datetime = date( backupbuddy_constants::ARCHIVE_NAME_FORMAT_DATETIME, pb_backupbuddy::$format->localize_time( time() ) );
 		}
 		$archive_file = backupbuddy_core::getBackupDirectory() . 'backup-' . $siteurl_stripped . '-' . $backupfile_datetime . '-' . $backupfile_profile . $type . '-' . $serial . '.zip';
 

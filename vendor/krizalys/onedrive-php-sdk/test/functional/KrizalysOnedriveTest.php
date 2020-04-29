@@ -202,12 +202,6 @@ EOF;
         if (property_exists($properties, 'description')) {
             $this->fail();
         }
-/*        $this->assertThat(
-            $properties,
-            $this->logicalNot(
-                $this->hasAttribute('description')
-            )
-        );*/
 
         $this->assertInternalType('string', $properties->parent_id);
         $this->assertGreaterThanOrEqual(0, $properties->size);
@@ -514,9 +508,7 @@ EOF;
         return $item->upload(
             $name,
             $content,
-            [
-                'contentType' => 'text/plain',
-            ]
+            []
         );
     }
 

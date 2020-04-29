@@ -64,31 +64,10 @@ if ( 'add' === $mode && ! $code ) {
 		( function( $ ) {
 			'use strict';
 
-			function open_window( url, title, w, h ) {
-				// Fixes dual-screen position                         Most browsers      Firefox
-				var dualScreenLeft = window.screenLeft != undefined ? window.screenLeft : window.screenX,
-					dualScreenTop = window.screenTop != undefined ? window.screenTop : window.screenY,
-
-					width = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width,
-					height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height,
-
-					systemZoom = width / window.screen.availWidth,
-					left = (width - w) / 2 / systemZoom + dualScreenLeft,
-					top = (height - h) / 2 / systemZoom + dualScreenTop,
-					newWindow = window.open( url, title, 'scrollbars=no, width=' + w / systemZoom + ', height=' + h / systemZoom + ', top=' + top + ', left=' + left );
-
-				// Puts focus on the newWindow.
-				if ( window.focus ) {
-					newWindow.focus();
-				}
-
-				return newWindow;
-			}
-
 			function backupbuddy_dropbox_init() {
 				$( '.dropbox-authorize' ).on( 'click', function( e ) {
 					e.preventDefault();
-					var win = open_window( $( this ).attr( 'href' ), 'Dropbox Authorization', 400, 500 ),
+					var win = backupbuddy_oauth_window( $( this ).attr( 'href' ), 'Dropbox Authorization', 400, 500 ),
 						$btn = $( this ),
 						$input = $( '.dropbox-oauth-code' ),
 						$footer = $( '.form-footer' );
@@ -231,27 +210,25 @@ if ( 'save' !== $mode && '1' !== $destination_settings['disable_file_management'
  */
 $settings_form->add_setting(
 	array(
-		'type'    => 'text',
-		'name'    => 'full_archive_limit',
-		'title'   => __( 'Full backup limit', 'it-l10n-backupbuddy' ) . ' <span class="required">*</span>',
-		'tip'     => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of Full (complete) backup archives to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
-		'rules'   => 'required|int[0-9999999]',
-		'default' => 5,
-		'css'     => 'width: 50px;',
-		'after'   => ' backups',
+		'type'  => 'text',
+		'name'  => 'full_archive_limit',
+		'title' => __( 'Full backup limit', 'it-l10n-backupbuddy' ) . ' <span class="required">*</span>',
+		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of Full (complete) backup archives to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
+		'rules' => 'required|int[0-9999999]',
+		'css'   => 'width: 50px;',
+		'after' => ' backups',
 	)
 );
 
 $settings_form->add_setting(
 	array(
-		'type'    => 'text',
-		'name'    => 'db_archive_limit',
-		'title'   => __( 'Database only limit', 'it-l10n-backupbuddy' ) . ' <span class="required">*</span>',
-		'tip'     => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of Database Only backup archives to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
-		'rules'   => 'required|int[0-9999999]',
-		'default' => 5,
-		'css'     => 'width: 50px;',
-		'after'   => ' backups',
+		'type'  => 'text',
+		'name'  => 'db_archive_limit',
+		'title' => __( 'Database only limit', 'it-l10n-backupbuddy' ) . ' <span class="required">*</span>',
+		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of Database Only backup archives to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
+		'rules' => 'required|int[0-9999999]',
+		'css'   => 'width: 50px;',
+		'after' => ' backups',
 	)
 );
 

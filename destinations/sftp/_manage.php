@@ -78,9 +78,6 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 	echo '<br>';
 }
 
-pb_backupbuddy::load_script( 'backupbuddy.min.js' );
-pb_backupbuddy::load_style( 'backupbuddy-core.css' );
-
 // Find backups in directory.
 backupbuddy_backups()->set_destination_id( $destination_id );
 

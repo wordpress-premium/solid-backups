@@ -79,6 +79,9 @@ if ( ! class_exists( 'BackupBuddy_Tabs' ) ) {
 $restore_tab_class = 'restore-backup';
 if ( $restore_in_progress ) {
 	$restore_tab_class .= ' processing';
+
+	// Kick Cron just in case.
+	backupbuddy_restore()->schedule_cron();
 }
 
 $tabs = new BackupBuddy_Tabs(

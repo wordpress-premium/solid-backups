@@ -109,7 +109,7 @@ $displayed     = array();
 							<td><?php echo esc_html( backupbuddy_core::parse_file( $restore['backup_file'], 'nicename' ) ); ?></td>
 							<td><?php echo esc_html( backupbuddy_restore()->get_summary( $restore ) ); ?></td>
 							<td><?php backupbuddy_restore()->get_status_text( $restore['status'], true ); ?></td>
-							<td><?php backupbuddy_restore()->get_status_html( $restore, __( 'Details', 'it-l10n-backupbuddy' ), true ); ?></td>
+							<td><?php backupbuddy_restore()->get_status_html( $restore, __( 'Details', 'it-l10n-backupbuddy' ), true, true ); ?></td>
 						</tr>
 						<tr id="restore-details-<?php echo esc_attr( $restore['id'] ); ?>" class="restore-details<?php echo esc_attr( $striped ); ?>">
 							<td colspan="5"><?php include pb_backupbuddy::plugin_path() . '/views/restore/restore-detail.php'; ?></td>

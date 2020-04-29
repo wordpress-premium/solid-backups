@@ -2054,3 +2054,17 @@
 	Enhancement: Various improvements to Restore functionality.
 	Bug Fix: Resolved issue where OneDrive sometimes results in 503 Error when sending files.
 	Bug Fix: PHP 7.4 Compatibility fixes.
+8.5.6.0 - 2020-04-22 - Brian DiChiara
+	Enhancement: New Google Drive (v2) Destination, supports latest API, OAuth2 and Restore functionality.
+	Bug Fix: Added better restore reliability for instances where it never starts.
+	Bug Fix: Backup .dat files now move with the Backups Directory setting change.
+	Bug Fix: Date only backups no longer display incorrect time (12:00a).
+	Bug Fix: Resolved issue where zip extraction throws zipbuddy related error.
+	Bug Fix: Various fixes to Dropbox (v3) archive limits.
+	Bug Fix: Resolved issue where sometimes Deployment Pull throws errors.
+	Bug Fix: Resolved fatal error on Diagnostics > Cron when arguments contain object as a parameter.
+	Bug Fix: Resolved issue with sFTP Destination and Pear/Blowfish library.
+	Bug Fix: Resolved issue where Destination ID "0" was not loading backups on Restore tab.
+8.5.7.0 - 2020-04-24 - Brian DiChiara
+	Bug Fix: Resolved issue with Dropbox (v2) Pruning.
+	Bug Fix: Corrected typo in error message so it's clearer.

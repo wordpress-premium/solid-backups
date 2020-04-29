@@ -411,9 +411,10 @@ class pb_backupbuddy_destination_stash2 {
 				continue;
 			}
 
-			$uploaded    = $file['uploaded_timestamp'];
-			$backup_date = backupbuddy_core::parse_file( $backup, 'timestamp' );
-			$size        = (float) $file['size'];
+			$uploaded      = $file['uploaded_timestamp'];
+			$backup_date   = backupbuddy_core::parse_file( $backup, 'datetime' );
+			$size          = (float) $file['size'];
+			$download_link = admin_url() . sprintf( '?stash2-destination-id=%s&stash2-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
 
 			add_filter( 'backupbuddy_backup_columns', array( 'pb_backupbuddy_destination_stash2', 'set_table_column_header' ), 10, 2 );
 
@@ -421,14 +422,11 @@ class pb_backupbuddy_destination_stash2 {
 				array(
 					$backup,
 					$backup_date,
+					$download_link,
 				),
 				backupbuddy_core::pretty_backup_type( $backup_type ),
 				pb_backupbuddy::$format->file_size( $size ),
 			);
-
-			if ( 'restore' === $mode ) {
-				$backup_array[] = backupbuddy_backups()->get_details_link( $backup );
-			}
 
 			if ( 'default' === $mode ) {
 				if ( 'live' === $settings['type'] ) {
@@ -437,14 +435,13 @@ class pb_backupbuddy_destination_stash2 {
 					$copy_link = '&cpy=' . rawurlencode( $backup );
 				}
 
-				$download_link      = admin_url() . sprintf( '?stash2-destination-id=%s&stash2-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
-				$actions            = array(
+				$actions        = array(
 					$download_link => __( 'Download Backup', 'it-l10n-backupbuddy' ),
 					$copy_link     => __( 'Copy to Local', 'it-l10n-backupbuddy' ),
 				);
-				$backup_array[]     = backupbuddy_backups()->get_action_menu( $backup, $actions );
-				$backup_array[0][0] = $download_link;
+				$backup_array[] = backupbuddy_backups()->get_action_menu( $backup, $actions );
 			} elseif ( 'restore' === $mode ) {
+				$backup_array[] = backupbuddy_backups()->get_details_link( $backup );
 				$backup_array[] = backupbuddy_backups()->get_restore_buttons( $backup, $backup_type );
 			}
 

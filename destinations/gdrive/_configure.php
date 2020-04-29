@@ -77,9 +77,9 @@ if ( 'add' == $mode ) {
 
 		if ( 'auth_gdrive' == pb_backupbuddy::_POST( 'gaction' ) ) {
 
-			require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive/Google/Client.php' );
-			require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive/Google/Http/MediaFileUpload.php' );
-			require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive/Google/Service/Drive.php' );
+			require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive2/Google/Client.php' );
+			require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive2/Google/Http/MediaFileUpload.php' );
+			require_once( pb_backupbuddy::plugin_path() . '/destinations/gdrive2/Google/Service/Drive.php' );
 
 			$redirect_uri = 'urn:ietf:wg:oauth:2.0:oob';
 
@@ -292,7 +292,7 @@ if ( 'save' != $mode ) {
 	$folderMeta = pb_backupbuddy_destination_gdrive::getFileMeta( $destination_settings, $folderID );
 	//print_r( $folderMeta );
 	if ( is_object( $folderMeta ) ) {
-		$folderText = 'Folder name: "<a href="' . $folderMeta->alternateLink . '" target="_new">' . $folderMeta->title . '"</a>';
+		$folderText = 'Folder name: &quot;<a href="' . esc_attr( $folderMeta->alternateLink ) . '" target="_new">' . esc_html( $folderMeta->title ) . '</a>&quot;';
 	} else {
 		$folderText = 'n/a';
 	}

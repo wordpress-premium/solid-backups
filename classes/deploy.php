@@ -20,9 +20,14 @@ class backupbuddy_deploy {
 		pb_backupbuddy::status( 'details', 'Constructing deploy class.' );
 		register_shutdown_function( array( &$this, 'shutdown_function' ) );
 
-		require_once( pb_backupbuddy::plugin_path() . '/classes/remote_api.php' );
+		require_once pb_backupbuddy::plugin_path() . '/classes/remote_api.php';
 
-		if ( false === ( $decoded_key = backupbuddy_remote_api::key_to_array( $destinationSettings['api_key'] ) ) ) {
+		if ( empty( $destinationSettings['api_key'] ) ) {
+			die( 'Error #202004031500. Missing Destination API key.' );
+		}
+
+		$decoded_key = backupbuddy_remote_api::key_to_array( $destinationSettings['api_key'] );
+		if ( false === $decoded_key ) {
 			die( 'Error #848349478943747. Unable to interpret API key. Corrupted?' );
 		}
 

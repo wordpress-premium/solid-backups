@@ -140,6 +140,16 @@ if ( ! in_array( $restore['status'], backupbuddy_restore()->get_completed_status
 				?>
 			</div>
 			<?php
+			if ( ! empty( $restore['sql_files'] ) ) {
+				$count = count( $restore['sql_files'] );
+				$label = _n( 'SQL File', 'SQL Files', $count, 'it-l10n-backupbuddy' );
+				printf( '<div>Found: <label for="%s-sql-files">%s %s</label>', esc_attr( $restore['id'] ), esc_html( $count ), esc_html( $label ) );
+				printf( '<input type="checkbox" id="%s-sql-files" class="toggler">', esc_attr( $restore['id'] ) );
+				echo '<pre style="white-space: pre-wrap;">';
+				print_r( $restore['sql_files'] );
+				echo '</pre>';
+				echo '</div>';
+			}
 			if ( ! empty( $restore['imported_tables'] ) ) {
 				$count = count( $restore['imported_tables'] );
 				$label = _n( 'Table', 'Tables', $count, 'it-l10n-backupbuddy' );

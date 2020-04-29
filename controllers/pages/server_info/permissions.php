@@ -7,6 +7,12 @@
 
 echo '<br>';
 
+if ( ! class_exists( 'pluginbuddy_stat' ) ) {
+	// pluginbuddy_stat is part of zipbuddy.
+	require_once pb_backupbuddy::plugin_path() . '/lib/zipbuddy/zipbuddy.php';
+	pb_backupbuddy::$classes['zipbuddy'] = new pluginbuddy_zipbuddy( backupbuddy_core::getBackupDirectory() );
+}
+
 $tests = array();
 
 $uploads_dirs = wp_upload_dir();

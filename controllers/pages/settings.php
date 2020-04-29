@@ -100,6 +100,12 @@ if ( isset( $_POST['pb_backupbuddy_backup_directory'] ) ) {
 				$old_backups_moved++;
 				$serial = backupbuddy_core::get_serial_from_file( basename( $old_backup ) );
 
+				// Move dat file too.
+				$old_dat = substr( $old_backup, 0, -4 ) . '.dat'; // Swap .zip with .dat.
+				if ( file_exists( $old_dat ) ) {
+					rename( $old_dat, $new_backup_dir . basename( $old_dat ) );
+				}
+
 				require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 				$fileoptions_files = glob( backupbuddy_core::getLogDirectory() . 'fileoptions/*.txt' );
 				if ( ! is_array( $fileoptions_files ) ) {

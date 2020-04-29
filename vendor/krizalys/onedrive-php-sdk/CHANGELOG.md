@@ -1,6 +1,29 @@
 Change log
 ==========
 
+[2.6.0] - 2020-02-02
+--------------------
+
+### Added
+
+- Coding style documentation.
+- Support for PHP 7.4.
+
+### Changed
+
+- Reduced unit tests interdependencies.
+- Revised the CONTRIBUTING file and now using it as pull request template.
+- Removed unused stubbed methods.
+- `\Krizalys\Onedrive\Proxy\DriveItemProxy::startUpload()`: The `'type'` option
+  is ignored by OneDrive & reports a notice. Omit this option.
+- `\Krizalys\Onedrive\Proxy\DriveItemProxy::upload()`: The `'contentType'`
+  option is ignored by OneDrive & reports a notice. Omit this option.
+- Updated Krizalys\Onedrive\Proxy\ImageProxy.
+- Updated Krizalys\Onedrive\Proxy\PhotoProxy.
+- Updated Krizalys\Onedrive\Proxy\AudioProxy.
+- Updated Krizalys\Onedrive\Proxy\VideoProxy.
+- Updated dependency on facebook/webdriver to php-webdriver/webdriver.
+
 [2.5.1] - 2019-10-06
 --------------------
 
@@ -311,7 +334,8 @@ as the official PHP Docker image.
 
 - Support for SSL.
 
-[unreleased]:    https://github.com/krizalys/onedrive-php-sdk/compare/2.5.1...HEAD
+[unreleased]:    https://github.com/krizalys/onedrive-php-sdk/compare/2.6.0...HEAD
+[2.6.0]:         https://github.com/krizalys/onedrive-php-sdk/compare/2.5.1...2.6.0
 [2.5.1]:         https://github.com/krizalys/onedrive-php-sdk/compare/2.5.0...2.5.1
 [2.5.0]:         https://github.com/krizalys/onedrive-php-sdk/compare/2.4.2...2.5.0
 [2.4.2]:         https://github.com/krizalys/onedrive-php-sdk/compare/2.4.1...2.4.2

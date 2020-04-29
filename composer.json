@@ -1,7 +1,7 @@
 {
     "name": "wordpress-premium/backupbuddy",
     "type": "wordpress-plugin",
-	"version": "8.5.3.2",
+	"version": "8.5.7.0",
     "require": {
         "composer/installers": "~1.6"
     }

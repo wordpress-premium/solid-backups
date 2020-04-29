@@ -110,10 +110,10 @@ function bb_enqueue_wp_admin_style() {
 		return;
 	}
 
-	wp_register_style( 'backupbuddy-core', pb_backupbuddy::plugin_url() . '/css/backupbuddy-core.css', array(), pb_backupbuddy::settings( 'version' ) );
-	wp_enqueue_style( 'backupbuddy-core' );
 	wp_enqueue_style( 'pb_backupbuddy-wp-admin', pb_backupbuddy::plugin_url() . '/css/wp-admin.css', array(), pb_backupbuddy::settings( 'version' ) );
 }
+
+add_action( 'admin_enqueue_scripts', 'bb_enqueue_wp_admin_style' );
 
 /**
  * Enqueues wp-admin-global.css file.
@@ -123,7 +123,6 @@ function bb_enqueue_wp_admin_global_styles() {
 }
 
 // Needed for retina icons in menu.
-add_action( 'admin_enqueue_scripts', 'bb_enqueue_wp_admin_style' );
 global $wp_version;
 if ( $wp_version >= 3.8 ) {
 	add_action( 'admin_enqueue_scripts', 'bb_enqueue_wp_admin_global_styles' );
@@ -434,25 +433,38 @@ if ( ( ! is_multisite() ) || ( is_multisite() && is_network_admin() ) ) { // Onl
 function backupbuddy_global_admin_scripts() {
 	wp_enqueue_script( 'backupbuddy_global_admin_scripts', pb_backupbuddy::plugin_url() . '/js/global_admin.js', array( 'jquery' ), pb_backupbuddy::settings( 'version' ), true );
 
+	wp_register_script( 'backupbuddy-min', pb_backupbuddy::plugin_url() . '/js/backupbuddy.min.js', array( 'jquery' ), pb_backupbuddy::settings( 'version' ), true );
+	wp_register_style( 'backupbuddy-core', pb_backupbuddy::plugin_url() . '/css/backupbuddy-core.css', array(), pb_backupbuddy::settings( 'version' ) );
+
 	if ( ! backupbuddy_is_admin_page() ) {
 		return;
 	}
 
-	$js_vars = array(
-		'ajax_url'             => admin_url( 'admin-ajax.php' ),
-		'admin_url'            => is_network_admin() ? network_admin_url( 'admin.php' ) : admin_url( 'admin.php' ),
-		'ajax_base'            => pb_backupbuddy::ajax_url( '' ),
-		'strings'              => backupbuddy_admin_get_strings(),
-		'hide_quick_setup'     => true === apply_filters( 'itbub_hide_quickwizard', false ),
-		'importbuddy_pass_set' => '' == pb_backupbuddy::$options['importbuddy_pass_hash'] ? 0 : 1,
-		'page_url'             => pb_backupbuddy::page_url(),
-		'destination_ids'      => backupbuddy_admin_get_destination_ids(),
-	);
-
-	wp_register_script( 'backupbuddy-min', pb_backupbuddy::plugin_url() . '/js/backupbuddy.min.js', array( 'jquery' ), pb_backupbuddy::settings( 'version' ), true );
-	pb_backupbuddy::load_script( 'backupbuddy-min', false, $js_vars );
+	pb_backupbuddy::load_script( 'backupbuddy-min', false, backupbuddy_js_vars() );
+	pb_backupbuddy::load_style( 'backupbuddy-core' );
 }
 add_action( 'admin_enqueue_scripts', 'backupbuddy_global_admin_scripts' );
+
+/**
+ * JS Vars for main BackupBuddy script.
+ *
+ * @return array  Array of JS vars for localizing variables.
+ */
+function backupbuddy_js_vars() {
+	return apply_filters(
+		'backupbuddy_js_vars',
+		array(
+			'ajax_url'             => admin_url( 'admin-ajax.php' ),
+			'admin_url'            => is_network_admin() ? network_admin_url( 'admin.php' ) : admin_url( 'admin.php' ),
+			'ajax_base'            => pb_backupbuddy::ajax_url( '' ),
+			'strings'              => backupbuddy_admin_get_strings(),
+			'hide_quick_setup'     => true === apply_filters( 'itbub_hide_quickwizard', false ),
+			'importbuddy_pass_set' => '' == pb_backupbuddy::$options['importbuddy_pass_hash'] ? 0 : 1,
+			'page_url'             => pb_backupbuddy::page_url(),
+			'destination_ids'      => backupbuddy_admin_get_destination_ids(),
+		)
+	);
+}
 
 /**
  * Get Strings for use in JS.
@@ -706,3 +718,23 @@ function backupbuddy_dropbox_download() {
 	pb_backupbuddy_destination_dropbox3::force_download( $settings, $file );
 }
 add_action( 'admin_init', 'backupbuddy_dropbox_download' );
+
+/**
+ * Google Drive (v2) Force Download.
+ */
+function backupbuddy_gdrive2_download() {
+	if ( ! pb_backupbuddy::_GET( 'gdrive2-download' ) ) {
+		return;
+	}
+
+	$file        = pb_backupbuddy::_GET( 'gdrive2-download' );
+	$destination = pb_backupbuddy::_GET( 'gdrive2-destination-id' );
+
+	if ( ! class_exists( 'pb_backupbuddy_destination_gdrive2' ) ) {
+		require_once pb_backupbuddy::plugin_path() . '/destinations/gdrive2/init.php';
+	}
+
+	$settings = pb_backupbuddy::$options['remote_destinations'][ $destination ];
+	pb_backupbuddy_destination_gdrive2::force_download( $settings, $file );
+}
+add_action( 'admin_init', 'backupbuddy_gdrive2_download' );

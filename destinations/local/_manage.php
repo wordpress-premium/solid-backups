@@ -81,9 +81,6 @@ function backupbuddy_local_backup_columns( $columns ) {
 	return $columns;
 }
 
-pb_backupbuddy::load_script( 'backupbuddy.min.js' );
-pb_backupbuddy::load_style( 'backupbuddy-core.css' );
-
 // Find backups in directory.
 backupbuddy_backups()->set_destination_id( $destination_id );
 

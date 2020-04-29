@@ -380,62 +380,72 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 
 		pb_backupbuddy::status( 'message', 'Success sending `' . basename( $file ) . '` to Dropbox!' );
 
-
-		// Start remote backup limit
+		// Start remote backup limit.
 		if ( $settings['archive_limit'] > 0 ) {
-			pb_backupbuddy::status( 'details',  'Dropbox file limit in place. Proceeding with enforcement.' );
+			pb_backupbuddy::status( 'details', 'Dropbox file limit in place. Proceeding with enforcement.' );
 
 			$meta_data = self::$_dbxClient->getMetadataWithChildren( $settings['directory'] );
 
-			// Create array of backups and organize by date
+			// Create array of backups and organize by date.
 			$bkupprefix = backupbuddy_core::backup_prefix();
+			$backups    = array();
 
-			$backups = array();
 			foreach ( (array) $meta_data['entries'] as $looping_file ) {
-				if ( $looping_file['.tag'] !== 'file' ) { // JUST IN CASE. IGNORE anything that is not explicitly a file.
+				if ( 'file' !== $looping_file['.tag'] ) { // JUST IN CASE. IGNORE anything that is not explicitly a file.
 					continue;
 				}
 
-				// check if file is backup
-				if ( ( strpos( $looping_file['path_lower'], 'backup-' . $bkupprefix . '-' ) !== false ) ) { // Appears to be a backup file.
-					$backups[$looping_file['path_lower']] = strtotime( $looping_file['server_modified'] );
+				// Skip non-zip files.
+				if ( '.zip' !== substr( $looping_file['name'], -4 ) ) {
+					continue;
 				}
+
+				// check if file is backup.
+				if ( false === strpos( $looping_file['name'], 'backup-' . $bkupprefix . '-' ) ) { // Appears to be a backup file.
+					continue;
+				}
+
+				$backups[ $looping_file['name'] ] = strtotime( $looping_file['server_modified'] );
 			}
 
-			arsort($backups);
+			arsort( $backups );
 
-			if ( ( count( $backups ) ) > $settings['archive_limit'] ) {
-				pb_backupbuddy::status( 'details',  'Dropbox backup file count of `' . count( $backups ) . '` exceeds limit of `' . $settings['archive_limit'] . '`.' );
-				$i = 0;
+			if ( count( $backups ) > $settings['archive_limit'] ) {
+				pb_backupbuddy::status( 'details', 'Dropbox backup file count of `' . count( $backups ) . '` exceeds limit of `' . $settings['archive_limit'] . '`.' );
+				$i                 = 0;
 				$delete_fail_count = 0;
-				foreach( $backups as $buname => $butime ) {
+
+				if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+					require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+				}
+
+				foreach ( $backups as $backup_name => $butime ) {
 					$i++;
 					if ( $i > $settings['archive_limit'] ) {
-						if ( ! self::$_dbxClient->delete( $buname ) ) { // Try to delete backup on Dropbox. Increment failure count if unable to.
-							pb_backupbuddy::status( 'details',  'Unable to delete excess Dropbox file: `' . $buname . '`' );
+						// Try to delete backup on Dropbox. Increment failure count if unable to.
+						if ( true !== pb_backupbuddy_destinations::delete( $settings, $backup_name ) ) {
+							pb_backupbuddy::status( 'details', 'Unable to delete excess Dropbox file: `' . $backup_name . '`' );
 							$delete_fail_count++;
 						} else {
-							pb_backupbuddy::status( 'details',  'Deleted excess Dropbox file: `' . $buname . '`' );
+							pb_backupbuddy::status( 'details', 'Deleted excess Dropbox file: `' . $backup_name . '`' );
 						}
 					}
 				}
 
-				if ( $delete_fail_count !== 0 ) {
-					backupbuddy_core::mail_error( sprintf( __('Dropbox remote limit could not delete %s backups.', 'it-l10n-backupbuddy' ), $delete_fail_count) );
+				if ( 0 !== $delete_fail_count ) {
+					backupbuddy_core::mail_error( sprintf( __( 'Dropbox remote limit could not delete %s backups.', 'it-l10n-backupbuddy' ), $delete_fail_count ) );
 				}
 			} else {
-				pb_backupbuddy::status( 'details',  'Dropbox backup file count of `' . count( $backups ) . '` does NOT exceed limit of `' . $settings['archive_limit'] . '`.' );
+				pb_backupbuddy::status( 'details', 'Dropbox backup file count of `' . count( $backups ) . '` does NOT exceed limit of `' . $settings['archive_limit'] . '`.' );
 			}
 		} else {
-			pb_backupbuddy::status( 'details',  'No Dropbox file limit to enforce.' );
+			pb_backupbuddy::status( 'details', 'No Dropbox file limit to enforce.' );
 		}
-		// End remote backup limit
+		// End remote backup limit.
 
 		pb_backupbuddy::status( 'details', 'All files sent.' );
 
 		return true; // Success if made it this far.
-
-
 	} // End send().
 
 
@@ -572,9 +582,9 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 
 		$directory = '/' . trim( $settings['directory'], '/\\' );
 
-		foreach( $files as $file ) {
+		foreach ( $files as $file ) {
 			try {
-				if ( NULL === self::$_dbxClient->delete( $directory . '/' . $file ) ) {
+				if ( null === self::$_dbxClient->delete( $directory . '/' . $file ) ) {
 					$error = 'Error #94349843a. Unable to delete file `' . $directory . '/' . $file . '`. Details: `' . $e->getMessage() . '`.';
 					return $error;
 				}
@@ -586,9 +596,6 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 		}
 
 		return true;
-
 	} // End delete().
-
-
 
 } // End class.

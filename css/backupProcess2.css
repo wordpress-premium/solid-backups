@@ -828,7 +828,10 @@ a:focus {
     background: #fff url('../destinations/ftp/icon50.png') no-repeat center 22px;
 }
 .bb_destination-item.bb_destination-gdrive a {
-    background: #fff url('../destinations/gdrive/icon50.png') no-repeat center 22px;
+    background: #fff url('../destinations/gdrive2/icon50.png') no-repeat center 22px;
+}
+.bb_destination-item.bb_destination-gdrive2 a {
+    background: #fff url('../destinations/gdrive2/icon50.png') no-repeat center 22px;
 }
 .bb_destination-item.bb_destination-sftp a {
     background: #fff url('../destinations/sftp/icon50.png') no-repeat center 22px;

@@ -522,6 +522,39 @@ class User extends DirectoryObject
     }
     
     /**
+    * Gets the lastPasswordChangeDateTime
+    * The time when this Azure AD user last changed their password. The date and time information uses ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 would look like this: '2014-01-01T00:00:00Z'
+    *
+    * @return \DateTime The lastPasswordChangeDateTime
+    */
+    public function getLastPasswordChangeDateTime()
+    {
+        if (array_key_exists("lastPasswordChangeDateTime", $this->_propDict)) {
+            if (is_a($this->_propDict["lastPasswordChangeDateTime"], "\DateTime")) {
+                return $this->_propDict["lastPasswordChangeDateTime"];
+            } else {
+                $this->_propDict["lastPasswordChangeDateTime"] = new \DateTime($this->_propDict["lastPasswordChangeDateTime"]);
+                return $this->_propDict["lastPasswordChangeDateTime"];
+            }
+        }
+        return null;
+    }
+    
+    /**
+    * Sets the lastPasswordChangeDateTime
+    * The time when this Azure AD user last changed their password. The date and time information uses ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 would look like this: '2014-01-01T00:00:00Z'
+    *
+    * @param \DateTime $val The lastPasswordChangeDateTime
+    *
+    * @return User
+    */
+    public function setLastPasswordChangeDateTime($val)
+    {
+        $this->_propDict["lastPasswordChangeDateTime"] = $val;
+        return $this;
+    }
+    
+    /**
     * Gets the legalAgeGroupClassification
     * Used by enterprise applications to determine the legal age group of the user. This property is read-only and calculated based on ageGroup and consentProvidedForMinor properties. Allowed values: null, minorWithOutParentalConsent, minorWithParentalConsent, minorNoParentalConsentRequired, notAdult and adult. Refer to the legal age group property definitions for further information.)
     *
@@ -1473,6 +1506,35 @@ class User extends DirectoryObject
     }
     
     /**
+    * Gets the deviceEnrollmentLimit
+    * The limit on the maximum number of devices that the user is permitted to enroll. Allowed values are 5 or 1000.
+    *
+    * @return int The deviceEnrollmentLimit
+    */
+    public function getDeviceEnrollmentLimit()
+    {
+        if (array_key_exists("deviceEnrollmentLimit", $this->_propDict)) {
+            return $this->_propDict["deviceEnrollmentLimit"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the deviceEnrollmentLimit
+    * The limit on the maximum number of devices that the user is permitted to enroll. Allowed values are 5 or 1000.
+    *
+    * @param int $val The deviceEnrollmentLimit
+    *
+    * @return User
+    */
+    public function setDeviceEnrollmentLimit($val)
+    {
+        $this->_propDict["deviceEnrollmentLimit"] = intval($val);
+        return $this;
+    }
+    
+    /**
     * Gets the aboutMe
     * A freeform text entry field for the user to describe themselves.
     *
@@ -1770,35 +1832,6 @@ class User extends DirectoryObject
         return $this;
     }
     
-    /**
-    * Gets the deviceEnrollmentLimit
-    * The limit on the maximum number of devices that the user is permitted to enroll. Allowed values are 5 or 1000.
-    *
-    * @return int The deviceEnrollmentLimit
-    */
-    public function getDeviceEnrollmentLimit()
-    {
-        if (array_key_exists("deviceEnrollmentLimit", $this->_propDict)) {
-            return $this->_propDict["deviceEnrollmentLimit"];
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-    * Sets the deviceEnrollmentLimit
-    * The limit on the maximum number of devices that the user is permitted to enroll. Allowed values are 5 or 1000.
-    *
-    * @param int $val The deviceEnrollmentLimit
-    *
-    * @return User
-    */
-    public function setDeviceEnrollmentLimit($val)
-    {
-        $this->_propDict["deviceEnrollmentLimit"] = intval($val);
-        return $this;
-    }
-    
 
      /** 
      * Gets the ownedDevices
@@ -2067,36 +2100,6 @@ class User extends DirectoryObject
     public function setTransitiveMemberOf($val)
     {
 		$this->_propDict["transitiveMemberOf"] = $val;
-        return $this;
-    }
-    
-
-     /** 
-     * Gets the extensions
-    * The collection of open extensions defined for the user. Read-only. Nullable.
-     *
-     * @return array The extensions
-     */
-    public function getExtensions()
-    {
-        if (array_key_exists("extensions", $this->_propDict)) {
-           return $this->_propDict["extensions"];
-        } else {
-            return null;
-        }
-    }
-    
-    /** 
-    * Sets the extensions
-    * The collection of open extensions defined for the user. Read-only. Nullable.
-    *
-    * @param Extension $val The extensions
-    *
-    * @return User
-    */
-    public function setExtensions($val)
-    {
-		$this->_propDict["extensions"] = $val;
         return $this;
     }
     
@@ -2593,69 +2596,33 @@ class User extends DirectoryObject
         return $this;
     }
     
-    /**
-    * Gets the planner
-    * Entry-point to the Planner resource that might exist for a user. Read-only.
-    *
-    * @return PlannerUser The planner
-    */
-    public function getPlanner()
+
+     /** 
+     * Gets the extensions
+    * The collection of open extensions defined for the user. Read-only. Nullable.
+     *
+     * @return array The extensions
+     */
+    public function getExtensions()
     {
-        if (array_key_exists("planner", $this->_propDict)) {
-            if (is_a($this->_propDict["planner"], "Microsoft\Graph\Model\PlannerUser")) {
-                return $this->_propDict["planner"];
-            } else {
-                $this->_propDict["planner"] = new PlannerUser($this->_propDict["planner"]);
-                return $this->_propDict["planner"];
-            }
+        if (array_key_exists("extensions", $this->_propDict)) {
+           return $this->_propDict["extensions"];
+        } else {
+            return null;
         }
-        return null;
     }
     
-    /**
-    * Sets the planner
-    * Entry-point to the Planner resource that might exist for a user. Read-only.
+    /** 
+    * Sets the extensions
+    * The collection of open extensions defined for the user. Read-only. Nullable.
     *
-    * @param PlannerUser $val The planner
+    * @param Extension $val The extensions
     *
     * @return User
     */
-    public function setPlanner($val)
+    public function setExtensions($val)
     {
-        $this->_propDict["planner"] = $val;
-        return $this;
-    }
-    
-    /**
-    * Gets the onenote
-    * Read-only.
-    *
-    * @return Onenote The onenote
-    */
-    public function getOnenote()
-    {
-        if (array_key_exists("onenote", $this->_propDict)) {
-            if (is_a($this->_propDict["onenote"], "Microsoft\Graph\Model\Onenote")) {
-                return $this->_propDict["onenote"];
-            } else {
-                $this->_propDict["onenote"] = new Onenote($this->_propDict["onenote"]);
-                return $this->_propDict["onenote"];
-            }
-        }
-        return null;
-    }
-    
-    /**
-    * Sets the onenote
-    * Read-only.
-    *
-    * @param Onenote $val The onenote
-    *
-    * @return User
-    */
-    public function setOnenote($val)
-    {
-        $this->_propDict["onenote"] = $val;
+		$this->_propDict["extensions"] = $val;
         return $this;
     }
     
@@ -2749,33 +2716,36 @@ class User extends DirectoryObject
         return $this;
     }
     
-
-     /** 
-     * Gets the activities
-    * The user's activities across devices. Read-only. Nullable.
-     *
-     * @return array The activities
-     */
-    public function getActivities()
+    /**
+    * Gets the planner
+    * Entry-point to the Planner resource that might exist for a user. Read-only.
+    *
+    * @return PlannerUser The planner
+    */
+    public function getPlanner()
     {
-        if (array_key_exists("activities", $this->_propDict)) {
-           return $this->_propDict["activities"];
-        } else {
-            return null;
+        if (array_key_exists("planner", $this->_propDict)) {
+            if (is_a($this->_propDict["planner"], "Microsoft\Graph\Model\PlannerUser")) {
+                return $this->_propDict["planner"];
+            } else {
+                $this->_propDict["planner"] = new PlannerUser($this->_propDict["planner"]);
+                return $this->_propDict["planner"];
+            }
         }
+        return null;
     }
     
-    /** 
-    * Sets the activities
-    * The user's activities across devices. Read-only. Nullable.
+    /**
+    * Sets the planner
+    * Entry-point to the Planner resource that might exist for a user. Read-only.
     *
-    * @param UserActivity $val The activities
+    * @param PlannerUser $val The planner
     *
     * @return User
     */
-    public function setActivities($val)
+    public function setPlanner($val)
     {
-		$this->_propDict["activities"] = $val;
+        $this->_propDict["planner"] = $val;
         return $this;
     }
     
@@ -2838,6 +2808,97 @@ class User extends DirectoryObject
     public function setSettings($val)
     {
         $this->_propDict["settings"] = $val;
+        return $this;
+    }
+    
+    /**
+    * Gets the onenote
+    * Read-only.
+    *
+    * @return Onenote The onenote
+    */
+    public function getOnenote()
+    {
+        if (array_key_exists("onenote", $this->_propDict)) {
+            if (is_a($this->_propDict["onenote"], "Microsoft\Graph\Model\Onenote")) {
+                return $this->_propDict["onenote"];
+            } else {
+                $this->_propDict["onenote"] = new Onenote($this->_propDict["onenote"]);
+                return $this->_propDict["onenote"];
+            }
+        }
+        return null;
+    }
+    
+    /**
+    * Sets the onenote
+    * Read-only.
+    *
+    * @param Onenote $val The onenote
+    *
+    * @return User
+    */
+    public function setOnenote($val)
+    {
+        $this->_propDict["onenote"] = $val;
+        return $this;
+    }
+    
+
+     /** 
+     * Gets the activities
+    * The user's activities across devices. Read-only. Nullable.
+     *
+     * @return array The activities
+     */
+    public function getActivities()
+    {
+        if (array_key_exists("activities", $this->_propDict)) {
+           return $this->_propDict["activities"];
+        } else {
+            return null;
+        }
+    }
+    
+    /** 
+    * Sets the activities
+    * The user's activities across devices. Read-only. Nullable.
+    *
+    * @param UserActivity $val The activities
+    *
+    * @return User
+    */
+    public function setActivities($val)
+    {
+		$this->_propDict["activities"] = $val;
+        return $this;
+    }
+    
+
+     /** 
+     * Gets the onlineMeetings
+     *
+     * @return array The onlineMeetings
+     */
+    public function getOnlineMeetings()
+    {
+        if (array_key_exists("onlineMeetings", $this->_propDict)) {
+           return $this->_propDict["onlineMeetings"];
+        } else {
+            return null;
+        }
+    }
+    
+    /** 
+    * Sets the onlineMeetings
+    *
+    * @param OnlineMeeting $val The onlineMeetings
+    *
+    * @return User
+    */
+    public function setOnlineMeetings($val)
+    {
+		$this->_propDict["onlineMeetings"] = $val;
         return $this;
     }
     

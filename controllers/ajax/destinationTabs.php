@@ -141,7 +141,7 @@ if ( 'migration' == $mode ) {
 
 					if ( data == 'Destination deleted.' ) {
 
-						window.location.href = '<?php echo $picker_url . '&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ); ?>&sending=<?php echo pb_backupbuddy::_GET( 'sending' ); ?>&alert_notice=' + encodeURIComponent( 'Destination deleted.' );
+						window.location.href = '<?php echo esc_html( $picker_url ); ?>&callback_data=<?php echo pb_backupbuddy::_GET( 'callback_data' ); ?>&sending=<?php echo pb_backupbuddy::_GET( 'sending' ); ?>&alert_notice=' + encodeURIComponent( 'Destination deleted.' );
 
 					} else { // Show message if not success.
 

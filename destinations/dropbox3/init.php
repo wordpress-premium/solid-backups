@@ -41,12 +41,12 @@ class pb_backupbuddy_destination_dropbox3 {
 		'dropbox_folder_path'     => '', // Remote Dropbox directory path to store into.
 		'dropbox_folder_name'     => '', // Remote Dropbox directory name to store into.
 
-		'full_archive_limit'      => 0, // Max number of full archives allowed in destination directory.
-		'db_archive_limit'        => 0, // Max number of db archives allowed in destination directory.
-		'themes_archive_limit'    => 0, // Max number of themes archives allowed in destination directory.
-		'plugins_archive_limit'   => 0, // Max number of plugins archives allowed in destination directory.
-		'media_archive_limit'     => 0, // Max number of media archives allowed in destination directory.
-		'files_archive_limit'     => 0, // Max number of files archives allowed in destination directory.
+		'full_archive_limit'      => 5, // Max number of full archives allowed in destination directory.
+		'db_archive_limit'        => 5, // Max number of db archives allowed in destination directory.
+		'themes_archive_limit'    => 5, // Max number of themes archives allowed in destination directory.
+		'plugins_archive_limit'   => 5, // Max number of plugins archives allowed in destination directory.
+		'media_archive_limit'     => 5, // Max number of media archives allowed in destination directory.
+		'files_archive_limit'     => 5, // Max number of files archives allowed in destination directory.
 
 		'max_chunk_size'          => '80', // Maximum chunk size in MB. Anything larger will be chunked up into pieces this size (or less for last piece). This allows larger files to be sent than would otherwise be possible.
 		'disable_file_management' => '0', // When 1, _manage.php will not load which renders remote file management DISABLED.
@@ -652,10 +652,10 @@ class pb_backupbuddy_destination_dropbox3 {
 			self::add_settings( $settings );
 		}
 
-		$folder_path = self::get_root_folder( 'path' );
-		$files       = self::get_folder_contents( $folder_path, 'date' );
+		$folder_path  = self::get_root_folder( 'path' );
+		$remote_files = self::get_folder_contents( $folder_path, 'date' );
 
-		if ( ! is_array( $files ) ) {
+		if ( ! is_array( $remote_files ) ) {
 			self::error( __( 'Unexpected response retrieving Dropbox folder contents for folder: ', 'it-l10n-backupbuddy' ) . $folder_path );
 			return array();
 		}
@@ -663,14 +663,29 @@ class pb_backupbuddy_destination_dropbox3 {
 		$backup_list       = array();
 		$backup_sort_dates = array();
 
-		foreach ( $files as $index => $file ) {
+		$prefix = backupbuddy_core::backup_prefix();
+
+		if ( $prefix ) {
+			$prefix .= '-';
+		} else {
+			$prefix = '';
+		}
+
+		foreach ( $remote_files as $index => $remote_file ) {
 			// Skip anything not a file.
-			if ( 'file' !== $file['.tag'] ) {
+			if ( 'file' !== $remote_file['.tag'] ) {
 				continue;
 			}
 
-			$filename = $file['name'];
-			if ( false === stristr( $filename, 'backup-' ) ) { // only show backup files.
+			$filename = $remote_file['name'];
+
+			// Skip non-zip files.
+			if ( '.zip' !== substr( $filename, -4 ) ) {
+				continue;
+			}
+
+			// Appears to not be a backup file for this site.
+			if ( strpos( $filename, 'backup-' . $prefix ) === false ) {
 				continue;
 			}
 
@@ -682,10 +697,10 @@ class pb_backupbuddy_destination_dropbox3 {
 				continue;
 			}
 
-			$backup_date   = backupbuddy_core::parse_file( $backup, 'timestamp' );
+			$backup_date   = backupbuddy_core::parse_file( $backup, 'datetime' );
 			$download_link = false;
 
-			if ( $file['is_downloadable'] ) {
+			if ( $remote_file['is_downloadable'] ) {
 				$download_link = admin_url() . sprintf(
 					'?dropbox-destination-id=%s&dropbox-download=%s',
 					backupbuddy_backups()->get_destination_id(),
@@ -700,12 +715,8 @@ class pb_backupbuddy_destination_dropbox3 {
 					$download_link,
 				),
 				backupbuddy_core::pretty_backup_type( $backup_type ),
-				pb_backupbuddy::$format->file_size( $file['size'] ),
+				pb_backupbuddy::$format->file_size( $remote_file['size'] ),
 			);
-
-			if ( 'restore' === $mode ) {
-				$backup_array[] = backupbuddy_backups()->get_details_link( $backup );
-			}
 
 			if ( 'default' === $mode ) {
 				$copy_link = '&cpy=' . rawurlencode( $backup );
@@ -719,6 +730,7 @@ class pb_backupbuddy_destination_dropbox3 {
 
 				$backup_array[] = backupbuddy_backups()->get_action_menu( $backup, $actions );
 			} elseif ( 'restore' === $mode ) {
+				$backup_array[] = backupbuddy_backups()->get_details_link( $backup );
 				$backup_array[] = backupbuddy_backups()->get_restore_buttons( $backup, $backup_type );
 			}
 
@@ -1102,6 +1114,13 @@ class pb_backupbuddy_destination_dropbox3 {
 		// Filter backups by backup type.
 		$backups = array();
 		$prefix  = backupbuddy_core::backup_prefix();
+
+		if ( $prefix ) {
+			$prefix .= '-';
+		} else {
+			$prefix = '';
+		}
+
 		foreach ( $remote_files as $index => $remote_file ) {
 			// Skip anything not a file.
 			if ( 'file' !== $remote_file['.tag'] ) {
@@ -1110,46 +1129,59 @@ class pb_backupbuddy_destination_dropbox3 {
 
 			$filename = $remote_file['name'];
 
-			if ( '.zip' !== substr( $filename, -4 ) ) { // Skip non-zip files.
+			// Skip non-zip files.
+			if ( '.zip' !== substr( $filename, -4 ) ) {
 				continue;
 			}
 
-			if ( strpos( $filename, 'backup-' . $prefix . '-' ) === false ) { // Appears to not be a backup file for this site.
-				continue;
-			}
-			if ( strpos( $filename, '-' . $backup_type . '-' ) === false ) { // Appears to not be the same type of backup.
+			// Appears to not be a backup file for this site.
+			if ( strpos( $filename, 'backup-' . $prefix ) === false ) {
 				continue;
 			}
 
-			$backups[ $remote_file['id'] ] = $remote_file['client_modified'];
+			// Appears to not be the same type of backup.
+			if ( strpos( $filename, '-' . $backup_type . '-' ) === false ) {
+				continue;
+			}
+
+			$backup_date = backupbuddy_core::parse_file( $filename, 'datetime' );
+
+			$backups[ basename( $filename ) ] = $backup_date;
 		}
 
 		arsort( $backups );
-		$backup_delete_count = count( $backups );
-		$delete_fail_count   = 0;
+		$backup_count    = count( $backups );
+		$delete_failures = array();
 
 		pb_backupbuddy::status( 'details', 'Dropbox found `' . count( $backups ) . '` backups of this type when checking archive limits.' );
 
-		if ( $backup_delete_count > $limit ) {
-			$delete_backups = array_slice( $backups, $limit );
+		if ( $backup_count > $limit ) {
+			$delete_backups      = array_slice( $backups, $limit );
+			$backup_delete_count = count( $delete_backups );
 
 			pb_backupbuddy::status( 'details', 'More archives (' . count( $backups ) . ') than limit (' . $limit . ') allows. Pruning...' );
 
-			foreach ( $delete_backups as $file_id => $backup_time ) {
-				pb_backupbuddy::status( 'details', 'Deleting excess file `' . $file_id . '`...' );
+			if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+				require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+			}
 
-				if ( true !== pb_backupbuddy_destinations::delete( self::$settings, $file_id ) ) {
-					pb_backupbuddy::status( 'details', 'Unable to delete excess Dropbox file `' . $file_id . '`. Details: `' . print_r( $pb_backupbuddy_destination_errors, true ) . '`.' );
-					$delete_fail_count++;
+			foreach ( $delete_backups as $filename => $backup_time ) {
+				pb_backupbuddy::status( 'details', 'Deleting excess file `' . $filename . '`...' );
+
+				if ( true !== pb_backupbuddy_destinations::delete( self::$settings, $filename ) ) {
+					pb_backupbuddy::status( 'details', 'Unable to delete excess Dropbox file `' . $filename . '`. Details: `' . print_r( $pb_backupbuddy_destination_errors, true ) . '`.' );
+					$delete_failures[] = $filename;
 				}
 			}
 
 			pb_backupbuddy::status( 'details', 'Finished pruning excess backups.' );
+		}
 
-			if ( 0 !== $delete_fail_count ) {
-				$error_message = 'Dropbox remote limit could not delete ' . $delete_fail_count . ' backups.';
-				self::error( $error_message, 'mail' );
-			}
+		$delete_fail_count = count( $delete_failures );
+
+		if ( $delete_fail_count ) {
+			$error_message = 'Dropbox remote limit could not delete ' . $delete_fail_count . ' backups. (' . implode( $delete_failures, ', ' );
+			self::error( $error_message, 'mail' );
 		}
 
 		pb_backupbuddy::status( 'details', 'Dropbox completed archive limiting.' );

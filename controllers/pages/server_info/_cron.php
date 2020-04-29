@@ -63,7 +63,7 @@ foreach ( (array) $cron as $time => $cron_item ) {
 						} else {
 							$is_array = true;
 							foreach ( $args as $arg ) {
-								if ( is_array( $arg ) ) {
+								if ( ! is_string( $arg ) ) {
 									$arguments_inner[] = print_r( $arg, true );
 								} else {
 									$arguments_inner[] = $arg;

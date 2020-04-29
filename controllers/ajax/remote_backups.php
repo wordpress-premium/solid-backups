@@ -34,8 +34,12 @@ if ( ! empty( $a_mode ) && empty( $modes ) ) {
 $destination_id    = pb_backupbuddy::_GET( 'destination_id' );
 $response['index'] = pb_backupbuddy::_GET( 'index' );
 
+if ( ! $destination_id && ( '0' !== $destination_id && 0 !== $destination_id ) ) {
+	$destination_id = false;
+}
+
 // Return early if no usable remote destinations.
-if ( ! $destination_id || empty( pb_backupbuddy::$options['remote_destinations'][ $destination_id ] ) ) {
+if ( false === $destination_id || empty( pb_backupbuddy::$options['remote_destinations'][ $destination_id ] ) ) {
 	$response['log'][] = __( 'Invalid destination id.', 'it-l10n-backupbuddy' );
 	wp_send_json( $response );
 	exit();
@@ -47,7 +51,7 @@ if ( empty( $modes ) ) {
 	exit();
 }
 
-$supported = array( 'local', 's33', 's32', 'stash3', 'stash2', 'sftp', 'ftp', 'dropbox3' );
+$supported = array( 'local', 's33', 's32', 'stash3', 'stash2', 'sftp', 'ftp', 'dropbox3', 'gdrive2' );
 
 $destination_settings = pb_backupbuddy::$options['remote_destinations'][ $destination_id ];
 
@@ -84,6 +88,7 @@ if ( ! empty( $modes ) ) {
 					'destination_id'     => $destination_id,
 					'class'              => 'minimal',
 					'disable_pagination' => true,
+					'disable_assets'     => true,
 				)
 			);
 			$table = ob_get_clean();

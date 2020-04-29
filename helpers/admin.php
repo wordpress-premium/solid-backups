@@ -12,6 +12,9 @@
  */
 function backupbuddy_is_admin_page() {
 	$screen = get_current_screen();
+	if ( ! $screen ) {
+		return false;
+	}
 	if ( false === strpos( $screen->base, 'pb_backupbuddy_' ) ) {
 		return false;
 	}

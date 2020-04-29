@@ -75,9 +75,6 @@ if ( pb_backupbuddy::_GET( 'cpy' ) ) {
 	}
 }
 
-pb_backupbuddy::load_script( 'backupbuddy.min.js' );
-pb_backupbuddy::load_style( 'backupbuddy-core.css' );
-
 // Find backups in directory.
 backupbuddy_backups()->set_destination_id( $destination_id );
 
@@ -92,70 +89,3 @@ backupbuddy_backups()->table(
 		'class'          => 'minimal',
 	)
 );
-
-/*
-// Get contents of the current directory.
-ftp_chdir( $conn_id, $ftp_directory );
-$contents = ftp_nlist( $conn_id, '' );
-
-// Create array of backups and sizes.
-$backups      = array();
-$backup_list  = array();
-$got_modified = false;
-foreach ( $contents as $backup ) {
-	// Check if file is backup.
-	if ( false === strpos( $backup, 'backup-' ) ) {
-		continue;
-	}
-	$backup_type = backupbuddy_core::getBackupTypeFromFile( $backup );
-	if ( ! $backup_type ) {
-		continue;
-	}
-
-	$mod_time = ftp_mdtm( $conn_id, $ftp_directory . $backup );
-	if ( $mod_time > -1 ) {
-		$got_modified = true;
-	}
-	$file_size              = ftp_size( $conn_id, $ftp_directory . $backup );
-	$backup_list[ $backup ] = array(
-		$backup,
-		pb_backupbuddy::$format->date( pb_backupbuddy::$format->localize_time( $mod_time ) ) . '<br /><span class="description">(' . pb_backupbuddy::$format->time_ago( $mod_time ) . ' ago)</span>',
-		pb_backupbuddy::$format->file_size( $file_size ),
-		$backup_type,
-	);
-}
-
-// Close this connection.
-ftp_close( $conn_id );
-
-if ( $got_modified === true ) { // FTP server supports sorting by modified date.
-	// Custom sort function for multidimension array usage.
-	function backupbuddy_number_sort( $a, $b ) {
-		return $a['modified'] < $b['modified'];
-	}
-	// Sort by modified using custom sort function above.
-	usort( $backups, 'backupbuddy_number_sort' );
-}
-
-$url_prefix = pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . htmlentities( pb_backupbuddy::_GET( 'destination_id' ) );
-
-// Render table listing files.
-if ( count( $backup_list ) <= 0 ) {
-	printf(
-		'<strong>%s</strong>',
-		esc_html__( 'You have not completed sending any backups to this FTP destination for this site yet.', 'it-l10n-backupbuddy' )
-	);
-} else {
-	pb_backupbuddy::$ui->list_table(
-		$backup_list,
-		array(
-			'action'                  => $url_prefix . '&remote_path=' . htmlentities( pb_backupbuddy::_GET( 'remote_path' ) ),
-			'columns'                 => array( 'Backup File', 'Uploaded <img src="' . pb_backupbuddy::plugin_url() . '/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent first">', 'File Size', 'Type' ),
-			// 'hover_actions'   =>  array( 'copy' => 'Copy to Local' ),
-			'hover_action_column_key' => '0',
-			'bulk_actions'            => array( 'delete_backup' => 'Delete' ),
-			'css'                     => 'width: 100%;',
-		)
-	);
-}
-*/

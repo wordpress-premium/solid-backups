@@ -50,6 +50,11 @@ class pb_backupbuddy_destination_sftp {
 			require_once pb_backupbuddy::plugin_path() . '/destinations/sftp/lib/phpseclib/Net/SFTP.php';
 		}
 
+		// Try to include phpseclib's version of Blowfish to avoid conflicts with PEAR version.
+		if ( ! class_exists( 'Crypt_Blowfish' ) ) {
+			require_once pb_backupbuddy::plugin_path() . '/destinations/sftp/lib/phpseclib/Crypt/Blowfish.php';
+		}
+
 		// Crank up logging level if in debug mode.
 		if ( '3' == pb_backupbuddy::$options['log_level'] && ! defined( 'NET_SFTP_LOGGING' ) ) {
 			define( 'NET_SFTP_LOGGING', NET_SFTP_LOG_COMPLEX );
@@ -197,14 +202,15 @@ class pb_backupbuddy_destination_sftp {
 				continue;
 			}
 
-			$backup_date = backupbuddy_core::parse_file( $backup, 'timestamp' );
+			$backup_date   = backupbuddy_core::parse_file( $backup, 'datetime' );
+			$download_link = admin_url() . sprintf( '?sftp-destination-id=%s&sftp-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
 
 			$backup_array = array(
 				array(
 					$backup,
 					$backup_date,
+					$download_link,
 				),
-				//pb_backupbuddy::$format->date( pb_backupbuddy::$format->localize_time( filemtime( $backup ) ) ) . '<br /><span class="description">(' . pb_backupbuddy::$format->time_ago( filemtime( $backup ) ) . ' ago)</span>',
 				backupbuddy_core::pretty_backup_type( $backup_type ),
 				pb_backupbuddy::$format->file_size( $file['size'] ),
 			);
@@ -214,7 +220,6 @@ class pb_backupbuddy_destination_sftp {
 			}
 
 			if ( 'default' === $mode ) {
-				$download_link  = admin_url() . sprintf( '?sftp-destination-id=%s&sftp-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
 				$copy_link      = '&cpy=' . rawurlencode( $backup );
 				$actions        = array(
 					$download_link => __( 'Download Backup', 'it-l10n-backupbuddy' ),

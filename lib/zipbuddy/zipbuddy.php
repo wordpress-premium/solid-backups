@@ -1578,7 +1578,7 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 		 *
 		 *	@return	bool							true on success (all extractions successful), false otherwise
 		 */
-		public function extract( $zip_file, $destination_directory, $items = array() ) {
+		public function extract( $zip_file, $destination_directory = '', $items = array() ) {
 
 			$zip_methods = array();
 

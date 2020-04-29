@@ -10,7 +10,7 @@ class pb_backupbuddy_destination_gdrive {
 	public static $destination_info = array(
 		'name'			=>		'Google Drive',
 		'description'	=>		'Send files to Google Drive. <a href="https://drive.google.com" target="_blank">Learn more here.</a>',
-		'category'		=>		'best', // best, normal, legacy
+		'category'		=>		'legacy', // best, normal, legacy
 	);
 
 	// Default settings. Should be public static for auto-merging.
@@ -961,20 +961,17 @@ class pb_backupbuddy_destination_gdrive {
 
 			// Using closure callback so the destinationID can be passed into this and not be modified by other instances.
 			function backupbuddy_gdrive_folderSelect_ajaxResponse( destinationID, loadParentID, loadParentTitle, command ) {
-				return function(data, textStatus, jqXHR) {
+				return function( response, textStatus, jqXHR ) {
 					destinationWrap = backupbuddy_gdrive_getDestinationWrap( destinationID );
 					//console.log( 'Gdrive response for destination ' + destinationID );
 
 					destinationWrap.find( '.pb_backupbuddy_loading' ).hide();
-					data = jQuery.trim( data );
-					try {
-						var data = jQuery.parseJSON( data );
-					} catch(e) {
-						alert( 'Error #48349844: Unexpected non-json response from server: `' + data + '`.' );
+					if ( 'undefined' === typeof response.success ) {
+						alert( 'Error #3298484: Unexpected non-json response from server: `' + response + '`.' );
 						return;
 					}
-					if ( true !== data.success ) {
-						alert( 'Error #838933: Unable to get folder data. Details: `' + data.message + '`.' );
+					if ( true !== response.success ) {
+						alert( 'Error #32793793: Unable to create folder. Details: `' + response.error + '`.' );
 						return;
 					}
 
@@ -1006,10 +1003,10 @@ class pb_backupbuddy_destination_gdrive {
 					});
 					destinationWrap.find( '.backupbuddy-gdrive-breadcrumbs' ).text( breadcrumbs );
 
-					jQuery.each( data.folders, function( index, folder ) {
+					jQuery.each( response.folders, function( index, folder ) {
 						destinationWrap.find( '.backupbuddy-gdrive-folderList' ).append( '<span data-id="' + folder.id + '" class="backupbuddy-gdrive-folderList-folder"><span class="backupbuddy-gdrive-folderList-selected pb_label pb_label-info" title="Select this folder to use.">Select</span> <span class="backupbuddy-gdrive-folderList-open dashicons dashicons-plus" title="Expand folder & view folders within"></span> <span class="backupbuddy-gdrive-folderList-title backupbuddy-gdrive-folderList-open">' + folder.title + '</span><span class="backupbuddy-gdrive-folderList-createdWrap"><span class="backupbuddy-gdrive-folderList-created">' + folder.created + '</span>&nbsp;&nbsp;Modified <span class="backupbuddy-gdrive-folderList-createdAgo">' + folder.createdAgo + ' ago</span></span></span>' );
 					});
-					if ( 0 === data.folders.length ) {
+					if ( 0 === response.folders.length ) {
 						destinationWrap.find( '.backupbuddy-gdrive-folderList' ).append( '<span class="description">No folders found at this location in your Google Drive.</span>' );
 					}
 
@@ -1078,26 +1075,24 @@ class pb_backupbuddy_destination_gdrive {
 
 					jQuery( '.pb_backupbuddy_loading' ).show();
 					jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'gdrive_folder_create' ); ?>', { service_account_email: destinationWrap.find( '#pb_backupbuddy_service_account_email' ).val(), service_account_file: destinationWrap.find( '#pb_backupbuddy_service_account_file' ).val(), clientID: destinationWrap.find( '#pb_backupbuddy_client_id' ).val(), clientSecret: destinationWrap.find( '#pb_backupbuddy_client_secret' ).val(), tokens: destinationWrap.find( '#pb_backupbuddy_tokens' ).val(), parentID: currentFolderID, folderName: newFolderName },
-						function(data) {
+						function( response ) {
 							destinationWrap.find( '.pb_backupbuddy_loading' ).hide();
-							data = jQuery.trim( data );
-							try {
-								var data = jQuery.parseJSON( data );
-							} catch(e) {
-								alert( 'Error #3298484: Unexpected non-json response from server: `' + data + '`.' );
+							if ( 'undefined' === typeof response.success ) {
+								alert( 'Error #3298484: Unexpected non-json response from server: `' + response + '`.' );
 								return;
 							}
-							if ( true !== data.success ) {
-								alert( 'Error #32793793: Unable to create folder. Details: `' + data.message + '`.' );
+							if ( true !== response.success ) {
+								alert( 'Error #32793793: Unable to create folder. Details: `' + response.error + '`.' );
 								return;
 							}
 
 							/*
 							Gets back on success:
-							data.folderID
-							data.folderTitle
+							response.folderID
+							response.folderTitle
 							*/
-							backupbuddy_gdrive_setFolder( destinationID, data.folderID, data.folderTitle );
+
+							backupbuddy_gdrive_setFolder( destinationID, response.folderID, response.folderTitle );
 
 							finishedCallback = function(){
 								destinationWrap.find( '.backupbuddy-gdrive-statusText' ).text( 'Created & selected new folder.' );

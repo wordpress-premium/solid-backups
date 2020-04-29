@@ -840,25 +840,22 @@ class pb_backupbuddy_destination_s33 {
 				continue;
 			}
 
-			$uploaded    = strtotime( $object['LastModified'] );
-			$backup_date = backupbuddy_core::parse_file( $backup, 'timestamp' );
-			$size        = (double) $object['Size'];
+			$uploaded      = strtotime( $object['LastModified'] );
+			$backup_date   = backupbuddy_core::parse_file( $backup, 'datetime' );
+			$size          = (double) $object['Size'];
+			$download_link = self::getFileURL( $settings, $backup );
 
 			$backup_array = array(
 				array(
 					$backup,
 					$backup_date,
+					$download_link,
 				),
 				backupbuddy_core::pretty_backup_type( $backup_type ),
 				pb_backupbuddy::$format->file_size( $size ),
 			);
 
-			if ( 'restore' === $mode ) {
-				$backup_array[] = backupbuddy_backups()->get_details_link( $backup );
-			}
-
 			if ( 'default' === $mode ) {
-				$download_link  = self::getFileURL( $settings, $backup );
 				$copy_link      = '&cpy=' . rawurlencode( $backup ) . '&remote_path=' . rawurlencode( $prefix );
 				$actions        = array(
 					$download_link => __( 'Download Backup', 'it-l10n-backupbuddy' ),
@@ -866,6 +863,7 @@ class pb_backupbuddy_destination_s33 {
 				);
 				$backup_array[] = backupbuddy_backups()->get_action_menu( $backup, $actions );
 			} elseif ( 'restore' === $mode ) {
+				$backup_array[] = backupbuddy_backups()->get_details_link( $backup );
 				$backup_array[] = backupbuddy_backups()->get_restore_buttons( $backup, $backup_type );
 			}
 

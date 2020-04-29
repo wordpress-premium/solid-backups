@@ -31,10 +31,11 @@ $backup_integrity = backupbuddy_core::backup_integrity_check( $zip_file, $backup
 
 // Backup status.
 $pretty_status = array(
-	true   => '<span class="pb_label pb_label-success">Good</span>', // v4.0+ Good.
-	'pass' => '<span class="pb_label pb_label-success">Good</span>', // Pre-v4.0 Good.
-	false  => '<span class="pb_label pb_label-important">Bad</span>', // v4.0+ Bad.
-	'fail' => '<span class="pb_label pb_label-important">Bad</span>', // Pre-v4.0 Bad.
+	true     => '<span class="pb_label pb_label-success">Good</span>', // v4.0+ Good.
+	'pass'   => '<span class="pb_label pb_label-success">Good</span>', // Pre-v4.0 Good.
+	false    => '<span class="pb_label pb_label-important">Bad</span>', // v4.0+ Bad.
+	'fail'   => '<span class="pb_label pb_label-important">Bad</span>', // Pre-v4.0 Bad.
+	'remote' => '<span class="pb_label pb_label-info">Remote</span>', // Remote backups.
 );
 
 // Backup type.
@@ -60,7 +61,7 @@ $actions       = '';
 if ( is_array( $backup_integrity ) ) { // Data intact... put it all together.
 	// Calculate time ago.
 	$time_ago = '';
-	if ( isset( $backup_integrity['modified'] ) ) {
+	if ( ! empty( $backup_integrity['modified'] ) ) {
 		$time_ago = ' (' . pb_backupbuddy::$format->time_ago( $backup_integrity['modified'] ) . ' ago)';
 	}
 
@@ -81,7 +82,7 @@ if ( is_array( $backup_integrity ) ) { // Data intact... put it all together.
 
 	$modified      = pb_backupbuddy::$format->date( pb_backupbuddy::$format->localize_time( $backup_integrity['modified'] ), 'l, F j, Y - g:i:s a' );
 	$modified_time = $backup_integrity['modified'];
-	if ( isset( $backup_integrity['status'] ) ) { // Pre-v4.0.
+	if ( ! empty( $backup_integrity['status'] ) ) { // Pre-v4.0.
 		$status = $backup_integrity['status'];
 	} else { // v4.0+.
 		$status = $backup_integrity['is_ok'];
@@ -111,10 +112,40 @@ if ( is_array( $backup_integrity ) ) { // Data intact... put it all together.
 
 	//$actions = '<a href="' . esc_attr( admin_url( '?page=pb_backupbuddy_backup&reset_integrity=' . $backup_serial ) ) . '" title="Rescan integrity. Last checked ' . esc_attr( pb_backupbuddy::$format->date( $backup_integrity['scan_time'] ) ) . '.">Rescan integrity</a> | ';
 } else { // end if is_array( $backup_options ).
-	$time_ago      = ' (' . pb_backupbuddy::$format->time_ago( $backup_date ) . ' ago)';
-	$modified_time = filemtime( backupbuddy_core::getBackupDirectory() . $zip_file );
-	$detected_type = backupbuddy_core::parse_file( $zip_file, 'type' );
-	$modified      = pb_backupbuddy::$format->date( pb_backupbuddy::$format->localize_time( $modified_time ), 'l, F j, Y - g:i:s a' );
+	if ( file_exists( backupbuddy_core::getBackupDirectory() . $zip_file ) ) {
+		$modified_time = filemtime( backupbuddy_core::getBackupDirectory() . $zip_file );
+	}
+}
+
+if ( ! file_exists( backupbuddy_core::getBackupDirectory() . $zip_file ) ) {
+	$status = 'remote';
+}
+
+$parsed = backupbuddy_core::parse_file( $zip_file );
+if ( ! $detected_type ) {
+	$detected_type = $parsed['type'];
+}
+if ( ! $modified_time ) {
+	$modified_time = $parsed['timestamp'];
+}
+if ( ! $modified ) {
+	$format   = empty( $parsed['time'] ) ? 'l, F j, Y' : 'l, F j, Y - g:i:s a';
+	$modified = pb_backupbuddy::$format->date( pb_backupbuddy::$format->localize_time( $modified_time ), $format );
+}
+
+if ( ! $time_ago ) {
+	if ( empty( $parsed['time'] ) ) {
+		if ( current_time( 'Y-m-d' ) === $parsed['date'] ) {
+			$time_ago = ' (' . __( 'Today', 'it-l10n-backupbuddy' ) . ')';
+		} else {
+			$time_ago = ' (' . pb_backupbuddy::$format->time_ago( $backup_date ) . ' ago)';
+		}
+	} else {
+		if ( ! is_numeric( $backup_date ) ) {
+			$backup_date = strtotime( $backup_date );
+		}
+		$time_ago = ' (' . pb_backupbuddy::$format->time_ago( $backup_date ) . ' ago)';
+	}
 }
 
 if ( $data ) {

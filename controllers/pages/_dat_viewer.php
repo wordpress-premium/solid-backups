@@ -25,12 +25,22 @@ if ( empty( $dat_zip_file ) ) {
 
 pb_backupbuddy::disalert( 'restore_caution', __( 'Caution: Files will be restored relative to the site WordPress installation directory, NOT necessarily their original location. Restored files may overwrite existing files of the same name. Use caution when restoring, especially when restoring large numbers of files to avoid breaking the site.', 'it-l10n-backupbuddy' ), false, '', array( 'class' => 'below-h2' ) );
 
-$backup_timestamp = backupbuddy_core::parse_file( $dat_zip_file, 'timestamp' );
-$backup_serial    = backupbuddy_core::parse_file( $dat_zip_file, 'serial' );
+$backup_info      = backupbuddy_core::parse_file( $dat_zip_file );
+$backup_timestamp = $backup_info['timestamp'];
+$backup_serial    = $backup_info['serial'];
 $backup_local     = pb_backupbuddy::$format->localize_time( $backup_timestamp );
-$backup_date      = pb_backupbuddy::$format->date( $backup_timestamp, 'l, F j, Y g:i a' );
-$backup_time_ago  = pb_backupbuddy::$format->time_ago( $backup_timestamp ) . ' ago';
-$destination_id   = pb_backupbuddy::_GET( 'destination' );
+$date_format      = empty( $backup_info['time'] ) ? 'l, F j, Y' : 'l, F j, Y g:i a';
+$backup_date      = pb_backupbuddy::$format->date( $backup_timestamp, $date_format );
+if ( empty( $backup_info['time'] ) ) {
+	if ( current_time( 'Y-m-d' ) === $backup_info['date'] ) {
+		$backup_time_ago = __( 'Today', 'it-l10n-backupbuddy' );
+	} else {
+		$backup_time_ago = pb_backupbuddy::$format->time_ago( $backup_timestamp ) . ' ago';
+	}
+} else {
+	$backup_time_ago = pb_backupbuddy::$format->time_ago( $backup_timestamp ) . ' ago';
+}
+$destination_id = pb_backupbuddy::_GET( 'destination' );
 ?>
 
 <div class="backupbuddy-restore-header">

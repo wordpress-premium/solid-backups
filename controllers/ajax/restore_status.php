@@ -38,6 +38,9 @@ $response['is_done'] = in_array( $restore['status'], backupbuddy_restore()->get_
 
 if ( $response['is_done'] && empty( $restore['viewed'] ) ) {
 	backupbuddy_restore()->restore_viewed( $restore_id );
+} elseif ( BackupBuddy_Restore::STATUS_NOT_STARTED === $restore['status'] ) {
+	// Sometimes restore needs a kick start.
+	backupbuddy_restore()->schedule_cron();
 }
 
 wp_send_json( $response );

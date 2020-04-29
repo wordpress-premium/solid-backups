@@ -239,10 +239,12 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 	public function _remote_send( $destination_id, $backup_file, $trigger, $send_importbuddy = false, $delete_after = false ) {
 		pb_backupbuddy::set_greedy_script_limits();
 
-		if ( ( '' == $backup_file ) && ( $send_importbuddy ) ) {
+		if ( '' == $backup_file && $send_importbuddy ) {
 			pb_backupbuddy::status( 'message', 'Only sending ImportBuddy to remote destination `' . $destination_id . '`.' );
 		} else {
-			pb_backupbuddy::status( 'message', 'Sending `' . $backup_file . '` to remote destination `' . $destination_id . '`. Importbuddy?: `' . $send_importbuddy . '`. Delete after?: `' . $delete_after . '`.' );
+			$is_importbuddy  = $send_importbuddy ? 'Yes' : 'No';
+			$do_delete_after = $delete_after ? 'Yes' : 'No';
+			pb_backupbuddy::status( 'message', 'Sending `' . $backup_file . '` to remote destination `' . $destination_id . '`. Importbuddy?: `' . $is_importbuddy . '`. Delete after?: `' . $do_delete_after . '`.' );
 		}
 
 		if ( ! isset( pb_backupbuddy::$options ) ) {

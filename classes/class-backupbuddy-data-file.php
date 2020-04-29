@@ -140,7 +140,7 @@ class BackupBuddy_Data_File {
 			// Check to see if dat file exists.
 			$data_file      = str_replace( '.zip', '.' . $this->extension, $zip_file );
 			$data_file_path = false;
-			if ( file_exists( $data_file ) ) { // Full Path.
+			if ( realpath( $data_file ) === $data_file && file_exists( $data_file ) ) { // Full Path.
 				$data_file_path = $data_file;
 			} elseif ( file_exists( $backup_directory . basename( $data_file ) ) ) { // Filename.
 				$data_file_path = $backup_directory . basename( $data_file );

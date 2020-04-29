@@ -3,33 +3,33 @@ require_once( pb_backupbuddy::plugin_path() . '/classes/core.php' );
 
 
 class backupbuddy_remote_api {
-	
+
 	private static $_errors = array();		// Hold error strings to retrieve with getErrors().
 	private static $_incomingPayload = '';
-	
+
 	public static function localCall( $keySet = false, $importbuddy = false ) {
 		if ( true !== $keySet ) {
 			die( '<html>403 Access Denied</html>' );
 		}
-		
+
 		register_shutdown_function( array( 'backupbuddy_remote_api', 'shutdown_function' ) );
-		
+
 		header( 'Content-Type: application/octet-stream' );
-		
+
 		if ( true !== self::init_incoming_call() ) {
 			$message = 'Error #8002: Error validating API call authenticity. Verify you are using the correct active API key.';
 			pb_backupbuddy::status( 'error', $message );
 			self::_reply( array( 'success' => false, 'error' => $message ) );
 		}
-		
+
 		// If here then validation was all good. API call is authorized.
-		
+
 		if ( true !== $importbuddy ) {
 			$functionName = '_verb_' . backupbuddy_core::getHttpHeader( 'backupbuddy-verb' );
 		} else {
 			$functionName = '_verb_importbuddy_' . backupbuddy_core::getHttpHeader( 'backupbuddy-verb' );
 		}
-		
+
 		// Does verb exist?
 		if ( false === method_exists( 'backupbuddy_remote_api', $functionName ) ) {
 			$message = 'Error #843489974: Unknown verb `' . backupbuddy_core::getHttpHeader( 'backupbuddy-verb' ) . '`.';
@@ -39,24 +39,24 @@ class backupbuddy_remote_api {
 			pb_backupbuddy::status( 'details', 'Calling incoming API function `' . $functionName . '`.' );
 			call_user_func_array( 'backupbuddy_remote_api::' . $functionName, array() );
 		}
-		
+
 		// Cleanup
 		self::$_incomingPayload = '';
 
 		// function: verb_[VERBHERE]
 	}
-	
-	
-	
+
+
+
 	/*	shutdown_function()
-	 *	
+	 *
 	 *	Used for catching fatal PHP errors during backup to write to log for debugging.
-	 *	
+	 *
 	 *	@return		null
 	 */
 	public static function shutdown_function() {
-		
-		
+
+
 		// Get error message.
 		// Error types: http://php.net/manual/en/errorfunc.constants.php
 		$e = error_get_last();
@@ -67,13 +67,13 @@ class backupbuddy_remote_api {
 				return;
 			}
 		}
-		
-		
+
+
 		// Calculate log directory.
 		$log_directory = backupbuddy_core::getLogDirectory();
 		$main_file = $log_directory . 'log-' . pb_backupbuddy::$options['log_serial'] . '.txt';
-		
-		
+
+
 		// Determine if writing to a serial log.
 		if ( pb_backupbuddy::$_status_serial != '' ) {
 			$serial = pb_backupbuddy::$_status_serial;
@@ -82,27 +82,27 @@ class backupbuddy_remote_api {
 		} else {
 			$write_serial = false;
 		}
-		
-		
+
+
 		// Format error message.
 		$e_string = 'PHP_ERROR ' . __( 'Error #32893. Fatal PHP error encountered:', 'it-l10n-backupbuddy' );
 		foreach( (array)$e as $e_line_title => $e_line ) {
 			$e_string .= $e_line_title . ' => ' . $e_line . "; ";
 		}
 		$e_string .= ".\n";
-		
-		
+
+
 		// Write to log.
 		@file_put_contents( $main_file, $e_string, FILE_APPEND );
 		if ( $write_serial === true ) {
 			@file_put_contents( $serial_file, $e_string, FILE_APPEND );
 		}
-		
-		
+
+
 	} // End shutdown_function.
-	
-	
-	
+
+
+
 	/* remoteCall()
 	 *
 	 * Send an API call to a remote server.
@@ -123,14 +123,14 @@ class backupbuddy_remote_api {
 	public static function remoteCall( $remoteAPI, $verb, $moreParams = array(), $timeout, $files = array(), $returnRaw = false ) {
 		pb_backupbuddy::status( 'details', 'Preparing remote API call verb `' . $verb . '`.' );
 		$now = time();
-		
+
 		$body = array();
-		
+
 		if ( ! is_numeric( $timeout ) ) {
 			$timeout = backupbuddy_constants::DEPLOYMENT_REMOTE_API_DEFAULT_TIMEOUT;
 		}
 		pb_backupbuddy::status( 'details', 'remoteCall() HTTP wait timeout: `' . $timeout . '` seconds.' );
-		
+
 		$defaultFile = array(
 			'file'    => '',
 			'size'    => '',
@@ -141,32 +141,32 @@ class backupbuddy_remote_api {
 			'datalen' => 0,
 			'data'    => '',
 		);
-		
+
 		// Apply defaults for each file.
 		foreach( $files as &$file ) {
 			$file = array_merge( $defaultFile, $file );
 		}
-		
+
 		$body['files'] = $files;
 
 		if ( ! is_array( $moreParams ) ) {
 			error_log( 'BackupBuddy Error #4893783447 remote_api.php; $moreParams must be passed as array.' );
 		}
 		$body = serialize( array_merge( $body, $moreParams ) );
-		
+
 		//print_r( $apiKey );
 		$signature = md5( $now . $verb . $remoteAPI['key_public'] . $remoteAPI['key_secret'] . $body );
-		
+
 		if ( defined( 'BACKUPBUDDY_DEV' ) && ( true === BACKUPBUDDY_DEV ) ) {
 			error_log( 'BACKUPBUDDY_DEV-remote api http body SEND- ' . print_r( $body, true ) );
 		}
-		
+
 		$sslverify = true;
 		if ( '0' == pb_backupbuddy::$options['deploy_sslverify'] ) {
 			$sslverify = false;
 			pb_backupbuddy::status( 'details', 'Skipping SSL cert verification based on advanced settings.' );
 		}
-		
+
 		//error_log( 'connectTo: ' . $remoteAPI['siteurl'] );
 		$response = wp_remote_post( rtrim( $remoteAPI['siteurl'], '/' ) . '/', array(
 				'method' => 'POST',
@@ -188,7 +188,7 @@ class backupbuddy_remote_api {
 				'cookies' => array()
 			)
 		);
-		
+
 		if ( is_wp_error( $response ) ) {
 			return self::_error( 'Error #9037: Unable to connect to remote server or unexpected response. Details: `' . $response->get_error_message() . '` - Site URL: `' . $remoteAPI['siteurl'] . '`, Home URL: `' . $remoteAPI['homeurl'] . '`.' );
 		} else {
@@ -196,33 +196,33 @@ class backupbuddy_remote_api {
 				return $response['body'];
 			}
 			//error_log( '3333Response: ' . $response['body'] );
-			
+
 			if ( false !== stripos( $response['body'], 'Request Entity Too Large' ) ) {
 				return self::_error( 'Error #8001b: Request Entity Too Large. The destination server says we sent too much data. Either change the Deployment Advanced Setting "Max Chunk Size" to a lower value or change the server configuration to accept a larger value. See the following webpage for the server solution for Apache, nginx, or IIS: https://craftcms.stackexchange.com/questions/2328/413-request-entity-too-large-error-with-uploading-a-file  ... Return data: `' . htmlentities( $response['body'] ) . '`.' );
 			}
-			
+
 			if ( false === ( $return = @unserialize( $response['body'] ) ) ) {
 				$error = "Error #8001: Unable to decode Deployment response. Things to check: 1) Verify both sites are running the latest BackupBuddy version (v8.1.1.1 introduced non-backward-compatible changes). 2) Check the remote site API URL is correct: " . $remoteAPI['siteurl'] . ". 3) If you changed the remote site API key you must update it into this site. 4) Make sure the remote site has the API enabled in its wp-config.php by adding define( 'BACKUPBUDDY_API_ENABLE', true ); somewhere ABOVE the line `That's all, stop editing!`. Verb: `" . $verb . "`. Troubleshooting: `<textarea style='width: 100%; height: 500px;' wrap='off'>" . htmlentities( print_r( $response, true ) ) . "</textarea>`.";
-				
+
 				/*
 				pb_backupbuddy::add_status_serial( 'remote_api' ); // Also log all incoming remote API calls.
 				pb_backupbuddy::status( 'error', 'REMOTE ERROR: ' . $error );
 				pb_backupbuddy::remove_status_serial( 'remote_api' );
 				*/
-				
+
 				return self::_error( $error );
 			} else {
 				if ( isset( $return['logs'] ) ) {
 					//pb_backupbuddy::add_status_serial( 'remote_api' ); // Also log all incoming remote API calls.
 					pb_backupbuddy::status( 'details', '*** Begin External Log (Remote API Call Response)' );
 					foreach( $return['logs'] as $log ) {
-						
+
 						pb_backupbuddy::status( 'details', '* ' . print_r( $log, true ) );
 					}
 					pb_backupbuddy::status( 'details', '*** End External Log (Remote API Call Response)' );
 					//pb_backupbuddy::remove_status_serial( 'remote_api' );
 				}
-				
+
 				if ( ! isset( $return['success'] ) || ( true !== $return['success'] ) ) { // Fail.
 					$error = '';
 					if ( isset( $return['error'] ) ) {
@@ -240,18 +240,18 @@ class backupbuddy_remote_api {
 			}
 		}
 	} // End remoteCall().
-	
-	
+
+
 	private static function _reply( $response_arr ) {
 		$response_arr['logs'] = pb_backupbuddy::get_status( 'remote_api', true, true, true ); // Array of status logs.
-		
+
 		//error_log( 'RESPONSE:' );
 		//error_log( print_r( $response_arr, true ) );
-		
+
 		die( serialize( $response_arr ) );
 	}
-	
-	
+
+
 	/* _verb_runBackup()
 	 *
 	 * Run a backup with a specified custom profile; eg a db backup for pulling deployment.
@@ -271,46 +271,46 @@ class backupbuddy_remote_api {
 			pb_backupbuddy::status( 'error', $message, $backupSerial );
 			self::_reply( array( 'success' => false, 'error' => $message ) ) ;
 		}
-		
+
 		// Appends session tokens from the pulling site so they wont get logged out when this database is restored there.
 		if ( isset( $profileArray['sessionTokens'] ) && ( is_array( $profileArray['sessionTokens'] ) ) ) {
 			pb_backupbuddy::status( 'details', 'Remote session tokens need updated.', $backupSerial );
 			//error_log( 'needtoken' );
-			
+
 			if ( ! is_numeric( $profileArray['sessionID'] ) ) {
 				$message = 'Error #328989893. Invalid session ID. Must be numeric.';
 				pb_backupbuddy::status( 'error', $message );
 				self::_reply( array( 'success' => false, 'error' => $message ) );
 			}
-			
+
 			// Get current session tokens.
 			global $wpdb;
 			$sql = "SELECT meta_value FROM `" . DB_NAME . "`.`" . $wpdb->prefix . "usermeta` WHERE `user_id` = '" . $profileArray['sessionID'] . "' AND `meta_key` = 'session_tokens';";
 			$results = $wpdb->get_var( $sql );
 			$oldSessionTokens = @unserialize( $results );
-			
+
 			// Add remote tokens.
 			if ( ! is_array( $oldSessionTokens ) ) {
 				$oldSessionTokens = array();
 			}
 			$newSessionTokens = array_merge( $oldSessionTokens, $profileArray['sessionTokens'] );
-			
+
 			// Re-serialize.
 			$newSessionTokens = serialize( $newSessionTokens );
-			
+
 			// Save merged tokens here.
 			$sql = "UPDATE `" . DB_NAME . "`.`" . $wpdb->prefix . "usermeta` SET meta_value= %s WHERE `user_id` = '" . $profileArray['sessionID'] . "' AND `meta_key` = 'session_tokens';";
 			$stringedSessionTokens = serialize( $profileArray['sessionTokens'] );
-			
+
 			if ( false === $wpdb->query( $wpdb->prepare( $sql, $stringedSessionTokens ) ) ) {
 				$message = 'Error #43734784: Unable to update remote session token.';
 				pb_backupbuddy::status( 'error', $message, $backupSerial );
 				self::_reply( array( 'success' => false, 'error' => $message ) );
 			}
-			
+
 			pb_backupbuddy::status( 'details', 'Updated remote session tokens.', $backupSerial );
 		}
-		
+
 		$maybeMessage = backupbuddy_api::runBackup( $profileArray, $triggerTitle = 'deployment_pulling', $backupMode = '', $backupSerial );
 		if ( empty( $maybeMessage['success'] ) ) {
 			$message = 'Error #48394873: Unable to launch backup at source. Details: `' . $maybeMessage . '`.';
@@ -321,34 +321,34 @@ class backupbuddy_remote_api {
 			self::_reply( array( 'success' => true, 'backupSerial' => $backupSerial, 'backupFile' => $archiveFilename ) );
 		}
 	} // End _verb_runBackup().
-	
-	
-	
+
+
+
 	private static function _verb_getBackupStatus() {
 		$backupSerial = self::$_incomingPayload[ 'serial' ];
 		pb_backupbuddy::status( 'details', '*** End Remote Backup Log section', $backupSerial ); // Place at end of log.
 		backupbuddy_api::getBackupStatus( $backupSerial ); // echos out. Use $returnRaw = true for remote_api call for this special verb that does not return json.
-		
+
 		// Fix missing WP cron constant.
 		if ( !defined( 'WP_CRON_LOCK_TIMEOUT' ) ) {
 			define('WP_CRON_LOCK_TIMEOUT', 60);  // In seconds
 		}
-		
+
 		if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
 			update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
 			spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
 		}
 	} // end _verb_getBackupStatus().
-	
-	
-	
+
+
+
 	/* _verb_confirmDeployment()
 	 *
 	 * User confirmed the deployment so cleanup any remaining temporary stuff such as temp db tables. Note: importbuddy, backup files, etc should have already been cleaned up by importbuddy itself at this point.
 	 *
 	 */
 	private static function _verb_confirmDeployment() {
-		
+
 		// Remove Temp Tables
 		$serial = self::$_incomingPayload[ 'serial' ];
 		require_once( pb_backupbuddy::plugin_path() . '/classes/housekeeping.php' );
@@ -367,82 +367,82 @@ class backupbuddy_remote_api {
 		foreach( $importbuddyFiles as $importbuddyFile ) {
 			unlink( $importbuddyFile );
 		}
-		
+
 		self::_reply( array( 'success' => true ) );
-		
+
 	} // End _verb_confirmDeployment().
-	
-	
+
+
 	// Receive backup archive.
 	private static function _verb_sendFile_backup() {
 		self::_sendFiles( 'backup' );
 	} // End _verb_sendFile_backup().
-	
-	
+
+
 	// Receive theme file.
 	private static function _verb_sendFile_theme() {
 		self::_sendFiles( 'theme' );
 	} // End _verb_sendFile_theme().
-	
+
 	// Receive child theme file.
 	private static function _verb_sendFile_childTheme() {
 		self::_sendFiles( 'childTheme' );
 	} // End _verb_sendFile_childtheme().
-	
+
 	// Receive plugin file.
 	private static function _verb_sendFile_plugin() {
 		self::_sendFiles( 'plugin' );
 	} // End _verb_sendFile_plugin().
-	
+
 	// Receive backup archive.
 	private static function _verb_sendFile_media() {
 		self::_sendFiles( 'media' );
 	} // End _verb_sendFile_media().
-	
+
 	// Receive additional extra inclusion.
 	private static function _verb_sendFile_extra() {
 		self::_sendFiles( 'extra' );
 	} // End _verb_sendFile_extra().
-	
+
 	// Testing file send ability. File is transient; stored in temp dir momentarily.
 	private static function _verb_sendFile_test() {
 		self::_sendFiles( 'test' );
 	} // End _verb_sendFile_test().
-	
-	
-	
+
+
+
 	// Get backup archive.
 	private static function _verb_getFile_backup() {
 		self::_getFile( 'backup' );
 	} // End _verb_getFile_backup().
-	
+
 	// Get theme file.
 	private static function _verb_getFile_theme() {
 		self::_getFile( 'theme' );
 	} // End _verb_getFile_theme().
-	
+
 	// Get child theme file.
 	private static function _verb_getFile_childTheme() {
 		self::_getFile( 'childTheme' );
 	} // End _verb_getFile_childTeme().
-	
+
 	// Get plugin file.
 	private static function _verb_getFile_plugin() {
 		self::_getFile( 'plugin' );
 	} // End _verb_getFile_plugin().
-	
+
 	// Get media file.
 	private static function _verb_getFile_media() {
 		self::_getFile( 'media' );
 	} // End _verb_getFile_media().
-	
+
 	// Get additional extra inclusion.
 	private static function _verb_getFile_extra() {
 		self::_getFile( 'extra' );
 	} // End _verb_getFile_extra().
-	
-	
-	
+
+
+
 	/* _getFilePathByType()
 	 *
 	 * Calculates root directory to store the specified type in. Contains trailing slash. Dies if unknown file type specified in params.
@@ -477,8 +477,8 @@ class backupbuddy_remote_api {
 		//error_log( 'rootDir: ' . $rootDir );
 		return $rootDir;
 	} // End _getFilePathByType().
-	
-	
+
+
 	/* _getFile()
 	 *
 	 * Calling site is wanting to get a file FROM this site.
@@ -488,15 +488,15 @@ class backupbuddy_remote_api {
 		$rootDir = self::_getFilePathByType( $type ); // contains trailing slash.
 		$filePath = stripslashes_deep( self::$_incomingPayload[ 'filename' ] );
 		$fullFilename = $rootDir . $filePath;
-		
+
 		$seekTo = self::$_incomingPayload[ 'seekto' ];
 		if ( ! is_numeric( $seekTo ) ) {
 			$seekTo = 0;
 		}
-		
+
 		$maxPayload = self::$_incomingPayload[ 'maxPayload' ]; // Max payload in bytes.
 		$maxPayloadBytes = $maxPayload * 1024 * 1024;
-		
+
 		// File exist? (note: if utf8 then this first check will fail and inside we will check for the file after utf8 decoding.)
 		if ( ! file_exists( $fullFilename ) ) {
 			// Check if utf8 decoding the filename helps us find it.
@@ -509,10 +509,10 @@ class backupbuddy_remote_api {
 				self::_reply( array( 'success' => false, 'error' => $message ) );
 			}
 		}
-		
+
 		$size = filesize( $fullFilename );
 		pb_backupbuddy::status( 'details', 'File size of file to get: ' . pb_backupbuddy::$format->file_size( $size ) );
-		
+
 		if ( $size > $maxPayloadBytes ) {
 			$chunksTotal = ceil( $size / $maxPayloadBytes );
 			pb_backupbuddy::status( 'details', 'This file + encoding exceeds the maximum per-chunk payload size so will be read in and sent in chunks of ' . self::$_incomingPayload[ 'maxPayload' ] . 'MB (' . $maxPayloadBytes . ' bytes) totaling approximately ' . $chunksTotal . ' chunks.' );
@@ -520,16 +520,16 @@ class backupbuddy_remote_api {
 			pb_backupbuddy::status( 'details', 'This file + encoding does not exceed per-chunk payload size of ' . self::$_incomingPayload[ 'maxPayload' ] . 'MB (' . pb_backupbuddy::$format->file_size( $maxPayloadBytes ) . ') so sending in one pass.' );
 		}
 		$prevPointer = 0;
-		
+
 		pb_backupbuddy::status( 'details', 'Reading in `' . $maxPayloadBytes . '` bytes at a time.' );
-		
+
 		// Open for reading.
 		if ( false === ( $fs = fopen( $fullFilename, 'rb' ) )) {
 			$message = 'Error #235532: Unable to fopen file `' . $fullFilename . '`.';
 			pb_backupbuddy::status( 'error', $message );
 			self::_reply( array( 'success' => false, 'error' => $message ) );
 		}
-		
+
 		// Seek to position (if applicable).
 		if ( 0 != $seekTo ) {
 			if ( 0 != fseek( $fs, $seekTo ) ) {
@@ -539,7 +539,7 @@ class backupbuddy_remote_api {
 				self::_reply( array( 'success' => false, 'error' => $message ) );
 			}
 		}
-		
+
 		$resumePoint = 0;
 		$fileDone = false;
 		$fileData = fread( $fs, $maxPayloadBytes );
@@ -556,7 +556,7 @@ class backupbuddy_remote_api {
 			}
 		}
 		@fclose( $fs );
-		
+
 		// TODO: In future perhaps pass data as the http response body and these items in a http header to prevent possible corruption in the serialized data.
 		$file = array(
 			'success'      => true,
@@ -567,13 +567,13 @@ class backupbuddy_remote_api {
 			'encoded'      => isset( $utf_decoded_filename ), // only isset if utf8 was needed to find this file.
 			'data'         => $fileData,
 		);
-		
+
 		self::_reply( $file );
-		
+
 	} // End _getFile().
-	
-	
-	
+
+
+
 	/* _sendFiles()
 	 *
 	 * Calling site is wanting to send file(s) TO this site. Called by various verbs that pass the appropriate $type that determines root path. Valid types: backup, theme, plugin, media
@@ -583,10 +583,10 @@ class backupbuddy_remote_api {
 		//error_log( 'type:' . $type );
 		$rootDir = self::_getFilePathByType( $type ); // contains trailing slash.
 		//error_log( 'API saving file to dir: `' . $rootDir . '`.' );
-		
+
 		$fileReceiveCount = 0;
 		$bytesReceived = 0;
-		
+
 		foreach( self::$_incomingPayload['files'] as $file ) {
 			//error_log( 'file: ' . $file );
 			//$file = str_replace( array( '\\', '/' ), '', stripslashes_deep( self::$_incomingPayload[ 'filename' ] ) );
@@ -611,25 +611,25 @@ class backupbuddy_remote_api {
 			} else { // Just the filename. No path.
 				$subFilePath = $file['file'];
 			}
-			
+
 			//error_log( 'a:' . $rootDir );
 			//error_log( 'b:' . $subFilePath );
 			$saveFile = $rootDir . $subFilePath;
 			//error_log( 'saveFile: ' . $saveFile );
 			//error_log( print_r( $file, true ) );
-			
+
 			// Calculate seek position.
 			$seekTo = $file[ 'seekto' ];
 			if ( ! is_numeric( $seekTo ) ) {
 				$seekTo = 0;
 			}
-			
+
 			// Check if directory exists & create if needed.
 			$saveDir = dirname( $saveFile );
-			
-			
+
+
 			// Delete existing directory for some types of transfers.
-			
+
 			if ( ( 0 == $seekTo ) && ( file_exists( $saveFile ) ) ) { // New file transfer only. Do not delete existing file if chunking.
 				if ( true !== @unlink( $saveFile ) ) {
 					$message = 'Error #238722: Unable to delete existing file `' . $saveFile . '`.';
@@ -637,7 +637,7 @@ class backupbuddy_remote_api {
 					self::_reply( array( 'success' => false, 'error' => $message ) );
 				}
 			}
-			
+
 			if ( ! is_dir( $saveDir ) ) {
 				if ( true !== pb_backupbuddy::$filesystem->mkdir( $saveDir ) ) {
 					$message = 'Error #327832: Unable to create directory `' . $saveDir . '`. Check permissions or manually create. Halting to preserve deployment integrity';
@@ -645,14 +645,14 @@ class backupbuddy_remote_api {
 					self::_reply( array( 'success' => false, 'error' => $message ) );
 				}
 			}
-			
+
 			// Open/create file for write/append.
 			if ( false === ( $fs = fopen( $saveFile, 'a' ) )) {
 				$message = 'Error #489339848: Unable to fopen file `' . $saveFile . '`.';
 				pb_backupbuddy::status( 'error', $message );
 				self::_reply( array( 'success' => false, 'error' => $message ) );
 			}
-			
+
 			// Seek to position (if applicable).
 			if ( 0 != fseek( $fs, $seekTo ) ) {
 				@fclose( $fs );
@@ -660,7 +660,7 @@ class backupbuddy_remote_api {
 				pb_backupbuddy::status( 'error', $message );
 				self::_reply( array( 'success' => false, 'error' => $message ) );
 			}
-			
+
 			// Check data length.
 			$gotLength = strlen( $file[ 'data' ] );
 			if ( $file['datalen'] != $gotLength ) {
@@ -669,7 +669,7 @@ class backupbuddy_remote_api {
 				pb_backupbuddy::status( 'error', $message );
 				self::_reply( array( 'success' => false, 'error' => $message ) );
 			}
-			
+
 			// Write to file.
 			if ( false === ( $bytesWritten = fwrite( $fs, $file[ 'data' ] ) ) ) {
 				@fclose( $fs );
@@ -679,11 +679,11 @@ class backupbuddy_remote_api {
 				self::_reply( array( 'success' => false, 'error' => $message ) );
 			} else {
 				@fclose( $fs );
-				
+
 				$message = 'Wrote `' . $bytesWritten . '` bytes to `' . $saveFile . '`.';
 				$bytesReceived += $bytesWritten;
 				pb_backupbuddy::status( 'details', $message );
-				
+
 				if ( ( '1' == $file[ 'test' ] ) || ( 'test' == $type ) ) {
 					@unlink( $saveFile );
 				} else {
@@ -695,7 +695,7 @@ class backupbuddy_remote_api {
 						}
 						@unlink( $saveFile );
 						*/
-						
+
 						// Media files need their thumbnails regenerated so get attachment ID.
 						/* CANNOT DO THIS HERE ... because item may not be in the DB yet. need to transfer thumbnails?
 						if ( 'media' == $type ) {
@@ -711,49 +711,49 @@ class backupbuddy_remote_api {
 							wp_update_attachment_metadata( $attachment_id,  $attach_data );
 						}
 						*/
-						
+
 						$fileReceiveCount++;
 					}
 				}
-				
+
 				continue;
 			}
 		}
-		
+
 		self::_reply( array( 'success' => true, 'message' => 'Received a total of `' . $fileReceiveCount . ' files, `' . $bytesReceived . '` bytes.' ) );
-		
+
 	} // End _sendFile().
-	
-	
-	
+
+
+
 	private static function _verb_getPreDeployInfo() {
 		$sha1 = false;
 		if ( '1' == self::$_incomingPayload[ 'sha1' ] ) {
 			$sha1 = true;
 		}
-		
+
 		self::_reply( array( 'success' => true, 'data' => backupbuddy_api::getPreDeployInfo( $sha1, self::$_incomingPayload[ 'destinationSettings' ] ) ) );
 	} // End _verb_getPreDeployInfo().
-	
-	
+
+
 	private static function _verb_renderImportBuddy() {
 		$backupFile = self::$_incomingPayload[ 'backupFile' ];
 		$password = md5( md5( backupbuddy_core::getHttpHeader( 'backupbuddy-api-key' ) ) );
 		$max_execution_time = self::$_incomingPayload['max_execution_time'];
-		
+
 		$doImportCleanup = true;
 		if ( 'true' == self::$_incomingPayload['doImportCleanup'] ) {
 			$doImportCleanup = true;
 		} elseif ( 'false' == self::$_incomingPayload['doImportCleanup'] ) {
 			$doImportCleanup = false;
 		}
-		
-		
+
+
 		// Store this serial in settings to cleanup any temp db tables in the future with this serial with periodic cleanup.
 		$backupSerial = backupbuddy_core::get_serial_from_file( $backupFile );
 		pb_backupbuddy::$options['rollback_cleanups'][ $backupSerial ] = time();
 		pb_backupbuddy::save();
-		
+
 		$setBlogPublic = '';
 		if ( 'true' == self::$_incomingPayload['setBlogPublic'] ) {
 			$setBlogPublic = true;
@@ -768,17 +768,17 @@ class backupbuddy_remote_api {
 		if ( is_numeric( $max_execution_time ) ) {
 			$additionalStateInfo['maxExecutionTime'] = $max_execution_time;
 		}
-		
+
 		$importFileSerial = backupbuddy_core::deploymentImportBuddy( $password, backupbuddy_core::getBackupDirectory() . $backupFile, $additionalStateInfo, $doImportCleanup );
 		if ( is_array( $importFileSerial ) ) {
 			self::_reply( array( 'success' => false, 'error' => $importFileSerial[1] ) );
 		} else {
 			self::_reply( array( 'success' => true, 'importFileSerial' => $importFileSerial ) );
 		}
-		
+
 	} // End _verb_renderImportBuddy().
-	
-	
+
+
 	public static function init_incoming_call() {
 		$key_public = backupbuddy_core::getHttpHeader( 'backupbuddy-api-key' );
 		$verb = backupbuddy_core::getHttpHeader( 'backupbuddy-verb' );
@@ -789,7 +789,7 @@ class backupbuddy_remote_api {
 		if ( false === ( $_incomingPayload = @file_get_contents('php://input') ) ) {
 			pb_backupbuddy::status( 'error', 'Error #43893484343: Unable to read php://input (val=false).' );
 		}
-		
+
 		$maxAge = 60*60; // Time in seconds after which a signed request is deemed too old. Help prevent replays. 1hr.
 		if ( 0 == count( pb_backupbuddy::$options['remote_api']['keys'] ) ) {
 			pb_backupbuddy::status( 'error', 'Error #34849489343: No API keys found. Should not happen.' );
@@ -800,17 +800,17 @@ class backupbuddy_remote_api {
 			$keyArr = self::key_to_array( $key );
 			if ( false === $keyArr ) {
 				pb_backupbuddy::status( 'details', 'Deployment incoming call: API key `' . $key . '` did NOT match. Trying next (if any)...' );
-				
+
 				self::_error( 'Warning #834983443: Failure decoding key. See returned log details.' );
 				continue;
 			}
 			if ( $key_public == $keyArr['key_public'] ) { // Incoming public key matches a stored public key.
 				pb_backupbuddy::status( 'details', 'Deployment incoming call: Key matches.' );
-				
+
 				// Has call expired?
 				if ( ( ! is_numeric( $time ) ) || ( ( time() - $time ) > $maxAge ) ) {
 					pb_backupbuddy::status( 'details', 'Deployment incoming call: Key timestamp expired. Too old! Currently: `' . time() . '`. Key time: `' . $time . '`.' );
-					
+
 					$message = 'Error #4845985: API call timestamp is too old. Verify the realtime clock on each server is relatively in sync.';
 					pb_backupbuddy::status( 'error', $message );
 					self::_reply( array( 'success' => false, 'error' => $message ) );
@@ -823,17 +823,17 @@ class backupbuddy_remote_api {
 					return false;
 				} else { // Signature good.
 					pb_backupbuddy::status( 'error', 'Deployment incoming call: Signature good.' );
-					
+
 					if ( false === ( self::$_incomingPayload = @unserialize( $_incomingPayload ) ) ) { // Corrupt payload.
 						pb_backupbuddy::status( 'error', 'Deployment incoming call: Payload corrupt/undecodable.' );
-						
+
 						self::$_incomingPayload = '';
 						$message = 'BackupBuddy Error #3893383: Valid key but incoming payload unserializable. Corrupt?';
 						pb_backupbuddy::status( 'error', $message );
 						error_log( $message );
 						return false;
 					}
-					
+
 					pb_backupbuddy::status( 'details', 'Deployment incoming call: Key auth success. Proceeding...' );
 					return true;
 				}
@@ -845,21 +845,23 @@ class backupbuddy_remote_api {
 		return false;
 	} // End init_incoming_call().
 
-	
+
 	public static function key_to_array( $key ) {
-		$key = trim( $key );
-		if ( false === ( $keyB = base64_decode( $key ) ) ) {
+		$key  = trim( $key );
+		$keyB = base64_decode( $key );
+		if ( ! $keyB ) {
 			pb_backupbuddy::status( 'error', 'Error #849348749834: Unable to decode key data `' . $key . '`.' );
 			return false;
 		}
-		if ( false === ( $keyC = unserialize( $keyB ) ) ) {
+		$keyC = unserialize( $keyB );
+		if ( false === $keyC ) {
 			pb_backupbuddy::status( 'error', 'Error #328937233: Unable to unserialize key data `' . $keyB . '`.' );
 			return false;
 		}
 		return $keyC;
 	}
-	
-	
+
+
 	public static function validate_api_key( $key ) {
 		if ( ! defined( 'BACKUPBUDDY_API_ENABLE' ) || ( TRUE != BACKUPBUDDY_API_ENABLE ) ) {
 			return false;
@@ -872,18 +874,18 @@ class backupbuddy_remote_api {
 		if ( '' == pb_backupbuddy::$options['api_key'] ) {
 			return false;
 		}
-		
-		
+
+
 		$key = self::key_to_array( $key );
 		if ( $key == pb_backupbuddy::$options['api_key'] ) {
 			return true;
 		} else {
 			return false;
 		}
-		
+
 	} // End validate_api_key().
-	
-	
+
+
 	public static function generate_key() {
 		if ( ! defined( 'BACKUPBUDDY_API_ENABLE' ) || ( TRUE != BACKUPBUDDY_API_ENABLE ) ) {
 			return false;
@@ -893,12 +895,12 @@ class backupbuddy_remote_api {
 			return false;
 		}
 		*/
-		
+
 		$siteurl = site_url();
 		$homeurl = home_url();
 		$rand = pb_backupbuddy::random_string( 12 );
 		$rand2 = pb_backupbuddy::random_string( 12 );
-		
+
 		$key = array(
 			'key_version' => 1,
 			'key_public' => md5( $rand . pb_backupbuddy::$options['log_serial'] . $siteurl . $homeurl . time() ),
@@ -907,13 +909,13 @@ class backupbuddy_remote_api {
 			'siteurl' => $siteurl,
 			'homeurl' => $homeurl,
 		);
-		
-		
+
+
 		return base64_encode( serialize( $key ) );
-		
+
 	} // End generate_api_key().
-	
-	
+
+
 	/* _error()
 	 *
 	 * Logs error messages for retrieval with getErrors().
@@ -927,9 +929,9 @@ class backupbuddy_remote_api {
 		pb_backupbuddy::status( 'error', $message );
 		return false;
 	}
-	
-	
-	
+
+
+
 	/* getErrors()
 	 *
 	 * Get any errors which may have occurred.
@@ -939,7 +941,7 @@ class backupbuddy_remote_api {
 	public static function getErrors() {
 		return self::$_errors;
 	} // End getErrors();
-	
-	
-	
+
+
+
 } // End class.

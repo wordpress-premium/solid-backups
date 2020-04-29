@@ -35,7 +35,7 @@ if ( 'push' === pb_backupbuddy::_GET( 'direction' ) ) {
 
 // Title for page.
 if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
-	pb_backupbuddy::$ui->title( 'Deploy Site' . $direction_text );
+	pb_backupbuddy::$ui->title( 'Deploy Site' . $direction_text, true, false );
 } else {
 	pb_backupbuddy::$ui->title( 'Create Backup', true, false );
 }
@@ -1311,11 +1311,13 @@ if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
 			}
 		}
 	} elseif ( 'pull' == pb_backupbuddy::_GET( 'direction' ) ) {
-		foreach ( $deploy_data['pullPluginFiles'] as $i => $pull_plugin_file ) { // For each push_plugin_file make sure.
-			$first_dir_slash = strpos( str_replace( '\\', '/', $pull_plugin_file ), '/', 1 );
-			$this_dir        = substr( $pull_plugin_file, 0, $first_dir_slash );
-			if ( ! in_array( $this_dir, $send_plugin_dirs ) ) { // File is in directory we are not sending. Unset.
-				unset( $deploy_data['pullPluginFiles'][ $i ] );
+		if ( ! empty( $deploy_data['pullPluginFiles'] ) && is_array( $deploy_data['pullPluginFiles'] ) ) {
+			foreach ( $deploy_data['pullPluginFiles'] as $i => $pull_plugin_file ) { // For each push_plugin_file make sure.
+				$first_dir_slash = strpos( str_replace( '\\', '/', $pull_plugin_file ), '/', 1 );
+				$this_dir        = substr( $pull_plugin_file, 0, $first_dir_slash );
+				if ( ! in_array( $this_dir, $send_plugin_dirs ) ) { // File is in directory we are not sending. Unset.
+					unset( $deploy_data['pullPluginFiles'][ $i ] );
+				}
 			}
 		}
 	}
@@ -1325,6 +1327,9 @@ if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
 	$deploy_data['sendExtras']      = 'true' == pb_backupbuddy::_POST( 'sendExtras' );
 	$deploy_data['doImportCleanup'] = 'true' == pb_backupbuddy::_POST( 'doImportCleanup' );
 	$deploy_data['destination_id']  = pb_backupbuddy::_POST( 'destination_id' );
+	if ( $deploy_data['destination_id'] && ! empty( pb_backupbuddy::$options['remote_destinations'][ $deploy_data['destination_id'] ] ) ) {
+		$deploy_data['destinationSettings'] = pb_backupbuddy::$options['remote_destinations'][ $deploy_data['destination_id'] ];
+	}
 
 	if ( '1' == pb_backupbuddy::_POST( 'setBlogPublic' ) ) {
 		$deploy_data['setBlogPublic'] = true;

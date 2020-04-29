@@ -43,7 +43,7 @@ class BackupBuddy_Backups {
 	 *
 	 * @var string
 	 */
-	private $destination_id = '';
+	private $destination_id = false;
 
 	/**
 	 * Class Constructor.
@@ -174,6 +174,12 @@ class BackupBuddy_Backups {
 	 * @param array  $settings  UI Table settings.
 	 */
 	public function table( $mode = 'default', $backups = false, $settings = array() ) {
+		// Load the CSS and JS files for the table.
+		if ( empty( $settings['disable_assets'] ) ) {
+			pb_backupbuddy::load_script( 'backupbuddy-min', false, backupbuddy_js_vars() );
+			pb_backupbuddy::load_style( 'backupbuddy-core' );
+		}
+
 		$this->mode = $mode;
 
 		if ( false === $backups ) {
@@ -312,7 +318,7 @@ class BackupBuddy_Backups {
 					continue;
 				}
 
-				$backup_date = backupbuddy_core::parse_file( $file, 'timestamp' );
+				$backup_date = backupbuddy_core::parse_file( $file, 'datetime' );
 
 				$backup_row = array(
 					array(
@@ -417,6 +423,7 @@ class BackupBuddy_Backups {
 			'detected_type' => backupbuddy_core::pretty_backup_type( backupbuddy_core::parse_file( $file, 'type' ) ),
 			'file_size'     => file_exists( $file ) ? filesize( $file ) : false,
 			'modified_time' => backupbuddy_core::parse_file( $file, 'timestamp' ),
+			'nicename'      => backupbuddy_core::parse_file( $file, 'nicename' ),
 			'modified'      => '',
 			'comment'       => '',
 			'output'        => '',
@@ -462,7 +469,9 @@ class BackupBuddy_Backups {
 			if ( $backup_integrity['size'] ) {
 				$integrity_data['file_size'] = $backup_integrity['size'];
 			}
-			if ( $integrity_data['modified_time'] ) {
+			if ( $integrity_data['nicename'] ) {
+				$integrity_data['modified'] = $integrity_data['nicename'];
+			} elseif ( $integrity_data['modified_time'] ) {
 				$integrity_data['modified'] = pb_backupbuddy::$format->date( $integrity_data['modified_time'], 'l, F j, Y - g:i a' );
 			}
 
@@ -556,10 +565,11 @@ class BackupBuddy_Backups {
 	 *
 	 * @param string $file         Path to backup file.
 	 * @param string $backup_type  Backup type.
+	 * @param string $file_id      ID of file used for button.
 	 *
 	 * @return string  Restore buttons HTML.
 	 */
-	public function get_restore_buttons( $file, $backup_type = false ) {
+	public function get_restore_buttons( $file, $backup_type = false, $file_id = null ) {
 		$restore_buttons   = '';
 		$button            = '<a href="%s" class="button restore-button%s"%s>%s</a>';
 		$full_restore_attr = sprintf(
@@ -579,12 +589,17 @@ class BackupBuddy_Backups {
 			$destination = '';
 			if ( backupbuddy_data_file()->locate( $file, $this->get_destination_id() ) ) {
 				$browse_tool = 'dat_viewer';
-				$destination = '&destination=' . $this->get_destination_id();
+				if ( false !== $this->get_destination_id() ) {
+					$destination = '&destination=' . rawurlencode( $this->get_destination_id() );
+				}
 			} elseif ( $this->is_remote() ) {
 				$can_browse = false;
 			}
 			if ( $can_browse ) {
-				$restore_files_url = admin_url( 'admin.php' ) . '?page=pb_backupbuddy_backup&' . $browse_tool . '=' . basename( $file ) . '&value=' . basename( $file ) . $destination . '#restore-backup';
+				if ( ! $file_id ) {
+					$file_id = basename( $file );
+				}
+				$restore_files_url = admin_url( 'admin.php' ) . '?page=pb_backupbuddy_backup&' . $browse_tool . '=' . rawurlencode( basename( $file ) ) . '&value=' . rawurlencode( $file_id ) . $destination . '#restore-backup';
 				$restore_buttons  .= sprintf( $button, $restore_files_url, '', '', esc_html__( 'Restore Files', 'it-l10n-backupbuddy' ) );
 			}
 
@@ -610,11 +625,22 @@ class BackupBuddy_Backups {
 	 * @return string  Details link.
 	 */
 	public function get_details_link( $file ) {
-		return sprintf(
-			'<a href="#backup-details" data-backup-zip="%s" data-destination-id="%s" class="backup-details">',
-			esc_attr( basename( $file ) ),
-			esc_attr( $this->get_destination_id() )
+		$details = sprintf(
+			'<a href="#backup-details" data-backup-zip="%s"%%s class="backup-details">',
+			esc_attr( basename( $file ) )
 		) . esc_html__( 'Details', 'it-l10n-backupbuddy' ) . '</a>';
+
+		$d_id_attr = '';
+
+		if ( false !== $this->get_destination_id() ) {
+			$d_id_attr = sprintf(
+				' data-destination-id="%s"',
+				esc_attr( $this->get_destination_id() )
+			);
+		}
+
+		$details = sprintf( $details, $d_id_attr );
+		return $details;
 	}
 
 	/**
@@ -654,11 +680,14 @@ class BackupBuddy_Backups {
 					if ( 'http' === strtolower( substr( $action_url, 0, 4 ) ) || '#' === substr( $action_url, 0, 1 ) ) {
 						$url = $action_url;
 					} else {
-						$url  = pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . $this->get_destination_id() . $action_url;
-						$url .= '&bub_rand=' . rand( 100, 999 );
+						$url = pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . $this->get_destination_id() . $action_url;
 					}
 				} else {
 					$url = $action_url;
+				}
+
+				if ( '.zip' === strtolower( substr( $url, -4 ) ) ) {
+					$url = add_query_arg( 'bub_rand', rand( 100, 999 ), $url );
 				}
 				$action_class = sanitize_title( $action_label );
 				$action_link  = sprintf( '<a href="%s" class="%s">%s</a>', esc_attr( $url ), esc_attr( $action_class ), esc_html( $action_label ) );
@@ -667,6 +696,13 @@ class BackupBuddy_Backups {
 			}
 		}
 
+		/**
+		 * Modify the action menu as needed.
+		 *
+		 * @param array  $action_menu  Action menu array.
+		 * @param string $file         Backup File.
+		 * @param object $this         BackupBuddy Backups class instance.
+		 */
 		$action_menu = apply_filters( 'backupbuddy_backups_action_menu', $action_menu, $file, $this );
 
 		if ( ! count( $action_menu ) ) {
@@ -694,21 +730,40 @@ class BackupBuddy_Backups {
 	 */
 	public function format_backup_title( $output, $item, $item_id, $itemi, $settings ) {
 		if ( ! empty( $item[0][1] ) ) {
-			$file     = $item[0][0];
-			$modified = $item[0][1];
-			$link_url = ! empty( $item[0][3] ) ? $item[0][3] : false;
+			$file        = $item[0][0];
+			$modified    = $item[0][1];
+			$link_url    = ! empty( $item[0][2] ) ? $item[0][2] : false;
+			$link_target = ! empty( $item[0][3] ) ? ' target="' . esc_attr( $item[0][3] ) . '"' : '';
 		} else {
 			return $output;
 		}
 
+		$label_format = 'l, F j, Y - g:i a';
+
+		if ( ! is_numeric( $modified ) ) {
+			$date    = $modified;
+			$current = current_time( 'mysql' );
+
+			// Check if there is a date AND time.
+			if ( false === strpos( $modified, ' ' ) ) {
+				$label_format = 'l, F j, Y';
+				$current      = current_time( 'Y-m-d' );
+			}
+
+			$modified = strtotime( $modified );
+			$time_ago = $current === $date ? __( 'Today', 'it-l10n-backupbuddy' ) : pb_backupbuddy::$format->time_ago( $modified, (int) current_time( 'timestamp' ) ) . ' ago';
+		} else {
+			$time_ago = pb_backupbuddy::$format->time_ago( $modified, (int) current_time( 'timestamp' ) ) . ' ago';
+		}
+
 		$mode     = $settings['display_mode'];
 		$filename = basename( $file );
-		$label    = pb_backupbuddy::$format->date( $modified, 'l, F j, Y - g:i a' );
-		$label   .= ' (' . pb_backupbuddy::$format->time_ago( $modified, (int) current_time( 'timestamp' ) ) . ' ago)';
+		$label    = pb_backupbuddy::$format->date( $modified, $label_format );
+		$label   .= ' (' . $time_ago . ')';
 		$url      = $link_url ? $link_url : pb_backupbuddy::ajax_url( 'download_archive' ) . '&backupbuddy_backup=' . $filename;
 
 		if ( 'default' === $mode ) { // Default backup listing.
-			$output = '<a href="' . esc_attr( $url ) . '" class="backupbuddyFileTitle" title="' . $filename . '">' . $label . '</a>';
+			$output = '<a href="' . esc_attr( $url ) . '"' . $link_target . ' class="backupbuddyFileTitle" title="' . $filename . '">' . $label . '</a>';
 		} elseif ( 'legacy' === $mode ) { // Copied default in case of changes.
 			$output = '<a href="' . esc_attr( $url ) . '" class="backupbuddyFileTitle" title="' . $filename . '">' . $label . '</a>';
 			$integrity_data = $this->get_integrity_data( $file );

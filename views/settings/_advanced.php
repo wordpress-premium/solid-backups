@@ -72,13 +72,13 @@ $settings_form->add_setting(
 		'type'    => 'select',
 		'name'    => 'archive_name_format',
 		'options' => array(
-			'date'       => 'Date only [default]',
-			'datetime'   => 'Date + time (12hr format)',
+			'datetime'   => 'Date + time (12hr format) [default]',
 			'datetime24' => 'Date + time (24hr format)',
 			'timestamp'  => 'Unix Timestamp',
+			'date'       => 'Date only (Not recommended)',
 		),
 		'title'   => __( 'Backup file name date/time', 'it-l10n-backupbuddy' ),
-		'tip'     => __( '[Default: disabled (date only)] - When enabled your backup filename will display the time the backup was created in addition to the default date. This is useful when making multiple backups in a one day period.', 'it-l10n-backupbuddy' ),
+		'tip'     => __( '[Default: Date + time (12hr format)] - Your backup filename will display the date and/or time (or timestamp) the backup was created. If you make multiple backups in a one day, it is HIGHLY recommended not to use the Date Only setting.', 'it-l10n-backupbuddy' ),
 		'css'     => '',
 		'rules'   => 'required',
 	)
@@ -314,7 +314,7 @@ $settings_form->add_setting(
 			'2' => __( 'Errors & Warnings', 'it-l10n-backupbuddy' ),
 			'3' => __( 'Everything (troubleshooting mode)', 'it-l10n-backupbuddy' ),
 		),
-		'tip'     => sprintf( __( '[Default: Errors Only] - This option controls how much activity is logged for records or troubleshooting. Logs may be viewed from the Logs / Other tab on the Settings page. Additionally when in Everything / Troubleshooting mode error emails will contain encrypted troubleshooting data for support. Log file: %s', 'it-l10n-backupbuddy' ), $log_file ),
+		'tip'     => sprintf( __( '[Default: Errors Only] - This option controls how much activity is logged for records or troubleshooting. Logs may be viewed from the Logs/Other tab on the Diagnostics page. Additionally when in Everything / Troubleshooting mode error emails will contain encrypted troubleshooting data for support. Log file: %s', 'it-l10n-backupbuddy' ), $log_file ),
 		'rules'   => 'required',
 	)
 );
@@ -363,7 +363,7 @@ $settings_form->add_setting(
 		'type'  => 'text',
 		'name'  => 'max_send_stats_days',
 		'title' => __( 'Recent remote send stats max age', 'it-l10n-backupbuddy' ),
-		'tip'   => sprintf( __( '[Default: Errors Only] - This option controls how much activity is logged for records or troubleshooting. Logs may be viewed from the Logs / Other tab on the Settings page. Additionally when in Everything / Troubleshooting mode error emails will contain encrypted troubleshooting data for support. Log file: %s', 'it-l10n-backupbuddy' ), $log_file ),
+		'tip'   => sprintf( __( '[Default: Errors Only] - This option controls how much activity is logged for records or troubleshooting. Logs may be viewed from the Logs/Other tab on the Diagnostics page. Additionally when in Everything / Troubleshooting mode error emails will contain encrypted troubleshooting data for support. Log file: %s', 'it-l10n-backupbuddy' ), $log_file ),
 		'tip'   => __( '[Default: 7 days] - Number of days to store recently sent file statistics & logs. Valid options are 1 to 90 days.' ),
 		'css'   => 'width: 50px;',
 		'rules' => 'required|int[1-90]',
@@ -375,7 +375,7 @@ $settings_form->add_setting(
 		'type'  => 'text',
 		'name'  => 'max_send_stats_count',
 		'title' => __( 'Recent remote send stats max number', 'it-l10n-backupbuddy' ),
-		'tip'   => sprintf( __( '[Default: Errors Only] - This option controls how much activity is logged for records or troubleshooting. Logs may be viewed from the Logs / Other tab on the Settings page. Additionally when in Everything / Troubleshooting mode error emails will contain encrypted troubleshooting data for support. Log file: %s', 'it-l10n-backupbuddy' ), $log_file ),
+		'tip'   => sprintf( __( '[Default: Errors Only] - This option controls how much activity is logged for records or troubleshooting. Logs may be viewed from the Logs/Other tab on the Diagnostics page. Additionally when in Everything / Troubleshooting mode error emails will contain encrypted troubleshooting data for support. Log file: %s', 'it-l10n-backupbuddy' ), $log_file ),
 		'tip'   => __( '[Default: 7 days] - Maximum number of recently sent file statistics & logs to store. Valid options are 1 to 25 sends.' ),
 		'css'   => 'width: 50px;',
 		'rules' => 'required|int[1-25]',

@@ -47,7 +47,7 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 if ( '' !== pb_backupbuddy::_GET( 'cpy' ) ) {
 	$copy = pb_backupbuddy::_GET( 'cpy' );
 
-	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
+	pb_backupbuddy::alert( 'The remote file has been scheduled to be copied down to your local backups. Check your logs for more details.' );
 
 	pb_backupbuddy::status( 'details', 'Scheduling Cron for Dropbox file copy to local.' );
 	backupbuddy_core::schedule_single_event( time(), 'process_destination_copy', array( $settings, $copy ) );
@@ -63,9 +63,6 @@ $quota = pb_backupbuddy_destination_dropbox3::get_quota();
 if ( is_array( $quota ) ) {
 	include pb_backupbuddy::plugin_path() . '/destinations/dropbox3/views/quota.php';
 }
-
-pb_backupbuddy::load_script( 'backupbuddy.min.js' );
-pb_backupbuddy::load_style( 'backupbuddy-core.css' );
 
 // Find backups in directory.
 backupbuddy_backups()->set_destination_id( $destination_id );

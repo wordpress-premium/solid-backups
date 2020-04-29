@@ -270,15 +270,17 @@ class pb_backupbuddy_ui {
 		foreach ( (array) $items as $item_id => $item ) {
 			$itemi++;
 			$timestamp_attr = '';
+			$addl_row_class = '';
 			$timestamp      = self::get_timestamp( $item );
+
 			if ( $timestamp ) {
 				$timestamp_attr = sprintf( ' data-timestamp="%s"', esc_attr( $timestamp ) );
-			}
 
-			$addl_row_class = ' month-' . strtolower( date( 'M', $timestamp ) );
-			if ( date( 'M', $timestamp ) !== $month ) {
-				$addl_row_class .= ' begin-month';
-				$month           = date( 'M', $timestamp );
+				$addl_row_class = ' month-' . strtolower( date( 'M', $timestamp ) );
+				if ( date( 'M', $timestamp ) !== $month ) {
+					$addl_row_class .= ' begin-month';
+					$month           = date( 'M', $timestamp );
+				}
 			}
 
 			echo sprintf( '<tr class="entry-row%s" data-id="%s" data-destination-id="%s"%s>', esc_attr( $addl_row_class ), esc_attr( basename( $item_id ) ), esc_attr( $settings['destination_id'] ), $timestamp_attr );
@@ -352,13 +354,17 @@ class pb_backupbuddy_ui {
 	public static function get_timestamp( $item ) {
 		$timestamp = '';
 		if ( ! is_array( $item ) ) {
-			if ( is_int( $item ) ) {
+			if ( is_int( $item ) || false !== strtotime( $item ) ) {
 				$timestamp = $item;
 			}
-		} elseif ( ! empty( $item[0][1] ) && is_int( $item[0][1] ) ) {
+		} elseif ( ! empty( $item[0][1] ) && ( is_int( $item[0][1] ) || ( is_string( $item[0][1] ) && false !== strtotime( $item[0][1] ) ) ) ) {
 			$timestamp = $item[0][1];
-		} elseif ( ! empty( $item[0] ) && is_int( $item[0] ) ) {
+		} elseif ( ! empty( $item[0] ) && ( is_int( $item[0] ) || ( is_string( $item[0] ) && false !== strtotime( $item[0] ) ) ) ) {
 			$timestamp = $item[0];
+		}
+
+		if ( ! empty( $timestamp ) && ! is_numeric( $timestamp ) ) {
+			$timestamp = strtotime( $timestamp );
 		}
 
 		return (int) $timestamp;
@@ -702,7 +708,7 @@ class pb_backupbuddy_ui {
 	 */
 	public function disalert( $unique_id, $message, $error = false, $more_css = '', $args = array() ) {
 		if ( '' == $unique_id || ! isset( pb_backupbuddy::$options['disalerts'][ $unique_id ] ) ) {
-			$message = '<a style="float: right;" class="pb_backupbuddy_disalert" href="javascript:void(0);" title="' . __( 'Dismiss this alert. Unhide dismissed alerts on the Settings page.', 'it-l10n-backupbuddy' ) . '" alt="' . pb_backupbuddy::ajax_url( 'disalert' ) . '"><b>' . __( 'Dismiss', 'it-l10n-backupbuddy' ) . '</b></a><div style="margin-right: 120px;">' . $message . '</div>';
+			$message = '<a style="float: right;" class="pb_backupbuddy_disalert" href="javascript:void(0);" title="' . __( 'Dismiss this alert. Unhide dismissed alerts on the Diagnostics page under Logs/Other.', 'it-l10n-backupbuddy' ) . '" alt="' . pb_backupbuddy::ajax_url( 'disalert' ) . '"><b>' . __( 'Dismiss', 'it-l10n-backupbuddy' ) . '</b></a><div style="margin-right: 120px;">' . $message . '</div>';
 			$this->alert( $message, $error, '', $unique_id, $more_css, $args );
 		} else {
 			echo '<!-- Previously Dismissed Alert: `' . htmlentities( $message ) . '` -->';
@@ -919,7 +925,6 @@ class pb_backupbuddy_ui {
 
 		$return = '</div>';
 
-
 		if ( $echo === true ) {
 			echo $return;
 		} else {
@@ -937,6 +942,9 @@ class pb_backupbuddy_ui {
 	 * @param string $body_class  Body class.
 	 */
 	public function ajax_header( $js = true, $padding = true, $body_class = '' ) {
+		// Make sure styles and scripts we may need are registered.
+		backupbuddy_global_admin_scripts();
+
 		echo '<html>';
 		echo '<head>';
 		echo '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />';
@@ -956,6 +964,7 @@ class pb_backupbuddy_ui {
 		pb_backupbuddy::load_style( 'thickboxed.css' );
 
 		//echo '<link rel="stylesheet" href="' . pb_backupbuddy::plugin_url(); . '/css/admin.css" type="text/css" media="all" />';
+		pb_backupbuddy::load_script( 'backupbuddy-min', false, backupbuddy_js_vars() );
 		pb_backupbuddy::load_script( 'admin.js', true );
 		pb_backupbuddy::load_style( 'admin.css' );
 		pb_backupbuddy::load_script( 'jquery-ui-tooltip', false );

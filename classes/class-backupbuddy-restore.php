@@ -597,6 +597,7 @@ class BackupBuddy_Restore {
 					$this->restore_viewed( $restore['id'] );
 					continue;
 				}
+
 				return $restore['id'];
 			}
 		}
@@ -842,7 +843,7 @@ class BackupBuddy_Restore {
 	}
 
 	/**
-	 * Load Full restore data into restore array.
+	 * Load Full restore data (from individual restore file) into restore array.
 	 *
 	 * @param array $restore_array  Restore array.
 	 * @param int   $attempts       Number of attempts to read file.
@@ -865,7 +866,11 @@ class BackupBuddy_Restore {
 		if ( file_exists( $this->current_restore ) ) {
 			$load_restore = json_decode( file_get_contents( $this->current_restore ), true );
 			if ( is_array( $load_restore ) ) {
-				$restore_array = array_merge( $restore_array, $load_restore );
+				// Keep status from master file.
+				$restore_status = $restore_array['status'];
+				$restore_array  = array_merge( $restore_array, $load_restore );
+				// Restore original status value.
+				$restore_array['status'] = $restore_status;
 			} else {
 				// File unavailable maybe it's being written, try again after a few seconds.
 				$attempts++;
@@ -931,6 +936,7 @@ class BackupBuddy_Restore {
 			unset( $restore_array['cleanup'] );
 			unset( $restore_array['perms'] );
 			unset( $restore_array['perm_fails'] );
+			unset( $restore_array['sql_files'] );
 			unset( $restore_array['tables'] );
 			unset( $restore_array['imported_tables'] );
 			unset( $restore_array['restored_tables'] );
@@ -2651,19 +2657,21 @@ class BackupBuddy_Restore {
 	/**
 	 * Returns HTML for status of restore.
 	 *
-	 * @param array  $restore   Restore array.
-	 * @param string $use_text  Text to display (default is status text).
-	 * @param bool   $echo      Echo or return.
+	 * @param array  $restore     Restore array.
+	 * @param string $use_text    Text to display (default is status text).
+	 * @param bool   $echo        Echo or return.
+	 * @param bool   $is_archive  If used for archive listing.
 	 *
 	 * @return string  Status HTML.
 	 */
-	public function get_status_html( $restore, $use_text = false, $echo = false ) {
+	public function get_status_html( $restore, $use_text = false, $echo = false, $is_archive = false ) {
 		$text = false === $use_text ? $this->get_status_text( $restore['status'] ) : $use_text;
 
 		if ( in_array( $restore['status'], $this->get_completed_statuses(), true ) ) {
 			$html = sprintf( '<a href="#restore-details-%s">%s</a>', esc_attr( $restore['id'] ), esc_html( $text ) );
 		} elseif ( $restore['status'] < self::STATUS_COMPLETE ) {
-			$html = sprintf( '<span data-restore-id="%s" class="restore-in-progress">%s</span>', esc_attr( $restore['id'] ), esc_html( $text ) );
+			$class = $is_archive ? '' : ' class="restore-in-progress"';
+			$html  = sprintf( '<span data-restore-id="%s"%s>%s</span>', esc_attr( $restore['id'] ), $class, esc_html( $text ) );
 		} else {
 			$html = false === $use_text ? 'Unknown Status: ' . $restore['status'] : $text;
 		}

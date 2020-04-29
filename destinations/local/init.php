@@ -288,7 +288,7 @@ class pb_backupbuddy_destination_local {
 				continue;
 			}
 
-			$backup_date = backupbuddy_core::parse_file( $backup, 'timestamp' );
+			$backup_date = backupbuddy_core::parse_file( $backup, 'datetime' );
 
 			$backup_array = array(
 				array(

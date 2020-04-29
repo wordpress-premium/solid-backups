@@ -75,27 +75,29 @@ class pb_backupbuddy_destinations {
 		$destination_type  = $destination_settings['type'];
 		$destination_class = 'pb_backupbuddy_destination_' . $destination_type;
 
-		// Load init file.
-		$destination_init_file = pb_backupbuddy::plugin_path() . '/destinations/' . $destination_type . '/init.php';
-		pb_backupbuddy::status( 'details', 'Loading destination init file `' . $destination_init_file . '`.' );
-		if ( file_exists( $destination_init_file ) ) {
-			require_once $destination_init_file;
-		} else {
-			pb_backupbuddy::status( 'error', 'Destination type `' . $destination_type . '` init.php file not found. Unable to load class `' . $destination_class . '`.' );
-			return false;
-		}
-		pb_backupbuddy::status( 'details', 'Destination init loaded.' );
-
 		if ( ! class_exists( $destination_class ) ) {
-			pb_backupbuddy::status( 'error', 'Destination type `' . $destination_type . '` class not found. Unable to load class `' . $destination_class . '`.' );
-			return false;
+			// Load init file.
+			$destination_init_file = pb_backupbuddy::plugin_path() . '/destinations/' . $destination_type . '/init.php';
+			pb_backupbuddy::status( 'details', 'Loading destination init file `' . $destination_init_file . '`.' );
+			if ( file_exists( $destination_init_file ) ) {
+				require_once $destination_init_file;
+			} else {
+				pb_backupbuddy::status( 'error', 'Destination type `' . $destination_type . '` init.php file not found. Unable to load class `' . $destination_class . '`.' );
+				return false;
+			}
+
+			// File loaded but class was not correct.
+			if ( ! class_exists( $destination_class ) ) {
+				pb_backupbuddy::status( 'error', 'Destination type `' . $destination_type . '` class not found. Unable to load class `' . $destination_class . '`.' );
+				return false;
+			}
+			pb_backupbuddy::status( 'details', 'Destination init loaded.' );
 		}
 
 		if ( method_exists( $destination_class, 'init' ) ) {
 			call_user_func_array( "{$destination_class}::init", array() ); // Initialize.
+			pb_backupbuddy::status( 'details', 'Initialized `' . $destination_type . '` destination.' );
 		}
-
-		pb_backupbuddy::status( 'details', 'Initialized `' . $destination_type . '` destination.' );
 
 		// Get default settings from class. Was using a variable class name but had to change this for PHP 5.2 compat.
 		pb_backupbuddy::status( 'details', 'Applying destination-specific defaults.' );
@@ -116,7 +118,6 @@ class pb_backupbuddy_destinations {
 			'settings' => $destination_settings,
 			'info'     => $destination_info,
 		);
-
 	} // End _init_destination().
 
 
@@ -451,12 +452,13 @@ class pb_backupbuddy_destinations {
 		}
 
 		if ( '' != $send_id ) {
+			$do_delete_after = $delete_after ? 'Yes' : 'No';
 			pb_backupbuddy::add_status_serial( 'remote_send-' . $send_id );
 			pb_backupbuddy::status( 'details', '----- Initiating master send function for BackupBuddy v' . pb_backupbuddy::settings( 'version' ) . '.' );
 			if ( is_array( $file ) ) {
-				pb_backupbuddy::status( 'details', 'Sending multiple files (' . count( $file ) . ') in this single send. Post-send deletion: ' . $delete_after );
+				pb_backupbuddy::status( 'details', 'Sending multiple files (' . count( $file ) . ') in this single send. Post-send deletion: ' . $do_delete_after );
 			} else {
-				pb_backupbuddy::status( 'details', 'Basename file: `' . basename( $file ) . '`. Post-send deletion: ' . $delete_after );
+				pb_backupbuddy::status( 'details', 'Basename file: `' . basename( $file ) . '`. Post-send deletion: ' . $do_delete_after );
 			}
 
 			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
@@ -776,9 +778,7 @@ class pb_backupbuddy_destinations {
 		}
 
 		// test() returns true on success, else error message.
-		$result = call_user_func_array( "{$destination_class}::test", array( $destination_settings ) );
-
-		return $result;
+		return call_user_func_array( "{$destination_class}::test", array( $destination_settings ) );
 	} // End test().
 
 
@@ -982,8 +982,14 @@ class pb_backupbuddy_destinations {
 
 		// Delete destination.
 		$deleted_destination          = array();
-		$deleted_destination['type']  = pb_backupbuddy::$options['remote_destinations'][ $destination_id ]['type'];
-		$deleted_destination['title'] = pb_backupbuddy::$options['remote_destinations'][ $destination_id ]['title'];
+		$destination_settings         = pb_backupbuddy::$options['remote_destinations'][ $destination_id ];
+		$deleted_destination['type']  = $destination_settings['type'];
+		$deleted_destination['title'] = $destination_settings['title'];
+
+		// Allow destinations to handle cleanup upon deletion.
+		$destination = self::_init_destination( $destination_settings );
+		do_action( 'backupbuddy_delete_destination_' . $deleted_destination['type'], $destination_settings );
+
 		unset( pb_backupbuddy::$options['remote_destinations'][ $destination_id ] );
 
 		// Remove this destination from all schedules using it.

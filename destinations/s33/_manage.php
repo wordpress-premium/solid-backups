@@ -121,9 +121,6 @@ if ( 0 === $backup_count ) {
 	}
 	echo '</b>';
 } else {
-	pb_backupbuddy::load_script( 'backupbuddy.min.js' );
-	pb_backupbuddy::load_style( 'backupbuddy-core.css' );
-
 	backupbuddy_backups()->table(
 		'default',
 		$backups,

@@ -2751,7 +2751,10 @@ class pb_backupbuddy_backup {
 		pb_backupbuddy::status( 'details', 'Starting PULL deployment process. Incoming state: `' . print_r( $state, true ) . '`.' );
 		pb_backupbuddy::status( 'startSubFunction', json_encode( array( 'function' => 'deploy_pull_start', 'title' => 'Found deployment.' ) ) );
 
-		require_once( pb_backupbuddy::plugin_path() . '/classes/deploy.php' );
+		require_once pb_backupbuddy::plugin_path() . '/classes/deploy.php';
+		if ( empty( $state['destinationSettings'] ) ) {
+			$state['destinationSettings'] = array();
+		}
 		$deploy = new backupbuddy_deploy( $state['destinationSettings'], $state );
 
 		// If not pulling any DB contents then skip making remote backup file.
