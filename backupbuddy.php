@@ -8,7 +8,7 @@
  * Author URI: http://ithemes.com/
  * iThemes Package: backupbuddy
  *
- * @package BackupBuddy
+ * @package BackupBuddy aa
  *
  *
  * INSTALLATION:
