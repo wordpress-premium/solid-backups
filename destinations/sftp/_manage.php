@@ -59,10 +59,14 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 
 	$delete_count = 0;
 
-	// Loop through and delete ftp backup files.
+	if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+		require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+	}
+
+	// Loop through and delete sftp backup files.
 	foreach ( (array) pb_backupbuddy::_POST( 'items' ) as $backup ) {
 		// Try to delete backup.
-		if ( true === $sftp->delete( $backup ) ) {
+		if ( true === pb_backupbuddy_destinations::delete( $destination, $backup ) ) {
 			$delete_count++;
 		} else {
 			pb_backupbuddy::alert( 'Unable to delete file `' . $destination['path'] . '/' . $backup . '`.', false, '', '', '', array( 'class' => 'below-h2' ) );
@@ -80,6 +84,7 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 
 // Find backups in directory.
 backupbuddy_backups()->set_destination_id( $destination_id );
+backupbuddy_backups()->show_cleanup();
 
 $backups = pb_backupbuddy_destinations::listFiles( $destination );
 

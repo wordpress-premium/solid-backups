@@ -18,8 +18,6 @@ wp_enqueue_script( 'thickbox' );
 wp_print_scripts( 'thickbox' );
 wp_print_styles( 'thickbox' );
 
-pb_backupbuddy::load_script( 'admin.js' );
-
 pb_backupbuddy::$ui->title( __( 'Diagnostics', 'it-l10n-backupbuddy' ), true, false );
 backupbuddy_core::versions_confirm();
 

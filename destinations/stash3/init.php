@@ -77,15 +77,15 @@ class pb_backupbuddy_destination_stash3 {
 	/**
 	 * Send one or more files.
 	 *
-	 * @param array  $settings       Destination settings.
-	 * @param array  $file           Array of one or more files to send (even though only 1 file is supported).
-	 * @param string $send_id        The send ID.
-	 * @param bool   $delete_after   Delete the file afterwards.
-	 * @param bool   $clear_uploads  Clear uploads.
+	 * @param array  $settings             Destination settings.
+	 * @param array  $file                 Array of one or more files to send (even though only 1 file is supported).
+	 * @param string $send_id              The send ID.
+	 * @param bool   $delete_after         Delete the local file afterwards.
+	 * @param bool   $delete_remote_after  If remote file should be deleted after send.
 	 *
 	 * @return bool|array  True on success, false on failure, array if a multipart chunked send so there is no status yet.
 	 */
-	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false, $clear_uploads = false ) {
+	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false, $delete_remote_after = false ) {
 		require_once pb_backupbuddy::plugin_path() . '/lib/stash/stash-api.php';
 
 		pb_backupbuddy::status( 'details', 'Starting stash3 send().' );
@@ -124,7 +124,7 @@ class pb_backupbuddy_destination_stash3 {
 		}
 
 		// Send file.
-		$result = pb_backupbuddy_destination_s33::send( $settings, $file, $send_id, $delete_after, $clear_uploads );
+		$result = pb_backupbuddy_destination_s33::send( $settings, $file, $send_id, $delete_after, $delete_remote_after );
 
 		if ( is_array( $result ) ) { // Chunking. Notify Stash API to kick cron.
 			self::cron_kick_api( $settings, false );
@@ -490,7 +490,7 @@ class pb_backupbuddy_destination_stash3 {
 	}
 
 	/**
-	 * Alias to deleteFiles().
+	 * Alias to deleteFiles(). (Legacy support)
 	 *
 	 * @param array  $settings  Destination settings.
 	 * @param string $file      File to delete.
@@ -498,8 +498,20 @@ class pb_backupbuddy_destination_stash3 {
 	 * @return bool|string  True if success, else string error message.
 	 */
 	public static function deleteFile( $settings, $file ) {
-		return self::deleteFiles( $settings, $file );
+		return self::delete( $settings, $file );
 	} // End deleteFile().
+
+	/**
+	 * Delete files. (Legacy support)
+	 *
+	 * @param array $settings  Destination settings.
+	 * @param array $files     Array of files to delete.
+	 *
+	 * @return bool|string  True if success, else string error message.
+	 */
+	public static function deleteFiles( $settings, $files = array() ) {
+		return self::delete( $settings, $files );
+	} // End deleteFiles().
 
 	/**
 	 * Delete files.
@@ -509,7 +521,7 @@ class pb_backupbuddy_destination_stash3 {
 	 *
 	 * @return bool|string  True if success, else string error message.
 	 */
-	public static function deleteFiles( $settings, $files = array() ) {
+	public static function delete( $settings, $files = array() ) {
 		require_once pb_backupbuddy::plugin_path() . '/lib/stash/stash-api.php';
 
 		$settings = self::_init( $settings );
@@ -537,9 +549,8 @@ class pb_backupbuddy_destination_stash3 {
 			$file = $remote_path . $file;
 		}
 
-		return pb_backupbuddy_destination_s33::deleteFiles( $settings, $files );
-
-	} // End deleteFiles().
+		return pb_backupbuddy_destination_s33::delete( $settings, $files );
+	}
 
 	/**
 	 * Enforce archive limits.
@@ -732,6 +743,59 @@ class pb_backupbuddy_destination_stash3 {
 		pb_backupbuddy::status( 'details', 'File saved to `' . $destination_file . '`.' );
 		@unlink( $download );
 		return true;
+	}
+
+	/**
+	 * Get a list of dat files not associated with backups.
+	 *
+	 * @param array $settings  Destination Settings array.
+	 *
+	 * @return array  Array of dat files.
+	 */
+	public static function get_dat_orphans( $settings ) {
+		$backups_array = self::listFiles( $settings );
+		if ( ! is_array( $backups_array ) ) {
+			return false;
+		}
+
+		$orphans = array();
+		$backups = array();
+		$files   = self::get_files( $settings, array( '.dat' ) );
+
+		if ( ! is_array( $files ) ) {
+			return false;
+		}
+
+		// Create an array of backup filenames.
+		foreach ( $backups_array as $backup_array ) {
+			$backups[] = $backup_array[0][0];
+		}
+
+		$prefix = backupbuddy_core::backup_prefix();
+
+		if ( $prefix ) {
+			$prefix .= '-';
+		}
+
+		// Loop through dat files looking for orphans.
+		foreach ( $files as $file ) {
+			$filename = $file['filename'];
+
+			// Appears to not be a dat file for this site.
+			if ( strpos( $filename, 'backup-' . $prefix ) === false ) {
+				continue;
+			}
+
+			// Skip dat files with backup files.
+			$backup_name = str_replace( '.dat', '.zip', $filename ); // TODO: Move to backupbuddy_data_file() method.
+			if ( in_array( $backup_name, $backups, true ) ) {
+				continue;
+			}
+
+			$orphans[] = $filename;
+		}
+
+		return $orphans;
 	}
 
 	/**

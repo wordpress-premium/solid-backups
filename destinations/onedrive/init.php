@@ -227,26 +227,10 @@ class pb_backupbuddy_destination_onedrive {
 			die( esc_html__( 'There was a problem creating the OneDrive client. Please contact support for assistance.', 'it-l10n-backupbuddy' ) );
 		}
 
-		$package = backupbuddy_get_package_license();
-
-		// Create the payload for validation.
-		$key     = $package['key'];
-		$user    = $package['user'];
-		$payload = array(
-			'time'   => current_time( 'timestamp' ),
-			'action' => 'backupbuddy-onedrive-oauth-connect',
-		);
-		$payload = wp_json_encode( $payload );
-
 		// Our OAuth server URL.
 		$redirect = self::get_config( 'ONEDRIVE_REDIRECT_URI' );
 
-		// Build the value for the "state" parameter passed to the OAuth API.
-		$source = admin_url( 'admin.php?page=pb_backupbuddy_destinations&onedrive-oauth=1' );
-		$source = add_query_arg( 'username', $user, $source );
-		$source = add_query_arg( 'payload', $payload, $source );
-		$source = add_query_arg( 'signature', hash_hmac( 'sha1', $payload, $key ), $source );
-
+		// getLogInUrl does not throw any Exceptions.
 		$url = self::$client->getLogInUrl(
 			array(
 				'files.read',
@@ -256,10 +240,11 @@ class pb_backupbuddy_destination_onedrive {
 				'offline_access',
 			),
 			$redirect,
-			$source
+			backupbuddy_get_oauth_source_url( 'onedrive' )
 		);
 
 		if ( true === $save_state ) {
+			// getState does not throw an Exception.
 			self::set_state( self::$client->getState() );
 		}
 
@@ -315,10 +300,15 @@ class pb_backupbuddy_destination_onedrive {
 			return false;
 		}
 
-		// Obtain the token using the code received by the OneDrive API.
-		self::$client->obtainAccessToken( self::get_config( 'ONEDRIVE_CLIENT_SECRET' ), self::$settings['oauth_code'] );
+		try {
+			// Obtain the token using the code received by the OneDrive API.
+			self::$client->obtainAccessToken( self::get_config( 'ONEDRIVE_CLIENT_SECRET' ), self::$settings['oauth_code'] );
+		} catch ( \Exception $e ) {
+			self::error( __( 'There was an error obtaining the OneDrive ccess token: ', 'it-l10n-backupbuddy' ) . $e->getMessage() );
+			return false;
+		}
 
-		// Persist the OneDrive client's state for future API requests.
+		// Persist the OneDrive client's state for future API requests. (No exceptions thrown here).
 		self::set_state( self::$client->getState() );
 
 		return true;
@@ -334,12 +324,14 @@ class pb_backupbuddy_destination_onedrive {
 			return false;
 		}
 
+		// This does not throw an Exception.
 		$state = self::$client->getState();
 
 		if ( ! $state ) {
 			return false;
 		}
 
+		// getAccessTokenStatus does not throw any Exceptions.
 		$status = self::$client->getAccessTokenStatus();
 
 		// Make sure we have a token.
@@ -356,11 +348,13 @@ class pb_backupbuddy_destination_onedrive {
 				return false;
 			}
 
+			// getState does not throw any Exceptions.
 			if ( ! self::set_state( self::$client->getState() ) ) {
 				self::error( __( 'An error has occurred during access token refresh.', 'it-l10n-backupbuddy' ) );
 				return false;
 			}
 
+			// getAccessTokenStatus does not throw any Exceptions.
 			if ( AccessTokenStatus::VALID !== self::$client->getAccessTokenStatus() ) {
 				self::error( __( 'Access to OneDrive has expired and could not be refreshed.', 'it-l10n-backupbuddy' ) );
 				return false;
@@ -422,15 +416,27 @@ class pb_backupbuddy_destination_onedrive {
 		self::$send_stats['start_time'] = microtime( true );
 
 		$folder_id = self::get_the_folder();
+		$folder    = self::get_drive_item( false, $folder_id );
+
+		if ( ! is_object( $folder ) ) {
+			// translators: %s represents the filename being uploaded.
+			self::error( sprintf( __( 'There was an error uploading `%s` to OneDrive: Invalid folder ID.', 'it-l10n-backupbuddy' ), basename( $file ) ) );
+			return false;
+		}
+
+		$total_transfer_size = 0;
+		$total_transfer_time = 0;
+
+		pb_backupbuddy::set_greedy_script_limits();
 
 		foreach ( $files as $file ) {
-			// Determine backup type for limiting later.
-			$backup_type = backupbuddy_core::getBackupTypeFromFile( $file );
-
 			if ( ! file_exists( $file ) ) {
-				self::error( __( 'Error #201910150843: File selected to send not found: `' . $file . '`.', 'it-l10n-backupbuddy' ) );
+				self::error( __( 'Error #201910150843: File selected to send not found', 'it-l10n-backupbuddy' ) . ': `' . $file . '`.' );
 				continue;
 			}
+
+			// Determine backup type for limiting later.
+			$backup_type = backupbuddy_core::getBackupTypeFromFile( $file );
 
 			$file_size = filesize( $file );
 			$file_info = pathinfo( $file );
@@ -440,23 +446,21 @@ class pb_backupbuddy_destination_onedrive {
 				$mime_type = 'application/zip';
 			} elseif ( 'php' === $file_ext ) {
 				$mime_type = 'application/x-httpd-php';
-			} else {
+			} else { // TODO: Set mime type for dat files?
 				$mime_type = '';
 			}
 
-			$folder = self::get_drive_item( false, $folder_id );
+			$total_transfer_size += $file_size;
+			$send_time            = -microtime( true );
 
-			if ( ! is_object( $folder ) ) {
-				self::error( __( 'There was an error uploading backup to OneDrive.', 'it-l10n-backupbuddy' ) );
-				return false;
+			pb_backupbuddy::status( 'details', __( 'Starting OneDrive upload for', 'it-l10n-backupbuddy' ) . ' `' . basename( $file ) . '`.' );
+
+			$args = array();
+			if ( $mime_type ) {
+				$args['contentType'] = $mime_type;
 			}
 
 			try {
-				$args = array();
-				if ( $mime_type ) {
-					$args['contentType'] = $mime_type;
-				}
-
 				// Returns UploadSessionProxy object.
 				$upload = $folder->startUpload( basename( $file ), fopen( $file, 'r' ), $args );
 			} catch ( \Exception $e ) {
@@ -464,16 +468,52 @@ class pb_backupbuddy_destination_onedrive {
 				return false;
 			}
 
+			pb_backupbuddy::status( 'details', 'Checking OneDrive upload status for `' . basename( $file ) . '`.' );
+
 			try {
 				// Potentially returns DriveItemProxy object.
-				$status = $upload->complete();
+				$new_file = $upload->complete();
 			} catch ( \Exception $e ) {
 				self::error( __( 'Error', 'it-l10n-backupbuddy' ) . ' #201910161524: ' . __( 'OneDrive upload failed for', 'it-l10n-backupbuddy' ) . ' `' . basename( $file ) . '`. ' . __( 'Details', 'it-l10n-backupbuddy' ) . ': ' . $e->getMessage() );
+				pb_backupbuddy::status( 'details', 'OneDrive upload status for `' . basename( $file ) . '` showed: ' . print_r( $new_file, true ) );
 				return false;
 			}
 
+			// Don't use isset or empty here.
+			if ( ! $new_file->id ) {
+				pb_backupbuddy::status( 'details', 'OneDrive upload status for `' . basename( $file ) . '` was missing ID property: ' . print_r( $new_file->id, true ) );
+				continue;
+			}
+
+			// Success!
+			pb_backupbuddy::status( 'details', 'OneDrive upload of file `' . basename( $file ) . '` completed successfully.' );
+
+			if ( $send_id ) {
+				$send_time           += microtime( true );
+				$total_transfer_time += $send_time;
+
+				pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #3...' );
+				require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
+				$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, true );
+				$result          = $fileoptions_obj->is_ok();
+				if ( true !== $result ) {
+					pb_backupbuddy::status( 'error', __( 'Fatal Error #9034.397237. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );
+				} else {
+					pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
+					$fileoptions = &$fileoptions_obj->options;
+
+					$fileoptions['start_time']  = self::$send_stats['start_time'];
+					$fileoptions['finish_time'] = microtime( true );
+					$fileoptions['write_speed'] = round( $total_transfer_size / $total_transfer_time, 5 );
+					$fileoptions['status']      = 'success';
+					$fileoptions_obj->save();
+				}
+				unset( $fileoptions_obj );
+			}
+
 			if ( $delete_remote_after ) {
-				self::deleteFile( false, $status->id );
+				pb_backupbuddy::status( 'details', 'Deleting `' . $new_file->id . '` (' . $new_file->name . ') per `delete_remote_after` parameter.' );
+				self::delete( false, $new_file->id );
 			}
 
 			if ( $backup_type ) {
@@ -536,26 +576,21 @@ class pb_backupbuddy_destination_onedrive {
 
 		// Filter backups by backup type.
 		$backups = array();
-		$prefix  = backupbuddy_core::backup_prefix();
-		foreach ( $remote_files as $remote_file ) {
-			if ( self::$client->isFolder( $remote_file ) ) { // Ignore folders.
+
+		foreach ( $remote_files as $file_id => $backup ) {
+			$filename = $backup[0][0];
+			$type     = backupbuddy_core::getBackupTypeFromFile( basename( $filename ) );
+
+			if ( ! $type ) { // Skip non-zip, non-backup files.
 				continue;
 			}
 
-			$filename = $remote_file->name;
-
-			if ( '.zip' !== substr( $filename, -4 ) ) { // Skip non-zip files.
+			// Only prune backups of this type.
+			if ( $type !== $backup_type ) {
 				continue;
 			}
 
-			if ( strpos( $filename, 'backup-' . $prefix . '-' ) === false ) { // Appears to not be a backup file for this site.
-				continue;
-			}
-			if ( strpos( $filename, '-' . $backup_type . '-' ) === false ) { // Appears to not be the same type of backup.
-				continue;
-			}
-
-			$backups[ $remote_file->id ] = $remote_file->createdDateTime->getTimestamp();
+			$backups[ $file_id ] = backupbuddy_core::parse_file( $filename, 'datetime' );
 		}
 
 		arsort( $backups );
@@ -569,10 +604,14 @@ class pb_backupbuddy_destination_onedrive {
 
 			pb_backupbuddy::status( 'details', 'More archives (' . count( $backups ) . ') than limit (' . $limit . ') allows. Pruning...' );
 
+			if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+				require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+			}
+
 			foreach ( $delete_backups as $file_id => $backup_time ) {
 				pb_backupbuddy::status( 'details', 'Deleting excess file `' . $file_id . '`...' );
 
-				if ( true !== self::deleteFile( false, $file_id ) ) {
+				if ( true !== pb_backupbuddy_destinations::delete( self::$settings, $file_id ) ) {
 					pb_backupbuddy::status( 'details', 'Unable to delete excess OneDrive file `' . $file_id . '`. Details: `' . print_r( $pb_backupbuddy_destination_errors, true ) . '`.' );
 					$delete_fail_count++;
 				}
@@ -622,7 +661,8 @@ class pb_backupbuddy_destination_onedrive {
 			$files = array( pb_backupbuddy::plugin_path() . '/destinations/remote-send-test.php' );
 		}
 
-		$result = self::send( false, $files, '', false, true );
+		$send_id = 'TEST-' . pb_backupbuddy::random_string( 12 );
+		$result  = self::send( false, $files, $send_id, false, true );
 
 		if ( true !== $result ) {
 			echo 'OneDrive test file send failed.';
@@ -657,30 +697,80 @@ class pb_backupbuddy_destination_onedrive {
 	/**
 	 * List files in this destination & directory.
 	 *
-	 * @param array  $settings   Destination settings.
-	 * @param string $folder_id  ID of OneDrive folder to list (defaults to stored setting).
+	 * @param array  $settings  Destination settings.
+	 * @param string $mode      Mode for listFiles.
 	 *
 	 * @return array|false  Array of items in directory OR bool FALSE on failure.
 	 */
-	public static function listFiles( $settings = false, $folder_id = false ) {
+	public static function listFiles( $settings = false, $mode = 'default' ) {
 		if ( false !== $settings ) {
 			self::add_settings( $settings );
 		}
 
-		if ( false === $folder_id ) {
-			$folder_id = self::get_the_folder();
-		}
-
-		$files = self::get_folder_contents( $folder_id );
+		$folder_id = self::get_the_folder();
+		$files     = self::get_folder_contents( $folder_id );
 
 		if ( ! is_array( $files ) ) {
 			self::error( __( 'Unexpected response retrieving OneDrive folder contents for folder ID: ', 'it-l10n-backupbuddy' ) . $folder_id );
 			return false;
 		}
 
-		usort( $files, array( 'pb_backupbuddy_destination_onedrive', 'sort_files' ) );
+		$prefix = backupbuddy_core::backup_prefix();
+		if ( $prefix ) {
+			$prefix .= '-';
+		}
 
-		return $files;
+		$backup_list       = array();
+		$backup_sort_dates = array();
+
+		foreach ( $files as $file ) {
+			$filename = $file->name;
+			if ( false === stristr( $filename, 'backup-' . $prefix ) ) { // only show backup files for this site.
+				continue;
+			}
+
+			// This checks for .zip extension.
+			$backup_type = backupbuddy_core::getBackupTypeFromFile( basename( $filename ) );
+
+			if ( ! $backup_type ) {
+				continue;
+			}
+
+			$backup        = $filename;
+			$backup_date   = backupbuddy_core::parse_file( $backup, 'datetime' );
+			$download_link = admin_url() . sprintf( '?onedrive-destination-id=%s&onedrive-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $file->id ) );
+
+			$backup_array = array(
+				array(
+					$backup,
+					$backup_date,
+					$download_link,
+				),
+				backupbuddy_core::pretty_backup_type( $backup_type ),
+				pb_backupbuddy::$format->file_size( $file->size ),
+			);
+
+			if ( 'default' === $mode ) {
+				$copy_link      = '&cpy=' . rawurlencode( $backup );
+				$actions        = array(
+					$download_link => __( 'Download Backup', 'it-l10n-backupbuddy' ),
+					$copy_link     => __( 'Copy to Local', 'it-l10n-backupbuddy' ),
+				);
+				$backup_array[] = backupbuddy_backups()->get_action_menu( $backup, $actions );
+				$key            = $file->id;
+			} elseif ( 'restore' === $mode ) {
+				$backup_array[] = backupbuddy_backups()->get_details_link( $backup, $file->id );
+				$backup_array[] = backupbuddy_backups()->get_restore_buttons( $backup, $backup_type );
+				$key            = basename( $backup );
+			}
+
+			$backup_list[ $key ]       = $backup_array;
+			$backup_sort_dates[ $key ] = $backup_date;
+		}
+
+		$backup_list = backupbuddy_backups()->sort_backups( $backup_list, $backup_sort_dates );
+
+		return $backup_list;
 	} // listFiles.
 
 	/**
@@ -694,20 +784,6 @@ class pb_backupbuddy_destination_onedrive {
 			$folder_id = self::get_root_folder();
 		}
 		return $folder_id;
-	}
-
-	/**
-	 * Sort files newest to oldest.
-	 *
-	 * @param object $a  DriveItem object.
-	 * @param object $b DriveItem object.
-	 *
-	 * @return int  1 or -1 depending on date.
-	 */
-	public static function sort_files( $a, $b ) {
-		$date_a = $a->createdDateTime->getTimestamp();
-		$date_b = $b->createdDateTime->getTimestamp();
-		return ( $date_a < $date_b ) ? 1 : -1;
 	}
 
 	/**
@@ -731,7 +807,7 @@ class pb_backupbuddy_destination_onedrive {
 		try {
 			$item = self::$client->getDriveItemById( $file_id );
 		} catch ( \Exception $e ) {
-			self::error( sprintf( __( 'There was an error getting OneDrive file properties for `%s`: ', 'it-l10n-backupbuddy' ), $file_id ) . $e->getMessage() );
+			self::error( __( 'There was an error getting OneDrive file properties for', 'it-l10n-backupbuddy' ) . ' `' . $file_id . '`: ' . $e->getMessage() );
 			return false;
 		}
 
@@ -757,27 +833,128 @@ class pb_backupbuddy_destination_onedrive {
 			return false;
 		}
 
-		try {
-			$drive_file = self::get_drive_item( false, $remote_file_id );
-		} catch ( \Exception $e ) {
-			self::error( sprintf( __( 'There was an error getting OneDrive file properties for `%s`: ', 'it-l10n-backupbuddy' ), $file_id ) . $e->getMessage() );
+		$drive_file = self::get_drive_item( false, $remote_file_id );
+
+		if ( false === $drive_file ) {
 			return false;
 		}
 
 		try {
 			$contents = $drive_file->download();
 		} catch ( \Exception $e ) {
-			self::error( sprintf( __( 'There was an error downloading OneDrive file `%s`: ', 'it-l10n-backupbuddy' ), $file_id ) . $e->getMessage() );
+			self::error( __( 'There was an error downloading OneDrive file', 'it-l10n-backupbuddy' ) . ' `' . $file_id . '`: ' . $e->getMessage() );
 			return false;
 		}
 
-		if ( true !== file_put_contents( $local_file, $contents->read( $contents->getSize() ) ) ) {
-			self::error( sprintf( __( 'Error #201910141448: Unable to save requested OneDrive file contents into file `%s`.', 'it-l10n-backupbuddy' ), $local_file ) );
+		if ( false === file_put_contents( $local_file, $contents->read( $contents->getSize() ) ) ) {
+			self::error( __( 'Error #201910141448: Unable to save requested OneDrive file contents into file', 'it-l10n-backupbuddy' ) . ' `' . $local_file . '`.' );
 			return false;
 		}
 
 		return true;
 	} // getFile.
+
+	/**
+	 * Download all backup dat files.
+	 *
+	 * @param array $settings  Destination Settings array.
+	 *
+	 * @return bool  If successful or not.
+	 */
+	public static function download_dat_files( $settings = false ) {
+		$backups_array = self::listFiles( $settings );
+		if ( ! is_array( $backups_array ) || ! count( $backups_array ) ) {
+			return false;
+		}
+
+		$files = self::get_folder_contents();
+		if ( ! is_array( $files ) || ! count( $files ) ) {
+			return false;
+		}
+
+		$backups = array();
+		foreach ( $backups_array as $backup ) {
+			$backups[] = $backup[0][0];
+		}
+
+		$success = true;
+		foreach ( $files as $file_id => $file ) {
+			// Only looking for dat files.
+			if ( '.dat' !== substr( $file->name, -4 ) ) {
+				continue;
+			}
+
+			$backup_name = str_replace( '.dat', '.zip', $file->name ); // TODO: Move to backupbuddy_data_file() method.
+			if ( ! in_array( $backup_name, $backups, true ) ) {
+				continue;
+			}
+
+			$local_file = backupbuddy_core::getBackupDirectory() . '/' . $file->name;
+			if ( ! self::getFile( $settings, $file->id, $local_file ) ) {
+				$success = false;
+			}
+		}
+
+		return $success;
+	}
+
+	/**
+	 * Get a list of dat files not associated with backups.
+	 *
+	 * @param array $settings  Destination Settings array.
+	 *
+	 * @return array  Array of dat files.
+	 */
+	public static function get_dat_orphans( $settings ) {
+		$backups_array = self::listFiles( $settings );
+		if ( ! is_array( $backups_array ) ) {
+			return false;
+		}
+
+		$files = self::get_folder_contents();
+
+		if ( ! count( $files ) ) {
+			return false;
+		}
+
+		$orphans = array();
+		$backups = array();
+
+		// Create an array of backup filenames.
+		foreach ( $backups_array as $backup_array ) {
+			$backups[] = $backup_array[0][0];
+		}
+
+		$prefix = backupbuddy_core::backup_prefix();
+		if ( $prefix ) {
+			$prefix .= '-';
+		}
+
+		// Loop through all dat files looking for orphans.
+		foreach ( $files as $file ) {
+			$filename = $file->name;
+
+			// Skip if not a .dat file.
+			if ( '.dat' !== substr( $filename, -4 ) ) {
+				continue;
+			}
+
+			// Only show dat files for this site.
+			if ( false === stristr( $filename, 'backup-' . $prefix ) ) {
+				continue;
+			}
+
+			// Skip dat files with backup files.
+			$backup_name = str_replace( '.dat', '.zip', $filename ); // TODO: Move to backupbuddy_data_file() method.
+			if ( in_array( $backup_name, $backups, true ) ) {
+				continue;
+			}
+
+			$orphans[ $file->id ] = $filename;
+		}
+
+		return $orphans;
+	}
 
 	/**
 	 * Delete files from this destination.
@@ -788,6 +965,18 @@ class pb_backupbuddy_destination_onedrive {
 	 * @return bool  If successful or not.
 	 */
 	public static function deleteFile( $settings = false, $files = array() ) {
+		return self::delete( $settings, $files );
+	} // delete.
+
+	/**
+	 * Delete files from this destination.
+	 *
+	 * @param array $settings  Destination settings.
+	 * @param array $files     File or array of files.
+	 *
+	 * @return bool  If successful or not.
+	 */
+	public static function delete( $settings = false, $files = array() ) {
 		if ( ! self::is_ready( $settings ) ) {
 			return false;
 		}
@@ -822,7 +1011,7 @@ class pb_backupbuddy_destination_onedrive {
 		}
 
 		return true;
-	} // delete.
+	}
 
 	/**
 	 * Get contents of folder by ID.
@@ -832,9 +1021,13 @@ class pb_backupbuddy_destination_onedrive {
 	 *
 	 * @return array  Array of items.
 	 */
-	public static function get_folder_contents( $folder_id, $options = array() ) {
+	public static function get_folder_contents( $folder_id = false, $options = array() ) {
 		if ( ! self::is_ready() ) {
 			return false;
+		}
+
+		if ( false === $folder_id ) {
+			$folder_id = self::get_the_folder();
 		}
 
 		if ( ! $folder_id ) {
@@ -845,14 +1038,14 @@ class pb_backupbuddy_destination_onedrive {
 		try {
 			$folder = self::get_drive_item( false, $folder_id );
 		} catch ( \Exception $e ) {
-			self::error( sprintf( __( 'There was an error opening OneDrive folder `%s`: ', 'it-l10n-backupbuddy' ), $folder_id ) . $e->getMessage() );
+			self::error( __( 'There was an error opening OneDrive folder', 'it-l10n-backupbuddy' ) . ' `' . $folder_id . '`: ' . $e->getMessage() );
 			return false;
 		}
 
 		try {
 			$contents = $folder->getChildren( $options );
 		} catch ( \Exception $e ) {
-			self::error( sprintf( __( 'There was an error retrieving OneDrive folder contents for `%s`: ', 'it-l10n-backupbuddy' ), $folder_id ) . $e->getMessage() );
+			self::error( __( 'There was an error retrieving OneDrive folder contents for', 'it-l10n-backupbuddy' ) . ' `' . $folder_id . '`: ' . $e->getMessage() );
 			return false;
 		}
 
@@ -892,6 +1085,7 @@ class pb_backupbuddy_destination_onedrive {
 			} elseif ( is_a( $item, '\Krizalys\Onedrive\File' ) ) {
 				continue;
 			} else {
+				// isFolder does not throw any Exceptions.
 				if ( ! self::$client->isFolder( $item ) ) {
 					continue;
 				}
@@ -947,7 +1141,14 @@ class pb_backupbuddy_destination_onedrive {
 			}
 		}
 
-		return self::$client->createFolder( sanitize_text_field( $name ) );
+		try {
+			$result = self::$client->createFolder( sanitize_text_field( $name ) );
+		} catch ( \Exception $e ) {
+			self::error( __( 'There was an error creating the OneDrive folder: ', 'it-l10n-backupbuddy' ) . $e->getMessage() );
+			return false;
+		}
+
+		return $result;
 	}
 
 	/**
@@ -991,26 +1192,38 @@ class pb_backupbuddy_destination_onedrive {
 
 		if ( ! $file_id ) {
 			self::error( __( 'Missing OneDrive File ID for download.', 'it-l10n-backupbuddy' ), 'echo' );
-			return false;
+			exit();
 		}
+
+		pb_backupbuddy::status( 'details', __( 'Attempting to download OneDrive file: ', 'it-l10n-backupbuddy' ) . $file_id );
 
 		try {
 			$drive_file = self::get_drive_item( false, $file_id );
 		} catch ( \Exception $e ) {
-			self::error( sprintf( __( 'There was an error getting OneDrive file properties for `%s`: ', 'it-l10n-backupbuddy' ), $file_id ) . $e->getMessage(), 'echo' );
+			self::error( __( 'There was an error getting OneDrive file properties for', 'it-l10n-backupbuddy' ) . ' `' . $file_id . '`: ' . $e->getMessage(), 'echo' );
 			exit();
 		}
 
-		try {
-			$contents = $drive_file->download();
-		} catch ( \Exception $e ) {
-			self::error( sprintf( __( 'There was an error downloading OneDrive file `%s`: ', 'it-l10n-backupbuddy' ), $file_id ) . $e->getMessage(), 'echo' );
-			exit();
-		}
+		flush();
+
+		pb_backupbuddy::set_greedy_script_limits();
 
 		header( 'Content-Description: File Transfer' );
 		header( 'Content-Type: application/octet-stream' );
 		header( sprintf( 'Content-Disposition: attachment; filename="%s"', $drive_file->name ) );
+		header( 'Content-Transfer-Encoding: binary' );
+		header( 'Cache-Control: must-revalidate' );
+		header( 'Accept-Ranges: bytes' );
+		header( 'Expires: 0' );
+		header( 'Pragma: public' );
+		header( 'Content-Length: ' . $drive_file->size );
+
+		try {
+			$contents = $drive_file->download();
+		} catch ( \Exception $e ) {
+			self::error( __( 'There was an error downloading OneDrive file', 'it-l10n-backupbuddy' ) . ' `' . $file_id . '`: ' . $e->getMessage(), 'echo' );
+			exit();
+		}
 
 		echo $contents->read( $contents->getSize() );
 		exit();

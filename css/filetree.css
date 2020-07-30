@@ -60,7 +60,7 @@
 	overflow: auto;
 }
 
-UL.jqueryFileTree {
+ul.jqueryFileTree {
 	font-family: Verdana, sans-serif;
 	font-size: 11px;
 	line-height: 18px;
@@ -68,7 +68,7 @@ UL.jqueryFileTree {
 	margin: 0px;
 }
 
-UL.jqueryFileTree LI {
+ul.jqueryFileTree li {
 	list-style: none;
 	padding: 0px;
 	margin: 0px;
@@ -76,9 +76,17 @@ UL.jqueryFileTree LI {
 	position: relative;
 }
 
-UL.jqueryFileTree a {
+ul.jqueryFileTree a {
 	color: #333;
 	text-decoration: none;
+	display: block;
+	padding: 4px;
+	padding-left: 26px;
+	padding-right: 6px;
+}
+
+ul.jqueryFileTree .readonly > span {
+	color: #999;
 	display: block;
 	padding: 4px;
 	padding-left: 26px;
@@ -128,7 +136,6 @@ UL.jqueryFileTree a {
 .viewlink_place img {
 	vertical-align: -2px;
 }
-
 
 .jqueryFileTree .directory.collapsed, .jqueryFileTree .file.collapsed {
 	border-bottom: 1px solid #EBEBEB;

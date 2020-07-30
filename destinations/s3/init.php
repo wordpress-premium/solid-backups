@@ -137,11 +137,9 @@ class pb_backupbuddy_destination_s3 { // Change class name end to match destinat
 
 			}
 
-
 			// Load fileoptions to the send.
-			pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
-			require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #10.' );
+			pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #10...' );
+			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 			$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', $read_only = false, $ignore_lock = false, $create_file = false );
 			if ( true !== ( $result = $fileoptions_obj->is_ok() ) ) {
 				pb_backupbuddy::status( 'error', __('Fatal Error #9034.2344848. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );
@@ -152,9 +150,7 @@ class pb_backupbuddy_destination_s3 { // Change class name end to match destinat
 			pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
 			$fileoptions = &$fileoptions_obj->options;
 
-
 			$update_status = 'Sent part ' . $this_part_number . ' of ' . count( $settings['_multipart_counts'] ) . '.';
-
 
 			// Made it here so success sending part. Increment for next part to send.
 			$settings['_multipart_partnumber']++;
@@ -235,8 +231,8 @@ class pb_backupbuddy_destination_s3 { // Change class name end to match destinat
 			}
 		} else { // not multipart continuation
 
-
-			require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
+			pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #9...' );
+			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 
 			// Determine backup type directory (if zip).
 			$backup_type_dir = '';
@@ -246,7 +242,6 @@ class pb_backupbuddy_destination_s3 { // Change class name end to match destinat
 				$serial = backupbuddy_core::get_serial_from_file( $file );
 
 				// See if we can get backup type from fileoptions data.
-				pb_backupbuddy::status( 'details', 'Fileoptions instance #9.' );
 				$backup_options = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt', $read_only = true, $ignore_lock = true );
 				if ( true !== ( $result = $backup_options->is_ok() ) ) {
 					pb_backupbuddy::status( 'error', 'Unable to open fileoptions file `' . backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt' . '`.' );
@@ -413,9 +408,8 @@ class pb_backupbuddy_destination_s3 { // Change class name end to match destinat
 			pb_backupbuddy::status( 'details', 'S3 success sending file `' . basename( $file ) . '`. File uploaded and reported to S3 as completed.' );
 
 			// Load destination fileoptions.
-			pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
-			require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #8.' );
+			pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #8...' );
+			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 			$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', $read_only = false, $ignore_lock = false, $create_file = false );
 			if ( true !== ( $result = $fileoptions_obj->is_ok() ) ) {
 				pb_backupbuddy::status( 'error', __('Fatal Error #9034.84838. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );
@@ -576,9 +570,8 @@ class pb_backupbuddy_destination_s3 { // Change class name end to match destinat
 		}
 
 		// Load destination fileoptions.
-		pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
-		require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
-		pb_backupbuddy::status( 'details', 'Fileoptions instance #7.' );
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #7...' );
+		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 		$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', $read_only = false, $ignore_lock = false, $create_file = false );
 		if ( true !== ( $result = $fileoptions_obj->is_ok() ) ) {
 			pb_backupbuddy::status( 'error', __('Fatal Error #9034.84838. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );

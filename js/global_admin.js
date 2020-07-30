@@ -1,19 +1,19 @@
-jQuery(document).ready(function() {
+jQuery(function( $ ) {
 	// Hide a dismissable alert and send AJAX call so it won't be shown in the future.
-	jQuery( '.pb_backupbuddy_disalert' ).click( function(e) {
+	$( '.pb_backupbuddy_disalert' ).on( 'click', function(e) {
 		e.preventDefault();
-		var this_unique_id = jQuery(this).parents('.pb_backupbuddy_alert').attr('rel');
+		var this_unique_id = $(this).parents('.pb_backupbuddy_alert').attr('rel');
 		if ( ( '' === this_unique_id ) || ( 'undefined' == typeof this_unique_id ) ) { // Don't save dismissing as this is just a one-time dismissable alert.
-			jQuery(this).parents('.pb_backupbuddy_alert').slideUp();
+			$(this).parents('.pb_backupbuddy_alert').slideUp();
 			return;
 		}
-		var this_disalert_url = jQuery(this).attr('alt');
+		var this_disalert_url = $(this).attr('alt');
 		//alert( unique_id );
-		
-		jQuery.post( this_disalert_url,
+
+		$.post( this_disalert_url,
 			{ unique_id: this_unique_id },
 			function(data) {
-				data = jQuery.trim( data );
+				data = $.trim( data );
 				if ( data != '1' ) {
 					alert( 'Error saving dismissal. Error: ' + data );
 				}
@@ -22,20 +22,15 @@ jQuery(document).ready(function() {
 				}
 			}
 		);
-		
-		jQuery(this).parents('.pb_backupbuddy_alert').slideUp();
-		
+
+		$(this).parents('.pb_backupbuddy_alert').slideUp();
 	});
 
-	jQuery( '.pb_backupbuddy_alert[rel="deprecated_s3_destinations"] ').on('click', '.backupbuddy-nag-button', function() {
-		jQuery(this).parent().siblings('.more_info').slideToggle();
+	$( '.pb_backupbuddy_alert[rel="deprecated_s3_destinations"] ').on('click', '.backupbuddy-nag-button', function() {
+		$(this).parent().siblings('.more_info').slideToggle();
 	});
-	
-	
-	
+
 });
-
-
 
 function backupbuddy_save_textarea_as_file( id_name, filename_serial ) {
     var textFileAsBlob = new Blob([ jQuery( id_name ).text() ], {type:'text/plain'});

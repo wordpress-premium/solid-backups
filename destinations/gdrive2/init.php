@@ -257,42 +257,29 @@ class pb_backupbuddy_destination_gdrive2 {
 		if ( self::$settings['service_account_file'] ) { // Service account.
 
 			if ( ! file_exists( self::$settings['service_account_file'] ) ) {
-				global $bb_gdrive_error;
-				$bb_gdrive_error = 'Error #202003251522: p12 service account file not found `' . self::$settings['service_account_file'] . '`.';
-				self::error( $bb_gdrive_error );
+				self::error( __( 'Error #202003251522: JSON service account file not found', 'it-l10n-backupbuddy' ) . '`' . self::$settings['service_account_file'] . '`.' );
 				return false;
 			}
 
-			$account_file = @file_get_contents( self::$settings['service_account_file'] );
-
-			if ( false === $account_file ) {
-				global $bb_gdrive_error;
-				$bb_gdrive_error = 'Error #4430439433: Unable to read/access p12 service account file `' . self::$settings['service_account_file'] . '`.';
-				self::error( $bb_gdrive_error );
+			if ( false === @file_get_contents( self::$settings['service_account_file'] ) ) {
+				self::error( __( 'Error #4430439433: Unable to read/access JSON service account file', 'it-l10n-backupbuddy' ) . ' `' . self::$settings['service_account_file'] . '`.' );
 				return false;
 			}
 
-			$cred = new Google_Auth_AssertionCredentials(
-				self::$settings['service_account_email'], // service account name.
-				array( 'https://www.googleapis.com/auth/drive' ),
-				$account_file
-			);
-
-			self::$client->setAssertionCredentials( $cred );
+			self::$client->setAuthConfig( self::$settings['service_account_file'] );
+			$token = self::$client->fetchAccessTokenWithAssertion();
 
 			if ( self::$client->isAccessTokenExpired() ) {
 				try {
 					self::$client->refreshTokenWithAssertion();
 				} catch ( Exception $e ) {
-					global $bb_gdrive_error;
-					$error           = self::get_gdrive_exception_error( $e );
-					$bb_gdrive_error = 'Error #4349898343843: Unable to set/refresh access token. Access token error details: `' . $error . '`.';
-					pb_backupbuddy::status( 'error', $bb_gdrive_error );
+					$error = self::get_gdrive_exception_error( $e );
+					pb_backupbuddy::status( 'error', __( 'Error #4349898343843: Unable to set/refresh access token. Access token error details', 'it-l10n-backupbuddy' ) . ': `' . $error . '`.' );
 					return false;
 				}
 			}
 
-			self::$settings['token']     = json_encode( self::$client->getAccessToken() );
+			self::$settings['token']     = json_encode( $token );
 			self::$settings['client_id'] = self::$settings['service_account_file'];
 		} else { // Normal account authentication.
 			$config = self::get_config();
@@ -314,10 +301,8 @@ class pb_backupbuddy_destination_gdrive2 {
 				try {
 					self::$client->setAccessToken( self::$settings['token'] );
 				} catch ( Exception $e ) {
-					global $bb_gdrive_error;
-					$error           = self::get_gdrive_exception_error( $e );
-					$bb_gdrive_error = 'Error #4839484984: Unable to set access token. Access token error details: `' . $error . '`.';
-					self::error( $bb_gdrive_error );
+					$error = self::get_gdrive_exception_error( $e );
+					self::error( __( 'Error #4839484984: Unable to set access token. Access token error details', 'it-l10n-backupbuddy' ) . ': `' . $error . '`.' );
 					return false;
 				}
 
@@ -363,24 +348,7 @@ class pb_backupbuddy_destination_gdrive2 {
 			return false;
 		}
 
-		$package = backupbuddy_get_package_license();
-
-		// Create the payload for validation.
-		$key     = $package['key'];
-		$user    = $package['user'];
-		$payload = array(
-			'time'   => current_time( 'timestamp' ),
-			'action' => 'backupbuddy-gdrive2-oauth-connect',
-		);
-		$payload = wp_json_encode( $payload );
-
-		// Build the value for the "state" parameter passed to the OAuth API.
-		$source = admin_url( 'admin.php?page=pb_backupbuddy_destinations&gdrive-oauth=1' );
-		$source = add_query_arg( 'username', $user, $source );
-		$source = add_query_arg( 'payload', $payload, $source );
-		$source = add_query_arg( 'signature', hash_hmac( 'sha1', $payload, $key ), $source );
-
-		self::$client->setState( $source );
+		self::$client->setState( backupbuddy_get_oauth_source_url( 'gdrive2' ) );
 
 		return self::$client->createAuthUrl();
 	}
@@ -577,20 +545,21 @@ class pb_backupbuddy_destination_gdrive2 {
 
 				// Reached end of file.
 				if ( $upload_status && $send_id ) {
+					pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #17...' );
 					require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-					$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, false );
+					$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, true );
 					$result          = $fileoptions_obj->is_ok();
 					if ( true !== $result ) {
 						pb_backupbuddy::status( 'error', __( 'Fatal Error #9034.397237. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );
-						return false;
-					}
-					pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
-					$fileoptions = &$fileoptions_obj->options;
+					} else {
+						pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
+						$fileoptions = &$fileoptions_obj->options;
 
-					$fileoptions['_multipart_status'] = 'Sent part ' . self::$settings['_chunks_sent'] . ' of ' . self::$settings['_chunks_total'] . ' parts.';
-					$fileoptions['finish_time']       = microtime( true );
-					$fileoptions['status']            = 'success';
-					$fileoptions_obj->save();
+						$fileoptions['_multipart_status'] = 'Sent part ' . self::$settings['_chunks_sent'] . ' of ' . self::$settings['_chunks_total'] . ' parts.';
+						$fileoptions['finish_time']       = microtime( true );
+						$fileoptions['status']            = 'success';
+						$fileoptions_obj->save();
+					}
 					unset( $fileoptions_obj );
 				}
 
@@ -599,6 +568,12 @@ class pb_backupbuddy_destination_gdrive2 {
 
 			if ( is_a( $upload_status, 'Google_Service_Drive_DriveFile' ) ) {
 				pb_backupbuddy::status( 'details', 'Uploaded File ID: ' . $upload_status->getId() );
+
+				// Upload Success.
+				if ( true === $delete_remote_after ) {
+					pb_backupbuddy::status( 'details', 'Deleting `' . $upload_status->getId() . '` (' . $upload_status->getName() . ') per `delete_remote_after` parameter.' );
+					self::delete( false, $upload_status->getId() );
+				}
 			} elseif ( false === $upload_status ) {
 				self::error( 'Error #84347474 sending. Upload status returned false.' );
 				return false;
@@ -606,11 +581,6 @@ class pb_backupbuddy_destination_gdrive2 {
 
 			// Reset defer back to default.
 			self::$client->setDefer( false );
-
-			// Upload Success.
-			if ( true === $delete_remote_after ) {
-				self::deleteFile( false, $upload_status->getId() );
-			}
 
 			// Prune if upload successful (and is a backup).
 			if ( $upload_status && $backup_type ) {
@@ -751,15 +721,20 @@ class pb_backupbuddy_destination_gdrive2 {
 
 			if ( count( $backups ) > $limit ) {
 				pb_backupbuddy::status( 'details', 'More archives (' . count( $backups ) . ') than limit (' . $limit . ') allows. Trimming...' );
+
 				$i                 = 0;
 				$delete_fail_count = 0;
+
+				if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+					require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+				}
 
 				foreach ( $backups as $backup_id => $backup_time ) {
 					$i++;
 					if ( $i > $limit ) {
 						pb_backupbuddy::status( 'details', 'Trimming excess file `' . $backup_id . '`...' );
 
-						if ( true !== self::deleteFile( false, $backup_id ) ) {
+						if ( true !== pb_backupbuddy_destinations::delete( self::$settings, $backup_id ) ) {
 							global $pb_backupbuddy_destination_errors;
 							pb_backupbuddy::status( 'details', 'Unable to delete excess Google Drive (v2) file `' . $backup_id . '`. Details: `' . print_r( $pb_backupbuddy_destination_errors, true ) . '`.' );
 							$delete_fail_count++;
@@ -837,7 +812,8 @@ class pb_backupbuddy_destination_gdrive2 {
 		pb_backupbuddy::status( 'details', 'Testing Google Drive (v2) destination.' );
 		$files = array( pb_backupbuddy::plugin_path() . '/destinations/remote-send-test.php' );
 
-		$results = self::send( false, $files, '', false, true );
+		$send_id = 'TEST-' . pb_backupbuddy::random_string( 12 );
+		$results = self::send( false, $files, $send_id, false, true );
 
 		if ( true === $results ) {
 			esc_html_e( 'Success sending test file to Google Drive (v2).', 'it-l10n-backupbuddy' );
@@ -927,14 +903,17 @@ class pb_backupbuddy_destination_gdrive2 {
 
 		do {
 			try {
-				$files                   = self::$api->files->listFiles( $parameters );
-				$contents                = array_merge( $contents, $files->getFiles() );
-				$parameters['pageToken'] = $files->getNextPageToken();
+				$files = self::$api->files->listFiles( $parameters );
 			} catch ( Exception $e ) {
 				$error = self::get_gdrive_exception_error( $e );
 				self::error( 'Error #202003261434: ' . $error, 'echo' );
 				$parameters['pageToken'] = false; // abort on error.
 			}
+
+			$contents = array_merge( $contents, $files->getFiles() );
+
+			$parameters['pageToken'] = $files->getNextPageToken();
+
 		} while ( $parameters['pageToken'] );
 
 		return $contents;
@@ -957,7 +936,6 @@ class pb_backupbuddy_destination_gdrive2 {
 		}
 
 		$files = self::get_folder_contents( false, array( 'query' => 'backups' ) );
-
 
 		if ( ! is_array( $files ) ) {
 			self::error( __( 'Unexpected response retrieving Google Drive (v2) folder contents for folder: ', 'it-l10n-backupbuddy' ) . $folder_path );
@@ -983,8 +961,6 @@ class pb_backupbuddy_destination_gdrive2 {
 				backupbuddy_backups()->get_destination_id(),
 				rawurlencode( $file->getId() )
 			);
-			// Alternative download link (maybe prompts for virus scan).
-			// $download_link = $file->getWebContentLink();
 
 			$backup_array = array(
 				array(
@@ -1008,15 +984,11 @@ class pb_backupbuddy_destination_gdrive2 {
 				add_filter( 'backupbuddy_backups_action_menu', array( 'pb_backupbuddy_destination_gdrive2', 'download_link_target' ), 10, 3 );
 				$backup_array[] = backupbuddy_backups()->get_action_menu( $file->getId(), $actions );
 				remove_filter( 'backupbuddy_backups_action_menu', array( 'pb_backupbuddy_destination_gdrive2', 'download_link_target' ), 10 );
+				$key = $file->getId();
 			} elseif ( 'restore' === $mode ) {
 				$backup_array[] = backupbuddy_backups()->get_details_link( $filename, $file->getId() );
 				$backup_array[] = backupbuddy_backups()->get_restore_buttons( $filename, $backup_type, $file->getId() );
-			}
-
-			if ( 'restore' === $mode ) {
-				$key = $file->getName();
-			} else {
-				$key = $file->getId();
+				$key            = $file->getName();
 			}
 
 			// Array key is checkbox value.
@@ -1054,15 +1026,17 @@ class pb_backupbuddy_destination_gdrive2 {
 	public static function force_download( $settings = false, $file_id = '' ) {
 		if ( ! self::is_ready( $settings ) ) {
 			self::error( __( 'Error #233233: Unable to connect with Google Drive (v2). See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
-			return false;
+			exit();
 		}
 
 		$file = self::get_file_meta( false, $file_id );
 
 		if ( ! $file ) {
-			self::error( __( 'Missing Google Drive File for download.', 'it-l10n-backupbuddy' ), 'echo' );
-			return false;
+			self::error( __( 'Missing Google Drive (v2) File for download.', 'it-l10n-backupbuddy' ), 'echo' );
+			exit();
 		}
+
+		pb_backupbuddy::status( 'details', __( 'Attempting to download Google Drive (v2) file: ', 'it-l10n-backupbuddy' ) . $file_id );
 
 		flush();
 
@@ -1125,7 +1099,10 @@ class pb_backupbuddy_destination_gdrive2 {
 	 * @return bool  If successful or not.
 	 */
 	public static function download_dat_files( $settings = false ) {
-		self::add_settings( $settings );
+		$backups_array = self::listFiles( $settings );
+		if ( ! is_array( $backups_array ) ) {
+			return false;
+		}
 
 		$folder = self::get_root_folder();
 		$dats   = self::get_folder_contents( $folder, array( 'query' => 'dat_files' ) );
@@ -1134,8 +1111,20 @@ class pb_backupbuddy_destination_gdrive2 {
 			return false;
 		}
 
+		// Create array of backup filenames.
+		foreach ( $backups_array as $backup ) {
+			$backups[] = $backup[0][0];
+		}
+
 		$success = true;
 		foreach ( $dats as $dat ) {
+			$backup_name = str_replace( '.dat', '.zip', $dat->getName() );
+
+			// Don't download if no corresponding backup zip.
+			if ( ! in_array( $backup_name, $backups, true ) ) {
+				continue;
+			}
+
 			$local_file = backupbuddy_core::getBackupDirectory() . '/' . $dat->getName();
 			if ( ! self::getFile( $settings, $dat->getId(), $local_file ) ) {
 				$success = false;
@@ -1143,6 +1132,55 @@ class pb_backupbuddy_destination_gdrive2 {
 		}
 
 		return $success;
+	}
+
+	/**
+	 * Get a list of dat files not associated with backups.
+	 *
+	 * @param array $settings  Destination Settings array.
+	 *
+	 * @return array  Array of dat files.
+	 */
+	public static function get_dat_orphans( $settings ) {
+		$backups_array = self::listFiles( $settings );
+		if ( ! is_array( $backups_array ) ) {
+			return false;
+		}
+
+		$folder = self::get_root_folder();
+		$dats   = self::get_folder_contents( $folder, array( 'query' => 'dat_files' ) );
+
+		if ( ! count( $dats ) ) {
+			return false;
+		}
+
+		$orphans = array();
+		$backups = array();
+
+		// Create an array of backup filenames.
+		foreach ( $backups_array as $backup_array ) {
+			$backups[] = $backup_array[0][0];
+		}
+
+		// Loop through all dat files looking for orphans.
+		foreach ( $dats as $index => $dat ) {
+			$filename = $dat->getName();
+
+			// Skip if not a .dat file.
+			if ( '.dat' !== substr( $filename, -4 ) ) {
+				continue;
+			}
+
+			// Skip dat files with backup files.
+			$backup_name = str_replace( '.dat', '.zip', $filename ); // TODO: Move to backupbuddy_data_file() method.
+			if ( in_array( $backup_name, $backups, true ) ) {
+				continue;
+			}
+
+			$orphans[ $dat->getId() ] = $filename;
+		}
+
+		return $orphans;
 	}
 
 	/**
@@ -1257,44 +1295,50 @@ class pb_backupbuddy_destination_gdrive2 {
 	/**
 	 * Deletes a file stored in destination.
 	 *
-	 * @param array  $settings  Destination Settings array.
-	 * @param string $file_id   ID of file.
+	 * @param array $settings  Destination Settings array.
+	 * @param array $files     Array of files.
 	 *
 	 * @return bool  If delete was successful.
 	 */
-	public static function deleteFile( $settings = false, $file_id = '' ) {
-		pb_backupbuddy::status( 'details', 'Deleting Google Drive file with ID `' . $file_id . '`.' );
-
+	public static function delete( $settings = false, $files = array() ) {
 		if ( ! self::is_ready( $settings ) ) {
 			self::error( 'Error #4839484: Unable to connect with Google Drive (v2). See log for details.', 'echo' );
 			return false;
 		}
 
-		try {
-			$file = self::$api->files->get( $file_id );
-		} catch ( Exception $e ) {
-			pb_backupbuddy::status( 'details', 'Unable to retrieve Google Drive (v2) file via `' . $file_id . '` for deletion. Attempting to lookup file by name.' );
-			pb_backupbuddy::status( 'details', 'Google Drive Responded: ' . self::get_gdrive_exception_error( $e ) );
-			$file = self::get_file_by_name( $file_id );
+		if ( ! is_array( $files ) ) {
+			$files = array( $files );
 		}
 
-		if ( ! $file ) {
-			self::error( 'Error #202004201327: Unable to locate requested Google Drive (v2) file `' . $file_id . '` for deletion.', 'echo' );
-			return false;
+		foreach ( $files as $file_id ) {
+			pb_backupbuddy::status( 'details', 'Deleting Google Drive file with ID `' . $file_id . '`.' );
+
+			try {
+				$file = self::$api->files->get( $file_id );
+			} catch ( Exception $e ) {
+				pb_backupbuddy::status( 'details', 'Unable to retrieve Google Drive (v2) file via `' . $file_id . '` for deletion. Attempting to lookup file by name.' );
+				pb_backupbuddy::status( 'details', 'Google Drive Responded: ' . self::get_gdrive_exception_error( $e ) );
+				$file = self::get_file_by_name( $file_id );
+			}
+
+			if ( ! $file ) {
+				self::error( 'Error #202004201327: Unable to locate requested Google Drive (v2) file `' . $file_id . '` for deletion.', 'echo' );
+				return false;
+			}
+
+			$file_id = $file->getId();
+
+			try {
+				self::$api->files->delete( $file_id );
+			} catch ( Exception $e ) {
+				self::error( self::get_gdrive_exception_error( $e ), 'echo' );
+				return false;
+			}
+			pb_backupbuddy::status( 'details', 'Google Drive (v2) file `' . $file_id . '` deleted.' );
 		}
 
-		$file_id = $file->getId();
-
-		try {
-			self::$api->files->delete( $file_id );
-		} catch ( Exception $e ) {
-			self::error( self::get_gdrive_exception_error( $e ), 'echo' );
-			return false;
-		}
-
-		pb_backupbuddy::status( 'details', 'Google Drive (v2) file deleted.' );
 		return true;
-	} // deleteFile.
+	} // delete.
 
 	/**
 	 * Create a new folder in the user's GDrive at specified parent location.
@@ -1311,9 +1355,7 @@ class pb_backupbuddy_destination_gdrive2 {
 		}
 
 		if ( ! self::is_ready( $settings ) ) {
-			global $bb_gdrive_error;
-			$error = 'Error #2378327: Unable to connect with Google Drive (v2). See log for details. Details: `' . $bb_gdrive_error . '`.';
-			self::error( $bb_gdrive_error, 'echo' );
+			self::error( __( 'Error #2378327: Unable to connect with Google Drive (v2). See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
 			return false;
 		}
 
@@ -1353,10 +1395,10 @@ class pb_backupbuddy_destination_gdrive2 {
 		?>
 		<script>
 			jQuery(function( $ ) {
-				destinationWrap = backupbuddy_gdrive_getDestinationWrap( '<?php echo esc_html( $destination_id ); ?>' );
+				destinationWrap = backupbuddy_gdrive2_getDestinationWrap( '<?php echo esc_html( $destination_id ); ?>' );
 
-				$( '.backupbuddy-gdrive-folderSelector[data-isTemplate="true"]' ).clone().attr('data-isTemplate','false').show().appendTo( destinationWrap.find( 'td.backupbuddy-gdrive-folder-row' ) ).attr( 'data-destinationID', '<?php echo esc_html( $destination_id ); ?>' );
-				backupbuddy_gdrive_folderSelect( '<?php echo esc_html( $destination_id ); ?>' );
+				$( '.backupbuddy-gdrive2-folderSelector[data-isTemplate="true"]' ).clone().attr('data-isTemplate','false').show().appendTo( destinationWrap.find( 'td.backupbuddy-gdrive2-folder-row' ) ).attr( 'data-destinationID', '<?php echo esc_html( $destination_id ); ?>' );
+				backupbuddy_gdrive2_folderSelect( '<?php echo esc_html( $destination_id ); ?>' );
 			});
 		</script>
 		<?php

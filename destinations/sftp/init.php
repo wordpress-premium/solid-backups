@@ -42,6 +42,13 @@ class pb_backupbuddy_destination_sftp {
 	);
 
 	/**
+	 * SFTP connection instance.
+	 *
+	 * @var stream
+	 */
+	public static $sftp = false;
+
+	/**
 	 * Initialize.
 	 */
 	public static function _init() {
@@ -113,6 +120,10 @@ class pb_backupbuddy_destination_sftp {
 	 * @return object|false  sFTP object or false on failure.
 	 */
 	public static function connect( $settings, $chdir = true ) {
+		if ( false !== self::$sftp ) {
+			return self::$sftp;
+		}
+
 		// Connect to server.
 		self::_init();
 		$server = $settings['address'];
@@ -130,38 +141,75 @@ class pb_backupbuddy_destination_sftp {
 
 		if ( ! $sftp->login( $settings['username'], $pass_or_key ) ) {
 			pb_backupbuddy::status( 'error', __( 'Connection to sFTP server failed.', 'it-l10n-backupbuddy' ) );
-			pb_backupbuddy::status( 'details', 'sFTP log (if available & enabled via full logging mode): `' . $sftp->getSFTPLog() . '`.' );
-			return false;
-		}
-
-		if ( $chdir && $settings['path'] && ! self::chdir( $sftp, $settings['path'] ) ) {
-			pb_backupbuddy::status( 'error', __( 'Could not change sFTP directory.', 'it-l10n-backupbuddy' ) );
-			pb_backupbuddy::status( 'details', 'sFTP log (if available & enabled via full logging mode): `' . $sftp->getSFTPLog() . '`.' );
+			if ( method_exists( $sftp, 'getSFTPLog' ) ) {
+				pb_backupbuddy::status( 'details', 'sFTP log (if available & enabled via full logging mode): `' . $sftp->getSFTPLog() . '`.' );
+			}
 			return false;
 		}
 
 		pb_backupbuddy::status( 'details', 'Success connecting to sFTP server.' );
-		return $sftp;
+
+		// Store for future use.
+		self::$sftp = $sftp;
+
+		if ( $chdir && $settings['path'] && ! self::chdir( $settings['path'] ) ) {
+			pb_backupbuddy::status( 'error', __( 'Could not change sFTP directory during initial connection.', 'it-l10n-backupbuddy' ) );
+			pb_backupbuddy::status( 'details', 'sFTP log (if available & enabled via full logging mode): `' . self::$sftp->getSFTPLog() . '`' );
+		}
+
+		return self::$sftp;
 	}
 
 	/**
 	 * Change directory for sFTP connection.
 	 *
-	 * @param object $sftp  sFTP Object.
 	 * @param string $path  Path to change to.
 	 *
 	 * @return bool  If directory changed.
 	 */
-	public static function chdir( $sftp, $path ) {
+	public static function chdir( $path ) {
+		if ( ! self::$sftp ) {
+			pb_backupbuddy::status( 'error', __( 'sFTP chdir was called before successful sFTP connection was made.', 'it-l10n-backupbuddy' ) );
+			return false;
+		}
+
+		// Attempt to create directory.
+		pb_backupbuddy::status( 'details', 'Attempting to create path (if it does not exist)...' );
+		if ( true === self::$sftp->mkdir( $path ) ) { // Try to make directory.
+			pb_backupbuddy::status( 'details', 'Directory created.' );
+		} else {
+			pb_backupbuddy::status( 'details', 'Directory not created.' );
+		}
+
 		// Change to directory.
 		pb_backupbuddy::status( 'details', 'Attempting to change into directory...' );
-		if ( true === $sftp->chdir( $path ) ) {
-			pb_backupbuddy::status( 'details', 'Changed into directory.' );
-			return true;
+		if ( true !== self::$sftp->chdir( $path ) ) {
+			pb_backupbuddy::status( 'error', __( 'Unable to change into specified path. Verify the path is correct with valid permissions.', 'it-l10n-backupbuddy' ) );
+			pb_backupbuddy::status( 'details', 'sFTP log (if available & enabled via full logging mode): `' . self::$sftp->getSFTPLog() . '`.' );
+			return false;
 		}
-		pb_backupbuddy::status( 'error', __( 'Unable to change into specified path. Verify the path is correct with valid permissions.', 'it-l10n-backupbuddy' ) );
-		pb_backupbuddy::status( 'details', 'sFTP log (if available & enabled via full logging mode): `' . $sftp->getSFTPLog() . '`.' );
-		return false;
+		pb_backupbuddy::status( 'details', 'Changed into directory.' );
+		return true;
+	}
+
+	/**
+	 * Get contents of a folder.
+	 *
+	 * @param string $folder  Folder path.
+	 *
+	 * @return array  Array of files.
+	 */
+	public static function get_folder_contents( $folder = '.' ) {
+		if ( ! self::$sftp ) {
+			pb_backupbuddy::status( 'error', __( 'sFTP get_folder_contents was called before successful sFTP connection was made.', 'it-l10n-backupbuddy' ) );
+			return false;
+		}
+
+		if ( ! self::$sftp->is_readable( $folder ) ) {
+			pb_backupbuddy::status( 'details', __( 'Warning: The requested sFTP directory is showing "not readable".', 'it-l10n-backupbuddy' ) );
+		}
+
+		return self::$sftp->rawlist( $folder );
 	}
 
 	/**
@@ -174,34 +222,50 @@ class pb_backupbuddy_destination_sftp {
 	 */
 	public static function listFiles( $settings = array(), $mode = 'default' ) {
 		global $pb_backupbuddy_destination_errors;
+
+		$backup_list = array();
+
 		if ( '1' == $settings['disabled'] ) {
 			$pb_backupbuddy_destination_errors[] = __( 'Error #48933: This destination is currently disabled. Enable it under this destination\'s Advanced Settings.', 'it-l10n-backupbuddy' );
-			return false;
+			return $backup_list;
 		}
 
-		$sftp = self::connect( $settings );
-		if ( ! $sftp ) {
+		if ( false === self::$sftp ) {
+			self::connect( $settings );
+		}
+
+		if ( ! self::$sftp ) {
 			pb_backupbuddy::status( 'error', __( 'Unable to list sFTP files. sFTP connection failed.', 'it-l10n-backupbuddy' ) );
-			return false;
+			return $backup_list;
 		}
 
-		$backups           = $sftp->rawlist( $settings['path'] );
-		$backup_list       = array();
+		$files = self::get_folder_contents( $settings['path'] );
+
+		if ( ! is_array( $files ) ) {
+			pb_backupbuddy::status( 'error', __( 'Invalid sFTP response when retreiving file listing.', 'it-l10n-backupbuddy' ) );
+			return $backup_list;
+		}
+
+		if ( empty( $files ) ) {
+			pb_backupbuddy::status( 'details', __( 'No files found in sFTP directory.', 'it-l10n-backupbuddy' ) );
+			return $backup_list;
+		}
+
 		$backup_sort_dates = array();
 
-		foreach ( $backups as $filename => $file ) {
+		foreach ( $files as $filename => $file ) {
 			if ( false === stristr( $filename, 'backup-' ) ) { // only show backup files.
 				continue;
 			}
 
-			$backup = $filename;
-
-			$backup_type = backupbuddy_core::getBackupTypeFromFile( basename( $backup ) );
+			// This checks for .zip extension.
+			$backup_type = backupbuddy_core::getBackupTypeFromFile( basename( $filename ) );
 
 			if ( ! $backup_type ) {
 				continue;
 			}
 
+			$backup        = $filename;
 			$backup_date   = backupbuddy_core::parse_file( $backup, 'datetime' );
 			$download_link = admin_url() . sprintf( '?sftp-destination-id=%s&sftp-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
 
@@ -242,16 +306,28 @@ class pb_backupbuddy_destination_sftp {
 	/**
 	 * Send one or more files.
 	 *
-	 * @param array  $settings  Settings array.
-	 * @param array  $files     Array of one or more files to send.
-	 * @param string $send_id   ID of the send.
+	 * @param array  $settings             Settings array.
+	 * @param array  $files                Array of one or more files to send.
+	 * @param string $send_id              ID of the send.
+	 * @param bool   $delete_after         Delete file after.
+	 * @param bool   $delete_remote_after  Delete remote file after (for tests).
 	 *
 	 * @return bool  True on success, else false.
 	 */
-	public static function send( $settings = array(), $files = array(), $send_id = '' ) {
+	public static function send( $settings = array(), $files = array(), $send_id = '', $delete_after = false, $delete_remote_after = false ) {
 		global $pb_backupbuddy_destination_errors;
+
 		if ( '1' == $settings['disabled'] ) {
 			$pb_backupbuddy_destination_errors[] = __( 'Error #48933: This destination is currently disabled. Enable it under this destination\'s Advanced Settings.', 'it-l10n-backupbuddy' );
+			return false;
+		}
+
+		if ( false === self::$sftp ) {
+			self::connect( $settings );
+		}
+
+		if ( ! self::$sftp ) {
+			pb_backupbuddy::status( 'error', 'Connection to sFTP server FAILED.' );
 			return false;
 		}
 
@@ -260,35 +336,19 @@ class pb_backupbuddy_destination_sftp {
 		}
 
 		pb_backupbuddy::status( 'details', 'sFTP class send() function started.' );
-		$sftp = self::connect( $settings, false );
-		if ( ! $sftp ) {
-			pb_backupbuddy::status( 'error', 'Connection to sFTP server FAILED.' );
-			return false;
-		}
-
-		pb_backupbuddy::status( 'details', 'Attempting to create path (if it does not exist)...' );
-
-		if ( $settings['path'] ) {
-			if ( true === $sftp->mkdir( $settings['path'] ) ) { // Try to make directory.
-				pb_backupbuddy::status( 'details', 'Directory created.' );
-			} else {
-				pb_backupbuddy::status( 'details', 'Directory not created.' );
-			}
-
-			if ( ! self::chdir( $sftp, $settings['path'] ) ) {
-				return false;
-			}
-		}
 
 		// Upload files.
 		$total_transfer_size = 0;
 		$total_transfer_time = 0;
+
 		foreach ( $files as $file ) {
 			if ( ! file_exists( $file ) ) {
 				pb_backupbuddy::status( 'error', 'Error #859485495. Could not upload local file `' . $file . '` to send to sFTP as it does not exist. Verify the file exists, permissions of file, parent directory, and that ownership is correct. You may need suphp installed on the server.' );
+				continue;
 			}
 			if ( ! is_readable( $file ) ) {
 				pb_backupbuddy::status( 'error', 'Error #8594846548. Could not read local file `' . $file . '` to send to sFTP as it is not readable. Verify permissions of file, parent directory, and that ownership is correct. You may need suphp installed on the server.' );
+				continue;
 			}
 
 			$filesize             = filesize( $file );
@@ -297,97 +357,112 @@ class pb_backupbuddy_destination_sftp {
 			$destination_file = basename( $file );
 			pb_backupbuddy::status( 'details', 'About to put to sFTP local file `' . $file . '` of size `' . pb_backupbuddy::$format->file_size( $filesize ) . '` to remote file `' . $destination_file . '`.' );
 			$send_time            = -microtime( true );
-			$upload               = $sftp->put( $destination_file, $file, NET_SFTP_LOCAL_FILE );
+			$upload               = self::$sftp->put( $destination_file, $file, NET_SFTP_LOCAL_FILE );
 			$send_time           += microtime( true );
 			$total_transfer_time += $send_time;
+
 			if ( false === $upload ) { // Failed sending.
 				$error_message = 'ERROR #9012b ( https://ithemeshelp.zendesk.com/hc/en-us/articles/211132377-Error-Codes-#9012 ).  sFTP file upload failed. Check file permissions & disk quota.';
 				pb_backupbuddy::status( 'error', $error_message );
 				backupbuddy_core::mail_error( $error_message );
-				pb_backupbuddy::status( 'details', 'sFTP log (if available & enabled via full logging mode): `' . $sftp->getSFTPLog() . '`.' );
+				pb_backupbuddy::status( 'details', 'sFTP log (if available & enabled via full logging mode): `' . self::$sftp->getSFTPLog() . '`.' );
 				return false;
 			} else { // Success sending.
 				pb_backupbuddy::status( 'details', 'Success completely sending `' . basename( $file ) . '` to destination.' );
 
-				// Start remote backup limit.
-				if ( $settings['archive_limit'] > 0 ) {
-					pb_backupbuddy::status( 'details', 'Archive limit enabled. Getting contents of backup directory.' );
-					$contents = $sftp->rawlist( '.' ); //$settings['path'] ); // already in destination directory/path.
-
-					// Create array of backups.
-					$bkupprefix = backupbuddy_core::backup_prefix();
-
-					$backups = array();
-					foreach ( $contents as $filename => $backup ) {
-						// Check if file is backup.
-						$pos = strpos( $filename, 'backup-' . $bkupprefix . '-' );
-						if ( false !== $pos ) {
-							$backups[] = array(
-								'file'     => $filename,
-								'modified' => $backup['mtime'],
-							);
-						}
-					}
-
-					function backupbuddy_number_sort( $a, $b ) {
-						return $a['modified'] < $b['modified'];
-					}
-
-					// Sort by modified using custom sort function above.
-					usort( $backups, 'backupbuddy_number_sort' );
-
-					if ( count( $backups ) > $settings['archive_limit'] ) {
-						pb_backupbuddy::status( 'details', 'More backups found (' . count( $backups ) . ') than limit permits (' . $settings['archive_limit'] . ').' . print_r( $backups, true ) );
-						$delete_fail_count = 0;
-						$i                 = 0;
-						foreach ( $backups as $backup ) {
-							$i++;
-							if ( $i > $settings['archive_limit'] ) {
-								//if ( false === $sftp->delete( $settings['path'] . '/' . $backup['file'] ) ) {
-								if ( false === $sftp->delete( $backup['file'] ) ) {
-									pb_backupbuddy::status( 'details', 'Unable to delete excess sFTP file `' . $backup['file'] . '` in current path `' . $settings['path'] . '`.' );
-									$delete_fail_count++;
-								} else {
-									pb_backupbuddy::status( 'details', 'Deleted excess sFTP file `' . $backup['file'] . '` in current path `' . $settings['path'] . '`.' );
-								}
-							}
-						}
-						if ( 0 !== $delete_fail_count ) {
-							backupbuddy_core::mail_error( sprintf( __( 'sFTP remote limit could not delete %s backups. Please check and verify file permissions.', 'it-l10n-backupbuddy' ), $delete_fail_count  ) );
-							pb_backupbuddy::status( 'error', 'Unable to delete one or more excess backup archives. File storage limit may be exceeded. Manually clean up backups and check permissions.' );
-						} else {
-							pb_backupbuddy::status( 'details', 'No problems encountered deleting excess backups.' );
-						}
-					} else {
-						pb_backupbuddy::status( 'details', 'Not enough backups found (' . count( $backups ) . ' backups for this site out of ' . count( $contents ) . ' on server) to exceed limit (' . $settings['archive_limit'] . '). Skipping limit enforcement.' );
-					}
-				} else {
-					pb_backupbuddy::status( 'details', 'No sFTP archive file limit to enforce.' );
+				if ( $delete_remote_after ) {
+					pb_backupbuddy::status( 'details', 'Deleting `' . basename( $file ) . '` per `delete_remote_after` parameter.' );
+					self::delete( $settings, $destination_file );
 				}
-				// End remote backup limit.
+
+				self::prune( $settings );
 			}
 		} // end $files loop.
 
 		// Load destination fileoptions.
-		pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #6...' );
 		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-		pb_backupbuddy::status( 'details', 'Fileoptions instance #6.' );
-		$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, false );
+		$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, true );
 		$result          = $fileoptions_obj->is_ok();
 		if ( true !== $result ) {
-			pb_backupbuddy::status( 'error', __( 'Fatal Error #9034.843498. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );
-			return false;
-		}
-		pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
-		$fileoptions = &$fileoptions_obj->options;
+			pb_backupbuddy::status( 'error', __( 'Fatal Error #9034.843498. Unable to access fileoptions data. Error: ', 'it-l10n-backupbuddy' ) . $result );
+		} else {
+			pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
+			$fileoptions = &$fileoptions_obj->options;
 
-		// Save stats.
-		$fileoptions['write_speed'] = $total_transfer_size / $total_transfer_time;
-		$fileoptions_obj->save();
+			// Save stats.
+			$fileoptions['write_speed'] = $total_transfer_size / $total_transfer_time;
+			$fileoptions_obj->save();
+		}
 		unset( $fileoptions_obj );
 
 		return true;
 	} // End send().
+
+	/**
+	 * Prune backups based on archive limits.
+	 *
+	 * @param array $settings  Destination settings array.
+	 *
+	 * @return bool  If pruning occurred.
+	 */
+	public static function prune( $settings ) {
+		if ( false === self::$sftp ) {
+			self::connect( $settings );
+		}
+
+		if ( ! self::$sftp ) {
+			return false;
+		}
+
+		if ( $settings['archive_limit'] <= 0 ) {
+			pb_backupbuddy::status( 'details', 'No sFTP archive file limit to enforce.' );
+			return false;
+		}
+
+		// Start remote backup limit.
+		pb_backupbuddy::status( 'details', 'Archive limit enabled. Getting backups.' );
+
+		$backups      = self::listFiles( $settings );
+		$backup_count = count( $backups );
+
+		// Check backup count to see if there are more than the limit.
+		if ( $backup_count <= $settings['archive_limit'] ) {
+			pb_backupbuddy::status( 'details', 'Not enough backups found (' . $backup_count . ') to exceed limit (' . $settings['archive_limit'] . '). Skipping limit enforcement.' );
+
+			return false;
+		}
+
+		pb_backupbuddy::status( 'details', 'More backups found (' . $backup_count . ') than limit permits (' . $settings['archive_limit'] . ').' . print_r( $backups, true ) );
+
+		$delete_fail_count = 0;
+		$i                 = 0;
+
+		if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+			require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+		}
+
+		foreach ( $backups as $backup ) {
+			$i++;
+			if ( $i > $settings['archive_limit'] ) {
+				if ( false === pb_backupbuddy_destinations::delete( $settings, $backup[0][0] ) ) {
+					pb_backupbuddy::status( 'details', 'Unable to delete excess sFTP file `' . $backup[0][0] . '` in current path `' . $settings['path'] . '`.' );
+					$delete_fail_count++;
+				} else {
+					pb_backupbuddy::status( 'details', 'Deleted excess sFTP file `' . $backup[0][0] . '` in current path `' . $settings['path'] . '`.' );
+				}
+			}
+		}
+
+		if ( 0 !== $delete_fail_count ) {
+			backupbuddy_core::mail_error( sprintf( __( 'sFTP remote limit could not delete %s backups. Please check and verify file permissions.', 'it-l10n-backupbuddy' ), $delete_fail_count  ) );
+			pb_backupbuddy::status( 'error', 'Unable to delete one or more excess backup archives. File storage limit may be exceeded. Manually clean up backups and check permissions.' );
+			return false;
+		}
+
+		pb_backupbuddy::status( 'details', 'No problems encountered deleting excess sFTP backups.' );
+		return true;
+	} // End remote backup limit.
 
 	/**
 	 * Download all backup dat files.
@@ -403,7 +478,7 @@ class pb_backupbuddy_destination_sftp {
 		}
 		$success = true;
 		foreach ( $backups as $backup ) {
-			$dat_file = str_replace( '.zip', '.dat', $backup[0][0] );
+			$dat_file = str_replace( '.zip', '.dat', $backup[0][0] ); // TODO: Move to backupbuddy_data_file() method.
 
 			if ( ! self::getFile( $settings, basename( $dat_file ) ) ) {
 				$success = false;
@@ -414,19 +489,71 @@ class pb_backupbuddy_destination_sftp {
 	}
 
 	/**
+	 * Get a list of dat files not associated with backups.
+	 *
+	 * @param array $settings  Destination Settings array.
+	 *
+	 * @return array  Array of dat files.
+	 */
+	public static function get_dat_orphans( $settings ) {
+		$backups_array = self::listFiles( $settings );
+		if ( ! is_array( $backups_array ) ) {
+			return false;
+		}
+
+		if ( false === self::$sftp ) {
+			self::connect( $settings );
+		}
+
+		if ( ! self::$sftp ) {
+			return false;
+		}
+
+		$orphans = array();
+		$backups = array();
+		$files   = self::get_folder_contents();
+
+		// Create an array of backup filenames.
+		foreach ( $backups_array as $backup_array ) {
+			$backups[] = $backup_array[0][0];
+		}
+
+		// Loop through all files again, this time looking for dat orphans.
+		foreach ( $files as $filename => $file ) {
+			if ( in_array( $filename, array( '.', '..' ), true ) ) {
+				continue;
+			}
+
+			// Skip if not a .dat file.
+			if ( '.dat' !== substr( $filename, -4 ) ) {
+				continue;
+			}
+
+			// Skip dat files with backup files.
+			$backup_name = str_replace( '.dat', '.zip', $filename ); // TODO: Move to backupbuddy_data_file() method.
+			if ( in_array( $backup_name, $backups, true ) ) {
+				continue;
+			}
+
+			$orphans[] = $filename;
+		}
+
+		return $orphans;
+	}
+
+	/**
 	 * Check if remote file exists.
 	 *
-	 * @param object $sftp  sFTP object.
 	 * @param string $file  Filename.
 	 *
 	 * @return bool  Check if remote file exists.
 	 */
-	public static function remote_file_exists( $sftp, $file ) {
-		$stat = $sftp->stat( $file );
-		if ( ! is_array( $stat ) ) {
+	public static function remote_file_exists( $file ) {
+		if ( ! self::$sftp ) {
 			return false;
 		}
-		return true;
+
+		return self::$sftp->file_exists( $file );
 	}
 
 	/**
@@ -439,13 +566,15 @@ class pb_backupbuddy_destination_sftp {
 	 * @return bool  If successful or not.
 	 */
 	public static function getFile( $settings, $remote_file, $destination_file = false ) {
-		$sftp = self::connect( $settings );
+		if ( false === self::$sftp ) {
+			self::connect( $settings );
+		}
 
-		if ( ! $sftp ) {
+		if ( ! self::$sftp ) {
 			return false;
 		}
 
-		if ( ! self::remote_file_exists( $sftp, $remote_file ) ) {
+		if ( ! self::remote_file_exists( $remote_file ) ) {
 			return false;
 		}
 
@@ -453,16 +582,16 @@ class pb_backupbuddy_destination_sftp {
 			$destination_file = backupbuddy_core::getBackupDirectory() . basename( $remote_file );
 		}
 
-		if ( ! $sftp->get( $remote_file, $destination_file ) ) {
+		if ( ! self::$sftp->get( $remote_file, $destination_file ) ) {
 			return false;
 		}
 
 		if ( '.zip' === substr( $remote_file, -4 ) ) {
-			$dat = str_replace( '.zip', '.dat', $remote_file );
-			if ( self::remote_file_exists( $sftp, $dat ) ) {
+			$dat = str_replace( '.zip', '.dat', $remote_file ); // TODO: Move to backupbuddy_data_file() method.
+			if ( self::remote_file_exists( $dat ) ) {
 				$local_dat = backupbuddy_core::getBackupDirectory() . $dat;
 				if ( ! file_exists( $local_dat ) ) {
-					$sftp->get( $dat, $local_dat );
+					self::$sftp->get( $dat, $local_dat );
 				}
 			}
 		}
@@ -477,13 +606,15 @@ class pb_backupbuddy_destination_sftp {
 	 * @param string $file      File to download.
 	 */
 	public static function stream_download( $settings, $file ) {
-		$sftp = self::connect( $settings );
+		if ( false === self::$sftp ) {
+			self::connect( $settings );
+		}
 
-		if ( ! $sftp ) {
+		if ( ! self::$sftp ) {
 			return false;
 		}
 
-		if ( ! self::remote_file_exists( $sftp, $file ) ) {
+		if ( ! self::remote_file_exists( $file ) ) {
 			return false;
 		}
 
@@ -496,10 +627,10 @@ class pb_backupbuddy_destination_sftp {
 		header( 'Accept-Ranges: bytes' );
 		header( 'Expires: 0' );
 		header( 'Pragma: public' );
-		header( 'Content-Length: ' . $sftp->size( $file ) );
+		header( 'Content-Length: ' . self::$sftp->size( $file ) );
 
 		set_time_limit( 3600 );
-		$sftp->get( $file, 'php://output' );
+		self::$sftp->get( $file, 'php://output' );
 	}
 
 	/**
@@ -510,8 +641,11 @@ class pb_backupbuddy_destination_sftp {
 	 * @return bool  True on success, string error message on failure.
 	 */
 	public static function test( $settings ) {
-		$sftp = self::connect( $settings );
-		if ( ! $sftp ) {
+		if ( false === self::$sftp ) {
+			self::connect( $settings );
+		}
+
+		if ( ! self::$sftp ) {
 			global $backupbuddy_sftp_using_key_file;
 			$using_key = '';
 			if ( isset( $backupbuddy_sftp_using_key_file ) && true === $backupbuddy_sftp_using_key_file ) {
@@ -519,36 +653,24 @@ class pb_backupbuddy_destination_sftp {
 			}
 
 			pb_backupbuddy::status( 'error', 'Connection to sFTP server FAILED.' . $using_key );
-			pb_backupbuddy::status( 'details', 'sFTP log (if available & enabled via full logging mode): `' . $sftp->getSFTPLog() . '`.' );
 			return __( 'Unable to connect to server using host, username, and password combination provided.', 'it-l10n-backupbuddy' ) . $using_key;
 		}
 
 		pb_backupbuddy::status( 'details', 'Success connecting to sFTP server.' );
 
-		pb_backupbuddy::status( 'details', 'Attempting to create path (if it does not exist)...' );
-		if ( true === $sftp->mkdir( $settings['path'] ) ) { // Try to make directory.
-			pb_backupbuddy::status( 'details', 'Directory created.' );
-		} else {
-			pb_backupbuddy::status( 'details', 'Directory not created.' );
-		}
+		$test_file = pb_backupbuddy::plugin_path() . '/destinations/remote-send-test.php';
+		$send_id   = 'TEST-' . pb_backupbuddy::random_string( 12 );
 
-		if ( empty( $settings['path'] ) ) {
-			$destination_file = 'backupbuddy_test.txt';
-		} else {
-			$destination_file = $settings['path'] . '/backupbuddy_test.txt';
-		}
-		pb_backupbuddy::status( 'details', 'About to put to sFTP test file `backupbuddy_test.txt` to remote location `' . $destination_file . '`.' );
-		$send_time = -microtime( true );
-		if ( true !== $sftp->put( $destination_file, 'Upload test for BackupBuddy destination. Delete me.' ) ) {
+		if ( true !== self::send( $settings, $test_file, $send_id, false, true ) ) {
 			pb_backupbuddy::status( 'details', 'sFTP test: Failure uploading test file.' );
-			$sftp->delete( $destination_file ); // Just in case it partionally made file. This has happened oddly.
-			pb_backupbuddy::status( 'details', 'sFTP log (if available & enabled via full logging mode): `' . $sftp->getSFTPLog() . '`.' );
+			pb_backupbuddy::status( 'details', 'sFTP log (if available & enabled via full logging mode): `' . self::$sftp->getSFTPLog() . '`.' );
+			self::delete( $settings, basename( $test_file ) ); // Just in case it partially uploaded. This has happens oddly sometimes.
 			return __( 'Failure uploading. Check path & permissions.', 'it-l10n-backupbuddy' );
 		} else { // File uploaded.
-			pb_backupbuddy::status( 'details', 'File uploaded.' );
+			pb_backupbuddy::status( 'details', 'sFTP test file uploaded.' );
 			if ( '' != $settings['url'] ) {
 				$response = wp_remote_get(
-					rtrim( $settings['url'], '/\\' ) . '/backupbuddy_test.txt',
+					rtrim( $settings['url'], '/\\' ) . '/' . basename( $test_file ),
 					array(
 						'method'      => 'GET',
 						'timeout'     => 20,
@@ -566,15 +688,45 @@ class pb_backupbuddy_destination_sftp {
 				}
 
 				if ( stristr( $response['body'], 'backupbuddy' ) === false ) {
-					return __('Failure. The path appears valid but the URL does not correspond to it. Leave the URL blank if not using this destination for migrations.', 'it-l10n-backupbuddy' );
+					return __( 'Failure. The path appears valid but the URL does not correspond to it. Leave the URL blank if not using this destination for migrations.', 'it-l10n-backupbuddy' );
 				}
 			}
-
-			pb_backupbuddy::status( 'details', 'sFTP test: Deleting temp test file.' );
-			$sftp->delete( $destination_file );
 		}
 
 		return true; // Success if we got this far.
 	} // End test().
+
+	/**
+	 * Delete a remote file.
+	 *
+	 * @param array $settings  Destination Settings array.
+	 * @param array $files     Files to delete.
+	 *
+	 * @return bool  If delete successful.
+	 */
+	public static function delete( $settings, $files = array() ) {
+		if ( false === self::$sftp ) {
+			self::connect( $settings );
+		}
+
+		if ( ! self::$sftp ) {
+			return false;
+		}
+
+		if ( ! is_array( $files ) ) {
+			$files = array( $files );
+		}
+
+		foreach ( $files as $file ) {
+			if ( ! self::remote_file_exists( $file ) ) {
+				continue;
+			}
+			if ( ! self::$sftp->delete( $file ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 
 } // End class.

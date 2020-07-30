@@ -612,59 +612,64 @@ class Client
         return $uploadId;
     }
 
-    /**
-     * Append another chunk data to a previously-started chunked upload session.
-     *
-     * @param string $uploadId
-     *     The unique identifier for the chunked upload session.  This is obtained via
-     *     {@link chunkedUploadStart}.
-     *
-     * @param int $byteOffset
-     *     The number of bytes you think you've already uploaded to the given chunked upload
-     *     session.  The server will append the new chunk of data after that point.
-     *
-     * @param string $data
-     *     The data to append to the existing chunked upload session.
-     *
-     * @return int|bool
-     *     If <code>false</code>, it means the server didn't know about the given
-     *     <code>$uploadId</code>.  This may be because the chunked upload session has expired
-     *     (they last around 24 hours).
-     *     If <code>true</code>, the chunk was successfully uploaded.  If an integer, it means
-     *     you and the server don't agree on the current <code>$byteOffset</code>.  The returned
-     *     integer is the server's internal byte offset for the chunked upload session.  You need
-     *     to adjust your input to match.
-     *
-     * @throws Exception
-     */
-    function chunkedUploadContinue($uploadId, $byteOffset, $data)
-    {
-    		\pb_backupbuddy::status( 'details', 'chunkedUploadContinue start to ID `' . $uploadId . '`, offset `' . $byteOffset . '`.' );
-        Checker::argStringNonEmpty("uploadId", $uploadId);
-        Checker::argNat("byteOffset", $byteOffset);
-        Checker::argString("data", $data);
+	/**
+	 * Append another chunk data to a previously-started chunked upload session.
+	 *
+	 * @throws Exception  Uses RequestUtil::unexpectedStatus().
+	 *
+	 * @param string $uploadId      The unique identifier for the chunked upload session.  This is obtained via {@link chunkedUploadStart}.
+	 * @param int    $byteOffset    The number of bytes you think you've already uploaded to the given chunked upload session.
+	 *                              The server will append the new chunk of data after that point.
+	 * @param string $data          The data to append to the existing chunked upload session.
+	 * @param bool   $offset_retry  If this is a retry due to correct offset.
+	 *
+	 * @return int|bool  If <code>false</code>, it means the server didn't know about the given <code>$uploadId</code>.
+	 *                   This may be because the chunked upload session has expired (they last around 24 hours).
+	 *                   If <code>true</code>, the chunk was successfully uploaded.  If an integer, it means
+	 *                   you and the server don't agree on the current <code>$byteOffset</code>.  The returned
+	 *                   integer is the server's internal byte offset for the chunked upload session.  You need
+	 *                   to adjust your input to match.
+	 */
+	public function chunkedUploadContinue( $uploadId, $byteOffset, $data, $offset_retry = false ) {
+		\pb_backupbuddy::status( 'details', 'chunkedUploadContinue start to ID `' . $uploadId . '`, offset `' . $byteOffset . '`.' );
+		Checker::argStringNonEmpty( 'uploadId', $uploadId );
+		Checker::argNat( 'byteOffset', $byteOffset );
+		Checker::argString( 'data', $data );
 
+		$response = $this->_chunkedUploadContinue(
+			array(
+				'session_id' => $uploadId,
+				'offset'     => $byteOffset,
+			),
+			$data
+		);
 
-        $response = $this->_chunkedUploadContinue(
-            array("session_id" => $uploadId, "offset" => $byteOffset),
-            $data
-        );
-        \pb_backupbuddy::status( 'details', 'Back in chunkedUploadContinue from _chunkedUploadContinue. Response: ' . print_r( $response, true ) );
+		\pb_backupbuddy::status( 'details', 'Back in chunkedUploadContinue from _chunkedUploadContinue. Response: ' . print_r( $response, true ) );
 
-        if ($response->statusCode === 404) {
-            // The server doesn't know our upload ID.  Maybe it expired?
-            return false;
-        }
+		if ( 404 === $response->statusCode ) {
+			// The server doesn't know our upload ID.  Maybe it expired?
+			return false;
+		}
 
+		// Retry with correct offset.
+		if ( 409 === $response->statusCode && false === $offset_retry ) {
+			$json = json_decode( $response->body );
+			if ( ! empty( $json->error->correct_offset ) ) {
+				\pb_backupbuddy::status( 'details', 'Retrying chunkedUploadContinue with corrected offset `' . $json->error->correct_offset . '`.' );
+				return $this->chunkedUploadContinue( $uploadId, $json->error->correct_offset, $data, true );
+			}
+		}
 
-        if ($response->statusCode !== 200) throw RequestUtil::unexpectedStatus($response);
+		if ( $response->statusCode !== 200 ) {
+			throw RequestUtil::unexpectedStatus( $response );
+		}
 
-        $nextByteOffset = $byteOffset + strlen($data);
+		$nextByteOffset = $byteOffset + strlen( $data );
 
-        \pb_backupbuddy::status( 'details', 'Next byte offset calculated by client lib: `' . $nextByteOffset . '`.' );
+		\pb_backupbuddy::status( 'details', 'Next byte offset calculated by client lib: `' . $nextByteOffset . '`.' );
 
-        return true;
-    }
+		return true;
+	}
 
     /**
      * @param string $body
@@ -888,12 +893,12 @@ class Client
      */
     private function _getMetadata($path, $params)
     {
-
-    	$params = array( 'path' => $path );
+    	$endpoint = isset( $params['list'] ) && 'false' === $params['list'] ? 'get_metadata' : 'list_folder';
+    	$params   = array( 'path' => $path );
 
         $response = $this->doPost(
             $this->apiHost,
-            "2/files/list_folder",
+            "2/files/" . $endpoint,
             $params,null,'application/json');
 
         if ($response->statusCode === 404) return null;

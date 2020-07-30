@@ -80,15 +80,16 @@ $displayed     = array();
 	<?php $restore_archive = backupbuddy_restore()->get_archive( $displayed ); ?>
 
 	<?php if ( $restore_archive ) : ?>
-		<h3>Restore Archive</h3>
+		<h4>Restore Archive <a href="#restore-archive" class="toggle-restore-archive">Show</a></h4>
 
-		<table class="widefat backupbuddy-restore-archive">
+		<table class="widefat backupbuddy-restore-archive hidden">
 			<thead>
 				<tr>
 					<th><?php esc_html_e( 'Restored Date', 'it-l10n-backupbuddy' ); ?></th>
 					<th><?php esc_html_e( 'Backup Date', 'it-l10n-backupbuddy' ); ?></th>
 					<th><?php esc_html_e( 'Data Restored', 'it-l10n-backupbuddy' ); ?></th>
 					<th><?php esc_html_e( 'Status', 'it-l10n-backupbuddy' ); ?></th>
+					<th>&nbsp;</th>
 					<th>&nbsp;</th>
 				</tr>
 			</thead>
@@ -110,9 +111,10 @@ $displayed     = array();
 							<td><?php echo esc_html( backupbuddy_restore()->get_summary( $restore ) ); ?></td>
 							<td><?php backupbuddy_restore()->get_status_text( $restore['status'], true ); ?></td>
 							<td><?php backupbuddy_restore()->get_status_html( $restore, __( 'Details', 'it-l10n-backupbuddy' ), true, true ); ?></td>
+							<td><?php backupbuddy_restore()->get_delete_link( $restore, true ); ?></td>
 						</tr>
 						<tr id="restore-details-<?php echo esc_attr( $restore['id'] ); ?>" class="restore-details<?php echo esc_attr( $striped ); ?>">
-							<td colspan="5"><?php include pb_backupbuddy::plugin_path() . '/views/restore/restore-detail.php'; ?></td>
+							<td colspan="6"><?php include pb_backupbuddy::plugin_path() . '/views/restore/restore-detail.php'; ?></td>
 						</tr>
 					<?php else : ?>
 						<?php $temp_id = uniqid(); ?>
@@ -120,9 +122,10 @@ $displayed     = array();
 							<td colspan="3"><?php esc_html_e( 'A corrupt restore log was found at: ', 'it-l10n-backupbuddy' ); ?> <?php echo esc_html( basename( $restore ) ); ?></td>
 							<td><?php esc_html_e( 'Corrupt', 'it-l10n-backupbuddy' ); ?></td>
 							<td><a href="#restore-details-<?php echo esc_attr( $temp_id ); ?>"><?php esc_html_e( 'Details', 'it-l10n-backupbuddy' ); ?></a></td>
+							<td><?php backupbuddy_restore()->get_delete_link( $restore, true ); ?></td>
 						</tr>
 						<tr id="restore-details-<?php echo esc_attr( $temp_id ); ?>" class="restore-details<?php echo esc_attr( $striped ); ?>">
-							<td colspan="5"><strong><?php
+							<td colspan="6"><strong><?php
 								$contents = file_get_contents( $restore );
 								$json     = json_decode( $contents, true );
 								esc_html_e( 'Could not parse log file. JSON Error: ', 'it-l10n-backupbuddy' );

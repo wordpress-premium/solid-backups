@@ -63,9 +63,12 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 		}
 		$delete_files[] = $file;
 	}
-	$response = pb_backupbuddy_destination_stash3::deleteFiles( $destination, $delete_files );
 
-	if ( true === $response ) {
+	if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+		require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+	}
+
+	if ( true === pb_backupbuddy_destinations::delete( $destination, $delete_files ) ) {
 		pb_backupbuddy::alert( 'Deleted ' . implode( ', ', $delete_files ) . '.' );
 	} else {
 		pb_backupbuddy::alert( 'Failed to delete one or more files. Details: `' . $response . '`.' );
@@ -89,6 +92,7 @@ if ( pb_backupbuddy::_GET( 'cpy' ) ) {
 } // end copying to local.
 
 backupbuddy_backups()->set_destination_id( $destination_id );
+
 $backups = pb_backupbuddy_destination_stash3::listFiles( $destination );
 if ( ! is_array( $backups ) ) {
 	pb_backupbuddy::alert( 'Error #892329c: ' . $files );
@@ -100,30 +104,34 @@ if ( false === $hide_quota ) {
 	pb_backupbuddy_destination_stash3::get_quota_bar( $quota, true );
 }
 
+backupbuddy_backups()->show_cleanup();
+
 $backup_count = count( $backups );
+$no_backups   = '';
+
+if ( 0 === $backup_count ) {
+	$no_backups = '<br><center><b>';
+	if ( 'live' === $destination['type'] ) {
+		$no_backups .= esc_html__( 'Your remote BackupBuddy Stash storage does not contain any Snapshot zip files yet. It may take several minutes after a Snapshot for them to display.', 'it-l10n-backupbuddy' );
+	} else {
+		$no_backups .= esc_html__( 'Your remote BackupBuddy Stash storage does not contain any traditional backup zip files yet.', 'it-l10n-backupbuddy' );
+	}
+	$no_backups .= '</b></center>';
+}
 
 // Render table listing files.
-if ( 0 === $backup_count ) {
-	echo '<br><center><b>';
-	if ( 'live' === $destination['type'] ) {
-		esc_html_e( 'Your remote BackupBuddy Stash storage does not contain any Snapshot zip files yet. It may take several minutes after a Snapshot for them to display.', 'it-l10n-backupbuddy' );
-	} else {
-		esc_html_e( 'Your remote BackupBuddy Stash storage does not contain any traditional backup zip files yet.', 'it-l10n-backupbuddy' );
-	}
-	echo '</b></center>';
-} else {
-	$table_args = array(
-		'action'         => $url_prefix,
-		'destination_id' => $destination_id,
-		'class'          => 'minimal',
-	);
+$table_args = array(
+	'action'         => $url_prefix,
+	'destination_id' => $destination_id,
+	'class'          => 'minimal',
+	'no-backups'     => $no_backups,
+);
 
-	if ( 'live' === $destination['type'] ) {
-		$table_args['bulk_actions'] = array();
-	}
-
-	backupbuddy_backups()->table( 'default', $backups, $table_args );
+if ( 'live' === $destination['type'] ) {
+	$table_args['bulk_actions'] = array();
 }
+
+backupbuddy_backups()->table( 'default', $backups, $table_args );
 
 // Display troubleshooting subscriber key.
 echo '<br style="clear: both;">';

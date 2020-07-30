@@ -254,6 +254,7 @@ class pb_backupbuddy_cron extends pb_backupbuddy_croncore {
 		if ( ! class_exists( 'backupbuddy_core' ) ) {
 			require_once pb_backupbuddy::plugin_path() . '/classes/core.php';
 		}
+
 		backupbuddy_core::send_remote_destination( $destination_id, $backup_file, $trigger, $send_importbuddy, $delete_after );
 	} // End _remote_send().
 

@@ -200,11 +200,22 @@ class BackupBuddy_Backups {
 		$total_backups = count( $this->backups );
 
 		if ( $total_backups <= 0 ) {
+
+			$class = 'no-backups-created';
+
 			if ( isset( $settings['destination_id'] ) ) {
-				printf( '<p class="no-backups-at-destination"><strong>%s</strong></p>', esc_html__( 'No backups were found at this destination.', 'it-l10n-backupbuddy' ) );
+				$no_backups = sprintf( '<strong>%s</strong>', esc_html__( 'No backups were found at this destination.', 'it-l10n-backupbuddy' ) );
+				$class     .= ' no-backups-at-destination';
 			} else {
-				printf( '<p class="no-backups-created">%s</p>', esc_html__( 'No backups have been created yet.', 'it-l10n-backupbuddy' ) );
+				$no_backups = esc_html__( 'No backups have been created yet.', 'it-l10n-backupbuddy' );
 			}
+
+			if ( ! empty( $settings['no-backups'] ) ) {
+				echo $settings['no-backups'];
+			} else {
+				printf( '<p class="%s">%s</p>', esc_attr( $class ), $no_backups );
+			}
+
 			return;
 		}
 
@@ -377,6 +388,179 @@ class BackupBuddy_Backups {
 	}
 
 	/**
+	 * Display the cleanup admin notice allow the user to clean up dat files.
+	 *
+	 * If no cleanup is necessary, notice will not show.
+	 */
+	public function show_cleanup() {
+		$dat_orphans = $this->get_dat_orphans();
+		if ( ! $dat_orphans || ! is_array( $dat_orphans ) ) {
+			return;
+		}
+
+		$count = count( $dat_orphans );
+
+		if ( false !== $this->get_destination_id() ) {
+			$rel = $this->get_destination_id();
+		} else {
+			$rel = 'local';
+		}
+		$id = 'dat-cleanup-' . $rel;
+
+		// Button labels.
+		$show_details = __( 'Show Details', 'it-l10n-backupbuddy' );
+		$hide_details = __( 'Hide Details', 'it-l10n-backupbuddy' );
+		$cleanup_now  = __( 'Clean Up Now', 'it-l10n-backupbuddy' );
+
+		// The main message to display.
+		$use     = false === $this->get_destination_id() ? 'in use' : 'used by this destination';
+		$files   = _n( 'file', 'files', $count, 'it-l10n-backupbuddy' );
+		$these   = _n( 'this file', 'these files', $count, 'it-l10n-backupbuddy' );
+		$message = sprintf( 'BackupBuddy found <strong>%s</strong> %s no longer %s that can be removed. Click "%s" to remove %s.', $count, $files, $use, $cleanup_now, $these );
+
+		// Action Buttons HTML.
+		$buttons = '<div class="button-actions"><button class="button button-primary" data-id="' . $id . '">' . $cleanup_now . '</button> <button class="button button-secondary" data-id="' . $id . '">' . $show_details . '</button></div>';
+
+		// Details toggle div.
+		$details  = '<div id="' . $id . '" class="cleanup-details" style="display:none;">';
+		$are_is   = _n( 'file is', 'files are', $count, 'it-l10n-backupbuddy' );
+		$details .= '<p>' . sprintf( __( 'The following %s no longer needed and can be safely deleted', 'it-l10n-backupbuddy' ), $are_is ) . ':</p>';
+		$details .= '<ul class="dat-orphans">';
+		foreach ( $dat_orphans as $orphan ) {
+			$details .= '<li>' . basename( $orphan ) . '</li>';
+		}
+		$details .= '</ul>';
+		$details .= '</div>';
+
+		// Javascript for toggle and cleanup ajax.
+		$script = "<script>jQuery( function( $ ) {
+			$( '.button-primary[data-id=\"$id\"]' ).on( 'click', function( e ) {
+				e.preventDefault();
+				var \$status = $( this ).parent( '.button-actions' );
+				\$status.html( 'Cleaning up...' );
+				BackupBuddy.Backups.cleanup( '$rel', '$id' );
+			});
+			$( '.button-secondary[data-id=\"$id\"]' ).on( 'click', function( e ) {
+				e.preventDefault();
+				$( '#$id' ).slideToggle( 'fast' );
+				var toggle_text = $( this ).text() === '$show_details' ? '$hide_details' : '$show_details';
+				$( this ).text( toggle_text );
+			});
+		});</script>";
+
+		// Output the full alert.
+		pb_backupbuddy::disalert( $id, $message . $details . $buttons . $script, false, false, array( 'class' => 'below-h2 backup-cleanup-alert' ) );
+	}
+
+	/**
+	 * Gets either local or remote dat orphan files, based on current destination ID.
+	 *
+	 * Remote destinations can use the array index for File IDs, but the value should be a human readable filename.
+	 *
+	 * @return array  Array of orphan files.
+	 */
+	public function get_dat_orphans() {
+		$orphans = array();
+
+		if ( false !== $this->get_destination_id() ) {
+			if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+				require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+			}
+			if ( ! empty( pb_backupbuddy::$options['remote_destinations'][ $this->get_destination_id() ] ) ) {
+				$destination_settings = pb_backupbuddy::$options['remote_destinations'][ $this->get_destination_id() ];
+				$orphans              = pb_backupbuddy_destinations::get_dat_orphans( $destination_settings );
+			}
+		} else {
+			$backups = glob( backupbuddy_core::getBackupDirectory() . 'backup*.zip' );
+			$dats    = glob( backupbuddy_core::getBackupDirectory() . 'backup*.dat' );
+			if ( ! is_array( $backups ) ) {
+				$backups = array();
+			}
+			foreach ( $dats as $dat ) {
+				$backup_name = str_replace( '.dat', '.zip', $dat );
+				if ( in_array( $backup_name, $backups, true ) ) {
+					continue;
+				}
+				// TODO: Check dat file against remote backups.
+				// $orphans[] = $dat;
+			}
+		}
+
+		return $orphans;
+	}
+
+	/**
+	 * Cleanup backup related files.
+	 *
+	 * @return bool  If cleanup was successful.
+	 */
+	public function do_cleanup() {
+		$orphans = $this->get_dat_orphans();
+
+		if ( ! $orphans || ! is_array( $orphans ) ) {
+			pb_backupbuddy::status( 'details', 'Attempted to run cleanup with nothing to cleanup.' );
+			return false;
+		}
+
+		$destination_settings = false;
+
+		if ( false !== $this->get_destination_id() ) {
+			if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+				require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+			}
+			if ( ! empty( pb_backupbuddy::$options['remote_destinations'][ $this->get_destination_id() ] ) ) {
+				$destination_settings = pb_backupbuddy::$options['remote_destinations'][ $this->get_destination_id() ];
+			}
+		}
+
+		$success = true;
+		$delete  = array();
+
+		foreach ( $orphans as $orphan_id => $orphan_filename ) {
+			$file = ! is_numeric( $orphan_id ) ? $orphan_id : $orphan_filename;
+			pb_backupbuddy::status( 'details', 'Attempting to delete file `' . $file . '` during orphan cleanup...' );
+			if ( $destination_settings ) {
+				$delete[] = $file;
+			} elseif ( file_exists( $file ) ) {
+				if ( ! @unlink( $file ) ) {
+					pb_backupbuddy::status( 'details', 'Orphan file `' . $file . '` was not deleted.' );
+					$success = false;
+				}
+			}
+		}
+
+		if ( count( $delete ) && $destination_settings ) {
+			if ( ! pb_backupbuddy_destinations::delete( $destination_settings, $delete ) ) {
+				pb_backupbuddy::status( 'details', 'One or more remote orphan files not deleted.' );
+				$success = false;
+			}
+		}
+
+		return $success;
+	}
+
+	/**
+	 * Using listFiles from a remote destination, this will remove backups without a local dat file.
+	 *
+	 * @param array $backups  Backup table array from listFiles().
+	 *
+	 * @return array  Modified array of backups with backups remove that don't have dat files.
+	 */
+	public function filter_by_dat( $backups ) {
+		$filtered = array();
+
+		foreach ( $backups as $key => $backup ) {
+			$filename = $backup[0][0];
+			$dat_file = str_replace( '.zip', '.dat', basename( $filename ) ); // TODO: Move to backupbuddy_data_file() method.
+			if ( file_exists( backupbuddy_core::getBackupDirectory() . '/' . $dat_file ) ) {
+				$filtered[ $key ] = $backup;
+			}
+		}
+
+		return $filtered;
+	}
+
+	/**
 	 * Retrieve data about backup from fileoptions file.
 	 *
 	 * @param string $file  Path to backup file.
@@ -389,8 +573,8 @@ class BackupBuddy_Backups {
 
 		$options = array();
 		if ( file_exists( backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt' ) ) {
+			pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #36...' );
 			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #33.' );
 			$read_only      = false;
 			$ignore_lock    = false;
 			$create_file    = true;
@@ -538,8 +722,12 @@ class BackupBuddy_Backups {
 	 */
 	public function set_destination_id( $destination_id ) {
 		if ( $destination_id || 0 === $destination_id || '0' === $destination_id ) {
-			$this->destination_id = $destination_id;
+			if ( ! empty( pb_backupbuddy::$options['remote_destinations'][ $destination_id ] ) ) {
+				$this->destination_id = $destination_id;
+				return true;
+			}
 		}
+		return false;
 	}
 
 	/**

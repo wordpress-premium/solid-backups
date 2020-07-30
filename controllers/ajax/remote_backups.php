@@ -51,7 +51,7 @@ if ( empty( $modes ) ) {
 	exit();
 }
 
-$supported = array( 'local', 's33', 's32', 'stash3', 'stash2', 'sftp', 'ftp', 'dropbox3', 'gdrive2' );
+$supported = array( 'local', 's33', 's32', 'stash3', 'stash2', 'sftp', 'ftp', 'dropbox3', 'gdrive2', 'onedrive' );
 
 $destination_settings = pb_backupbuddy::$options['remote_destinations'][ $destination_id ];
 
@@ -80,6 +80,9 @@ if ( ! empty( $modes ) ) {
 		if ( is_string( $backups ) ) {
 			$response['errors'][] = $backups;
 		} elseif ( is_array( $backups ) && count( $backups ) ) {
+			// Only show backups that have dat files.
+			$backups = backupbuddy_backups()->filter_by_dat( $backups );
+
 			ob_start();
 			backupbuddy_backups()->table(
 				$the_mode,

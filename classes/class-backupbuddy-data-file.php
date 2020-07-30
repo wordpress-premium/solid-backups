@@ -138,7 +138,7 @@ class BackupBuddy_Data_File {
 
 		if ( false !== $destination_id ) {
 			// Check to see if dat file exists.
-			$data_file      = str_replace( '.zip', '.' . $this->extension, $zip_file );
+			$data_file      = str_replace( '.zip', '.' . $this->extension, $zip_file ); // TODO: Move to method.
 			$data_file_path = false;
 			if ( realpath( $data_file ) === $data_file && file_exists( $data_file ) ) { // Full Path.
 				$data_file_path = $data_file;
@@ -191,6 +191,11 @@ class BackupBuddy_Data_File {
 	 */
 	public function locate( $zip_file, $destination_id = false ) {
 		if ( ! $zip_file ) {
+			return false;
+		}
+
+		// Bail early if not a zip file.
+		if ( '.zip' !== substr( $zip_file, -4 ) ) {
 			return false;
 		}
 
@@ -546,8 +551,12 @@ class BackupBuddy_Data_File {
 	 * @return array  Array of plugin data.
 	 */
 	private function get_plugin_data() {
-		$plugins = array();
+		$plugins  = array();
+		$priority = array();
+		$others   = array();
+		$found    = array();
 
+		// Grab a list of potential plugin files.
 		foreach ( $this->zip_file_list as $file_array ) {
 			$file        = $file_array[0];
 			$plugin_file = $this->maybe_get_plugin_file( $file );
@@ -556,15 +565,50 @@ class BackupBuddy_Data_File {
 				continue;
 			}
 
+			$basename = str_replace( '.php', '', basename( $plugin_file ) );
+
+			// Prioritize the likely files.
+			if ( false !== strpos( $plugin_file, $basename . '/' . $basename . '.php' ) ) {
+				$priority[] = $plugin_file;
+			} elseif ( false !== strpos( $plugin_file, str_replace( '-', '_', $basename ) . '/' . $basename . '.php' ) ) {
+				$priority[] = $plugin_file;
+			} elseif ( false !== strpos( $plugin_file, str_replace( '_', '-', $basename ) . '/' . $basename . '.php' ) ) {
+				$priority[] = $plugin_file;
+			} else {
+				$other[] = $plugin_file;
+			}
+		}
+
+		$plugin_files = array_merge( $priority, $others );
+
+		// Free up memory.
+		unset( $file, $file_array, $priority, $others );
+
+		// Locate plugin file that contains plugin information.
+		foreach ( $plugin_files as $plugin_file ) {
+			// Skip plugins we've already found files for.
+			$plugin_folder = basename( dirname( $plugin_file ) );
+			if ( in_array( $plugin_folder, $found, true ) ) {
+				continue;
+			}
+
 			$plugin_file_content = $this->zipbuddy->get_file_contents( $this->zip_file, $plugin_file );
 			$plugin_data         = $this->maybe_get_plugin_data( $plugin_file_content );
 
 			if ( false !== $plugin_data ) {
-				$plugin_file             = str_replace( 'wp-content/plugins/', '', $plugin_file );
-				$plugin_file             = str_replace( 'wp-content/mu-plugins/', '', $plugin_file );
+				// Plugin file should be plugin-name/plugin-file.php.
+				$plugin_file = str_replace( 'wp-content/plugins/', '', $plugin_file );
+				$plugin_file = str_replace( 'wp-content/mu-plugins/', '', $plugin_file );
+
 				$plugins[ $plugin_file ] = $plugin_data;
+
+				// Only need 1 file per plugin.
+				$found[] = $plugin_folder;
 			}
 		}
+
+		// Free up memory.
+		unset( $plugin_file_content, $plugin_data, $found, $plugin_files, $plugin_file, $plugin_folder );
 
 		return $plugins;
 	}

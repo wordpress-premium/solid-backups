@@ -22,7 +22,12 @@ class pb_backupbuddy_ajax extends pb_backupbuddy_ajaxcore {
 		if ( '' == $function ) {
 			$function = str_replace( array( '/', '\\' ), '', pb_backupbuddy::_POST( 'function' ) );
 		}
+		if ( ! $function ) {
+			die( 0 );
+		}
+
 		$file = pb_backupbuddy::plugin_path() . '/controllers/ajax/' . $function . '.php';
+
 		if ( ! file_exists( $file ) ) {
 			die( '0' );
 		}

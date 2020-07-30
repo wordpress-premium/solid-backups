@@ -290,6 +290,32 @@ if ( version_compare( PHP_VERSION, $php_minimum, '<=' ) ) {
 }
 array_push( $tests, $parent_class_test );
 
+// cURL Version.
+$curl_version = function_exists( 'curl_version' ) ? curl_version() : false;
+$curl_minimum = '7.35.0';
+if ( false === $curl_version ) {
+	$current_curl_version = 'N/A';
+} elseif ( empty( $curl_version['version'] ) ) {
+	$current_curl_version = 'Unknown';
+} else {
+	$current_curl_version = $curl_version['version'];
+}
+
+$parent_class_test = array(
+	'title'      => 'cURL Version',
+	'suggestion' => '>= ' . $curl_minimum,
+	'value'      => $current_curl_version,
+	'tip'        => __( 'Version of cURL currently running on this site.', 'it-l10n-backupbuddy' ),
+);
+if ( version_compare( $current_curl_version, $curl_minimum, '<=' ) ) {
+	$parent_class_test['status'] = 'FAIL';
+} elseif ( in_array( $current_curl_version, array( 'N/A', 'Unknown' ), true ) ) {
+	$parent_class_test['status'] = 'WARNING';
+} else {
+	$parent_class_test['status'] = 'OK';
+}
+array_push( $tests, $parent_class_test );
+
 
 // PHP max_execution_time.
 $parent_class_test = array(
@@ -681,6 +707,7 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 
 
 	/***** BEGIN AVERAGE WRITE SPEED */
+	pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #22...' );
 	require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 
 	$write_speed_samples = 0;
@@ -692,7 +719,6 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	foreach ( $backups as $backup ) {
 
 		$serial = backupbuddy_core::get_serial_from_file( $backup );
-		pb_backupbuddy::status( 'details', 'Fileoptions instance #22.' );
 		$backup_options = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt', true );
 		$result         = $backup_options->is_ok();
 		if ( true !== $result ) {

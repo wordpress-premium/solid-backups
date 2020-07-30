@@ -257,14 +257,15 @@ class pb_backupbuddy_destination_s33 {
 	/**
 	 * Send one or more files.
 	 *
-	 * @param array  $settings      Destination Settings.
-	 * @param array  $file          Array of one or more files to send.
-	 * @param string $send_id       Send ID.
-	 * @param bool   $delete_after  If should be deleted after.
+	 * @param array  $settings             Destination Settings.
+	 * @param array  $file                 Array of one or more files to send.
+	 * @param string $send_id              Send ID.
+	 * @param bool   $delete_after         If should be deleted after.
+	 * @param bool   $delete_remote_after  If remote file should be deleted after send.
 	 *
 	 * @return bool|array  True on success, false on failure, array if a multipart chunked send so there is no status yet.
 	 */
-	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false ) {
+	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false, $delete_remote_after = false ) {
 		pb_backupbuddy::status( 'details', 'Starting s33 send().' );
 		global $pb_backupbuddy_destination_errors;
 		if ( '1' == $settings['disabled'] ) {
@@ -383,9 +384,8 @@ class pb_backupbuddy_destination_s33 {
 			if ( isset( $fileoptions_obj ) ) {
 				pb_backupbuddy::status( 'details', 'fileoptions already loaded from prior pass.' );
 			} else { // load fileoptions.
-				pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+				pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #5...' );
 				require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-				pb_backupbuddy::status( 'details', 'Fileoptions instance #10.' );
 				$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, false );
 				$result          = $fileoptions_obj->is_ok();
 				if ( true !== $result ) {
@@ -395,12 +395,14 @@ class pb_backupbuddy_destination_s33 {
 				$fileoptions = &$fileoptions_obj->options;
 			}
 
-			//$update_status = 'Sent part ' . $settings['_multipart_partnumber'] . ' of ' . count( $settings['_multipart_counts'] ) . '.';
+			// $update_status = 'Sent part ' . $settings['_multipart_partnumber'] . ' of ' . count( $settings['_multipart_counts'] ) . '.';
 
-			if ( ! isset( $settings['_multipart_counts'][ $settings['_multipart_partnumber'] ] ) ) { // No more parts exist for this file. Tell S3 the multipart upload is complete and move on.
-				if ( isset( $settings[ '_retry_stash_confirm' ] ) && ( true === $settings[ '_retry_stash_confirm' ] ) ) { // Need to retry checking that the file confirm was a success.
+			// No more parts exist for this file. Tell S3 the multipart upload is complete and move on.
+			if ( ! isset( $settings['_multipart_counts'][ $settings['_multipart_partnumber'] ] ) ) {
+				// Need to retry checking that the file confirm was a success.
+				if ( isset( $settings[ '_retry_stash_confirm' ] ) && ( true === $settings[ '_retry_stash_confirm' ] ) ) {
 
-					// Grab array of files from customer's stash directory
+					// Grab array of files from customer's stash directory.
 					$files = pb_backupbuddy_destination_stash3::listFiles( $settings, $settings['_multipart_file'] );
 					if ( count( $files ) > 0 ) {
 						pb_backupbuddy::status( 'details', 'Stash confirmed upload completition was successful.' );
@@ -409,7 +411,6 @@ class pb_backupbuddy_destination_s33 {
 						BackupBuddy_Stash_API::send_fallback_upload_results( $settings, 'Error #23972793: Error notifying Stash of upload success even after wait. Details: `' . print_r( $response, true ) . '`.' );
 						return false;
 					}
-
 				} else { // Normal Stash part send.
 					$update_status = 'Sent part ' . $settings['_multipart_partnumber'] . ' of ' . count( $settings['_multipart_counts'] ) . ' parts.';
 
@@ -498,7 +499,6 @@ class pb_backupbuddy_destination_s33 {
 				}
 				$percentSent    = ceil( ( $totalSent / $settings['_multipart_backup_size'] ) * 100 );
 				$update_status .= '<div class="backupbuddy-progressbar" data-percent="' . $percentSent . '"><div class="backupbuddy-progressbar-label"></div></div>';
-
 
 				if ( '0' != $maxTime ) { // Not unlimited time so see if we can send more bursts this time or if we need to chunk.
 					// If we are within X second of reaching maximum PHP runtime then stop here so that it can be picked up in another PHP process...
@@ -708,10 +708,13 @@ class pb_backupbuddy_destination_s33 {
 
 			// Get file listing.
 			try {
-				$response_manage = self::$_client->listObjects( array(
-					'Bucket' => $settings['bucket'],
-					'Prefix' => $settings['directory'] . 'backup-' . backupbuddy_core::backup_prefix()
-				) ); // List all users files in this directory that are a backup for this site (limited by prefix).
+				// List all users files in this directory that are a backup for this site (limited by prefix).
+				$response_manage = self::$_client->listObjects(
+					array(
+						'Bucket' => $settings['bucket'],
+						'Prefix' => $settings['directory'] . 'backup-' . backupbuddy_core::backup_prefix(),
+					)
+				);
 			} catch ( Exception $e ) {
 				return self::_error( 'Error #9338292: Unable to list files for archive limiting. Details: `' . "$e" . '`.' );
 			}
@@ -723,7 +726,7 @@ class pb_backupbuddy_destination_s33 {
 			$backups = array();
 			foreach ( $response_manage['Contents'] as $object ) {
 				$file = str_replace( $settings['directory'], '', $object['Key'] );
-				if ( $backup_type != backupbuddy_core::getBackupTypeFromFile( $file, $quiet = true ) ) {
+				if ( $backup_type != backupbuddy_core::getBackupTypeFromFile( $file, true ) ) {
 					continue; // Not of the same backup type.
 				}
 				$backups[ $file ] = strtotime( $object['LastModified'] );
@@ -731,27 +734,30 @@ class pb_backupbuddy_destination_s33 {
 			arsort( $backups );
 
 			pb_backupbuddy::status( 'details', 'Found `' . count( $backups ) . '` backups of this type when checking archive limits out of `' . count( $response_manage['Contents'] ) . '` total files in this location.' );
-			if ( ( count( $backups ) ) > $limit ) {
+
+			if ( count( $backups ) > $limit ) {
 				pb_backupbuddy::status( 'details', 'More archives (' . count( $backups ) . ') than limit (' . $limit . ') allows. Trimming...' );
+
 				$i                 = 0;
 				$delete_fail_count = 0;
+
+				if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+					require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+				}
+
 				foreach ( $backups as $buname => $butime ) {
 					$i++;
 					if ( $i > $limit ) {
 						pb_backupbuddy::status( 'details', 'Trimming excess file `' . $buname . '`...' );
-						try {
-							$response = self::$_client->deleteObject( array(
-								'Bucket' => $settings['bucket'],
-								'Key'    => $settings['directory'] . $buname,
-							) );
-						} catch ( Exception $e ) {
-							self::_error( 'Unable to delete excess Stash file `' . $buname . '`. Details: `' . "$e" . '`.' );
+
+						if ( true !== pb_backupbuddy_destinations::delete( $settings, $buname ) ) {
+							self::_error( 'Unable to delete excess Stash file `' . $buname . '`.' );
 							$delete_fail_count++;
 						}
 					}
 				} // end foreach.
 				pb_backupbuddy::status( 'details', 'Finished trimming excess backups.' );
-				if ( $delete_fail_count !== 0 ) {
+				if ( 0 !== $delete_fail_count ) {
 					$error_message = 'Stash remote limit could not delete ' . $delete_fail_count . ' backups.';
 					pb_backupbuddy::status( 'error', $error_message );
 					backupbuddy_core::mail_error( $error_message );
@@ -885,7 +891,7 @@ class pb_backupbuddy_destination_s33 {
 	 * @return bool  If file was deleted.
 	 */
 	public static function deleteFile( $settings, $file ) {
-		return self::deleteFiles( $settings, $file );
+		return self::delete( $settings, $files );
 	} // End deleteFile().
 
 	/**
@@ -897,6 +903,18 @@ class pb_backupbuddy_destination_s33 {
 	 * @return bool  If file(s) were deleted.
 	 */
 	public static function deleteFiles( $settings, $files = array() ) {
+		return self::delete( $settings, $files );
+	} // End deleteFiles().
+
+	/**
+	 * Deletes file(s) from remote destination.
+	 *
+	 * @param array        $settings  Destination Settings.
+	 * @param string|array $files     File(s) to delete.
+	 *
+	 * @return bool  If file(s) were deleted.
+	 */
+	public static function delete( $settings, $files = array() ) {
 		$settings = self::_init( $settings );
 		if ( ! is_array( $files ) ) {
 			$files = array( $files );
@@ -912,12 +930,14 @@ class pb_backupbuddy_destination_s33 {
 		}
 
 		try {
-			$response = self::$_client->deleteObjects( array(
-				'Bucket' => $settings['bucket'],
-				'Delete' => array(
-					'Objects' => $fileKeys
-				),
-			) ); // list all the files in the subscriber account.
+			$response = self::$_client->deleteObjects(
+				array(
+					'Bucket' => $settings['bucket'],
+					'Delete' => array(
+						'Objects' => $fileKeys,
+					),
+				)
+			);
 		} catch ( Exception $e ) {
 			$error = 'Error #83823233393b: Unable to delete one or more files. Details: `' . "$e" . '`.';
 			self::_error( $error );
@@ -934,7 +954,7 @@ class pb_backupbuddy_destination_s33 {
 		}
 
 		return true;
-	} // End deleteFiles().
+	}
 
 	/**
 	 * Tests ability to write to this remote destination.
@@ -946,16 +966,17 @@ class pb_backupbuddy_destination_s33 {
 	public static function test( $settings ) {
 		$settings = self::_init( $settings );
 
-		$sendOK   = false;
-		$deleteOK = false;
-		$send_id  = 'TEST-' . pb_backupbuddy::random_string( 12 );
+		$sendOK    = false;
+		$deleteOK  = false;
+		$send_id   = 'TEST-' . pb_backupbuddy::random_string( 12 );
+		$test_file = pb_backupbuddy::plugin_path() . '/destinations/remote-send-test.php';
 
 		// Try sending a file.
 		if ( '1' == $settings['stash_mode'] && ( ! isset( $settings['live_mode'] ) || '1' != $settings['live_mode'] ) ) { // Stash mode but not live mode.
 			$settings['type'] = 'stash3';
 		}
 
-		$send_response = pb_backupbuddy_destinations::send( $settings, dirname( dirname( __FILE__ ) ) . '/remote-send-test.php', $send_id ); // 3rd param true forces clearing of any current uploads.
+		$send_response = pb_backupbuddy_destinations::send( $settings, $test_file, $send_id, false, true ); // 3rd param true forces clearing of any current uploads.
 
 		if ( true === $send_response ) {
 			$send_response = __( 'Success.', 'it-l10n-backupbuddy' );
@@ -973,7 +994,7 @@ class pb_backupbuddy_destination_s33 {
 			pb_backupbuddy::status( 'details', 'Preparing to delete sent test file.' );
 
 			if ( '1' == $settings['stash_mode'] ) { // Stash mode.
-				if ( true === ( $delete_response = pb_backupbuddy_destination_stash3::deleteFile( $settings, 'remote-send-test.php' ) ) ) { // success
+				if ( true === ( $delete_response = pb_backupbuddy_destination_stash3::delete( $settings, basename( $test_file ) ) ) ) { // success
 					$delete_response = __( 'Success.', 'it-l10n-backupbuddy' );
 					$deleteOK        = true;
 				} else { // error
@@ -982,8 +1003,7 @@ class pb_backupbuddy_destination_s33 {
 					$deleteOK        = false;
 				}
 			} else { // S3 mode.
-
-				if ( true === ( $delete_response = self::deleteFile( $settings, 'remote-send-test.php' ) ) ) {
+				if ( true === ( $delete_response = self::delete( $settings, basename( $test_file ) ) ) ) {
 					$delete_response = __( 'Success.', 'it-l10n-backupbuddy' );
 					$deleteOK        = true;
 				} else {
@@ -992,16 +1012,14 @@ class pb_backupbuddy_destination_s33 {
 					$delete_response = $error;
 					$deleteOK        = false;
 				}
-
 			}
 		} else { // end if $sendOK.
 			pb_backupbuddy::status( 'details', 'Skipping test delete due to failed send.' );
 		}
 
 		// Load destination fileoptions.
-		pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #4...' );
 		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-		pb_backupbuddy::status( 'details', 'Fileoptions instance #7.' );
 		$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, false );
 		$result          = $fileoptions_obj->is_ok();
 		if ( true !== $result ) {
@@ -1073,7 +1091,7 @@ class pb_backupbuddy_destination_s33 {
 
 		foreach ( $backups as $backup_array ) {
 			$backup_file = $backup_array[0][0];
-			$dat_file    = str_replace( '.zip', '.dat', $backup_file );
+			$dat_file    = str_replace( '.zip', '.dat', $backup_file ); // TODO: Move to backupbuddy_data_file() method.
 			$local_file  = backupbuddy_core::getBackupDirectory() . $dat_file;
 
 			if ( true !== self::getFile( $settings, $dat_file, $local_file ) ) {
@@ -1082,6 +1100,59 @@ class pb_backupbuddy_destination_s33 {
 		}
 
 		return $success;
+	}
+
+	/**
+	 * Get a list of dat files not associated with backups.
+	 *
+	 * @param array $settings  Destination Settings array.
+	 *
+	 * @return array  Array of dat files.
+	 */
+	public static function get_dat_orphans( $settings ) {
+		$backups_array = self::listFiles( $settings );
+		if ( ! is_array( $backups_array ) ) {
+			return false;
+		}
+
+		$orphans = array();
+		$backups = array();
+		$files   = self::get_files( $settings, array( '.dat' ) );
+
+		if ( ! is_array( $files ) ) {
+			return false;
+		}
+
+		// Create an array of backup filenames.
+		foreach ( $backups_array as $backup_array ) {
+			$backups[] = $backup_array[0][0];
+		}
+
+		$prefix = backupbuddy_core::backup_prefix();
+
+		if ( $prefix ) {
+			$prefix .= '-';
+		}
+
+		// Loop through dat files looking for orphans.
+		foreach ( $files as $file ) {
+			$filename = $file['filename'];
+
+			// Appears to not be a dat file for this site.
+			if ( strpos( $filename, 'backup-' . $prefix ) === false ) {
+				continue;
+			}
+
+			// Skip dat files with backup files.
+			$backup_name = str_replace( '.dat', '.zip', $filename ); // TODO: Move to backupbuddy_data_file() method.
+			if ( in_array( $backup_name, $backups, true ) ) {
+				continue;
+			}
+
+			$orphans[] = $filename;
+		}
+
+		return $orphans;
 	}
 
 	/**

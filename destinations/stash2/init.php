@@ -77,15 +77,15 @@ class pb_backupbuddy_destination_stash2 {
 	/**
 	 * Send one or more files.
 	 *
-	 * @param array  $settings       Destination settings.
-	 * @param array  $file           Array of one or more files to send (even though only 1 file is supported).
-	 * @param string $send_id        The send ID.
-	 * @param bool   $delete_after   Delete the file afterwards.
-	 * @param bool   $clear_uploads  Clear uploads.
+	 * @param array  $settings             Destination settings.
+	 * @param array  $file                 Array of one or more files to send (even though only 1 file is supported).
+	 * @param string $send_id              The send ID.
+	 * @param bool   $delete_after         Delete the file afterwards.
+	 * @param bool   $delete_remote_after  If remote file should be deleted after send.
 	 *
 	 * @return bool|array  True on success, false on failure, array if a multipart chunked send so there is no status yet.
 	 */
-	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false, $clear_uploads = false ) {
+	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false, $delete_remote_after = false ) {
 		require_once pb_backupbuddy::plugin_path() . '/lib/stash/stash-api.php';
 
 		pb_backupbuddy::status( 'details', 'Starting Stash2 send().' );
@@ -124,14 +124,13 @@ class pb_backupbuddy_destination_stash2 {
 		}
 
 		// Send file.
-		$result = pb_backupbuddy_destination_s32::send( $settings, $file, $send_id, $delete_after, $clear_uploads );
+		$result = pb_backupbuddy_destination_s32::send( $settings, $file, $send_id, $delete_after, $delete_remote_after );
 
 		if ( is_array( $result ) ) { // Chunking. Notify Stash API to kick cron.
 			self::cron_kick_api( $settings, false );
 		}
 
 		return $result;
-
 	} // End send().
 
 	/**
@@ -236,101 +235,15 @@ class pb_backupbuddy_destination_stash2 {
 	 * @return string|void  Quota bar HTML or void when echo'd.
 	 */
 	public static function get_quota_bar( $account_info, $echo = false ) {
-		$return  = '<div class="backupbuddy-stash2-quotawrap">';
-		$return .= '
-		<style>
-			.outer_progress {
-				-moz-border-radius: 4px;
-				-webkit-border-radius: 4px;
-				-khtml-border-radius: 4px;
-				border-radius: 4px;
-
-				border: 1px solid #DDD;
-				background: #EEE;
-
-				max-width: 700px;
-
-				margin-left: auto;
-				margin-right: auto;
-
-				height: 30px;
-			}
-
-			.inner_progress {
-				border-right: 1px solid #85bb3c;
-				background: #8cc63f url("' . esc_html( pb_backupbuddy::plugin_url() ) . '/destinations/stash2/progress.png") 50% 50% repeat-x;
-
-				height: 100%;
-			}
-
-			.progress_table {
-				color: #5E7078;
-				font-family: "Open Sans", Arial, Helvetica, Sans-Serif;
-				font-size: 14px;
-				line-height: 20px;
-				text-align: center;
-
-				margin-left: auto;
-				margin-right: auto;
-				margin-bottom: 20px;
-				max-width: 700px;
-			}
-		</style>';
-
-		if ( ! empty( $account_info['quota_warning'] ) ) {
-			// echo '<div style="color: red; max-width: 700px; margin-left: auto; margin-right: auto;"><b>Warning</b>: ' . $account_info['quota_warning'] . '</div><br>';
-		}
-
-		$return .= '
-		<div class="outer_progress">
-			<div class="inner_progress" style="width: ' . $account_info['quota_used_percent'] . '%"></div>
-		</div>
-
-		<table align="center" class="progress_table">
-			<tbody><tr align="center">
-			    <td style="width: 10%; font-weight: bold; text-align: center">Free Tier</td>
-			    <td style="width: 10%; font-weight: bold; text-align: center">Paid Tier</td>
-			    <td style="width: 10%"></td>
-			    <td style="width: 10%; font-weight: bold; text-align: center">Total</td>
-			    <td style="width: 10%; font-weight: bold; text-align: center">Used</td>
-			    <td style="width: 10%; font-weight: bold; text-align: center">Available</td>
-			</tr>
-
-			<tr align="center">
-				<td style="text-align: center">' . $account_info['quota_free_nice'] . '</td>
-				<td style="text-align: center">';
-		if ( '0' == $account_info['quota_paid'] ) {
-			$return .= 'none';
-		} else {
-			$return .= $account_info['quota_paid_nice'];
-		}
-				$return .= '</td>
-				<td></td>
-				<td style="text-align: center">' . $account_info['quota_total_nice'] . '</td>
-				<td style="text-align: center">' . $account_info['quota_used_nice'] . ' (' . $account_info['quota_used_percent'] . '%)</td>
-				<td style="text-align: center">' . $account_info['quota_available_nice'] . '</td>
-			</tr>
-			';
-		$return         .= '
-		</tbody></table>';
-
-		$return .= '<div style="text-align: center;">';
-		$return .= '
-		<b>' . __( 'Upgrade storage', 'it-l10n-backupbuddy' ) . ':</b> &nbsp;
-		<a href="https://ithemes.com/member/cart.php?action=add&id=290" target="_blank" style="text-decoration: none;">+ 5GB</a>, &nbsp;
-		<a href="https://ithemes.com/member/cart.php?action=add&id=291" target="_blank" style="text-decoration: none;">+ 10GB</a>, &nbsp;
-		<a href="https://ithemes.com/member/cart.php?action=add&id=292" target="_blank" style="text-decoration: none;">+ 25GB</a>
-
-		&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href="https://sync.ithemes.com/stash/" target="_blank" style="text-decoration: none;"><b>Manage Stash & Stash Live Files</b></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href="https://sync.ithemes.com/stash/" target="_blank" style="text-decoration: none;"><b>Manage Account</b></a>';
-
-		$return .= '<br><br></div>';
-		$return .= '</div>';
+		ob_start();
+		include pb_backupbuddy::plugin_path() . '/destinations/stash2/views/quota.php';
+		$output = ob_get_clean();
 
 		if ( false === $echo ) {
-			return $return;
+			return $output;
 		}
 
-		echo $return;
+		echo $output;
 	} // End get_quota_bar().
 
 	/**
@@ -485,7 +398,7 @@ class pb_backupbuddy_destination_stash2 {
 	 * @return bool|string  True if success, else string error message.
 	 */
 	public static function deleteFile( $settings, $file ) {
-		return self::deleteFiles( $settings, $file );
+		return self::delete( $settings, $file );
 	} // End deleteFile().
 
 	/**
@@ -497,6 +410,18 @@ class pb_backupbuddy_destination_stash2 {
 	 * @return bool|string  True if success, else string error message.
 	 */
 	public static function deleteFiles( $settings, $files = array() ) {
+		return self::delete( $settings, $files );
+	} // End deleteFiles().
+
+	/**
+	 * Delete files.
+	 *
+	 * @param array $settings  Destination settings.
+	 * @param array $files     Array of files to delete.
+	 *
+	 * @return bool|string  True if success, else string error message.
+	 */
+	public static function delete( $settings, $files = array() ) {
 		require_once pb_backupbuddy::plugin_path() . '/lib/stash/stash-api.php';
 
 		$settings = self::_init( $settings );
@@ -526,7 +451,7 @@ class pb_backupbuddy_destination_stash2 {
 		}
 
 		return pb_backupbuddy_destination_s32::deleteFiles( $settings, $files );
-	} // End deleteFiles().
+	}
 
 	/**
 	 * Enforce archive limits.
@@ -746,5 +671,65 @@ class pb_backupbuddy_destination_stash2 {
 		}
 
 		return $success;
+	}
+
+	/**
+	 * Get a list of dat files not associated with backups.
+	 *
+	 * @param array $settings  Destination Settings array.
+	 *
+	 * @return array  Array of dat files.
+	 */
+	public static function get_dat_orphans( $settings ) {
+		$backups_array = self::listFiles( $settings );
+		if ( ! is_array( $backups_array ) ) {
+			return false;
+		}
+
+		$orphans = array();
+		$backups = array();
+		$files   = self::get_files( $settings, array( '.dat' ) );
+
+		if ( ! is_array( $files ) ) {
+			return false;
+		}
+
+		// Create an array of backup filenames.
+		foreach ( $backups_array as $backup_array ) {
+			$backups[] = $backup_array[0][0];
+		}
+
+		$prefix = backupbuddy_core::backup_prefix();
+
+		if ( $prefix ) {
+			$prefix .= '-';
+		} else {
+			$prefix = '';
+		}
+
+		// Loop through all files looking for dat orphans.
+		foreach ( $files as $file ) {
+			$filename = $file['filename'];
+
+			// Skip if not a .dat file.
+			if ( '.dat' !== substr( $filename, -4 ) ) {
+				continue;
+			}
+
+			// Appears to not be a dat file for this site.
+			if ( strpos( $filename, 'backup-' . $prefix ) === false ) {
+				continue;
+			}
+
+			// Skip dat files with backup files.
+			$backup_name = str_replace( '.dat', '.zip', $filename ); // TODO: Move to backupbuddy_data_file() method.
+			if ( in_array( $backup_name, $backups, true ) ) {
+				continue;
+			}
+
+			$orphans[] = $filename;
+		}
+
+		return $orphans;
 	}
 } // End class.

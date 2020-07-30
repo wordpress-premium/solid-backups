@@ -52,8 +52,8 @@ if ( $fileoptions != '' ) {
 	$backup_options = &$fileoptions;
 	$backup_options_options = &$backup_options->options;
 } else { //if ( file_exists( backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt' ) ) {
-	require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
-	pb_backupbuddy::status( 'details', 'Fileoptions instance #44.' );
+	pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #44...' );
+	require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 	$backup_options = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt', $read_only = false, $ignore_lock = false, $create_file = true ); // Will create file to hold integrity data if nothing exists.
 	if ( true !== ( $result = $backup_options->is_ok() ) ) {
 		pb_backupbuddy::status( 'error', __('Fatal Error #9034 C. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error on file `' . backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt' . '`: ' . $result );

@@ -91,6 +91,7 @@ $tabs = new BackupBuddy_Tabs(
 			'label'    => esc_html__( 'Local Backups', 'it-l10n-backupbuddy' ),
 			'class'    => 'backups-main',
 			'callback' => function() {
+				backupbuddy_backups()->show_cleanup();
 				backupbuddy_backups()->bulk_actions();
 				backupbuddy_backups()->table();
 			},

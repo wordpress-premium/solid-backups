@@ -63,10 +63,10 @@ if ( 'add' === $mode && ! $code ) {
 			'use strict';
 
 			function backupbuddy_onedrive_init() {
-				$( '.onedrive-authorize' ).on( 'click', function( e ) {
+				$( '.onedrive-authorize-btn' ).on( 'click', function( e ) {
 					e.preventDefault();
 					var win = backupbuddy_oauth_window( $( this ).attr( 'href' ), 'OneDrive Authorization', 400, 500 ),
-						$btn = $( this ),
+						$parent = $( this ).parent( '.onedrive-authorize' ),
 						$input = $( '.onedrive-oauth-code' ),
 						$footer = $( '.form-footer' );
 
@@ -74,7 +74,7 @@ if ( 'add' === $mode && ! $code ) {
 						return;
 					}
 
-					$btn.addClass( 'hidden' );
+					$parent.addClass( 'hidden' );
 					$input.removeClass( 'hidden' );
 					$footer.removeClass( 'hidden' );
 				});
@@ -100,12 +100,22 @@ if ( 'add' === $mode && ! $code ) {
 		.onedrive-auth .form-footer {
 			padding: 15px 0;
 		}
+		a.onedrive-authorize-btn {
+			display: inline-block;
+			font-size: 0;
+			width: 215px;
+			height: 41px;
+			background-image: url( '<?php echo pb_backupbuddy::plugin_url(); ?>/destinations/onedrive/assets/ms-symbollockup_signin_light.svg' );
+			background-position: 50% 50%;
+			background-repeat: no-repeat;
+			background-size: contain;
+		}
 	</style>
 	<form method="post" action="<?php echo esc_attr( $onedrive_action ); ?>" class="onedrive-auth">
 		<input type="hidden" name="onedrive_action" value="auth_onedrive">
 		<input type="hidden" name="onedrive_state" value="<?php echo esc_attr( $state ); ?>" />
-		<p>
-			<?php printf( '<a href="%s" target="_blank" class="button onedrive-authorize">%s</a>', esc_attr( $redirect_url ), esc_html__( 'Click here to log into OneDrive', 'it-l10n-backupbuddy' ) ); ?>
+		<p class="onedrive-authorize">
+			<?php printf( '<a href="%s" target="_blank" class="onedrive-authorize-btn">%s</a>', esc_attr( $redirect_url ), esc_html__( 'Click here to log into OneDrive', 'it-l10n-backupbuddy' ) ); ?>
 		</p>
 		<p class="onedrive-oauth-code hidden">
 			<label>

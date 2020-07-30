@@ -12,9 +12,9 @@ pb_backupbuddy::set_status_serial( $serial );
 if ( true == get_transient( 'pb_backupbuddy_stop_backup-' . $serial ) ) {
 	pb_backupbuddy::status( 'message', 'Backup STOPPED by user. Post backup cleanup step has been scheduled to clean up any temporary files.', $serial );
 
-	require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
+	pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #30...' );
+	require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 	$fileoptions_file = backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt';
-	pb_backupbuddy::status( 'details', 'Fileoptions instance #30.' );
 	$backup_options = new pb_backupbuddy_fileoptions( $fileoptions_file, false, $ignore_lock = true );
 
 	if ( true !== ( $result = $backup_options->is_ok() ) ) {
@@ -42,9 +42,9 @@ if ( true == get_transient( 'pb_backupbuddy_stop_backup-' . $serial ) ) {
 
 // Make sure the serial exists.
 if ( $serial != '' ) {
-	require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
+	pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #29...' );
+	require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 	$fileoptions_file = backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt';
-	//pb_backupbuddy::status( 'details', 'Fileoptions instance #29.' );
 	$waitingFileoptions = true;
 	$waitingFileoptionsCount = 0;
 

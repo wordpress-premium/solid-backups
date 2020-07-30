@@ -496,6 +496,10 @@ class BackupBuddy_Restore {
 	 * @return array  Restore queue array.
 	 */
 	public function get_queue( $refresh = false ) {
+		if ( empty( $this->restore ) ) {
+			$this->save(); // Handle pruning and update storage file.
+		}
+
 		if ( $this->restores && false === $refresh ) {
 			return $this->restores;
 		}
@@ -503,6 +507,7 @@ class BackupBuddy_Restore {
 		$restores = array();
 		if ( file_exists( $this->restore_storage ) ) {
 			$restores = trim( @file_get_contents( $this->restore_storage ) );
+
 			if ( ! $restores ) {
 				$restores = array();
 			} else {
@@ -959,7 +964,9 @@ class BackupBuddy_Restore {
 			}
 		} else {
 			// Only prune if we're not changing restore details.
-			$this->prune();
+			if ( $this->prune() ) {
+				$restore_queue = $this->restores;
+			}
 		}
 
 		if ( ! empty( $this->restore ) && ( ! $this->current_restore || ! file_exists( $this->current_restore ) ) ) {
@@ -2104,6 +2111,8 @@ class BackupBuddy_Restore {
 			return true;
 		}
 		if ( file_exists( backupbuddy_core::getLogDirectory() . 'backupbuddy-restore-abort.nfo' ) ) {
+			// Make sure status is updated.
+			$this->restore['status'] = self::STATUS_USER_ABORTED;
 			return true;
 		}
 
@@ -2741,6 +2750,29 @@ class BackupBuddy_Restore {
 		}
 
 		echo $text;
+	}
+
+	/**
+	 * Returns a link to delete a restore from the archive.
+	 *
+	 * @param array $restore  Restore array.
+	 * @param bool  $echo     If link should be echo'd.
+	 *
+	 * @return string  Delete Link HTML.
+	 */
+	public function get_delete_link( $restore, $echo = false ) {
+		$attr = '';
+		if ( is_array( $restore ) ) {
+			$rel = $restore['id'];
+		} else {
+			$rel  = basename( $restore );
+			$attr = ' data-corrupt="true"';
+		}
+		$link = sprintf( '<a href="#delete-restore" class="delete-restore" rel="%s"%s>%s</a>', esc_attr( $rel ), $attr, esc_html__( 'Delete', 'it-l10n-backupbuddy' ) );
+		if ( false === $echo ) {
+			return $link;
+		}
+		echo $link;
 	}
 
 	/**

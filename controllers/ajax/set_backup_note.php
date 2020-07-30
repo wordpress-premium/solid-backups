@@ -34,8 +34,8 @@ if ( true !== $comment_result ) {
 // Even if we cannot save the note into the archive file, store it in internal settings.
 $serial = backupbuddy_core::get_serial_from_file( $backup_file );
 
+pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #24...' );
 require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-pb_backupbuddy::status( 'details', 'Fileoptions instance #24.' );
 $backup_options = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt' );
 $result         = $backup_options->is_ok();
 if ( true === $result ) {

@@ -21,10 +21,9 @@ foreach ( $send_fileoptions as $send_fileoption ) {
 
 	$send_id = str_replace( '.txt', '', str_replace( 'send-', '', basename( $send_fileoption ) ) );
 
-	pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+	pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #233...' );
 	require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-	pb_backupbuddy::status( 'details', 'Fileoptions instance #233.' );
-	$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', $read_only = true, $ignore_lock = true, $create_file = false );
+	$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', true, true, false );
 	if ( true !== ( $result = $fileoptions_obj->is_ok() ) ) {
 		pb_backupbuddy::status( 'error', __( 'Fatal Error #9034.233239333. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );
 		return false;
@@ -123,7 +122,7 @@ foreach ( $remote_sends as $send_id => $remote_send ) {
 
 	// Determine destination.
 	$destination_type = '';
-	if ( isset( pb_backupbuddy::$options['remote_destinations'][ $remote_send['destination'] ] ) ) { // Valid destination.
+	if ( ! empty( $remote_send['destination'] ) && isset( pb_backupbuddy::$options['remote_destinations'][ $remote_send['destination'] ] ) ) { // Valid destination.
 		$destination      = pb_backupbuddy::$options['remote_destinations'][ $remote_send['destination'] ]['title'] . ' (' . pb_backupbuddy::$options['remote_destinations'][ $remote_send['destination'] ]['type'] . ')';
 		$destination_type = pb_backupbuddy::$options['remote_destinations'][ $remote_send['destination'] ]['type'];
 	} else { // Invalid destination - been deleted since send?
@@ -131,16 +130,21 @@ foreach ( $remote_sends as $send_id => $remote_send ) {
 	}
 
 	$write_speed = '';
-	if ( isset( $remote_send['write_speed'] ) && ( '' != $remote_send['write_speed'] ) ) {
+	if ( ! empty( $remote_send['write_speed'] ) && is_float( $remote_send['write_speed'] ) ) {
 		$write_speed = 'Transfer Speed: &gt; ' . pb_backupbuddy::$format->file_size( $remote_send['write_speed'] ) . '/sec<br>';
 	}
 
-	$trigger = ucfirst( $remote_send['trigger'] );
-	if ( is_array( $remote_send['file'] ) ) {
-		$base_file = '-' . __( 'Multiple files', 'it-l10n-backupbuddy' ) . '-';
+	$trigger = ! empty( $remote_send['trigger'] ) ? ucfirst( $remote_send['trigger'] ) : __( 'Unknown', 'it-l10n-backupbuddy' );
+	if ( ! empty( $remote_send['file'] ) ) {
+		if ( is_array( $remote_send['file'] ) ) {
+			$base_file = '-' . __( 'Multiple files', 'it-l10n-backupbuddy' ) . '-';
+		} else {
+			$base_file = basename( $remote_send['file'] );
+		}
 	} else {
-		$base_file = basename( $remote_send['file'] );
+		$base_file = __( 'Remote send file missing.', 'it-l10n-backupbuddy' );
 	}
+
 	if ( 'remote-send-test.php' == $base_file ) {
 		$base_file   = __( 'Remote destination test', 'it-l10n-backupbuddy' ) . '<br><span class="description" style="margin-left: 10px;">(Send & delete test file remote-send-test.php)</span>';
 		$file_size   = '';

@@ -33,9 +33,13 @@ $folder_id = pb_backupbuddy_destination_gdrive2::get_root_folder();
 if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 	pb_backupbuddy::verify_nonce();
 	$deleted_files = 0;
+
+	if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+		require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+	}
+
 	foreach ( (array) pb_backupbuddy::_POST( 'items' ) as $item ) {
-		$response = pb_backupbuddy_destination_gdrive2::deleteFile( false, $item );
-		if ( true === $response ) {
+		if ( true === pb_backupbuddy_destinations::delete( $settings, $item ) ) {
 			$deleted_files++;
 		} else {
 			pb_backupbuddy::alert( 'Error: Unable to delete `' . $item . '`. Verify permissions or try again.' );
@@ -81,6 +85,7 @@ if ( ! $info ) {
 require pb_backupbuddy::plugin_path() . '/destinations/gdrive2/views/quota.php';
 
 backupbuddy_backups()->set_destination_id( $destination_id );
+backupbuddy_backups()->show_cleanup();
 
 $backups = pb_backupbuddy_destination_gdrive2::listFiles();
 

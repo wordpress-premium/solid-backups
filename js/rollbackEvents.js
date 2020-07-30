@@ -1,6 +1,5 @@
 function rollback_loadRestoreEvents() {
-	
-	
+
 	// Update status log details, messages, or errors.
 	jQuery('#pb_backupbuddy_status').bind('backupbuddy_details backupbuddy_message backupbuddy_error backupbuddy_warning', function(e, json) {
 		if ( 'backupbuddy_error' == e.type ) {
@@ -9,13 +8,10 @@ function rollback_loadRestoreEvents() {
 		if ( 'backupbuddy_warning' == e.type ) {
 			json.data = backupbuddyWarning( json.data );
 		}
-	
+
 		backupbuddy_log( json );
 	});
-	
-	
-	
-	
+
 	// A backup function (step) began.
 	jQuery('#pb_backupbuddy_status').bind( 'backupbuddy_startFunction', function(e, json) {
 		functionInfo = jQuery.parseJSON(json.data );
@@ -26,8 +22,8 @@ function rollback_loadRestoreEvents() {
 		}
 		backupbuddy_currentFunction = functionInfo.function;
 	});
-	
-	
+
+
 	// A backup function (step) finished.
 	jQuery('#pb_backupbuddy_status').bind( 'backupbuddy_finishFunction', function(e, json) {
 		functionInfo = jQuery.parseJSON( json.data );
@@ -37,8 +33,8 @@ function rollback_loadRestoreEvents() {
 		}
 		backupbuddy_currentFunction = '';
 	});
-	
-	
+
+
 	// Track minor events so we can detect certain things not finishing, such as importbuddy generation.
 	jQuery('#pb_backupbuddy_status').bind( 'backupbuddy_startAction', function(e, json) {
 		console.log( 'Starting action: ' + json.data );
@@ -49,8 +45,8 @@ function rollback_loadRestoreEvents() {
 		backupbuddy_currentActionStart = unix_timestamp();
 		backupbuddy_currentActionLastWarn = 0;
 	});
-	
-	
+
+
 	jQuery('#pb_backupbuddy_status').bind( 'backupbuddy_finishAction', function(e, json) {
 		console.log( 'Finishing action: ' + json.data );
 		if ( json.data !== backupbuddy_currentAction ) {
@@ -60,53 +56,50 @@ function rollback_loadRestoreEvents() {
 		backupbuddy_currentActionStart = 0;
 		backupbuddy_currentActionLastWarn = 0;
 	});
-	
-	
-	
-	
+
 	// An error was encountered running a function.
 	jQuery('#pb_backupbuddy_status').bind( 'backupbuddy_errorFunction', function(e, json) {
 		functionInfo = jQuery.parseJSON(json.data );
 		jQuery( '.backup-function-' + functionInfo.function ).find( '.backup-step-status-working' ).removeClass( 'backup-step-status-working' ).addClass( 'backup-step-status-error' );
 	});
-	
-	
+
+
 	// Start a subfunction. These are typically more minor, though still notable, events.
 	jQuery('#pb_backupbuddy_status').bind( 'backupbuddy_startSubFunction', function(e, json) {
 		functionInfo = jQuery.parseJSON(json.data );
 		html = '<div class="backup-step backup-step-secondary backup-function-' + functionInfo.function + '"><span class="backup-step-status"></span><span class="backup-step-title">' + functionInfo.title + '</span></div>';
 		jQuery( '.backup-steps' ).append( html );
 	});
-	
-	
-	
+
+
+
 	// An error message was sent from the server.
 	jQuery('#pb_backupbuddy_status').bind( 'backupbuddy_error', function(e, json) {
 		console.log( 'BACKUPBUDDY ERROR: ' + json.data );
 	});
-	
+
 	//var backupbuddy_actions = [];
-	
-	
-	
-	
-	
+
+
+
+
+
 	// A warning message was sent from the server.
 	jQuery('#pb_backupbuddy_status').bind( 'backupbuddy_warning', function(e, json) {
 		html = '<span class="backup-step-status backup-step-status-warning"></span><div class="backup-step backup-step-secondary"><span class="backup-step-title">' + json.data + '</span></div>';
 		jQuery( '.backup-steps' ).append( html );
 	});
-	
-	
+
+
 	// The entire backup process has been halted, whether by BackupBuddy or the user.
 	jQuery('#pb_backupbuddy_status').bind( 'backupbuddy_haltScript', function(e, json) {
-	
+
 		if ( 0 === keep_polling ) { // Only show once.
 			return;
 		}
-	
+
 		keep_polling = 0; // Stop polling server for status updates.
-	
+
 		jQuery( '.backup-step-status-working' ).removeClass( 'backup-step-status-working' ).addClass( 'backup-step-status-error' ); // Anything that was currently running turns into an error.
 		jQuery( '#pb_backupbuddy_stop' ).css( 'visibility', 'hidden' );
 		jQuery( '.pb_backupbuddy_blinkz' ).css( 'background-position', 'top' ); // turn off led
@@ -115,7 +108,7 @@ function rollback_loadRestoreEvents() {
 		jQuery( '#pb_backupbuddy_slot3_led' ).removeClass( 'pb_backupbuddy_blinkz' ); // disable blinking
 		jQuery( '#pb_backupbuddy_slot4_led' ).removeClass( 'pb_backupbuddy_empty' ); // Remove empty LED hole.
 		jQuery( '#pb_backupbuddy_slot4_led' ).addClass( 'pb_backupbuddy_codered' ); // set checkmark
-	
+
 		// Briefly wait
 		//setTimeout(function(){
 		backupbuddy_log( '***' );
@@ -124,14 +117,14 @@ function rollback_loadRestoreEvents() {
 		} else {
 			backupbuddy_log( '* No in-progress function detected.' );
 		}
-	
+
 		if ( '' !== backupbuddy_currentAction ) {
 			backupbuddy_log( '* Unfinished action: `' + backupbuddy_currentAction + '` (' + ( unix_timestamp() - backupbuddy_currentActionStart ) + ' seconds ago).' );
 		} else {
 			backupbuddy_log( '* No in-progress action detected.' );
 		}
 		backupbuddy_log( '***' );
-	
+
 		// Calculate suggestions.
 		/*
 		 if ( 'importbuddyCreation' == backupbuddy_currentAction ) {
@@ -142,15 +135,15 @@ function rollback_loadRestoreEvents() {
 		 } );
 		 }
 		 */
-	
+
 		backupbuddy_showSuggestions( suggestions );
-	
+
 		setTimeout(function(){
 			backupbuddy_log( '--- The backup has halted.' );
 		},500);
 		alert( 'The backup has halted.' );
 		//},1000);
-	
+
 	});
 
 } // end load

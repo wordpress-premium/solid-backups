@@ -176,7 +176,7 @@ if (!class_exists("pluginbuddy_dbreplace")) {
 
 				foreach( $rowsResult as $row ) {
 					$needs_update = false;
-					$sql_update = array();
+					$sql_update   = array();
 
 					foreach( $row as $column => $value ) {
 						if ( $column != $primary_key ) {
@@ -473,10 +473,18 @@ if (!class_exists("pluginbuddy_dbreplace")) {
 		public function recursive_object_replace( $find, $replace, &$data ) {
 			if ( is_object( $data ) ) {
 
+				// This occurs when the class in the serialized data doesn't exist or isn't available when the object is loaded.
 				if ( is_a( $data, '__PHP_Incomplete_Class' ) ) {
+					// Instead of converting object to stdClass, just skip this object. Converting the class from whatever it is stored in the database to an stdClass destroys the object anyway, so it doesn't do any good to replace any strings inside the object.
+					return $data;
+					/*
 					$serialized_object = serialize( $data );
 					$std_class_object  = preg_replace( '/^O:\d+:"[^"]++"/', 'O:' . strlen( 'stdClass' ) . ':"stdClass"', $serialized_object );
 					$data              = unserialize( $std_class_object );
+					// Free up memory.
+					unset( $serialized_object );
+					unset( $std_class_object );
+					*/
 				}
 
 				$vars = get_object_vars( $data );
@@ -580,4 +588,3 @@ if (!class_exists("pluginbuddy_dbreplace")) {
 
 	} // end pluginbuddy_dbreplace class.
 }
-?>

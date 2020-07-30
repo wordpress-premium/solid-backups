@@ -28,9 +28,13 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 	$delete_items  = (array) pb_backupbuddy::_POST( 'items' );
 
 	if ( ! empty( $delete_items ) ) {
+
+		if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+			require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+		}
+
 		foreach ( $delete_items as $item ) {
-			$response = pb_backupbuddy_destination_onedrive::deleteFile( false, $item );
-			if ( true === $response ) {
+			if ( true === pb_backupbuddy_destinations::delete( $settings, $item ) ) {
 				$deleted_files++;
 			} else {
 				pb_backupbuddy::alert( 'Error: Unable to delete `' . $item . '`. Verify permissions or try again.' );
@@ -44,21 +48,8 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 	}
 }
 
-if ( '' !== pb_backupbuddy::_GET( 'download' ) ) {
-	// TODO: Use download feature to stream download contents instead of this link.
-	$download   = pb_backupbuddy::_GET( 'download' );
-	$drive_file = pb_backupbuddy_destination_onedrive::get_drive_item( false, $download );
-
-	if ( $drive_file ) {
-		$permission_proxy = $drive_file->createLink( 'view' );
-		pb_backupbuddy::alert( '<a href="' . esc_attr( $permission_proxy->link->webUrl ) . '" target="_new">Click here</a> to view & download this file from OneDrive. You must be logged in to OneDrive to access it.' );
-	} else {
-		pb_backupbuddy::alert( 'Invalid remote file.', true );
-	}
-}
-
-if ( '' !== pb_backupbuddy::_GET( 'copy' ) ) {
-	$copy       = pb_backupbuddy::_GET( 'copy' );
+if ( '' !== pb_backupbuddy::_GET( 'cpy' ) ) {
+	$copy       = pb_backupbuddy::_GET( 'cpy' );
 	$drive_file = pb_backupbuddy_destination_onedrive::get_drive_item( false, $copy );
 
 	if ( $drive_file ) {
@@ -82,56 +73,18 @@ if ( is_object( $quota ) ) {
 	include pb_backupbuddy::plugin_path() . '/destinations/onedrive/views/quota.php';
 }
 
-$backup_files = array();
-$files        = pb_backupbuddy_destination_onedrive::listFiles();
+// Find backups in directory.
+backupbuddy_backups()->set_destination_id( $destination_id );
+backupbuddy_backups()->show_cleanup();
 
-if ( is_array( $files ) && count( $files ) ) {
-	foreach ( $files as $file ) {
-		$filename    = $file->name;
-		$backup_type = backupbuddy_core::getBackupTypeFromFile( $filename );
+$backups = pb_backupbuddy_destinations::listFiles( $settings );
 
-		if ( ! $backup_type ) {
-			continue;
-		}
-
-		$created   = $file->createdDateTime->getTimestamp();
-		$file_id   = $file->id;
-		$file_size = $file->size;
-
-		$backup_files[ $file_id ] = array(
-			array( $file_id, $filename ),
-			pb_backupbuddy::$format->date( pb_backupbuddy::$format->localize_time( $created ) ) . '<br /><span class="description">(' . pb_backupbuddy::$format->time_ago( $created ) . ' ago)</span>',
-			pb_backupbuddy::$format->file_size( $file_size ),
-			$backup_type,
-		);
-	}
-}
-
-if ( ! count( $backup_files ) ) {
-	printf( '<p>%s</p>', esc_html__( 'No backup files found.', 'it-l10n-backupbuddy' ) );
-} else {
-	$url_prefix          = pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . $destination_id;
-	$download_url_prefix = admin_url() . sprintf( '?onedrive-destination-id=%s&onedrive-download=', $destination_id );
-
-	pb_backupbuddy::$ui->list_table(
-		$backup_files,
-		array(
-			'action'                  => pb_backupbuddy::ajax_url( 'remoteClient' ) . '&function=remoteClient&destination_id=' . htmlentities( $destination_id ) . '&remote_path=' . htmlentities( pb_backupbuddy::_GET( 'remote_path' ) ),
-			'columns'                 => array(
-				__( 'Backup File', 'it-l10n-backupbuddy' ),
-				__( 'Uploaded', 'it-l10n-backupbuddy' ) . ' <img src="' . pb_backupbuddy::plugin_url() . '/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent first">',
-				__( 'File Size', 'it-l10n-backupbuddy' ),
-				__( 'Type', 'it-l10n-backupbuddy' ),
-			),
-			'hover_actions'           => array(
-				$url_prefix . '&copy=' => __( 'Copy to Local', 'it-l10n-backupbuddy' ),
-				$download_url_prefix   => __( 'Download', 'it-l10n-backupbuddy' ),
-			),
-			'hover_action_column_key' => '0',
-			'bulk_actions'            => array(
-				'delete_backup' => __( 'Delete', 'it-l10n-backupbuddy' ),
-			),
-			'css'                     => 'width: 100%;',
-		)
-	);
-}
+backupbuddy_backups()->table(
+	'default',
+	$backups,
+	array(
+		'action'         => pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . htmlentities( $destination_id ),
+		'destination_id' => $destination_id,
+		'class'          => 'minimal',
+	)
+);

@@ -18,6 +18,7 @@ $disk_available = pb_backupbuddy::$format->file_size( $avail_space );
 <style type="text/css">
 	.onedrive-quota-wrapper {
 		text-align: center;
+		margin-bottom: 25px;
 	}
 	.onedrive-quota-wrapper::after {
 		clear: both;

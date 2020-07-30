@@ -29,9 +29,8 @@ switch ( $step ) {
 			);
 		}
 
-		pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #26...' );
 		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-		pb_backupbuddy::status( 'details', 'Fileoptions instance #26.' );
 		$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $last_migration_key . '.txt', true, true, false );
 		$result          = $fileoptions_obj->is_ok();
 		if ( true !== $result ) {

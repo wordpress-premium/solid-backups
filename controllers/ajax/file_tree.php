@@ -26,6 +26,7 @@ if ( pb_backupbuddy::_GET( 'dat_viewer' ) ) {
 	$serial = pb_backupbuddy::_GET( 'serial' );
 
 	// The fileoptions file that contains the file tree information.
+	pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #28...' );
 	require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 	$fileoptions_file = backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '-filetree.txt';
 
@@ -36,7 +37,6 @@ if ( pb_backupbuddy::_GET( 'dat_viewer' ) ) {
 		}
 	}
 
-	pb_backupbuddy::status( 'details', 'Fileoptions instance #28.' );
 	$fileoptions = new pb_backupbuddy_fileoptions( $fileoptions_file );
 
 	// Either we are getting cached file tree information or we need to create afresh.

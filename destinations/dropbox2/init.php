@@ -192,9 +192,8 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 			$chunked_destination_settings['_chunk_transfer_speeds'][] = $chunk_transfer_speed;
 
 			// Load destination fileoptions.
-			pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
-			require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #15.' );
+			pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #15...' );
+			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 			$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', $read_only = false, $ignore_lock = false, $create_file = false );
 			if ( true !== ( $result = $fileoptions_obj->is_ok() ) ) {
 				pb_backupbuddy::status( 'error', __('Fatal Error #9034.84838. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );
@@ -355,10 +354,8 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 				$send_time += microtime( true );
 				@fclose( $f );
 
-
-				pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
-				require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
-				pb_backupbuddy::status( 'details', 'Fileoptions instance #14.' );
+				pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #14...' );
+				require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 				$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', $read_only = false, $ignore_lock = false, $create_file = false );
 				if ( true !== ( $result = $fileoptions_obj->is_ok() ) ) {
 					pb_backupbuddy::status( 'error', __('Fatal Error #9034.2344848. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );

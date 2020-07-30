@@ -66,6 +66,7 @@ if ( '' != pb_backupbuddy::_GET( 'reset_disalerts' ) ) {
 
 // Cancel all running backups.
 if ( '1' == pb_backupbuddy::_GET( 'cancel_running_backups' ) ) {
+	pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #383...' );
 	require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 
 	$fileoptions_directory = backupbuddy_core::getLogDirectory() . 'fileoptions/';
@@ -76,8 +77,6 @@ if ( '1' == pb_backupbuddy::_GET( 'cancel_running_backups' ) ) {
 	$cancelled = array();
 	for ( $x = 0; $x <= 3; $x++ ) { // Try this a few times since there may be race conditions on an open file.
 		foreach ( $files as $file ) {
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #383.' );
-
 			$backup_options = new pb_backupbuddy_fileoptions( $file, false );
 			$result         = $backup_options->is_ok();
 			if ( true !== $result ) {

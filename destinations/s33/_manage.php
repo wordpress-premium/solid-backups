@@ -46,16 +46,16 @@ if ( $destination_id || '0' === $destination_id || 0 === $destination_id ) {
 // Handle deletion.
 if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 	pb_backupbuddy::verify_nonce();
-	$delete_files = array();
-	foreach ( (array) pb_backupbuddy::_POST( 'items' ) as $item ) {
-		$delete_files[] = $item;
-	}
-	$response = pb_backupbuddy_destination_s33::deleteFiles( $settings, $delete_files );
+	$delete_files = (array) pb_backupbuddy::_POST( 'items' );
 
-	if ( true === $response ) {
+	if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+		require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+	}
+
+	if ( true === pb_backupbuddy_destinations::delete( $settings, $delete_files ) ) {
 		pb_backupbuddy::alert( 'Deleted ' . implode( ', ', $delete_files ) . '.' );
 	} else {
-		pb_backupbuddy::alert( 'Failed to delete one or more files. Details: `' . $response . '`.' );
+		pb_backupbuddy::alert( 'Failed to delete one or more files.' );
 	}
 	echo '<br>';
 } // end deletion.
@@ -91,6 +91,8 @@ if ( ! is_array( $backups ) ) {
 	die( 'Error listing files: `' . esc_html( $backups ) . '`.' );
 }
 
+backupbuddy_backups()->show_cleanup();
+
 // Handle pagination.
 $marker = end( $backups );
 reset( $backups );
@@ -110,27 +112,28 @@ $backup_count = count( $backups );
 	<?php } ?>
 </center>
 <?php
+$no_backups = '';
 
-// Render table listing files.
 if ( 0 === $backup_count ) {
-	echo '<b>';
-	if ( $site_only ) { // Only this site.
-		esc_html_e( 'You have not completed sending any backups to this S3v3 destination (bucket + directory) for this site yet.', 'it-l10n-backupbuddy' );
-	} else { // All sites.
-		esc_html_e( 'You have not completed sending any backups to this S3v3 destination (bucket + directory).', 'it-l10n-backupbuddy' );
+	$no_backups = '<b>';
+	if ( $site_only ) {
+		$no_backups .= esc_html__( 'You have not completed sending any backups to this S3v3 destination (bucket + directory) for this site yet.', 'it-l10n-backupbuddy' );
+	} else {
+		$no_backups .= esc_html__( 'You have not completed sending any backups to this S3v3 destination (bucket + directory).', 'it-l10n-backupbuddy' );
 	}
-	echo '</b>';
-} else {
-	backupbuddy_backups()->table(
-		'default',
-		$backups,
-		array(
-			'action'         => $url_prefix . '&remote_path=' . htmlentities( pb_backupbuddy::_GET( 'remote_path' ) ),
-			'destination_id' => $destination_id,
-			'class'          => 'minimal',
-		)
-	);
+	$no_backups .= '</b>';
 }
+
+backupbuddy_backups()->table(
+	'default',
+	$backups,
+	array(
+		'action'         => $url_prefix . '&remote_path=' . htmlentities( pb_backupbuddy::_GET( 'remote_path' ) ),
+		'destination_id' => $destination_id,
+		'class'          => 'minimal',
+		'no-backups'     => $no_backups,
+	)
+);
 
 // Display troubleshooting subscriber key.
 echo '<br style="clear: both;">';

@@ -11,12 +11,12 @@ pb_backupbuddy::$ui->ajax_header( true, true, 'backupbuddy-admin-iframe' );
 
 $destination_id = pb_backupbuddy::_GET( 'destination_id' );
 
-if ( isset( pb_backupbuddy::$options['remote_destinations'][ $destination_id ] ) ) {
-	$destination = pb_backupbuddy::$options['remote_destinations'][ $destination_id ];
-} else {
-	echo 'Error #438934894349. Invalid destination ID `' . $destination_id . '`.';
+if ( empty( pb_backupbuddy::$options['remote_destinations'][ $destination_id ] ) ) {
+	echo 'Error #438934894349. Invalid destination ID `' . esc_html( $destination_id ) . '`.';
 	return;
 }
+
+$destination = pb_backupbuddy::$options['remote_destinations'][ $destination_id ];
 
 require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
 pb_backupbuddy_destinations::manage( $destination, $destination_id );

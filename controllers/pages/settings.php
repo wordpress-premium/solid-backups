@@ -106,13 +106,13 @@ if ( isset( $_POST['pb_backupbuddy_backup_directory'] ) ) {
 					rename( $old_dat, $new_backup_dir . basename( $old_dat ) );
 				}
 
+				pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #21...' );
 				require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 				$fileoptions_files = glob( backupbuddy_core::getLogDirectory() . 'fileoptions/*.txt' );
 				if ( ! is_array( $fileoptions_files ) ) {
 					$fileoptions_files = array();
 				}
 				foreach ( $fileoptions_files as $fileoptions_file ) {
-					pb_backupbuddy::status( 'details', 'Fileoptions instance #21.' );
 					$backup_options = new pb_backupbuddy_fileoptions( $fileoptions_file );
 					$result         = $backup_options->is_ok();
 					if ( true !== $result ) {

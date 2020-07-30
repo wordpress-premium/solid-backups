@@ -69,7 +69,7 @@ if ( 'add' === $mode ) {
 			$auth_url = pb_backupbuddy_destination_gdrive2::get_oauth_url();
 			?>
 			<script type="text/javascript">
-				function backupbuddy_gdrive_preload_image( url ){
+				function backupbuddy_gdrive2_preload_image( url ){
 					var img = new Image();
 					img.src = url;
 				}
@@ -77,48 +77,48 @@ if ( 'add' === $mode ) {
 				( function( $ ) {
 					'use strict';
 
-					function backupbuddy_gdrive_init() {
-						$( '.gdrive-authorize' ).on( 'click', function( e ) {
+					function backupbuddy_gdrive2_init() {
+						$( '.gdrive2-authorize' ).on( 'click', function( e ) {
 							e.preventDefault();
 							var win = backupbuddy_oauth_window( $( this ).attr( 'href' ), 'Google Drive Authorization', 400, 500 ),
 								$btn = $( this ),
-								$input = $( '.gdrive-auth-code' ),
+								$input = $( '.gdrive2-auth-code' ),
 								$footer = $( '.form-footer' );
 
 							if ( ! $input.length ) {
 								return;
 							}
 
-							$( '.gdrive-initial-actions' ).addClass( 'hidden' );
+							$( '.gdrive2-initial-actions' ).addClass( 'hidden' );
 							$input.removeClass( 'hidden' );
 							$footer.removeClass( 'hidden' );
 						});
 					}
 
 					$( function() {
-						backupbuddy_gdrive_init();
+						backupbuddy_gdrive2_init();
 					});
 				})( jQuery );
 
 				<?php foreach ( $g_assets as $asset ) : ?>
-					backupbuddy_gdrive_preload_image( '<?php echo esc_html( $asset ); ?>' );
+					backupbuddy_gdrive2_preload_image( '<?php echo esc_html( $asset ); ?>' );
 				<?php endforeach; ?>
 			</script>
 			<style type="text/css">
-				.gdrive-auth {
+				.gdrive2-auth {
 					padding-top: 15px;
 				}
-				.gdrive-auth label {
+				.gdrive2-auth label {
 					display: block;
 				}
-				.gdrive-auth input.large {
+				.gdrive2-auth input.large {
 					width: 100%;
 					max-width: 700px;
 				}
-				.gdrive-auth .form-footer {
+				.gdrive2-auth .form-footer {
 					padding: 15px 0;
 				}
-				.gdrive-authorize {
+				.gdrive2-authorize {
 					display: inline-block;
 					font-size: 0;
 					width: 191px;
@@ -128,29 +128,29 @@ if ( 'add' === $mode ) {
 					background-position: 0 0;
 					background-image: url( '<?php echo esc_html( $g_assets['normal'] ); ?>' );
 				}
-				.gdrive-authorize:hover,
-				.gdrive-authorize:focus {
+				.gdrive2-authorize:hover,
+				.gdrive2-authorize:focus {
 					background-image: url( '<?php echo esc_html( $g_assets['hover'] ); ?>' );
 				}
-				.gdrive-authorize:active {
+				.gdrive2-authorize:active {
 					background-image: url( '<?php echo esc_html( $g_assets['active'] ); ?>' );
 				}
 			</style>
-			<form method="post" action="<?php echo esc_attr( pb_backupbuddy::ajax_url( 'destination_picker' ) ) . '&add=gdrive2&account=normal&callback_data=' . esc_attr( pb_backupbuddy::_GET( 'callback_data' ) ); ?>" class="gdrive-auth">
+			<form method="post" action="<?php echo esc_attr( pb_backupbuddy::ajax_url( 'destination_picker' ) ) . '&add=gdrive2&account=normal&callback_data=' . esc_attr( pb_backupbuddy::_GET( 'callback_data' ) ); ?>" class="gdrive2-auth">
 
-				<p class="gdrive-initial-actions">
+				<p class="gdrive2-initial-actions">
 					<?php
 					printf(
-						'<a href="%s" target="_blank" class="gdrive-authorize">%s</a>',
+						'<a href="%s" target="_blank" class="gdrive2-authorize">%s</a>',
 						esc_attr( $auth_url ),
 						esc_html__( 'Click here to log into Google Drive', 'it-l10n-backupbuddy' )
 					);
 					?>
 				</p>
 
-				<p class="gdrive-initial-actions"><?php esc_html_e( 'Looking for Service Account File authentication?' ); ?> <a href="<?php echo esc_attr( pb_backupbuddy::ajax_url( 'destination_picker' ) ) . '&add=gdrive2&account=service&callback_data=' . esc_attr( pb_backupbuddy::_GET( 'callback_data' ) ); ?>"><?php esc_html_e( 'Click Here', 'it-l10n-backupbuddy' ); ?></a></p>
+				<p class="gdrive2-initial-actions"><?php esc_html_e( 'Looking for Service Account File authentication?' ); ?> <a href="<?php echo esc_attr( pb_backupbuddy::ajax_url( 'destination_picker' ) ) . '&add=gdrive2&account=service&callback_data=' . esc_attr( pb_backupbuddy::_GET( 'callback_data' ) ); ?>"><?php esc_html_e( 'Click Here', 'it-l10n-backupbuddy' ); ?></a></p>
 
-				<p class="gdrive-auth-code hidden">
+				<p class="gdrive2-auth-code hidden">
 					<label>
 						<span class="label"><?php esc_html_e( 'Paste Your Code Here:', 'it-l10n-backupbuddy' ); ?></span>
 						<span class="field"><input type="text" name="auth_code" class="large" /></span>
@@ -178,7 +178,7 @@ if ( 'add' === $mode ) {
 				$service_account_file = '';
 			} else { // All fields entered.
 				if ( ! file_exists( $service_account_file ) ) {
-					pb_backupbuddy::alert( 'Error #83493844: Unable to find .p12 file at entered path `' . htmlentities( $service_account_file ) . '`. Verify file path is correct and has readable permissions.', true );
+					pb_backupbuddy::alert( 'Error #83493844: Unable to find JSON file at entered path `' . htmlentities( $service_account_file ) . '`. Verify file path is correct and has readable permissions.', true );
 					$service_form_ok      = false;
 					$service_account_file = '';
 				}
@@ -189,8 +189,9 @@ if ( 'add' === $mode ) {
 				pb_backupbuddy_destination_gdrive2::$settings['service_account_email'] = $service_account_email;
 
 				$info = pb_backupbuddy_destination_gdrive2::getDriveInfo();
+
 				if ( false === $info ) {
-					pb_backupbuddy::alert( 'Error #84934834: Unable to authenticate to Google Drive Service Account for Storage Access with supplied credentials. NOTE: You must use the P12 file format and NOT json.<br>Account Name: ' . esc_html( $service_account_email ) . '<br>P12 File Path: ' . esc_html( $service_account_file ), true );
+					pb_backupbuddy::alert( 'Error #84934834: Unable to authenticate to Google Drive Service Account for Storage Access with supplied credentials. NOTE: You must use the JSON file format and NOT p12.<br>Account Name: ' . esc_html( $service_account_email ) . '<br>JSON File Path: ' . esc_html( $service_account_file ), true );
 					$service_form_ok = false;
 				}
 			}
@@ -200,20 +201,21 @@ if ( 'add' === $mode ) {
 
 		if ( false === $service_form_ok ) {
 			?>
-
-			<br>
-			<b>&nbsp;&nbsp;Service Account Setup:</b><br>
+			<p><b>&nbsp;&nbsp;Service Account Setup:</b></p>
 			<ol>
 				<li><a href="https://console.developers.google.com/iam-admin/serviceaccounts/" target="_blank" class="button secondary-button" style="vertical-align: 0;">Click here to launch the Create Service Account page</a></li>
 				<li>Click "Select a Project", select your project, and click "Open"</li>
 				<li>Click "+ Create Service Account" at the top of the page</li>
 				<li>Enter a descriptive name and a role of "Storage -> Storage Admin" (our default recommendation)</li>
-				<li>Click "Furnish a new private key" and select Key Type of "P12"</li>
-				<li>Click "Create"</li>
-				<li>Copy the "Service Account ID" which looks like an email to the box below</li>
-				<li>Upload the .p12 key file onto your server, preferably outside a web-accessible directory and enter its path below</li>
+				<li>Click "+ Create Key" and select Key Type of "<strong>JSON</strong>"</li>
+				<li>Click "Create". Your .json file should download automatically.</li>
+				<li>Click "Done".</li>
 			</ol>
-			<br>
+			<p>Then:</p>
+			<ol>
+				<li>Copy the "Service Account ID" which looks like an email to the box below:</li>
+				<li>Upload the <strong>JSON</strong> key file onto your server, preferably outside a web-accessible directory and enter its path below:</li>
+			</ol>
 			<form method="post" action="<?php echo esc_attr( pb_backupbuddy::ajax_url( 'destination_picker' ) ) . '&add=gdrive2&account=service&callback_data=' . esc_attr( pb_backupbuddy::_GET( 'callback_data' ) ); ?>" >
 				<input type="hidden" name="gaction" value="auth_gdrive">
 
@@ -223,7 +225,7 @@ if ( 'add' === $mode ) {
 						<td><input type="text" name="service_account_email" placeholder="Typical format: description@*.iam.gserviceaccount.com" value="<?php echo esc_attr( $service_account_email ); ?>" style="width: 100%; max-width: 720px;"></td>
 					</tr>
 					<tr>
-						<th scope="row">Full path to .p12 key file</th>
+						<th scope="row">Full path to .json key file</th>
 						<td><input type="text" name="service_account_file" style="width: 100%; max-width: 720px;" value="<?php echo esc_attr( $service_account_file ); ?>"><br><span class="description" style="display: inline-block; overflow: scroll;">Web root: <?php echo esc_html( ABSPATH ); ?></span></td>
 					</tr>
 					<tr>
@@ -231,15 +233,14 @@ if ( 'add' === $mode ) {
 						<td><input class="button-primary" type="submit" value="Continue"></td>
 					</tr>
 				</table>
-
 			</form>
 			<?php
 			return;
 			// End service account form submission needing entered/re-entered.
-		} else {
-			pb_backupbuddy::alert( __( 'Unsupported authorization mode.', 'it-l10n-backupbuddy' ), true );
-			return;
 		}
+	} else {
+		pb_backupbuddy::alert( __( 'Unsupported authorization mode.', 'it-l10n-backupbuddy' ), true );
+		return;
 	}
 }
 
@@ -323,8 +324,8 @@ $settings_form->add_setting(
 		'tip'       => __( 'Folder to store files within. Leave blank to store in the root or use the unique identifier ID. Use the folder picker or get the path ID from the folder URL in your web browser. Renaming the folder in Google Drive will not change the ID or impact backups going into it.', 'it-l10n-backupbuddy' ),
 		'rules'     => '',
 		'css'       => 'width: 300px;',
-		'after'     => ' <span class="description">This is NOT the folder name but its ID. Leave blank to store in root.</span>&nbsp;<span class="description"><span class="backupbuddy-gdrive-folder-name-text">' . $folder_text . '</span></span><br><br>',
-		'row_class' => 'backupbuddy-gdrive-folder-row',
+		'after'     => ' <span class="description">This is NOT the folder name but its ID. Leave blank to store in root.</span>&nbsp;<span class="description"><span class="backupbuddy-gdrive2-folder-name-text">' . $folder_text . '</span></span><br><br>',
+		'row_class' => 'backupbuddy-gdrive2-folder-row',
 	)
 );
 $settings_form->add_setting(

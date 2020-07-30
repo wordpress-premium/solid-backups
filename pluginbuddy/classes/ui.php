@@ -910,8 +910,6 @@ class pb_backupbuddy_ui {
 
 	} // End start_tab().
 
-
-
 	/*	end_tab()
 	 *
 	 *	Closes this tab section.
@@ -932,7 +930,6 @@ class pb_backupbuddy_ui {
 		}
 
 	} // End end_tab().
-
 
 	/**
 	 * Output HTML headers when using AJAX.
@@ -955,7 +952,7 @@ class pb_backupbuddy_ui {
 		wp_print_styles( 'buttons' );
 		wp_print_styles( 'colors' );
 
-		if ( $js === true ) {
+		if ( true === $js ) {
 			wp_enqueue_script( 'jquery' );
 			wp_print_scripts( 'jquery' );
 		}
@@ -963,15 +960,15 @@ class pb_backupbuddy_ui {
 		pb_backupbuddy::load_style( 'wp-admin.css' );
 		pb_backupbuddy::load_style( 'thickboxed.css' );
 
-		//echo '<link rel="stylesheet" href="' . pb_backupbuddy::plugin_url(); . '/css/admin.css" type="text/css" media="all" />';
-		pb_backupbuddy::load_script( 'backupbuddy-min', false, backupbuddy_js_vars() );
+		pb_backupbuddy::load_script( 'backupbuddy_global_admin_scripts', false );
 		pb_backupbuddy::load_script( 'admin.js', true );
+		pb_backupbuddy::load_script( 'backupbuddy-min', false, backupbuddy_js_vars() );
 		pb_backupbuddy::load_style( 'admin.css' );
 		pb_backupbuddy::load_script( 'jquery-ui-tooltip', false );
 		pb_backupbuddy::load_style( 'jQuery-ui-1.11.2.css', true );
 
 		printf( '<body class="wp-core-ui %s" style="background: inherit;">', esc_attr( $body_class ) );
-		if ( $padding === true ) {
+		if ( true === $padding ) {
 			echo '<div class="bb-iframe-divpadding-noscroll" style="padding: 12px; padding-left: 20px; padding-right: 20px; overflow: scroll;">';
 		} else {
 			echo '<div>';
@@ -979,8 +976,12 @@ class pb_backupbuddy_ui {
 
 	} // End ajax_header().
 
-
-	function ajax_footer( $js_common = true ) {
+	/**
+	 * AJAX Footer for HTML pages.
+	 *
+	 * @param bool $js_common  Load common JS.
+	 */
+	public function ajax_footer( $js_common = true ) {
 		echo '</div>';
 
 		if ( true === $js_common ) {
@@ -991,8 +992,6 @@ class pb_backupbuddy_ui {
 		echo '</head>';
 		echo '</html>';
 	} // End ajax_footer().
-
-
 
 } // End class pluginbuddy_ui.
 

@@ -19,11 +19,6 @@ if ( !defined( 'PB_IMPORTBUDDY' ) ) { // NOT IN IMPORTBUDDY:
 	</style>
 
 	<?php
-
-	pb_backupbuddy::load_script( 'admin.js' );
-
-
-
 	pb_backupbuddy::$ui->title( __( 'Diagnostics', 'it-l10n-backupbuddy' ) );
 	backupbuddy_core::versions_confirm();
 

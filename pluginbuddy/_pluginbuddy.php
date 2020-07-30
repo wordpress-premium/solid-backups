@@ -1714,7 +1714,7 @@ class pb_backupbuddy {
 					wp_enqueue_script( $script_name, $url_path . $script, array(), pb_backupbuddy::settings( 'version' ) );
 					wp_print_scripts( $script_name );
 				} else {
-					echo '{Error: Javascript file was set to load that did not exist: `' . $url_path . $script . '`}';
+					echo '<script>console.warn( \'{Error: Javascript file was set to load that did not exist: `' . esc_html( $url_path . $script ) . '`}\');</script>';
 				}
 			}
 		} else { // Not a specific file.

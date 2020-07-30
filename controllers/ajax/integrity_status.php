@@ -12,8 +12,8 @@ $serial = str_replace( '/\\', '', $serial );
 pb_backupbuddy::load();
 pb_backupbuddy::$ui->ajax_header();
 
+pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #27...' );
 require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-pb_backupbuddy::status( 'details', 'Fileoptions instance #27.' );
 $options_file   = backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt';
 $backup_options = new pb_backupbuddy_fileoptions( $options_file, true );
 $result         = $backup_options->is_ok();

@@ -13,8 +13,8 @@ $backup_serial = backupbuddy_core::parse_file( $zip_file, 'serial' );
 $backup_date   = backupbuddy_core::parse_file( $zip_file, 'nicename' );
 
 if ( file_exists( backupbuddy_core::getLogDirectory() . 'fileoptions/' . $backup_serial . '.txt' ) ) {
+	pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #50...' );
 	require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-	pb_backupbuddy::status( 'details', 'Fileoptions instance #50.' );
 	$read_only      = false;
 	$ignore_lock    = false;
 	$create_file    = true;
@@ -141,10 +141,11 @@ if ( ! $time_ago ) {
 			$time_ago = ' (' . pb_backupbuddy::$format->time_ago( $backup_date ) . ' ago)';
 		}
 	} else {
-		if ( ! is_numeric( $backup_date ) ) {
-			$backup_date = strtotime( $backup_date );
+		$time_ago_date = $backup_date;
+		if ( ! is_numeric( $time_ago_date ) ) {
+			$time_ago_date = strtotime( $time_ago_date );
 		}
-		$time_ago = ' (' . pb_backupbuddy::$format->time_ago( $backup_date ) . ' ago)';
+		$time_ago = ' (' . pb_backupbuddy::$format->time_ago( $time_ago_date ) . ' ago)';
 	}
 }
 

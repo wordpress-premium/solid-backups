@@ -9,13 +9,13 @@
  * @package BackupBuddy
  */
 
-if ( isset( pb_backupbuddy::$options['remote_destinations'][ pb_backupbuddy::_GET( 'destination_id' ) ] ) ) {
-	$destination_id = (int) pb_backupbuddy::_GET( 'destination_id' );
-	pb_backupbuddy_destination_dropbox3::init( $destination_id );
-	$settings = pb_backupbuddy_destination_dropbox3::$settings;
-} else {
+if ( empty( pb_backupbuddy::$options['remote_destinations'][ pb_backupbuddy::_GET( 'destination_id' ) ] ) ) {
 	die( 'Error #844893: Invalid destination ID.' );
 }
+
+$destination_id = (int) pb_backupbuddy::_GET( 'destination_id' );
+pb_backupbuddy_destination_dropbox3::init( $destination_id );
+$settings = pb_backupbuddy_destination_dropbox3::$settings;
 
 if ( isset( $settings['disabled'] ) && '1' === $settings['disabled'] ) {
 	die( esc_html__( '<span class="description">This destination is currently disabled based on its settings. Re-enable it under its Advanced Settings.</span>', 'it-l10n-backupbuddy' ) );
@@ -28,9 +28,12 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 	$delete_items  = (array) pb_backupbuddy::_POST( 'items' );
 
 	if ( ! empty( $delete_items ) ) {
+		if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+			require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+		}
+
 		foreach ( $delete_items as $item ) {
-			$response = pb_backupbuddy_destinations::delete( $settings, $item );
-			if ( true === $response ) {
+			if ( true === pb_backupbuddy_destinations::delete( $settings, $item ) ) {
 				$deleted_files++;
 			} else {
 				pb_backupbuddy::alert( 'Error: Unable to delete `' . $item . '`. Verify permissions or try again.' );
@@ -38,7 +41,8 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 		}
 
 		if ( $deleted_files > 0 ) {
-			pb_backupbuddy::alert( 'Deleted ' . $deleted_files . ' file(s).' );
+			$file_str = _n( 'file', 'files', $deleted_files, 'it-l10n-backupbuddy' );
+			pb_backupbuddy::alert( 'Deleted ' . $deleted_files . ' ' . $file_str . '.' );
 			echo '<br>';
 		}
 	}
@@ -66,6 +70,7 @@ if ( is_array( $quota ) ) {
 
 // Find backups in directory.
 backupbuddy_backups()->set_destination_id( $destination_id );
+backupbuddy_backups()->show_cleanup();
 
 $backups = pb_backupbuddy_destinations::listFiles( $settings );
 

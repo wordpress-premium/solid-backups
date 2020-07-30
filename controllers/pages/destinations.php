@@ -46,36 +46,37 @@ if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && true == BACKUPBUDDY_API_ENABLE ) {
 		}
 	}
 
-	jQuery(document).ready(function() {
+	jQuery(function( $ ) {
 
-		jQuery('#screen-meta-links').append(
+		$('#screen-meta-links').append(
 			'<div class="backupbuddy-meta-link-wrap hide-if-no-js screen-meta-toggle">' +
 				'<a href="javascript:void(0)" class="show-settings" onClick="jQuery(\'.backupbuddy_api_key-hide\').slideToggle(); jQuery(this).toggleClass(\'screen-meta-active\'); return false; return false;"><?php esc_html_e( 'Deployment Key', 'it-l10n-backupbuddy' );
 					echo ' (' . esc_html( $deployment_enabled_status ) . ')'; ?></a>' +
 			'</div>'
 		);
 
-		jQuery( '.backupbuddy-progressbar' ).each( function(){
-			percentDone = jQuery(this).attr( 'data-percent' );
-			jQuery(this).progressbar( { value: parseInt( percentDone, 10 ) } );
-			jQuery(this).find( '.backupbuddy-progressbar-label' ).text( percentDone + ' %' );
+		$( '.backupbuddy-progressbar' ).each( function(){
+			percentDone = $(this).attr( 'data-percent' );
+			$(this).progressbar( { value: parseInt( percentDone, 10 ) } );
+			$(this).find( '.backupbuddy-progressbar-label' ).text( percentDone + ' %' );
 		});
 
 
-		jQuery( '#backupbuddy-deployment-regenerateKey' ).click( function(e){
+		$( '#backupbuddy-deployment-regenerateKey' ).click( function(e){
 			e.preventDefault();
 
 			if ( false === confirm( '<?php esc_html_e( 'Are you sure you want to generate a new key? This will render any existing keys invalid.', 'it-l10n-backupbuddy' ); ?>' ) ) {
 				return false;
 			}
 
-			jQuery( '.pb_backupbuddy_loading-regenerateKey' ).show();
-			jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'deployment_regenerateKey' ); ?>', { },
+			$( '.pb_backupbuddy_loading-regenerateKey' ).show();
+
+			$.post( '<?php echo pb_backupbuddy::ajax_url( 'deployment_regenerateKey' ); ?>', { },
 				function(data) {
-					jQuery( '.pb_backupbuddy_loading-regenerateKey' ).hide();
-					data = jQuery.trim( data );
+					$( '.pb_backupbuddy_loading-regenerateKey' ).hide();
+					data = $.trim( data );
 					try {
-						var data = jQuery.parseJSON( data );
+						var data = $.parseJSON( data );
 					} catch(e) {
 						alert( 'Error #3899833: Unexpected non-json response from server: `' + data + '`.' );
 						return;
@@ -85,12 +86,12 @@ if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && true == BACKUPBUDDY_API_ENABLE ) {
 						return;
 					}
 
-					jQuery( '#backupbuddy-deployment-regenerateKey-textarea' ).val( data.key );
+					$( '#backupbuddy-deployment-regenerateKey-textarea' ).val( data.key );
 				}
 			);
-		}); // End jQuery( '#backupbuddy-deployment-regenerateKey' ).click().
+		}); // End $( '#backupbuddy-deployment-regenerateKey' ).click().
 
-		jQuery( '#wpbody-content > .wrap > h1:first' ).append( '<div class="backupbuddy_destinations_iframe_load"><span class="spinner"></span> <?php esc_html_e( 'Loading remote destinations...', 'it-l10n-backupbuddy' ); ?></div>' );
+		$( '#wpbody-content > .wrap > h1:first' ).append( '<div class="backupbuddy_destinations_iframe_load"><span class="spinner"></span> <?php esc_html_e( 'Loading remote destinations...', 'it-l10n-backupbuddy' ); ?></div>' );
 	});
 </script>
 
@@ -135,17 +136,17 @@ define( 'BACKUPBUDDY_API_ENABLE', true ); // Enable BackupBuddy Deployment acces
 		<br>
 		<?php
 	}
-	echo '</div>';
-
-	$destination_tabs_url = pb_backupbuddy::ajax_url( 'destinationTabs' );
-	if ( pb_backupbuddy::_GET( 'tab' ) ) {
-		$destination_tabs_url .= pb_backupbuddy::_GET( 'tab' );
-	}
-
-	echo '<iframe id="pb_backupbuddy_iframe-dest-wrap" src="' . $destination_tabs_url . '&action_verb=to%20manage%20files" width="100%" height="4000" frameBorder="0" onLoad="jQuery( \'.backupbuddy_destinations_iframe_load\' ).fadeOut(\'fast\');">Error #4584594579. Browser not compatible with iframes.</iframe>';
-?>
+	?>
+</div>
 
 <?php
+$destination_tabs_url = pb_backupbuddy::ajax_url( 'destinationTabs' );
+if ( pb_backupbuddy::_GET( 'tab' ) ) {
+	$destination_tabs_url .= '&tab=' . rawurlencode( pb_backupbuddy::_GET( 'tab' ) );
+}
+
+echo '<iframe id="pb_backupbuddy_iframe-dest-wrap" src="' . $destination_tabs_url . '&action_verb=to%20manage%20files" width="100%" frameBorder="0" onLoad="BackupBuddy.Destinations.tabsIframeLoad();">Error #4584594579. Browser not compatible with iframes.</iframe>';
+
 // Handles thickbox auto-resizing. Keep at bottom of page to avoid issues.
 if ( ! wp_script_is( 'media-upload' ) ) {
 	wp_enqueue_script( 'media-upload' );

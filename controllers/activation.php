@@ -187,9 +187,9 @@ if ( pb_backupbuddy::$options['data_version'] < 4 ) {
 if ( pb_backupbuddy::$options['data_version'] < 5 ) {
 	if ( isset( pb_backupbuddy::$options['backups'] ) && ( count( pb_backupbuddy::$options['backups'] ) > 0 ) ) {
 		pb_backupbuddy::anti_directory_browsing( backupbuddy_core::getLogDirectory() . 'fileoptions/' );
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #31...' );
 		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 		foreach ( pb_backupbuddy::$options['backups'] as $serial => $backup ) {
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #31.' );
 			$backup_options          = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt', false, false, true );
 			$backup_options->options = $backup;
 			if ( true === $backup_options->save() ) {

@@ -12,8 +12,8 @@ $send_di = str_replace( '/\\', '', $send_id );
 pb_backupbuddy::load();
 pb_backupbuddy::$ui->ajax_header();
 
+pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #2...' );
 require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-pb_backupbuddy::status( 'details', 'Fileoptions instance #27.' );
 $options_file = backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt';
 $send_options = new pb_backupbuddy_fileoptions( $options_file, true );
 $result       = $send_options->is_ok();

@@ -154,7 +154,6 @@ class pb_backupbuddy_pagescore {
 		if ( file_exists( $page_file ) ) { // Load from /controllers/pages/PAGE.php if it exists.
 
 			// Display page.
-			pb_backupbuddy::load_script( 'admin.js', true );
 			pb_backupbuddy::load_style( 'admin.css' );
 			pb_backupbuddy::load_script( 'jquery-ui-tooltip', false );
 			pb_backupbuddy::load_style( 'jQuery-ui-1.11.2.css', true );

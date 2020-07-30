@@ -405,6 +405,21 @@ class backupbuddy_core {
 		// Log directory.
 		$excludes[] = self::getLogDirectory();
 
+		// Restore directories.
+		if ( function_exists( 'wp_upload_dir' ) ) {
+			$uploads_dir  = wp_upload_dir();
+			$restore_dirs = glob( rtrim( $uploads_dir['basedir'], '/' ) . '/backupbuddy-restoretmp-*' );
+			if ( is_array( $restore_dirs ) && ! empty( $restore_dirs ) ) {
+				foreach ( $restore_dirs as $restore_dir ) {
+					// Make sure we don't accidentally exclude the root folder.
+					if ( ! $restore_dir || ! ! rtrim( $restore_dir, '/' ) ) {
+						continue;
+					}
+					$excludes[] = rtrim( $restore_dir, '/' ) . '/';
+				}
+			}
+		}
+
 		// Media/themes/plugins excluded option.
 		if ( isset( $profile['exclude_media'] ) && '1' == $profile['exclude_media'] ) {
 			pb_backupbuddy::status( 'details', __( 'Excluding media directories.', 'it-l10n-backupbuddy' ) );
@@ -649,8 +664,8 @@ class backupbuddy_core {
 			$body    = pb_backupbuddy::$options['email_notify_scheduled_complete_body'];
 
 			$archive_file = '';
+			pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #37...' );
 			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #37.' );
 			$backup_options = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt', true, true );
 			$result         = $backup_options->is_ok();
 			if ( true !== $result ) {
@@ -891,8 +906,8 @@ class backupbuddy_core {
 			pb_backupbuddy::status( 'details', 'Sending multiple files (' . count( $file ) . ') in single pass to remote destination `' . $destination_id . '` with ID `' . $identifier . '` triggered by `' . $trigger . '`.' );
 		}
 
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #35...' );
 		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-		pb_backupbuddy::status( 'details', 'Fileoptions instance #35.' );
 		$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $identifier . '.txt', false, true, true );
 		$result          = $fileoptions_obj->is_ok();
 		if ( true !== $result ) {
@@ -952,15 +967,13 @@ class backupbuddy_core {
 			pb_backupbuddy::status( 'details', 'Calling destination send() function for importbuddy.php.' );
 			$send_result = pb_backupbuddy_destinations::send( $destination_settings, $importbuddy_file, $identifier, $delete_after );
 			pb_backupbuddy::status( 'details', 'Finished destination send() function for importbuddy.php.' );
-
 		}
 
 		self::kick_db(); // Kick the database to make sure it didn't go away, preventing options saving.
 
 		// Reload fileoptions.
-		pb_backupbuddy::status( 'details', 'About to load fileoptions data for saving send status.' );
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #34 for saving send status...' );
 		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-		pb_backupbuddy::status( 'details', 'Fileoptions instance #34.' );
 		$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $identifier . '.txt', false, false, false );
 		$result          = $fileoptions_obj->is_ok();
 		if ( true !== $result ) {
@@ -972,10 +985,20 @@ class backupbuddy_core {
 
 		// Update stats.
 		$fileoptions[ $identifier ]['finish_time'] = microtime( true );
+
 		if ( true === $send_result ) { // succeeded.
 			$fileoptions['status']      = 'success';
 			$fileoptions['finish_time'] = microtime( true );
 			pb_backupbuddy::status( 'details', 'Remote send SUCCESS.' );
+
+			$backups = is_array( $file ) ? $file : array( $file );
+			foreach ( $backups as $backup ) {
+				$data_file = backupbuddy_data_file()->locate( $backup );
+				if ( false !== $data_file ) {
+					pb_backupbuddy::status( 'details', 'Scheduling .dat file to be sent: `' . $data_file . '`.' );
+					self::schedule_single_event( time(), 'remote_send', array( $destination_id, $data_file, $trigger ) );
+				}
+			}
 		} elseif ( false === $send_result ) { // failed.
 			$fileoptions['status'] = 'failure';
 			pb_backupbuddy::status( 'details', 'Remote send FAILURE.' );
@@ -997,7 +1020,6 @@ class backupbuddy_core {
 
 		// As of v5.0: Post-send deletion now handled within destinations/bootstrap.php send() to support chunked sends.
 		return $send_result;
-
 	} // End send_remote_destination().
 
 
@@ -1017,6 +1039,38 @@ class backupbuddy_core {
 		// Pass off to destination handler.
 		require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
 		$send_result = pb_backupbuddy_destinations::send( $destination_settings, $files, $send_id, $delete_after, $is_retry );
+
+		if ( true === $send_result ) { // succeeded.
+			$backups = is_array( $files ) ? $files : array( $files );
+			foreach ( $backups as $backup ) {
+				$data_file = backupbuddy_data_file()->locate( $backup );
+				if ( false !== $data_file ) {
+					pb_backupbuddy::status( 'details', 'Scheduling .dat file to be sent: `' . $data_file . '`.' );
+					if ( isset( $destination_settings['destination_id'] ) ) {
+						self::schedule_single_event( time(), 'remote_send', array( $destination_settings['destination_id'], $data_file, 'Automatic' ) );
+					} else {
+						$dat_settings = $destination_settings;
+						// Clean up settings for fresh dat file send.
+						unset(
+							$dat_settings['_chunk_upload_id'], // Dropbox3.
+							$dat_settings['_chunk_offset'], // Dropbox3.
+							$dat_settings['_chunk_maxsize'], // Dropbox3.
+							$dat_settings['_chunk_next_offset'], // Dropbox3.
+							$dat_settings['_chunk_total_sent'], // Dropbox3.
+							$dat_settings['_chunk_sent_count'], // Dropbox3.
+							$dat_settings['_chunk_total_count'], // Dropbox3.
+							$dat_settings['_chunk_transfer_speeds'], // Dropbox3.
+							$dat_settings['_chunks_sent'], // GDrive2.
+							$dat_settings['_chunks_total'], // GDrive2.
+							$dat_settings['_media_resumeUri'], // GDrive2.
+							$dat_settings['_media_progress'] // GDrive2.
+						);
+						$dat_send_id = pb_backupbuddy::random_string( 12 );
+						self::schedule_single_event( time(), 'destination_send', array( $dat_settings, array( $data_file ), $dat_send_id, false, $dat_send_id ) );
+					}
+				}
+			}
+		}
 
 		return $send_result;
 
@@ -1112,8 +1166,8 @@ class backupbuddy_core {
 
 				$options = array();
 				if ( file_exists( backupbuddy_core::getLogDirectory() . 'fileoptions/' . $serial . '.txt' ) ) {
+					pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #33...' );
 					require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-					pb_backupbuddy::status( 'details', 'Fileoptions instance #33.' );
 					$read_only      = false;
 					$ignore_lock    = false;
 					$create_file    = true;
@@ -1820,8 +1874,8 @@ class backupbuddy_core {
 		if ( '' != pb_backupbuddy::$options['last_backup_serial'] ) {
 			$last_backup_fileoptions = backupbuddy_core::getLogDirectory() . 'fileoptions/' . pb_backupbuddy::$options['last_backup_serial'] . '.txt';
 			if ( file_exists( $last_backup_fileoptions ) ) {
+				pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #32...' );
 				require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-				pb_backupbuddy::status( 'details', 'Fileoptions instance #32.' );
 				$backup_options = new pb_backupbuddy_fileoptions( $last_backup_fileoptions, true );
 				$result         = $backup_options->is_ok();
 				if ( true !== $result || ! isset( $backup_options->options['updated_time'] ) ) {

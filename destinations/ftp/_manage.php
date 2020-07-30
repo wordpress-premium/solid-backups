@@ -36,20 +36,18 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 	$delete_items = (array) pb_backupbuddy::_POST( 'items' );
 
 	if ( ! empty( $delete_items ) ) {
-		$conn_id = pb_backupbuddy_destination_ftp::connect( $destination );
-		if ( $conn_id ) {
-			// Loop through and delete ftp backup files.
-			foreach ( $delete_items as $backup ) {
-				// Try to delete backup.
-				if ( pb_backupbuddy_destination_ftp::delete( $destination, $backup, $conn_id ) ) {
-					$delete_count++;
-				} else {
-					pb_backupbuddy::alert( 'Unable to delete file `' . $ftp_directory . '/' . $backup . '`.' );
-				}
-			}
+		if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+			require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+		}
 
-			// Close this connection.
-			ftp_close( $conn_id );
+		// Loop through and delete ftp backup files.
+		foreach ( $delete_items as $backup ) {
+			// Try to delete backup.
+			if ( pb_backupbuddy_destinations::delete( $destination, $backup ) ) {
+				$delete_count++;
+			} else {
+				pb_backupbuddy::alert( 'Unable to delete file `' . $ftp_directory . '/' . $backup . '`.' );
+			}
 		}
 	}
 
@@ -64,7 +62,7 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 // Copy ftp backups to the local backup files.
 if ( pb_backupbuddy::_GET( 'cpy' ) ) {
 	$copy = pb_backupbuddy::_GET( 'cpy' );
-	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
+	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. Get more information from the Diagnostics page under Recent Actions > Recent Remote Sends/File Transfers.' );
 	echo '<br>';
 	pb_backupbuddy::status( 'details', 'Scheduling Cron for creating ftp copy.' );
 	backupbuddy_core::schedule_single_event( time(), 'process_destination_copy', array( $destination, $copy ) );
@@ -77,6 +75,7 @@ if ( pb_backupbuddy::_GET( 'cpy' ) ) {
 
 // Find backups in directory.
 backupbuddy_backups()->set_destination_id( $destination_id );
+backupbuddy_backups()->show_cleanup();
 
 $backups = pb_backupbuddy_destinations::listFiles( $destination );
 

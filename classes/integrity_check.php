@@ -247,8 +247,8 @@ class backupbuddy_integrity_check {
 			$fileoptions_path = backupbuddy_core::getLogDirectory() . 'fileoptions/' . $this->serial . '.txt';
 
 			// Create the fileoptions/[serial].txt file.
+			pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #42...' );
 			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #44.' );
 			$this->backup_options = new pb_backupbuddy_fileoptions( $fileoptions_path, $read_only = false, $ignore_lock = false, $create_file = true );
 
 			// Confirm that the new file was created successfully.

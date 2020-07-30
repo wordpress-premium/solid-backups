@@ -56,15 +56,19 @@ pb_backupbuddy::load_style( 'quicksetup.css' );
 
 		jQuery( '#pb_backupbuddy_quickstart_destination' ).change( function() {
 			if ( jQuery(this).val() == 'stash2' ) { // Stash (v2).
-				jQuery( '.stash2-fields' ).slideDown();
+				jQuery( '.stash-fields' ).slideDown();
 				jQuery( '#pb_backupbuddy_quickstart_form .schedule' ).slideDown();
 				return; // Skip destination picker for Stash (v2).
+			} else if ( jQuery(this).val() == 'stash3' ) { // Stash (v3).
+				jQuery( '.stash-fields' ).slideDown();
+				jQuery( '#pb_backupbuddy_quickstart_form .schedule' ).slideDown();
+				return; // Skip destination picker for Stash (v3).
 			} else if (  jQuery(this).val() == 'live' ) { // Stash Live (as of v7).
-				jQuery( '.stash2-fields' ).slideUp();
+				jQuery( '.stash-fields' ).slideUp();
 				jQuery( '#pb_backupbuddy_quickstart_form .schedule' ).slideUp();
-				return;
+				return; // Skip destination picker for Stash Live (redirected after submission).
 			} else { // Other destination.
-				jQuery( '.stash2-fields' ).slideUp();
+				jQuery( '.stash-fields' ).slideUp();
 				jQuery( '#pb_backupbuddy_quickstart_form .schedule' ).slideDown();
 			}
 			if ( jQuery(this).val() != '' ) {
@@ -200,7 +204,8 @@ pb_backupbuddy::load_style( 'quicksetup.css' );
 			</div>
 		</div>
 		<div class="step password">
-			<h4><span class="number">2.</span> Create a password for restoring or migrating your backups.</h4>
+			<?php $text = pb_backupbuddy::$options['importbuddy_pass_hash'] ? __( 'Optionally update your', 'it-l10n-backupbuddy' ) : __( 'Create a', 'it-l10n-backupbuddy' ); ?>
+			<h4><span class="number">2.</span> <?php echo esc_html( $text ); ?> password for restoring or migrating your backups.</h4>
 			<div class="backupbuddy-quickstart-indent">
 				<div class="input-float">
 					<label>Password</label>
@@ -211,7 +216,8 @@ pb_backupbuddy::load_style( 'quicksetup.css' );
 					<input class="checkfield" type="password" id="pb_backupbuddy_quickstart_passwordconfirm" name="password_confirm">
 				</div>
 				<div class="input-float">
-					<img src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/check.png" class="check" id="pb_backupbuddy_quickstart_password_check" style="margin-top: 26px; margin-left: 0;">
+					<?php $display = pb_backupbuddy::$options['importbuddy_pass_hash'] ? 'display:inline;' : ''; ?>
+					<img src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/check.png" class="check" id="pb_backupbuddy_quickstart_password_check" style="margin-top: 26px; margin-left: 0;<?php echo esc_attr( $display ); ?>">
 					<div id="pb_backupbuddy_quickstart_password_check_fail" style="color: #E38282; display: none;">
 						<img src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/nomatch-x.png" class="check" style="margin-top: 26px; margin-left: 0;">
 						<div style="display: inline-block; margin-left: 35px; margin-top: 32px;">
@@ -252,32 +258,30 @@ pb_backupbuddy::load_style( 'quicksetup.css' );
 							unset( $destinations['s3'] );
 						endif;
 
-						$stash_v2 = '';
-
 						foreach ( $destinations as $destination_slug => $destination ) :
 							if ( 'site' === $destination_slug || 'live' === $destination_slug ) : // Don't show Deployment or Live.
 								continue;
 							endif;
 
-							if ( 'stash2' === $destination_slug ) :
-								$stash_v2             = '2';
+							if ( 'stash3' === $destination_slug ) :
 								$destination['name'] .= ' - ' . esc_html__( 'Recommended', 'it-l10n-backupbuddy' );
-
-								if ( isset( $destinations['live'] ) ) :
-									printf( '<option value="live">%s - %s</option>',
-										esc_html__( 'BackupBuddy Stash Live', 'it-l10n-backupbuddy' ),
-										esc_html__( 'Real-time backups new in v7.0', 'it-l10n-backupbuddy' )
-									);
-								endif;
 							endif;
 
 							if ( ! empty( $destination['name'] ) ) {
 								printf( '<option value="%s" %s>%s</option>',
 									esc_attr( $destination_slug ),
-									selected( 'stash2', $destination_slug, false ),
+									selected( 'stash3', $destination_slug, false ),
 									esc_html( $destination['name'] )
 								) . "\r\n";
 							}
+
+							if ( 'stash3' === $destination_slug && isset( $destinations['live'] ) ) :
+								printf(
+									'<option value="live">%s - %s</option>',
+									esc_html__( 'BackupBuddy Stash Live', 'it-l10n-backupbuddy' ),
+									esc_html__( 'Real-time backups new in v7.0', 'it-l10n-backupbuddy' )
+								);
+							endif;
 						endforeach;
 						unset( $destinations );
 						?>
@@ -287,16 +291,16 @@ pb_backupbuddy::load_style( 'quicksetup.css' );
 
 					<img src="<?php echo esc_url( pb_backupbuddy::plugin_url() ); ?>/images/check.png" class="check" id="pb_backupbuddy_quickstart_destination_check" style="margin-top: 2px;" />
 
-					<div id="dest" class="stash<?php echo esc_attr( $stash_v2 ); ?>-fields">
+					<div id="dest" class="stash-fields">
 						<p style="margin-bottom: 0;">You get <strong>1GB</strong> of free storage on BackupBuddy Stash, our managed backup storage. <a href="https://ithemes.com/backupbuddy-stash/">Learn more about BackupBuddy Stash</a></p>
 						<div class="clearfix"></div>
 						<div class="input-float">
 							<label>iThemes Username</label>
-							<input type="text" name="stash<?php echo esc_attr( $stash_v2 ); ?>_username">
+							<input type="text" name="stash_username">
 						</div>
 						<div>
 							<label>Password</label>
-							<input class="checkfield" type="password" name="stash<?php echo esc_attr( $stash_v2 ); ?>_password">
+							<input class="checkfield" type="password" name="stash_password">
 							<img src="<?php echo esc_url( pb_backupbuddy::plugin_url() ); ?>/images/check.png" class="check" />
 						</div>
 						<div></div><!-- does this do something? -->

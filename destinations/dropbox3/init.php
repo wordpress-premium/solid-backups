@@ -261,30 +261,10 @@ class pb_backupbuddy_destination_dropbox3 {
 			return false;
 		}
 
-		$package = backupbuddy_get_package_license();
-
-		// Create the payload for validation.
-		$key     = $package['key'];
-		$user    = $package['user'];
-		$payload = array(
-			'time'   => current_time( 'timestamp' ),
-			'action' => 'backupbuddy-dropbox-oauth-connect',
-		);
-		$payload = wp_json_encode( $payload );
-
-		// Our OAuth server URL.
-		$redirect = self::get_config( 'DROPBOX_REDIRECT_URI' );
-
-		// Build the value for the "state" parameter passed to the OAuth API.
-		$source = admin_url( 'admin.php?page=pb_backupbuddy_destinations&dropbox-oauth=1' );
-		$source = add_query_arg( 'username', $user, $source );
-		$source = add_query_arg( 'payload', $payload, $source );
-		$source = add_query_arg( 'signature', hash_hmac( 'sha1', $payload, $key ), $source );
-
 		$url = self::$client->getAuthorizationUrl(
 			array(
-				'redirect_uri' => $redirect,
-				'state'        => $source,
+				'redirect_uri' => self::get_config( 'DROPBOX_REDIRECT_URI' ),
+				'state'        => backupbuddy_get_oauth_source_url( 'dropbox' ),
 			)
 		);
 
@@ -452,16 +432,20 @@ class pb_backupbuddy_destination_dropbox3 {
 	/**
 	 * Get the root folder ID.
 	 *
-	 * @param string $return  What to return. Default is folder array.
+	 * @param string $return          What to return. Default is folder array.
+	 * @param bool   $trailing_slash  If trailing slash should be added.
 	 *
 	 * @return string|false  Folder ID, folder name, folder array, or false on error.
 	 */
-	public static function get_root_folder( $return = 'array' ) {
+	public static function get_root_folder( $return = 'array', $trailing_slash = true ) {
 		if ( empty( self::$settings['dropbox_folder_path'] ) ) {
-			return '';
+			return '/';
 		}
 
 		$path = rtrim( self::$settings['dropbox_folder_path'], '/' );
+		if ( $trailing_slash ) {
+			$path .= '/';
+		}
 
 		if ( 'name' === $return ) {
 			return basename( self::$settings['dropbox_folder_name'] );
@@ -492,9 +476,6 @@ class pb_backupbuddy_destination_dropbox3 {
 		if ( ! $parent ) {
 			$parent = self::get_root_folder( 'path' );
 		}
-		if ( ! $parent ) {
-			$parent = '/';
-		}
 
 		$items   = self::get_folder_contents( $parent, 'alpha' );
 		$folders = array();
@@ -524,15 +505,17 @@ class pb_backupbuddy_destination_dropbox3 {
 	 *
 	 * @return array  Array of items.
 	 */
-	public static function get_folder_contents( $folder, $sort = false ) {
+	public static function get_folder_contents( $folder = false, $sort = false ) {
 		if ( ! self::is_ready() ) {
 			return false;
 		}
 
 		if ( ! $folder ) {
-			$folder = '/';
+			$folder = self::get_root_folder( 'path' );
 		}
-		$folder = '/' !== $folder ? rtrim( $folder, '/' ) : $folder;
+		if ( '/' !== $folder ) {
+			$folder = rtrim( $folder, '/' );
+		}
 
 		try {
 			$response = self::$api->getMetadataWithChildren( $folder );
@@ -637,6 +620,25 @@ class pb_backupbuddy_destination_dropbox3 {
 		}
 
 		return $info;
+	}
+
+	/**
+	 * Check if remote file exixts.
+	 *
+	 * @param string $file  Remote path to file.
+	 *
+	 * @return bool  If remote file exists.
+	 */
+	public static function file_exists( $file ) {
+		if ( ! self::is_ready() ) {
+			return false;
+		}
+
+		$info = self::file_info( $file );
+		if ( false === $info ) {
+			return false;
+		}
+		return true;
 	}
 
 	/**
@@ -770,7 +772,6 @@ class pb_backupbuddy_destination_dropbox3 {
 		$backup_type = backupbuddy_core::getBackupTypeFromFile( $file );
 
 		pb_backupbuddy::status( 'details', 'Dropbox (v3) send function started. Remote send id: `' . $send_id . '`.' );
-		$max_chunk_size_bytes = ( self::$settings['max_chunk_size'] * 1024 * 1024 );
 
 		// Continue Multipart Chunked Upload.
 		if ( ! empty( self::$settings['_chunk_upload_id'] ) ) {
@@ -824,7 +825,7 @@ class pb_backupbuddy_destination_dropbox3 {
 				self::$settings['_chunk_next_offset'] = $response;
 				// Try resending with corrected offset.
 				try {
-					$result = self::$api->chunkedUploadContinue( self::$settings['_chunk_upload_id'], self::$settings['_chunk_next_offset'], $data );
+					$response = self::$api->chunkedUploadContinue( self::$settings['_chunk_upload_id'], self::$settings['_chunk_next_offset'], $data );
 				} catch ( \Exception $e ) {
 					self::error( 'Dropbox Error #8263836: ' . $e->getMessage() );
 					return false;
@@ -851,17 +852,17 @@ class pb_backupbuddy_destination_dropbox3 {
 			$session_settings['_chunk_transfer_speeds'][] = $chunk_transfer_speed;
 
 			// Load destination fileoptions.
-			pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+			pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #19...' );
 			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #15.' );
 			$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, false );
 			$result          = $fileoptions_obj->is_ok();
+			$fileoptions     = false;
 			if ( true !== $result ) {
-				self::error( __( 'Fatal Error #9034.84838. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );
-				return false;
+				self::error( __( 'Fatal Error #9034.84838. Unable to access fileoptions data. Error: ', 'it-l10n-backupbuddy' ) . $result );
+			} else {
+				pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
+				$fileoptions = &$fileoptions_obj->options;
 			}
-			pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
-			$fileoptions = &$fileoptions_obj->options;
 
 			// Multipart send completed. Send finished signal to Dropbox to seal the deal.
 			if ( true === feof( $f ) ) {
@@ -869,7 +870,7 @@ class pb_backupbuddy_destination_dropbox3 {
 				pb_backupbuddy::status( 'details', 'At end of file. Finishing transfer and notifying Dropbox of file transfer completion.' );
 
 				$session_settings['_chunk_upload_id'] = ''; // Unset since chunking finished.
-				$destination_path = self::get_root_folder( 'path' ) . '/' . basename( $file );
+				$destination_path = self::get_root_folder( 'path' ) . basename( $file );
 
 				try {
 					$response = self::$api->chunkedUploadFinish( self::$settings['_chunk_upload_id'], $destination_path, dbx\WriteMode::add(), filesize( $file ) );
@@ -883,12 +884,13 @@ class pb_backupbuddy_destination_dropbox3 {
 					self::error( 'Error #8958944. Dropbox reported file size differs from local size. The file upload may have been corrupted. Local size: `' . $local_size . '`. Remote size: `' . $response['size'] . '`.' );
 					return false;
 				}
-
-				$fileoptions['write_speed']       = array_sum( $session_settings['_chunk_transfer_speeds'] ) / $session_settings['_chunk_sent_count'];
-				$fileoptions['_multipart_status'] = 'Sent part ' . $session_settings['_chunk_sent_count'] . ' of ' . $session_settings['_chunk_total_count'] . '.';
-				$fileoptions['finish_time']       = microtime( true );
-				$fileoptions['status']            = 'success';
-				$fileoptions_obj->save();
+				if ( false !== $fileoptions ) {
+					$fileoptions['write_speed']       = array_sum( $session_settings['_chunk_transfer_speeds'] ) / $session_settings['_chunk_sent_count'];
+					$fileoptions['_multipart_status'] = 'Sent part ' . $session_settings['_chunk_sent_count'] . ' of ' . $session_settings['_chunk_total_count'] . '.';
+					$fileoptions['finish_time']       = microtime( true );
+					$fileoptions['status']            = 'success';
+					$fileoptions_obj->save();
+				}
 				unset( $fileoptions_obj );
 			}
 			fclose( $f );
@@ -967,7 +969,8 @@ class pb_backupbuddy_destination_dropbox3 {
 				pb_backupbuddy::status( 'details', 'Dropbox chunk transfer stats - Sent: `' . pb_backupbuddy::$format->file_size( $data_length ) . '`, Transfer duration: `' . $send_time . '`, Speed: `' . pb_backupbuddy::$format->file_size( $chunk_transfer_speed ) . '`.' );
 
 				// Set options for subsequent step chunks.
-				$session_settings = self::$settings;
+				$session_settings     = self::$settings;
+				$max_chunk_size_bytes = self::$settings['max_chunk_size'] * 1024 * 1024;
 
 				$session_settings['_chunk_file']        = $file;
 				$session_settings['_chunk_maxsize']     = $max_chunk_size_bytes;
@@ -1009,7 +1012,7 @@ class pb_backupbuddy_destination_dropbox3 {
 				pb_backupbuddy::status( 'details', 'About to put file `' . basename( $file ) . '` (' . pb_backupbuddy::$format->file_size( $file_size ) . ') to Dropbox (v3).' );
 				pb_backupbuddy::status( 'details', 'Send Directory: ' . self::get_root_folder( 'path' ) );
 
-				$destination_path = self::get_root_folder( 'path' ) . '/' . basename( $file );
+				$destination_path = self::get_root_folder( 'path' ) . basename( $file );
 
 				$send_time = -( microtime( true ) );
 				try {
@@ -1022,9 +1025,8 @@ class pb_backupbuddy_destination_dropbox3 {
 				$send_time += microtime( true );
 				@fclose( $f );
 
-				pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+				pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #18...' );
 				require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-				pb_backupbuddy::status( 'details', 'Fileoptions instance #14.' );
 				$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, true );
 				$result          = $fileoptions_obj->is_ok();
 				if ( true !== $result ) {
@@ -1048,7 +1050,7 @@ class pb_backupbuddy_destination_dropbox3 {
 		pb_backupbuddy::status( 'message', 'Success sending `' . basename( $file ) . '` to Dropbox!' );
 
 		if ( $delete_remote_after ) {
-			self::delete( false, $destination_path );
+			self::delete( false, basename( $destination_path ) );
 		}
 
 		if ( $backup_type ) {
@@ -1101,9 +1103,6 @@ class pb_backupbuddy_destination_dropbox3 {
 		// Get file listing.
 		$search_count = 1;
 		$folder_path  = self::get_root_folder( 'path' );
-		if ( ! $folder_path ) {
-			$folder_path = '/';
-		}
 		$remote_files = self::get_folder_contents( $folder_path, 'date' );
 
 		if ( ! $remote_files ) {
@@ -1150,8 +1149,9 @@ class pb_backupbuddy_destination_dropbox3 {
 		}
 
 		arsort( $backups );
-		$backup_count    = count( $backups );
-		$delete_failures = array();
+		$backup_count        = count( $backups );
+		$delete_failures     = array();
+		$backup_delete_count = 0;
 
 		pb_backupbuddy::status( 'details', 'Dropbox found `' . count( $backups ) . '` backups of this type when checking archive limits.' );
 
@@ -1195,6 +1195,70 @@ class pb_backupbuddy_destination_dropbox3 {
 	}
 
 	/**
+	 * Get a list of dat files not associated with backups.
+	 *
+	 * @param array $settings  Destination Settings array.
+	 *
+	 * @return array  Array of dat files.
+	 */
+	public static function get_dat_orphans( $settings ) {
+		$backups_array = self::listFiles( $settings );
+		if ( ! is_array( $backups_array ) ) {
+			return false;
+		}
+
+		$orphans = array();
+		$backups = array();
+		$files   = self::get_folder_contents();
+
+		if ( ! is_array( $files ) ) {
+			return false;
+		}
+
+		// Create an array of backup filenames.
+		foreach ( $backups_array as $backup_array ) {
+			$backups[] = $backup_array[0][0];
+		}
+
+		$prefix = backupbuddy_core::backup_prefix();
+
+		if ( $prefix ) {
+			$prefix .= '-';
+		} else {
+			$prefix = '';
+		}
+
+		// Loop through all files looking for dat orphans.
+		foreach ( $files as $index => $file ) {
+			if ( 'file' !== $file['.tag'] ) {
+				continue;
+			}
+
+			$filename = $file['name'];
+
+			// Skip if not a .dat file.
+			if ( '.dat' !== substr( $filename, -4 ) ) {
+				continue;
+			}
+
+			// Appears to not be a dat file for this site.
+			if ( strpos( $filename, 'backup-' . $prefix ) === false ) {
+				continue;
+			}
+
+			// Skip dat files with backup files.
+			$backup_name = str_replace( '.dat', '.zip', $filename ); // TODO: Move to backupbuddy_data_file() method.
+			if ( in_array( $backup_name, $backups, true ) ) {
+				continue;
+			}
+
+			$orphans[] = $filename;
+		}
+
+		return $orphans;
+	}
+
+	/**
 	 * Download all backup dat files.
 	 *
 	 * @param array $settings  Destination Settings array.
@@ -1203,12 +1267,12 @@ class pb_backupbuddy_destination_dropbox3 {
 	 */
 	public static function download_dat_files( $settings ) {
 		$backups = self::listFiles( $settings );
-		if ( ! count( $backups ) ) {
+		if ( ! is_array( $backups ) || ! count( $backups ) ) {
 			return false;
 		}
 		$success = true;
 		foreach ( $backups as $backup ) {
-			$dat_file = str_replace( '.zip', '.dat', $backup[0][0] );
+			$dat_file = str_replace( '.zip', '.dat', $backup[0][0] ); // TODO: Move to backupbuddy_data_file() method.
 
 			if ( ! self::getFile( $settings, basename( $dat_file ) ) ) {
 				$success = false;
@@ -1243,16 +1307,21 @@ class pb_backupbuddy_destination_dropbox3 {
 
 		$f = @fopen( $local_file, 'w+' );
 		if ( false === $f ) {
-			self::error( 'Error #54894985. Unable to open local file for writing `' . $local_file . '`.' );
+			self::error( 'Error #54894985: Unable to open local file for writing `' . $local_file . '`.' );
+			return false;
+		}
+
+		if ( ! self::file_exists( self::get_root_folder( 'path' ) . $remote_file ) ) {
+			self::error( 'Error #202007131155: Requested remote Dropbox file not found `' . self::get_root_folder( 'path' ) . $remote_file . '`.' );
 			return false;
 		}
 
 		try {
-			$file_meta = self::$api->getFile( self::get_root_folder( 'path' ) . '/' . $remote_file, $f );
+			$file_meta = self::$api->getFile( self::get_root_folder( 'path' ) . $remote_file, $f );
 		} catch ( \Exception $e ) {
 			fclose( $f );
 			@unlink( $local_file );
-			self::error( sprintf( __( 'There was an error downloading Dropbox file `%s`: ', 'it-l10n-backupbuddy' ), $file_id ) . $e->getMessage() );
+			self::error( sprintf( __( 'There was an error downloading Dropbox file `%s`: ', 'it-l10n-backupbuddy' ), $remote_file ) . $e->getMessage() );
 			return false;
 		}
 
@@ -1295,10 +1364,15 @@ class pb_backupbuddy_destination_dropbox3 {
 		}
 
 		foreach ( $files as $filename ) {
+			if ( ! self::file_exists( self::get_root_folder( 'path' ) . basename( $filename ) ) ) {
+				pb_backupbuddy::status( 'details', 'Tried to delete Dropbox file that does not exist: ' . self::get_root_folder( 'path' ) . basename( $filename ) );
+				continue;
+			}
+
 			pb_backupbuddy::status( 'details', 'Deleting Dropbox file `' . basename( $filename ) . '`.' );
 
 			try {
-				$result = self::$api->delete( self::get_root_folder( 'path' ) . '/' . basename( $filename ) );
+				$result = self::$api->delete( self::get_root_folder( 'path' ) . basename( $filename ) );
 			} catch ( \Exception $e ) {
 				self::error( $e->getMessage(), 'echo' );
 				return false;
@@ -1366,7 +1440,7 @@ class pb_backupbuddy_destination_dropbox3 {
 		}
 
 		try {
-			$download = self::$api->createTemporaryDirectLink( self::get_root_folder( 'path' ) . '/' . $file );
+			$download = self::$api->createTemporaryDirectLink( self::get_root_folder( 'path' ) . $file );
 		} catch ( \Exception $e ) {
 			self::error( __( 'There was an error getting Dropbox file URL for download: ', 'it-l10n-backupbuddy' ) . $e->getMessage(), 'echo' );
 			return false;

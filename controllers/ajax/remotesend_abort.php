@@ -10,9 +10,8 @@ backupbuddy_core::verifyAjaxAccess();
 $send_id = pb_backupbuddy::_GET( 'send_id' );
 $send_id = str_replace( '/\\', '', $send_id );
 
-pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #25...' );
 require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-pb_backupbuddy::status( 'details', 'Fileoptions instance #25.' );
 $fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, true, false );
 $result          = $fileoptions_obj->is_ok();
 if ( true !== $result ) {

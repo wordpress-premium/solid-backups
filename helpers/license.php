@@ -31,3 +31,32 @@ function backupbuddy_get_package_license() {
 
 	return $packages[ $plugin_file ];
 }
+
+/**
+ * Create Source (state) URL for OAuth requests.
+ *
+ * @param string $destination  Destination slug, used to identify which auth.
+ *
+ * @return string  URL with Payload, Signature and Site URL.
+ */
+function backupbuddy_get_oauth_source_url( $destination ) {
+	$package = backupbuddy_get_package_license();
+
+	// Create the payload for validation.
+	$key     = $package['key'];
+	$user    = $package['user'];
+	$payload = array(
+		'time'   => current_time( 'timestamp' ),
+		'action' => 'backupbuddy-' . $destination . '-oauth-connect',
+	);
+	$payload = wp_json_encode( $payload );
+
+	// Build the value for the "state" parameter passed to the OAuth API.
+	$source = admin_url( 'admin.php?page=pb_backupbuddy_destinations&' . $destination . '-oauth=1' );
+	$source = add_query_arg( 'username', $user, $source );
+	$source = add_query_arg( 'site', network_home_url(), $source );
+	$source = add_query_arg( 'payload', $payload, $source );
+	$source = add_query_arg( 'signature', hash_hmac( 'sha1', $payload, $key ), $source );
+
+	return $source;
+}

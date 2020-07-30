@@ -1,3 +1,5 @@
+var backupbuddy_destinations_advanced_toggle;
+
 jQuery(function( $ ) {
 	$( '.backupbuddy-do_bulk_action' ).on( 'click', function() {
 		var items = $( 'input[type="checkbox"][name^="items["]' ).length;
@@ -33,19 +35,25 @@ jQuery(function( $ ) {
 		$parent.children( 'div' ).hide();
 	});
 
-	$( '.advanced-toggle-title' ).on( 'click', function( e ) {
-		var $containerWrap = $( this ).closest( 'form' ),
-			$titleToggle = $containerWrap.find( '.advanced-toggle-title' ),
-			$rightArrow = $titleToggle.find( '.dashicons-arrow-right' );
+	backupbuddy_destinations_advanced_toggle = function() {
+		$( '.advanced-toggle-title' ).on( 'click', function( e ) {
+			e.preventDefault();
 
-		if ( $rightArrow.length > 0 ) {
-			$rightArrow.removeClass( 'dashicons-arrow-right' ).addClass( 'dashicons-arrow-down' );
-		} else {
-			$titleToggle.find( '.dashicons-arrow-down' ).removeClass( 'dashicons-arrow-down' ).addClass( 'dashicons-arrow-right' );
-		}
+			var $containerWrap = $( this ).closest( 'form' ),
+				$titleToggle = $containerWrap.find( '.advanced-toggle-title' ),
+				$rightArrow = $titleToggle.find( '.dashicons-arrow-right' );
 
-		$containerWrap.find( '.advanced-toggle' ).toggle();
-	});
+			if ( $rightArrow.length > 0 ) {
+				$rightArrow.removeClass( 'dashicons-arrow-right' ).addClass( 'dashicons-arrow-down' );
+			} else {
+				$titleToggle.find( '.dashicons-arrow-down' ).removeClass( 'dashicons-arrow-down' ).addClass( 'dashicons-arrow-right' );
+			}
+
+			$containerWrap.find( '.advanced-toggle' ).toggle();
+		});
+	};
+
+	backupbuddy_destinations_advanced_toggle();
 
 	$( '.pluginbuddy_tip' ).tooltip(); // Now using jQuery UI tooltip.
 

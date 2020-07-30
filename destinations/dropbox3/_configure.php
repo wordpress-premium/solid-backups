@@ -68,7 +68,7 @@ if ( 'add' === $mode && ! $code ) {
 				$( '.dropbox-authorize' ).on( 'click', function( e ) {
 					e.preventDefault();
 					var win = backupbuddy_oauth_window( $( this ).attr( 'href' ), 'Dropbox Authorization', 400, 500 ),
-						$btn = $( this ),
+						$parent = $( '.dropbox-authorize-btn' ),
 						$input = $( '.dropbox-oauth-code' ),
 						$footer = $( '.form-footer' );
 
@@ -76,7 +76,7 @@ if ( 'add' === $mode && ! $code ) {
 						return;
 					}
 
-					$btn.addClass( 'hidden' );
+					$parent.addClass( 'hidden' );
 					$input.removeClass( 'hidden' );
 					$footer.removeClass( 'hidden' );
 				});
@@ -102,12 +102,35 @@ if ( 'add' === $mode && ! $code ) {
 		.dropbox-auth .form-footer {
 			padding: 15px 0;
 		}
+		.dropbox-authorize {
+			display: inline-block;
+			color: #0261FF;
+			border: 1px solid #0261FF;
+			text-decoration: none;
+			line-height: 32px;
+			border-radius: 3px;
+			background-color: #fff;
+			padding: 4px 10px;
+			transition: background-color 200ms ease-in-out;
+		}
+		.dropbox-authorize:hover {
+			color: #0261FF;
+			background-color: #eaf1fb;
+		}
+		.dropbox-authorize .icon {
+			display: inline-block;
+			background-image: url( '<?php echo esc_attr( pb_backupbuddy::plugin_url() ); ?>/destinations/dropbox3/assets/Dropbox.svg' );
+			background-repeat: no-repeat;
+			background-position: 0 50%;
+			background-size: 140px;
+			margin-right: 7px;
+		}
 	</style>
 	<form method="post" action="<?php echo esc_attr( $dropbox_action ); ?>" class="dropbox-auth">
 		<input type="hidden" name="dropbox_action" value="auth_dropbox">
 		<input type="hidden" name="oauth_state" value="<?php echo esc_attr( $state ); ?>" />
-		<p>
-			<?php printf( '<a href="%s" target="_blank" class="button dropbox-authorize">%s</a>', esc_attr( $redirect_url ), esc_html__( 'Click here to log into Dropbox', 'it-l10n-backupbuddy' ) ); ?>
+		<p class="dropbox-authorize-btn">
+			<?php printf( '<a href="%s" target="_blank" class="dropbox-authorize"><span class="icon"></span>%s</a>', esc_attr( $redirect_url ), esc_html__( 'Click here to log into Dropbox', 'it-l10n-backupbuddy' ) ); ?>
 		</p>
 		<p class="dropbox-oauth-code hidden">
 			<label>
@@ -131,6 +154,12 @@ if ( 'edit' === $mode && false === pb_backupbuddy_destination_dropbox3::connect(
 	return;
 }
 
+$default = '';
+
+if ( 'add' === $mode ) {
+	$default = __( 'My Dropbox (v3)', 'it-l10n-backupbuddy' );
+}
+
 $settings_form->add_setting(
 	array(
 		'type'    => 'text',
@@ -138,7 +167,7 @@ $settings_form->add_setting(
 		'title'   => __( 'Destination name', 'it-l10n-backupbuddy' ),
 		'tip'     => __( 'Name of the new destination to create. This is for your convenience only.', 'it-l10n-backupbuddy' ),
 		'rules'   => 'required|string[1-45]',
-		'default' => __( 'My Dropbox (v3)', 'it-l10n-backupbuddy' ),
+		'default' => $default,
 	)
 );
 
@@ -298,9 +327,9 @@ $settings_form->add_setting(
 		'name'      => 'max_chunk_size',
 		'title'     => __( 'Max chunk size', 'it-l10n-backupbuddy' ),
 		'tip'       => __( '[Example: 5] - Enter 0 for no chunking; minimum of 5 if enabling. This is the maximum file size to send in one whole piece. Files larger than this will be transferred in pieces up to this file size one part at a time. This allows to transfer of larger files than you server may allow by breaking up the send process. Chunked files may be delayed if there is little site traffic to trigger them. Default is 80 and maximum is 150.', 'it-l10n-backupbuddy' ),
-		'rules'     => 'required|int[5-150]',
+		'rules'     => 'required|int[0-150]',
 		'css'       => 'width: 50px;',
-		'after'     => ' MB (recommended; leave at 80MB if unsure)',
+		'after'     => ' MB (Recommended; Use 80MB if unsure)',
 		'row_class' => 'advanced-toggle',
 	)
 );

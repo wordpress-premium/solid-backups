@@ -44,6 +44,13 @@ class pb_backupbuddy_destination_ftp {
 	);
 
 	/**
+	 * FTP connection instance.
+	 *
+	 * @var stream
+	 */
+	public static $conn_id = false;
+
+	/**
 	 * Connect to FTP and return FTP connection.
 	 *
 	 * @param array $settings  Destination settings array.
@@ -56,6 +63,10 @@ class pb_backupbuddy_destination_ftp {
 		if ( '1' == $settings['disabled'] ) {
 			$pb_backupbuddy_destination_errors[] = __( 'Error #48933: This destination is currently disabled. Enable it under this destination\'s Advanced Settings.', 'it-l10n-backupbuddy' );
 			return false;
+		}
+
+		if ( false !== self::$conn_id ) {
+			return self::$conn_id;
 		}
 
 		if ( ! $settings['address'] || ! $settings['username'] || ! $settings['password'] ) {
@@ -127,33 +138,35 @@ class pb_backupbuddy_destination_ftp {
 			pb_backupbuddy::status( 'details', 'Active FTP mode based on settings.' );
 		}
 
-		if ( $chdir && $path && ! self::chdir( $conn_id, $path ) ) {
+		self::$conn_id = $conn_id;
+
+		if ( $chdir && $path && ! self::chdir( $path ) ) {
 			pb_backupbuddy::status( 'error', __( 'Could not change FTP directory.', 'it-l10n-backupbuddy' ) );
 			return false;
 		}
 
-		return $conn_id;
+		return self::$conn_id;
 	}
 
 	/**
 	 * Change directory for FTP connection.
 	 *
-	 * @param stream $conn_id  FTP Stream.
 	 * @param string $path  Path to change to.
 	 *
 	 * @return bool  If directory changed.
 	 */
-	public static function chdir( $conn_id, $path ) {
-		if ( ! $conn_id || ! $path ) {
+	public static function chdir( $path ) {
+		if ( ! self::$conn_id || ! $path ) {
 			return false;
 		}
+
 		// Create directory if it does not exist.
 		pb_backupbuddy::status( 'details', 'Creating FTP directory `' . $path . '` if not exists.' );
-		@ftp_mkdir( $conn_id, $path );
+		@ftp_mkdir( self::$conn_id, $path );
 
 		// Change to directory.
 		pb_backupbuddy::status( 'details', 'Attempting to change into directory...' );
-		if ( true === ftp_chdir( $conn_id, $path ) ) {
+		if ( true === ftp_chdir( self::$conn_id, $path ) ) {
 			pb_backupbuddy::status( 'details', 'Changed into directory.' );
 			return true;
 		}
@@ -166,22 +179,24 @@ class pb_backupbuddy_destination_ftp {
 	 *
 	 * @param array  $settings  Destination Settings array.
 	 * @param string $file      Filename.
-	 * @param stream $conn_id   FTP connection stream.
 	 *
 	 * @return bool|int  Size of file.
 	 */
-	public static function get_size( $settings, $file, $conn_id = false ) {
-		if ( false === $conn_id ) {
-			$conn_id = self::connect( $settings );
+	public static function get_size( $settings, $file ) {
+		if ( false === self::$conn_id ) {
+			self::connect( $settings );
 		}
-		if ( ! $conn_id ) {
+
+		if ( ! self::$conn_id ) {
 			return false;
 		}
 
-		$size = @ftp_size( $conn_id, $file );
+		$size = ftp_size( self::$conn_id, $file );
+
 		if ( -1 === $size ) {
 			return false;
 		}
+
 		return $size;
 	}
 
@@ -190,12 +205,11 @@ class pb_backupbuddy_destination_ftp {
 	 *
 	 * @param array  $settings  Destination Settings array.
 	 * @param string $file      Filename.
-	 * @param stream $conn_id   FTP connection stream.
 	 *
 	 * @return bool  Check if remote file exists.
 	 */
-	public static function remote_file_exists( $settings, $file, $conn_id = false ) {
-		return ( false !== self::get_size( $settings, $file, $conn_id ) );
+	public static function remote_file_exists( $settings, $file ) {
+		return ( false !== self::get_size( $settings, $file ) );
 	}
 
 	/**
@@ -208,13 +222,17 @@ class pb_backupbuddy_destination_ftp {
 	 * @return bool  If successful or not.
 	 */
 	public static function getFile( $settings, $remote_file, $destination_file = false ) {
-		$conn_id = self::connect( $settings );
+		if ( false === self::$conn_id ) {
+			self::connect( $settings );
+		}
 
-		if ( ! $conn_id ) {
+		if ( ! self::$conn_id ) {
+			pb_backupbuddy::status( 'error', __( 'Could not connect to FTP server to getFile.', 'it-l10n-backupbuddy' ) );
 			return false;
 		}
 
-		if ( ! self::remote_file_exists( $settings, $remote_file, $conn_id ) ) {
+		if ( ! self::remote_file_exists( $settings, $remote_file ) ) {
+			pb_backupbuddy::status( 'error', __( 'FTP Remote file does not exist: ', 'it-l10n-backupbuddy' ) . $remote_file . '.' );
 			return false;
 		}
 
@@ -222,9 +240,9 @@ class pb_backupbuddy_destination_ftp {
 			$destination_file = backupbuddy_core::getBackupDirectory() . basename( $remote_file );
 		}
 
-		if ( ! ftp_get( $conn_id, $destination_file, $remote_file, FTP_BINARY ) ) {
+		if ( ! ftp_get( self::$conn_id, $destination_file, $remote_file, FTP_BINARY ) ) {
 			pb_backupbuddy::status( 'error', __( 'Unable to get FTP file.', 'it-l10n-backupbuddy' ) );
-			ftp_close( $conn_id );
+			self::close();
 			return false;
 		}
 
@@ -232,18 +250,27 @@ class pb_backupbuddy_destination_ftp {
 
 		// Grab dat file too.
 		if ( '.zip' === substr( $remote_file, -4 ) ) {
-			$dat = str_replace( '.zip', '.dat', $remote_file );
-			if ( self::remote_file_exists( $settings, $dat, $conn_id ) ) {
+			$dat = str_replace( '.zip', '.dat', $remote_file ); // TODO: Move to backupbuddy_data_file() method.
+			if ( self::remote_file_exists( $settings, $dat ) ) {
 				$local_dat = backupbuddy_core::getBackupDirectory() . $dat;
 				if ( ! file_exists( $local_dat ) ) {
-					ftp_get( $conn_id, $dat, $local_dat, FTP_BINARY );
+					ftp_get( self::$conn_id, $dat, $local_dat, FTP_BINARY );
 				}
 			}
 		}
 
-		ftp_close( $conn_id );
+		pb_backupbuddy::status( 'details', 'FTP getFile: Closing FTP connection.' );
+		self::close();
 
 		return true;
+	}
+
+	/**
+	 * Close the FTP connection.
+	 */
+	public static function close() {
+		ftp_close( self::$conn_id );
+		self::$conn_id = false;
 	}
 
 	/**
@@ -260,7 +287,7 @@ class pb_backupbuddy_destination_ftp {
 		}
 		$success = true;
 		foreach ( $backups as $backup ) {
-			$dat_file = str_replace( '.zip', '.dat', $backup[0][0] );
+			$dat_file = str_replace( '.zip', '.dat', $backup[0][0] ); // TODO: Move to backupbuddy_data_file() method.
 
 			if ( ! self::getFile( $settings, basename( $dat_file ) ) ) {
 				$success = false;
@@ -271,25 +298,82 @@ class pb_backupbuddy_destination_ftp {
 	}
 
 	/**
+	 * Get a list of dat files not associated with backups.
+	 *
+	 * @param array $settings  Destination Settings array.
+	 *
+	 * @return array  Array of dat files.
+	 */
+	public static function get_dat_orphans( $settings ) {
+		$backups_array = self::listFiles( $settings );
+		if ( ! is_array( $backups_array ) ) {
+			return false;
+		}
+
+		if ( false === self::$conn_id ) {
+			self::connect( $settings );
+		}
+
+		if ( ! self::$conn_id ) {
+			return false;
+		}
+
+		$orphans = array();
+		$backups = array();
+		$files   = self::get_folder_contents();
+
+		// Create an array of backup filenames.
+		foreach ( $backups_array as $backup_array ) {
+			$backups[] = $backup_array[0][0];
+		}
+
+		// Loop through all files again, this time looking for dat orphans.
+		foreach ( $files as $file ) {
+			if ( in_array( $file, array( '.', '..' ), true ) ) {
+				continue;
+			}
+
+			// Skip if not a .dat file.
+			if ( '.dat' !== substr( $file, -4 ) ) {
+				continue;
+			}
+
+			// Skip dat files with backup files.
+			$backup_name = str_replace( '.dat', '.zip', $file );
+			if ( in_array( $backup_name, $backups, true ) ) {
+				continue;
+			}
+
+			$orphans[] = $file;
+		}
+
+		return $orphans;
+	}
+
+	/**
 	 * Download file from FTP.
 	 *
 	 * @param array  $settings  Destination settings array.
 	 * @param string $file      File to download.
 	 */
 	public static function stream_download( $settings, $file ) {
-		$conn_id = self::connect( $settings );
+		if ( false === self::$conn_id ) {
+			self::connect( $settings );
+		}
 
-		if ( ! $conn_id ) {
+		if ( ! self::$conn_id ) {
 			return false;
 		}
 
-		if ( ! self::remote_file_exists( $settings, $file, $conn_id ) ) {
+		if ( ! self::remote_file_exists( $settings, $file ) ) {
 			return false;
 		}
 
 		$handle = fopen( 'php://temp', 'r+' );
-		ftp_fget( $conn_id, $handle, $file, FTP_BINARY );
-		ftp_close( $conn_id );
+		ftp_fget( self::$conn_id, $handle, $file, FTP_BINARY );
+
+		pb_backupbuddy::status( 'details', 'FTP download: Closing FTP connection.' );
+		self::close();
 
 		rewind( $handle );
 		$fstats = fstat( $handle );
@@ -313,6 +397,21 @@ class pb_backupbuddy_destination_ftp {
 	}
 
 	/**
+	 * Get contents of a folder.
+	 *
+	 * @param string $folder  Folder path.
+	 *
+	 * @return array  Array of files.
+	 */
+	public static function get_folder_contents( $folder = '' ) {
+		if ( ! self::$conn_id ) {
+			pb_backupbuddy::status( 'error', __( 'FTP get_folder_contents was called before successful FTP connection was made.', 'it-l10n-backupbuddy' ) );
+			return false;
+		}
+		return ftp_nlist( self::$conn_id, $folder );
+	}
+
+	/**
 	 * List Backup Files array.
 	 *
 	 * @param array  $settings  Destination settings array.
@@ -327,30 +426,35 @@ class pb_backupbuddy_destination_ftp {
 			return false;
 		}
 
-		$conn_id = self::connect( $settings );
-		if ( ! $conn_id ) {
-			pb_backupbuddy::status( 'error', __( 'Unable to list sFTP files. sFTP connection failed.', 'it-l10n-backupbuddy' ) );
+		if ( false === self::$conn_id ) {
+			self::connect( $settings );
+		}
+
+		if ( ! self::$conn_id ) {
+			pb_backupbuddy::status( 'error', __( 'Unable to list FTP files. FTP connection failed.', 'it-l10n-backupbuddy' ) );
 			return false;
 		}
 
-		$backups = ftp_nlist( $conn_id, '' );
+		$files = self::get_folder_contents();
 
 		$backup_list       = array();
 		$backup_sort_dates = array();
 
-		foreach ( $backups as $backup ) {
-			if ( false === stristr( $backup, 'backup-' ) ) { // only show backup files.
+		foreach ( $files as $file ) {
+			if ( false === stristr( $file, 'backup-' ) ) { // only show backup files.
 				continue;
 			}
 
-			$backup_type = backupbuddy_core::getBackupTypeFromFile( basename( $backup ) );
+			// This checks to make sure it's a zip.
+			$backup_type = backupbuddy_core::getBackupTypeFromFile( basename( $file ) );
 
 			if ( ! $backup_type ) {
 				continue;
 			}
 
+			$backup        = $file;
 			$backup_date   = backupbuddy_core::parse_file( $backup, 'datetime' );
-			$backup_size   = self::get_size( $settings, $backup, $conn_id );
+			$backup_size   = self::get_size( $settings, $backup );
 			$download_link = admin_url() . sprintf( '?ftp-destination-id=%s&ftp-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
 
 			$backup_array = array(
@@ -379,7 +483,8 @@ class pb_backupbuddy_destination_ftp {
 			$backup_sort_dates[ basename( $backup ) ] = $backup_date;
 		}
 
-		ftp_close( $conn_id );
+		pb_backupbuddy::status( 'details', 'FTP listFiles: Closing FTP connection.' );
+		self::close();
 
 		$backup_list = backupbuddy_backups()->sort_backups( $backup_list, $backup_sort_dates );
 
@@ -389,18 +494,22 @@ class pb_backupbuddy_destination_ftp {
 	/**
 	 * Send one or more files via FTP
 	 *
-	 * @param array  $settings  Destination settings array.
-	 * @param array  $files     Array of one or more files to send.
-	 * @param string $send_id   Send ID.
+	 * @param array  $settings             Destination settings array.
+	 * @param array  $files                Array of one or more files to send.
+	 * @param string $send_id              Send ID.
+	 * @param bool   $delete_after         Delete file after.
+	 * @param bool   $delete_remote_after  Delete remote file after (for tests).
 	 *
 	 * @return bool  If sent successfully.
 	 */
-	public static function send( $settings = array(), $files = array(), $send_id = '' ) {
+	public static function send( $settings = array(), $files = array(), $send_id = '', $delete_after = false, $delete_remote_after = false ) {
 		pb_backupbuddy::status( 'details', 'FTP class send() function started.' );
 
-		$conn_id = self::connect( $settings );
+		if ( false === self::$conn_id ) {
+			self::connect( $settings );
+		}
 
-		if ( ! $conn_id ) {
+		if ( ! self::$conn_id ) {
 			return false;
 		}
 
@@ -415,6 +524,8 @@ class pb_backupbuddy_destination_ftp {
 		// Upload files.
 		$total_transfer_size = 0;
 		$total_transfer_time = 0;
+		$start_time          = time();
+
 		foreach ( $files as $file ) {
 			if ( ! file_exists( $file ) ) {
 				pb_backupbuddy::status( 'error', 'Error #859485495. Could not upload local file `' . $file . '` to send to FTP as it does not exist. Verify the file exists, permissions of file, parent directory, and that ownership is correct. You may need suphp installed on the server.' );
@@ -429,7 +540,7 @@ class pb_backupbuddy_destination_ftp {
 			$destination_file = basename( $file ); // Using chdir() so path not needed. $path . '/' . basename( $file );
 			pb_backupbuddy::status( 'details', 'About to put to FTP local file `' . $file . '` of size `' . pb_backupbuddy::$format->file_size( $filesize ) . '` to remote file `' . $destination_file . '`.' );
 			$send_time            = -microtime( true );
-			$upload               = ftp_put( $conn_id, $destination_file, $file, FTP_BINARY );
+			$upload               = ftp_put( self::$conn_id, $destination_file, $file, FTP_BINARY );
 			$send_time           += microtime( true );
 			$total_transfer_time += $send_time;
 			if ( false === $upload ) {
@@ -439,32 +550,39 @@ class pb_backupbuddy_destination_ftp {
 
 				return false;
 			} else {
-				pb_backupbuddy::status( 'details', 'Success completely sending `' . basename( $file ) . '` to destination.' );
-				self::prune( $settings, $conn_id );
+				pb_backupbuddy::status( 'details', 'Success completely sending `' . $destination_file . '` to destination.' );
 			}
+
+			if ( $delete_remote_after ) {
+				pb_backupbuddy::status( 'details', 'Deleting `' . $destination_file . '` per `delete_remote_after` parameter.' );
+				self::delete( $settings, $destination_file );
+			}
+
+			self::prune( $settings );
 		} // end $files loop.
 
 		// Load destination fileoptions.
-		pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #13...' );
 		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-		pb_backupbuddy::status( 'details', 'Fileoptions instance #13.' );
-		$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, false );
+		$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, true );
 		$result          = $fileoptions_obj->is_ok();
 		if ( true !== $result ) {
 			pb_backupbuddy::status( 'error', __( 'Fatal Error #9034.84838. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );
-			return false;
-		}
-		pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
-		$fileoptions = &$fileoptions_obj->options;
+		} else {
+			pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
+			$fileoptions = &$fileoptions_obj->options;
 
-		// Save stats.
-		$fileoptions['write_speed'] = $total_transfer_size / $total_transfer_time;
-		// $fileoptions['finish_time'] = time();
-		// $fileoptions['status'] = 'success';
-		$fileoptions_obj->save();
+			// Save stats.
+			$fileoptions['write_speed'] = $total_transfer_size / $total_transfer_time;
+			$fileoptions['start_time']  = $start_time;
+			$fileoptions['finish_time'] = time();
+			$fileoptions['status']      = 'success';
+			$fileoptions_obj->save();
+		}
 		unset( $fileoptions_obj );
 
-		ftp_close( $conn_id );
+		pb_backupbuddy::status( 'details', 'FTP send: Closing FTP connection.' );
+		self::close();
 
 		return true;
 
@@ -473,16 +591,15 @@ class pb_backupbuddy_destination_ftp {
 	/**
 	 * Prune backups when limit is reached.
 	 *
-	 * @param array  $settings  Destination Settings array.
-	 * @param stream $conn_id   FTP Connection ID resource.
+	 * @param array $settings  Destination Settings array.
 	 *
 	 * @return bool  If prune successful.
 	 */
-	public static function prune( $settings, $conn_id = false ) {
-		if ( false === $conn_id ) {
-			$conn_id = self::connect( $settings );
+	public static function prune( $settings ) {
+		if ( false === self::$conn_id ) {
+			self::connect( $settings );
 		}
-		if ( ! $conn_id ) {
+		if ( ! self::$conn_id ) {
 			return false;
 		}
 
@@ -495,7 +612,7 @@ class pb_backupbuddy_destination_ftp {
 
 		// Start remote backup limit.
 		pb_backupbuddy::status( 'details', 'Getting contents of backup directory.' );
-		$contents = ftp_nlist( $conn_id, '' );
+		$contents = ftp_nlist( self::$conn_id, '' );
 
 		// Create array of backups.
 		$bkupprefix = backupbuddy_core::backup_prefix();
@@ -512,10 +629,15 @@ class pb_backupbuddy_destination_ftp {
 		if ( count( $backups ) > $limit ) {
 			$delete_fail_count = 0;
 			$i                 = 0;
+
+			if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+				require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+			}
+
 			foreach ( $backups as $backup ) {
 				$i++;
 				if ( $i > $limit ) {
-					if ( ! ftp_delete( $conn_id, $backup ) ) {
+					if ( ! pb_backupbuddy_destinations::delete( $settings, $backup ) ) {
 						pb_backupbuddy::status( 'details', 'Unable to delete excess FTP file `' . $backup . '` in path `' . $path . '`.' );
 						$delete_fail_count++;
 					}
@@ -539,54 +661,13 @@ class pb_backupbuddy_destination_ftp {
 	 */
 	public static function test( $settings ) {
 		// Try sending a file.
-		$send_id       = 'TEST-' . pb_backupbuddy::random_string( 12 );
-		$send_response = pb_backupbuddy_destinations::send( $settings, pb_backupbuddy::plugin_path() . '/destinations/remote-send-test.php', $send_id ); // 3rd param true forces clearing of any current uploads.
-		if ( false === $send_response ) {
-			$send_response = 'Error sending test file to FTP.';
-		} else {
-			$send_response = 'Success.';
-		}
+		$send_id   = 'TEST-' . pb_backupbuddy::random_string( 12 );
+		$test_file = pb_backupbuddy::plugin_path() . '/destinations/remote-send-test.php';
 
-		// Now we will need to go and cleanup this potentially uploaded file.
-		$delete_response = 'Error deleting test file from FTP.'; // Default.
-
-		// Delete test file.
-		pb_backupbuddy::status( 'details', 'FTP test: Deleting temp test file.' );
-		if ( true === self::delete( $settings, $path . '/remote-send-test.php', $conn_id ) ) {
-			$delete_response = 'Success.';
-		}
-
-		// Close FTP connection.
-		pb_backupbuddy::status( 'details', 'FTP test: Closing FTP connection.' );
-		@ftp_close( $conn_id );
-
-		// Load destination fileoptions.
-		pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
-		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-		pb_backupbuddy::status( 'details', 'Fileoptions instance #12.' );
-		$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, false );
-		$result          = $fileoptions_obj->is_ok();
-		if ( true !== $result ) {
-			pb_backupbuddy::status( 'error', __( 'Fatal Error #9034.72373. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );
+		if ( true !== self::send( $settings, $test_file, $send_id, false, true ) ) { // 3rd param true forces clearing of any current uploads.
+			self::delete( $settings, basename( $test_file ) ); // In case partial file upload occurred.
 			return false;
 		}
-		pb_backupbuddy::status( 'details', 'Fileoptions data loaded.' );
-		$fileoptions = &$fileoptions_obj->options;
-
-		if ( 'Success.' != $send_response || 'Success.' != $delete_response ) {
-			$fileoptions['status'] = 'failure';
-
-			$fileoptions_obj->save();
-			unset( $fileoptions_obj );
-
-			return 'Send details: `' . $send_response . '`. Delete details: `' . $delete_response . '`.';
-		} else {
-			$fileoptions['status']      = 'success';
-			$fileoptions['finish_time'] = microtime( true );
-		}
-
-		$fileoptions_obj->save();
-		unset( $fileoptions_obj );
 
 		return true;
 
@@ -595,21 +676,34 @@ class pb_backupbuddy_destination_ftp {
 	/**
 	 * Delete a remote file.
 	 *
-	 * @param array  $settings  Destination Settings array.
-	 * @param string $file      File to delete.
-	 * @param stream $conn_id   FTP connection resource.
+	 * @param array $settings  Destination Settings array.
+	 * @param array $files     Files to delete.
 	 *
 	 * @return bool  If delete successful.
 	 */
-	public static function delete( $settings, $file, $conn_id = false ) {
-		if ( false === $conn_id ) {
-			$conn_id = self::connect( $settings );
+	public static function delete( $settings, $files = array() ) {
+		if ( false === self::$conn_id ) {
+			self::connect( $settings );
 		}
-		if ( ! $conn_id ) {
+
+		if ( ! self::$conn_id ) {
 			return false;
 		}
 
-		return ftp_delete( $conn_id, $file );
+		if ( ! is_array( $files ) ) {
+			$files = array( $files );
+		}
+
+		foreach ( $files as $file ) {
+			if ( ! self::remote_file_exists( $settings, $file ) ) {
+				continue;
+			}
+			if ( ! ftp_delete( self::$conn_id, $file ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 } // End class.

@@ -109,7 +109,7 @@ pb_backupbuddy::load_style( 'filetree.css' );
 		jQuery( '.bb_destinations-existing .bb_destination-item a' ).on( 'click', function(e) {
 			e.preventDefault();
 			if ( jQuery( this ).parent().hasClass( 'bb_destination-item-disabled' ) ) {
-				alert( 'This remote destination is unavailable.  It is either disabled in its Advanced Settings or not compatible with this server.' );
+				alert( 'This remote destination is unavailable. It is either disabled in its Advanced Settings or not compatible with this server.' );
 				return false;
 			}
 

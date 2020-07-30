@@ -32,7 +32,7 @@ if ( false !== stristr( pb_backupbuddy::_GET( 'page' ), 'backupbuddy' ) ) {
  */
 function bb_admin_head() {
 	printf(
-		'<div class="bb-topbar-title"><a href="%s"><strong>BACKUP</strong>BUDDY</a><span><span>v</span>%s</span></div>',
+		'<div class="bb-topbar-title"><a href="%s" class="backupbuddy-logo"><strong>BACKUP</strong>BUDDY</a><span><span>v</span>%s</span></div>',
 		esc_attr( admin_url( 'admin.php?page=pb_backupbuddy_backup' ) ),
 		esc_html( pb_backupbuddy::settings( 'version' ) )
 	);
@@ -431,7 +431,8 @@ if ( ( ! is_multisite() ) || ( is_multisite() && is_network_admin() ) ) { // Onl
  * Global admin javascript files.
  */
 function backupbuddy_global_admin_scripts() {
-	wp_enqueue_script( 'backupbuddy_global_admin_scripts', pb_backupbuddy::plugin_url() . '/js/global_admin.js', array( 'jquery' ), pb_backupbuddy::settings( 'version' ), true );
+	wp_register_script( 'backupbuddy_global_admin_scripts', pb_backupbuddy::plugin_url() . '/js/global_admin.js', array( 'jquery' ), pb_backupbuddy::settings( 'version' ), true );
+	wp_enqueue_script( 'backupbuddy_global_admin_scripts' );
 
 	wp_register_script( 'backupbuddy-min', pb_backupbuddy::plugin_url() . '/js/backupbuddy.min.js', array( 'jquery' ), pb_backupbuddy::settings( 'version' ), true );
 	wp_register_style( 'backupbuddy-core', pb_backupbuddy::plugin_url() . '/css/backupbuddy-core.css', array(), pb_backupbuddy::settings( 'version' ) );
@@ -738,3 +739,23 @@ function backupbuddy_gdrive2_download() {
 	pb_backupbuddy_destination_gdrive2::force_download( $settings, $file );
 }
 add_action( 'admin_init', 'backupbuddy_gdrive2_download' );
+
+/**
+ * Local Force Download.
+ */
+function backupbuddy_local_download() {
+	if ( ! pb_backupbuddy::_GET( 'local-download' ) ) {
+		return;
+	}
+
+	$file        = pb_backupbuddy::_GET( 'local-download' );
+	$destination = pb_backupbuddy::_GET( 'local-destination-id' );
+
+	if ( ! class_exists( 'pb_backupbuddy_destination_local' ) ) {
+		require_once pb_backupbuddy::plugin_path() . '/destinations/local/init.php';
+	}
+
+	$settings = pb_backupbuddy::$options['remote_destinations'][ $destination ];
+	pb_backupbuddy_destination_local::force_download( $settings, $file );
+}
+add_action( 'admin_init', 'backupbuddy_local_download' );

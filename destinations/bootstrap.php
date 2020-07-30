@@ -332,6 +332,33 @@ class pb_backupbuddy_destinations {
 	}
 
 	/**
+	 * Get ALL Orphan Dat files.
+	 *
+	 * @param array $destination_settings  Destination Settings array.
+	 *
+	 * @return array  Array of orphan dat files.
+	 */
+	public static function get_dat_orphans( $destination_settings ) {
+		$destination = self::_init_destination( $destination_settings );
+		if ( false === $destination ) {
+			pb_backupbuddy::status( 'error', esc_html__( 'Error #546893498e. Destination configuration file missing.', 'it-l10n-backupbuddy' ) );
+			return false;
+		}
+
+		$destination_settings = $destination['settings']; // Settings with defaults applied, normalized, etc.
+		$destination_class    = $destination['class'];
+
+		if ( false === method_exists( $destination_class, 'get_dat_orphans' ) ) {
+			pb_backupbuddy::status( 'error', esc_html__( 'get_dat_orphans destination function called on destination not supporting it.', 'it-l10n-backupbuddy' ) );
+			return false;
+		}
+
+		pb_backupbuddy::status( 'details', esc_html__( 'Calling get_dat_orphans for ' . $destination_settings['type'] . ' destination.', 'it-l10n-backupbuddy' ) );
+
+		return call_user_func_array( "{$destination_class}::get_dat_orphans", array( $destination_settings ) );
+	}
+
+	/**
 	 * Delete one or more files.
 	 *
 	 * @param array  $destination_settings  Array of destination settings.
@@ -340,8 +367,8 @@ class pb_backupbuddy_destinations {
 	 * @return bool  True if all deleted, else false if one or more failed to delete.
 	 */
 	public static function delete( $destination_settings, $file_or_files ) {
-
 		$destination = self::_init_destination( $destination_settings );
+
 		if ( false === $destination ) {
 			echo '{Error #546893498f. Destination configuration file missing.}';
 			return false;
@@ -351,14 +378,75 @@ class pb_backupbuddy_destinations {
 		$destination_class    = $destination['class'];
 
 		if ( false === method_exists( $destination_class, 'delete' ) ) {
-			pb_backupbuddy::status( 'error', 'Delete destination function called on destination not supporting it.' );
+			pb_backupbuddy::status( 'error', 'Delete function called on destination not supporting it.' );
 			return false;
 		}
 
-		return call_user_func_array( "{$destination_class}::delete", array( $destination_settings, $file_or_files ) );
+		// Make sure we always have an array.
+		if ( ! is_array( $file_or_files ) ) {
+			$file_or_files = array( $file_or_files );
+		}
 
-	} // End delete().
+		$success = call_user_func_array( "{$destination_class}::delete", array( $destination_settings, $file_or_files ) );
 
+		// Delete .dat file if delete was successful.
+		if ( $success ) {
+			self::delete_dat( $destination_settings, $file_or_files );
+		}
+
+		return $success;
+	} // delete.
+
+	/**
+	 * Delete corresponding backup .dat files.
+	 *
+	 * @param array $destination_settings  Destination settings array.
+	 * @param array $file_or_files         Array of files for deletion.
+	 *
+	 * @return bool  If files were deleted.
+	 */
+	public static function delete_dat( $destination_settings, $file_or_files ) {
+		$destination = self::_init_destination( $destination_settings );
+
+		if ( false === $destination ) {
+			echo '{Error #546893498g. Destination configuration file missing.}';
+			return false;
+		}
+
+		$destination_settings = $destination['settings']; // Settings with defaults applied, normalized, etc.
+		$destination_class    = $destination['class'];
+
+		// Call custom delete_dat if available.
+		if ( false !== method_exists( $destination_class, 'delete_dat' ) ) {
+			pb_backupbuddy::status( 'details', 'Attempting to delete corresponding .dat files using delete_dat method.' );
+			return call_user_func_array( "{$destination_class}::delete_dat", array( $destination_settings, $file_or_files ) );
+		}
+
+		// Make sure delete method exists first.
+		if ( false === method_exists( $destination_class, 'delete' ) ) {
+			pb_backupbuddy::status( 'error', 'Delete function called on destination not supporting it.' );
+			return false;
+		}
+
+		// Try to automate deleting of .dat files.
+		$dats = array();
+		foreach ( $file_or_files as $backup ) {
+			// Make sure filename has .zip and is not a file ID.
+			if ( false === strpos( $backup, '.zip' ) ) {
+				continue;
+			}
+			$dats[] = str_replace( '.zip', '.dat', $backup ); // TODO: Move to backupbuddy_data_file() method.
+		}
+
+		// Bail if no dats to delete.
+		if ( ! count( $dats ) ) {
+			return false;
+		}
+
+		pb_backupbuddy::status( 'details', 'Attempting to delete corresponding .dat files using delete method.' );
+
+		return call_user_func_array( "{$destination_class}::delete", array( $destination_settings, $dats ) );
+	} // delete_dat.
 
 	/**
 	 * Get a remote file and store locally.
@@ -492,11 +580,16 @@ class pb_backupbuddy_destinations {
 			}
 			$fileoptions['update_time'] = microtime( true );
 			$fileoptions['deleteAfter'] = $delete_after;
-			if ( is_array( $file ) ) {
+
+			$size_file = is_array( $file ) && count( $file ) === 1 ? reset( $file ) : $file;
+			if ( is_array( $size_file ) ) {
 				$fileoptions['file_size'] = -1;
-			} else {
-				$fileoptions['file_size'] = filesize( $file );
+			} elseif ( file_exists( $size_file ) ) {
+				if ( filesize( $size_file ) ) {
+					$fileoptions['file_size'] = filesize( $size_file );
+				}
 			}
+
 			if ( '' != $trigger ) {
 				$fileoptions['trigger'] = $trigger;
 			}
@@ -605,8 +698,8 @@ class pb_backupbuddy_destinations {
 			}
 
 			// Save error details into fileoptions for this send.
+			pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #45...' );
 			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #45.' );
 			$fileoptions_obj    = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, false );
 			$fileoptions_result = $fileoptions_obj->is_ok();
 			if ( true !== $fileoptions_result ) {
@@ -648,9 +741,8 @@ class pb_backupbuddy_destinations {
 				pb_backupbuddy::status( 'warning', 'Completed send function. Unknown result: `' . $result . '`.' );
 			}
 
-			pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+			pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #16...' );
 			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #16.' );
 			$fileoptions_obj    = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, false );
 			$fileoptions_result = $fileoptions_obj->is_ok();
 			if ( true !== $fileoptions_result ) {

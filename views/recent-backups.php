@@ -29,8 +29,8 @@ $recent_empty = count( $recent_backups_list ) <= 0 ? ' empty' : '';
 		$recent_backup_count_cap = 5; // Max number of recent backups to list.
 		$recent_backups          = array();
 		foreach ( $recent_backups_list as $backup_fileoptions ) {
+			pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #1...' );
 			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #1.' );
 			$read_only = true;
 			$backup    = new pb_backupbuddy_fileoptions( $backup_fileoptions, $read_only );
 			$result    = $backup->is_ok();

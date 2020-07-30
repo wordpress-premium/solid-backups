@@ -13,30 +13,30 @@ final class Curl
 
     /** @var string[] */
     private $headers = array();
-    
+
     private $debugout;
 
     /**
      * @param string $url
      */
     function __construct($url)
-    {	
-    	
+    {
+
     		if ( \pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
-			ob_start();  
+			ob_start();
 			$this->debugout = fopen('php://output', 'w');
     		}
-    		
+
         // Make sure there aren't any spaces in the URL (i.e. the caller forgot to URL-encode).
         if (strpos($url, ' ') !== false) {
             throw new \InvalidArgumentException("Found space in \$url; it should be encoded");
         }
         \pb_backupbuddy::status( 'details', 'Curl URL: `' . $url . '`.' );
         $this->handle = curl_init($url);
-        
+
         if ( \pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
-	        curl_setopt($this->handle, CURLOPT_VERBOSE, true);  
-	        curl_setopt($this->handle, CURLOPT_STDERR, $this->debugout);  
+	        curl_setopt($this->handle, CURLOPT_VERBOSE, true);
+	        curl_setopt($this->handle, CURLOPT_STDERR, $this->debugout);
 	   }
 
         // NOTE: Though we turn on all the correct SSL settings, many PHP installations
@@ -77,33 +77,55 @@ final class Curl
         $this->headers[] = $header;
     }
 
-    function exec( $contentType = '' )
-    {
-    		if ( '' == $contentType ) {
-    			//$contentType = 'application/json';
-    		}
-		$this->headers = array_merge( $this->headers, array( 'Content-Type: '. $contentType) );
-		
-        $this->set(CURLOPT_HTTPHEADER, $this->headers);
-        \pb_backupbuddy::status('details', 'About to exec in Curl.php curl_exec(). contentType: `' . $contentType . '`.' );
-        $body = curl_exec($this->handle);
-        if ($body === false) {
-            throw new Exception_NetworkIO("Error executing HTTP request: " . curl_error($this->handle));
-        }
+	/**
+	 * Execute CURL request
+	 *
+	 * @throws Exception_NetworkIO  When response body is false.
+	 *
+	 * @param string $contentType  Content type.
+	 *
+	 * @return HttpResponse  HTTP Response object.
+	 */
+	public function exec( $contentType = '' ) {
+		if ( '' == $contentType ) {
+			// $contentType = 'application/json';
+		}
 
-        $statusCode = curl_getinfo($this->handle, CURLINFO_HTTP_CODE);
-        
-        if ( \pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
-       	fclose($this->debugout);
-		$debug = ob_get_clean();
-		\pb_backupbuddy::status( 'details', 'Dropbox HTTP debug: `' . $debug . '`.' );
-	   }
-        
-        return new HttpResponse($statusCode, $body);
-    }
-    
+		$this->headers = array_merge( $this->headers, array( 'Content-Type: '. $contentType ) );
+		if ( in_array( 'Content-Length: 0', $this->headers, true ) ) {
+			foreach ( $this->headers as $index => $header ) {
+				if ( 'Content-Length: 0' === $header ) {
+					\pb_backupbuddy::status( 'details', 'Removing `Content-Length: 0` from cURL headers.' );
+					unset( $this->headers[ $index ] );
+					break;
+				}
+			}
+		}
+
+		$this->set( CURLOPT_HTTPHEADER, $this->headers );
+		$curl_version = curl_version();
+		if ( ! empty( $curl_version['version'] ) ) {
+			\pb_backupbuddy::status( 'details', 'Curl version: `' . $curl_version['version'] . '`' );
+		}
+		\pb_backupbuddy::status( 'details', 'About to exec in Curl.php curl_exec(). contentType: `' . $contentType . '`.' );
+		$body = curl_exec( $this->handle );
+		if ( false === $body ) {
+			throw new Exception_NetworkIO( 'Error executing HTTP request: ' . curl_error( $this->handle ) );
+		}
+
+		$statusCode = curl_getinfo( $this->handle, CURLINFO_HTTP_CODE );
+
+		if ( '3' == \pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+			fclose( $this->debugout );
+			$debug = ob_get_clean();
+			\pb_backupbuddy::status( 'details', 'Dropbox HTTP debug: `' . $debug . '`.' );
+		}
+
+		return new HttpResponse( $statusCode, $body );
+	}
+
     function get( $option ) {
-    	
+
     }
 
     /**

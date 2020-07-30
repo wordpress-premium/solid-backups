@@ -2178,9 +2178,9 @@ class backupbuddy_live_periodic {
 	 */
 	public static function get_file_stats( $type ) {
 
-		require_once( pb_backupbuddy::plugin_path() . '/classes/fileoptions.php' );
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #17...' );
+		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 
-		pb_backupbuddy::status( 'details', 'Fileoptions instance #89.' );
 		$statsObj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'live/' . $type . '-' . pb_backupbuddy::$options['log_serial'] . '.txt', $read_only = true, $ignore_lock = true, $create_file = false );
 		if ( true !== ( $result = $statsObj->is_ok() ) ) {
 			pb_backupbuddy::status( 'error', 'Error #3443794. Fatal error. Unable to create or access fileoptions file for media. Details: `' . $result . '`.' );

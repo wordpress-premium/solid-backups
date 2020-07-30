@@ -428,9 +428,8 @@ class pb_backupbuddy_destination_s32 {
 			if ( isset( $fileoptions_obj ) ) {
 				pb_backupbuddy::status( 'details', 'fileoptions already loaded from prior pass.' );
 			} else { // load fileoptions
-				pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+				pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #10...' );
 				require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-				pb_backupbuddy::status( 'details', 'Fileoptions instance #10.' );
 				$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', $read_only = false, $ignore_lock = false, $create_file = false );
 				if ( true !== ( $result = $fileoptions_obj->is_ok() ) ) {
 					return self::_error( __( 'Fatal Error #9034.23788723. Unable to access fileoptions data.', 'it-l10n-backupbuddy' ) . ' Error: ' . $result );
@@ -645,12 +644,13 @@ class pb_backupbuddy_destination_s32 {
 
 			// Get file listing.
 			try {
+				// List all users files in this directory that are a backup for this site (limited by prefix).
 				$response_manage = self::$_client->listObjects(
 					array(
 						'Bucket' => $settings['bucket'],
 						'Prefix' => $settings['directory'] . 'backup-' . backupbuddy_core::backup_prefix(),
 					)
-				); // List all users files in this directory that are a backup for this site (limited by prefix).
+				);
 			} catch ( Exception $e ) {
 				return self::_error( 'Error #9338292: Unable to list files for archive limiting. Details: `' . $e . '`.' );
 			}
@@ -670,23 +670,23 @@ class pb_backupbuddy_destination_s32 {
 			arsort( $backups );
 
 			pb_backupbuddy::status( 'details', 'Found `' . count( $backups ) . '` backups of this type when checking archive limits out of `' . count( $response_manage['Contents'] ) . '` total files in this location.' );
-			if ( ( count( $backups ) ) > $limit ) {
+
+			if ( count( $backups ) > $limit ) {
 				pb_backupbuddy::status( 'details', 'More archives (' . count( $backups ) . ') than limit (' . $limit . ') allows. Trimming...' );
+
 				$i                 = 0;
 				$delete_fail_count = 0;
+
+				if ( ! class_exists( 'pb_backupbuddy_destinations' ) ) {
+					require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
+				}
+
 				foreach ( $backups as $buname => $butime ) {
 					$i++;
 					if ( $i > $limit ) {
 						pb_backupbuddy::status( 'details', 'Trimming excess file `' . $buname . '`...' );
-						try {
-							$response = self::$_client->deleteObject(
-								array(
-									'Bucket' => $settings['bucket'],
-									'Key'    => $settings['directory'] . $buname,
-								)
-							);
-						} catch ( Exception $e ) {
-							self::_error( 'Unable to delete excess Stash file `' . $buname . '`. Details: `' . $e . '`.' );
+						if ( true !== pb_backupbuddy_destinations::delete( $settings, $buname ) ) {
+							self::_error( 'Unable to delete excess Stash file `' . $buname . '`.' );
 							$delete_fail_count++;
 						}
 					}
@@ -839,6 +839,20 @@ class pb_backupbuddy_destination_s32 {
 	 * @return bool  If file(s) were deleted.
 	 */
 	public static function deleteFiles( $settings, $files = array() ) {
+		return self::delete( $settings, $files );
+	} // End deleteFiles().
+
+	/**
+	 * Deletes file(s) from remote destination.
+	 *
+	 * @throws Exception  General Exception thrown when deleteObjects fails.
+	 *
+	 * @param array        $settings  Destination Settings.
+	 * @param string|array $files     File(s) to delete.
+	 *
+	 * @return bool  If file(s) were deleted.
+	 */
+	public static function delete( $settings, $files = array() ) {
 		$settings = self::_init( $settings );
 		if ( ! is_array( $files ) ) {
 			$files = array( $files );
@@ -859,7 +873,7 @@ class pb_backupbuddy_destination_s32 {
 					'Bucket'  => $settings['bucket'],
 					'Objects' => $file_keys,
 				)
-			); // list all the files in the subscriber account.
+			);
 		} catch ( Exception $e ) {
 			$error = 'Error #83823233393: Unable to delete one or more files. Details: `' . $e . '`.';
 			self::_error( $error );
@@ -876,8 +890,7 @@ class pb_backupbuddy_destination_s32 {
 		}
 
 		return true;
-
-	} // End deleteFiles().
+	}
 
 	/**
 	 * Tests ability to write to this remote destination.
@@ -940,9 +953,8 @@ class pb_backupbuddy_destination_s32 {
 		}
 
 		// Load destination fileoptions.
-		pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #7...' );
 		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-		pb_backupbuddy::status( 'details', 'Fileoptions instance #7.' );
 		$fileoptions_obj = new pb_backupbuddy_fileoptions( backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt', false, false, false );
 		$result          = $fileoptions_obj->is_ok();
 		if ( true !== $result ) {
@@ -1018,7 +1030,7 @@ class pb_backupbuddy_destination_s32 {
 
 		foreach ( $backups as $backup_array ) {
 			$backup_file = $backup_array[0][0];
-			$dat_file    = str_replace( '.zip', '.dat', $backup_file );
+			$dat_file    = str_replace( '.zip', '.dat', $backup_file ); // TODO: Move to backupbuddy_data_file() method.
 			$local_file  = backupbuddy_core::getBackupDirectory() . $dat_file;
 
 			if ( true !== self::getFile( $settings, $dat_file, $local_file ) ) {
@@ -1027,6 +1039,59 @@ class pb_backupbuddy_destination_s32 {
 		}
 
 		return $success;
+	}
+
+	/**
+	 * Get a list of dat files not associated with backups.
+	 *
+	 * @param array $settings  Destination Settings array.
+	 *
+	 * @return array  Array of dat files.
+	 */
+	public static function get_dat_orphans( $settings ) {
+		$backups_array = self::listFiles( $settings );
+		if ( ! is_array( $backups_array ) ) {
+			return false;
+		}
+
+		$orphans = array();
+		$backups = array();
+		$files   = self::get_files( $settings, array( '.dat' ) );
+
+		if ( ! is_array( $files ) ) {
+			return false;
+		}
+
+		// Create an array of backup filenames.
+		foreach ( $backups_array as $backup_array ) {
+			$backups[] = $backup_array[0][0];
+		}
+
+		$prefix = backupbuddy_core::backup_prefix();
+
+		if ( $prefix ) {
+			$prefix .= '-';
+		}
+
+		// Loop through dat files looking for orphans.
+		foreach ( $files as $file ) {
+			$filename = $file['filename'];
+
+			// Appears to not be a dat file for this site.
+			if ( strpos( $filename, 'backup-' . $prefix ) === false ) {
+				continue;
+			}
+
+			// Skip dat files with backup files.
+			$backup_name = str_replace( '.dat', '.zip', $filename ); // TODO: Move to backupbuddy_data_file() method.
+			if ( in_array( $backup_name, $backups, true ) ) {
+				continue;
+			}
+
+			$orphans[] = $filename;
+		}
+
+		return $orphans;
 	}
 
 	/**

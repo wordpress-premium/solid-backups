@@ -535,6 +535,7 @@ class backupbuddy_housekeeping {
 	 * Process Timed Out Backups
 	 */
 	public static function process_timed_out_backups() {
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #43...' );
 		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 
 		// Mark any backups noted as in progress to timed out if taking too long. Send error email is scheduled and failed or timed out.
@@ -546,7 +547,6 @@ class backupbuddy_housekeeping {
 			$files = array();
 		}
 		foreach ( $files as $file ) {
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #43.' );
 			$read_only      = false;
 			$backup_options = new pb_backupbuddy_fileoptions( $file, $read_only );
 			$result         = $backup_options->is_ok();
@@ -650,6 +650,7 @@ class backupbuddy_housekeeping {
 	 * Process Timed Out Sends
 	 */
 	public static function process_timed_out_sends() {
+		pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #23...' );
 		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 
 		// Mark any timed out remote sends as timed out. Attempt resend once.
@@ -659,10 +660,7 @@ class backupbuddy_housekeeping {
 			$send_fileoptions = array();
 		}
 		foreach ( $send_fileoptions as $send_fileoption ) {
-			$send_id = str_replace( '.txt', '', str_replace( 'send-', '', basename( $send_fileoption ) ) );
-			pb_backupbuddy::status( 'details', 'About to load fileoptions data.' );
-			require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
-			pb_backupbuddy::status( 'details', 'Fileoptions instance #23.' );
+			$send_id          = str_replace( '.txt', '', str_replace( 'send-', '', basename( $send_fileoption ) ) );
 			$fileoptions_file = backupbuddy_core::getLogDirectory() . 'fileoptions/send-' . $send_id . '.txt';
 			$read_only        = false;
 			$ignore_lock      = false;
