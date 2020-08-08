@@ -1,5 +1,5 @@
 {
-    "name": "wordpress-premium/plugins/backupbuddy",
+    "name": "wordpress-premium/backupbuddy",
     "type": "wordpress-plugin",
 	"time": "2020-07-15",
 	"version": "8.6.00",
