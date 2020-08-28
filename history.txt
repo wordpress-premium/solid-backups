@@ -2095,3 +2095,5 @@
 	Bug Fix: Better handling of getMetadata in Dropbox SDK for file_exists checks.
 	Enhancement: Display cURL version information in Diagnostics > Server.
 	Enhancement: Adjusted "Deleted X file(s)" text to be easier to read.
+8.6.1.0 - 2020-08-12 - Brian DiChiara, Chris Jean
+	Enhancement: Updated Updater - Includes Support for WordPress Automatic Updates.
