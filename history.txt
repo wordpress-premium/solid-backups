@@ -2097,3 +2097,8 @@
 	Enhancement: Adjusted "Deleted X file(s)" text to be easier to read.
 8.6.1.0 - 2020-08-12 - Brian DiChiara, Chris Jean
 	Enhancement: Updated Updater - Includes Support for WordPress Automatic Updates.
+8.6.2.0 - 2020-10-07 - Brian DiChiara
+	Bug Fix: Improvements to Restore including a bug fix that resolves looping over the same step.
+	Bug Fix: Added Restore support for db_1.sql where database backup is stored in a single file.
+	Bug Fix: Dropbox CURL Backwards compatibility fix.
+	Bug Fix: Fix issue where dat file fails to send on S3 destinations, thus triggering failure email.

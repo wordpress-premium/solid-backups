@@ -344,9 +344,10 @@ class BackupBuddy_Restore {
 			'cleanup'    => array(), // files/folders to cleanup afterwards.
 		);
 		$db_defaults   = array(
-			'tables'            => array(),
+			'tables'            => array(), // requested tables for restore.
 			'sql_files'         => array(), // sql files in backup.
 			'sql_path'          => false, // path to sql files.
+			'single_file'       => false, // If import is all 1 file (db_1.sql).
 			'table_queue'       => array(), // array of tables for restoring.
 			'imported_tables'   => array(), // array of tables that have been imported.
 			'post_import'       => array(), // array of queries to run after temp table imported.
@@ -699,6 +700,9 @@ class BackupBuddy_Restore {
 			}
 			if ( isset( $restore['table_queue'] ) ) {
 				$total_tables = count( $restore['table_queue'] );
+				if ( 1 === $total_tables && true === $restore['single_file'] ) {
+					$total_tables = isset( $restore['imported_tables'] ) ? count( $restore['imported_tables'] ) : '?';
+				}
 			} else {
 				$total_tables = 0;
 			}
@@ -905,6 +909,7 @@ class BackupBuddy_Restore {
 		if ( empty( $restore_array ) ) {
 			$restore_array = $this->restore;
 		}
+
 		if ( empty( $restore_array['id'] ) ) {
 			return false;
 		}
@@ -916,6 +921,7 @@ class BackupBuddy_Restore {
 			pb_backupbuddy::status( 'details', 'Attempt to write to restore log failed. Check folder permissions for ' . backupbuddy_core::getLogDirectory() . '.' );
 			return false;
 		}
+
 		return true;
 	}
 
@@ -954,27 +960,56 @@ class BackupBuddy_Restore {
 			unset( $restore_array['log'] );
 
 			// Save Queue without extra data.
-			$restore_queue[ $this->restore['id'] ] = wp_json_encode( $restore_array );
+			$restore_queue[ $restore_array['id'] ] = wp_json_encode( $restore_array );
 
-			$this->save_restore();
+			if ( ! $this->save_restore() ) {
+				pb_backupbuddy::status( 'details', 'Attempted to save restore but was unsuccessful.' );
+				return false;
+			}
+
+			if ( ! $this->current_restore || ! file_exists( $this->current_restore ) ) {
+				pb_backupbuddy::status( 'details', 'Attempted to write to restore log, but log was unavailable.' );
+				return false;
+			}
+
+			if ( ! $this->write_restore_queue( $restore_queue ) ) {
+				return false;
+			}
 
 			// Keep cron alive.
-			if ( ! in_array( $this->restore['status'], $this->get_completed_statuses(), true ) ) {
+			if ( ! in_array( $restore_array['status'], $this->get_completed_statuses(), true ) ) {
 				$this->schedule_cron();
 			}
 		} else {
 			// Only prune if we're not changing restore details.
 			if ( $this->prune() ) {
-				$restore_queue = $this->restores;
+				if ( ! $this->write_restore_queue() ) {
+					return false;
+				}
 			}
 		}
 
-		if ( ! empty( $this->restore ) && ( ! $this->current_restore || ! file_exists( $this->current_restore ) ) ) {
-			pb_backupbuddy::status( 'details', 'Attempted to write to restore log, but log was unavailable.' );
+		return true;
+	}
+
+	/**
+	 * Perform Restore Queue file save.
+	 *
+	 * @param array $restore_queue  Array to use for queue.
+	 *
+	 * @return bool  If successful.
+	 */
+	private function write_restore_queue( $restore_queue = array() ) {
+		if ( empty( $restore_queue ) ) {
+			$restore_queue = $this->restores;
+		}
+
+		if ( empty( $restore_queue ) ) {
+			pb_backupbuddy::status( 'details', 'Nothing to write to restore queue. Bailing early.' );
 			return false;
 		}
 
-		if ( ! @file_put_contents( $this->restore_storage, wp_json_encode( $restore_queue ) ) ) {
+		if ( ! file_put_contents( $this->restore_storage, wp_json_encode( $restore_queue ) ) ) {
 			pb_backupbuddy::status( 'details', 'Unable to write restore queue. Check folder permissions.' );
 			return false;
 		}
@@ -1061,6 +1096,7 @@ class BackupBuddy_Restore {
 
 			if ( ! $this->restore['status'] ) {
 				if ( $this->start() ) {
+					$this->log( '✓ Restore started.' );
 					$this->save();
 				}
 			}
@@ -1072,6 +1108,7 @@ class BackupBuddy_Restore {
 					return false;
 				}
 
+				$this->log( '✓ Restore ready.' );
 				$this->set_status( self::STATUS_READY );
 				$this->cron_complete();
 				return true; // Milestone.
@@ -1351,16 +1388,18 @@ class BackupBuddy_Restore {
 	 */
 	private function ready() {
 		if ( file_exists( $this->restore['zip_path'] ) ) {
-			if ( true === $this->restore['download'] && ! empty( $this->restore['zip_size'] ) ) {
-				// Make sure file size is expected to ensure download is complete.
-				$size     = (int) filesize( $this->restore['zip_path'] );
-				$expected = (int) $this->restore['zip_size'];
-				if ( $size !== $expected ) {
-					$this->set_status( self::STATUS_DOWNLOADING );
-					return false;
+			if ( true === $this->restore['download'] ) {
+				if ( ! empty( $this->restore['zip_size'] ) ) {
+					// Make sure file size is expected to ensure download is complete.
+					$size     = (int) filesize( $this->restore['zip_path'] );
+					$expected = (int) $this->restore['zip_size'];
+					if ( $size !== $expected ) {
+						$this->set_status( self::STATUS_DOWNLOADING );
+						return false;
+					}
 				}
+				$this->log( '✓ Zip download complete.' );
 			}
-			$this->log( '✓ Zip download complete.' );
 			return true;
 		}
 
@@ -1543,7 +1582,6 @@ class BackupBuddy_Restore {
 		}
 
 		$this->log( '✓ Zip extracted.' );
-		$this->save();
 
 		return true;
 	}
@@ -1882,9 +1920,9 @@ class BackupBuddy_Restore {
 			foreach ( $files as $file ) {
 				$file_path = rtrim( $path, '/' ) . '/' . $file;
 				if ( false !== $original && is_string( $original ) ) {
-					$original_path = rtrim( $original, '/' ) . '/' . $file;
+					$original = rtrim( $original, '/' ) . '/' . $file;
 				}
-				if ( ! $this->restore_permissions( $file_path, $original_path, $owner, $group ) ) {
+				if ( ! $this->restore_permissions( $file_path, $original, $owner, $group ) ) {
 					$success = false;
 				}
 			}
@@ -2462,6 +2500,10 @@ class BackupBuddy_Restore {
 			}
 		}
 
+		if ( $db_successful ) {
+			$this->cleanup_db();
+		}
+
 		if ( true !== $leave_debugging ) {
 			$this->wipe_stall_log();
 		}
@@ -2887,26 +2929,30 @@ class BackupBuddy_Restore {
 			return false; // Milestone.
 		}
 
-		// Restore each SQL file individually.
-		foreach ( $this->restore['table_queue'] as $table ) {
-			if ( in_array( $table, $this->restore['imported_tables'], true ) ) {
-				continue; // Skip successfully imported tables.
-			}
-			if ( in_array( $table, $this->restore['failed_tables'], true ) ) {
-				continue; // Skip failed tables.
-			}
-			if ( isset( $this->restore['last_tables'][ $table ] ) ) {
-				continue; // Skip tables to be imported later.
-			}
+		// Skip This section on single file import where db_1 has already been imported.
+		if ( ! $this->restore['single_file'] || count( $this->restore['single_file'] ) > 1 ) {
 
-			if ( ! $this->temp_import_table( $table ) ) {
-				$this->error( 'Failed to import table: `' . $table . '`.' );
-				$this->abort();
-				return false;
-			}
+			// Restore each SQL file individually.
+			foreach ( $this->restore['table_queue'] as $table ) {
+				if ( in_array( $table, $this->restore['imported_tables'], true ) ) {
+					continue; // Skip successfully imported tables.
+				}
+				if ( in_array( $table, $this->restore['failed_tables'], true ) ) {
+					continue; // Skip failed tables.
+				}
+				if ( isset( $this->restore['last_tables'][ $table ] ) ) {
+					continue; // Skip tables to be imported later.
+				}
 
-			$this->set_status( self::STATUS_DB_READY );
-			return false; // Milestone.
+				if ( ! $this->temp_import_table( $table ) ) {
+					$this->error( 'Failed to import table: `' . $table . '`.' );
+					$this->abort();
+					return false;
+				}
+
+				$this->set_status( self::STATUS_DB_READY );
+				return false; // Milestone.
+			}
 		}
 
 		// Lastly perform tables that have dependencies.
@@ -2978,9 +3024,14 @@ class BackupBuddy_Restore {
 			return false;
 		}
 
-		$importbuddy    = new pb_backupbuddy_mysqlbuddy( DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, $this->table_prefix );
-		$table_basename = preg_replace( '/' . preg_quote( $wpdb->prefix ) . '/', '', $table, 1 );
-		$dependencies   = $this->get_table_dependency( $import_file );
+		$this->restore['single_file'] = 'db_1' === $table;
+
+		$importbuddy  = new pb_backupbuddy_mysqlbuddy( DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, $this->table_prefix );
+		$dependencies = $this->get_table_dependency( $import_file );
+
+		if ( ! $this->restore['single_file'] ) {
+			$table_basename = preg_replace( '/' . preg_quote( $wpdb->prefix ) . '/', '', $table, 1 );
+		}
 
 		// If any dependencies has not been imported yet and is scheduled to import, move to end.
 		if ( $dependencies && empty( array_intersect( $dependencies, $this->restore['imported_tables'] ) ) ) {
@@ -3028,7 +3079,7 @@ class BackupBuddy_Restore {
 		}
 
 		// Final Table check.
-		if ( ! $this->table_exists( $this->table_prefix . $table_basename ) ) {
+		if ( ! $this->restore['single_file'] && ! $this->table_exists( $this->table_prefix . $table_basename ) ) {
 			$this->restore['failed_tables'][] = $table;
 			$this->log( '× Table failed exists check: ' . $table );
 
@@ -3050,10 +3101,44 @@ class BackupBuddy_Restore {
 			unset( $this->restore['post_import'][ $table ] );
 		}
 
-		$this->restore['imported_tables'][] = $table;
-		$this->restore['cleanup_db'][ 'Drop Temp Table `' . $this->table_prefix . $table_basename . '`.' ] = sprintf( "DROP TABLE IF EXISTS `%s`;", $this->table_prefix . $table_basename );
+		if ( ! $this->restore['single_file'] ) {
+			$this->restore['imported_tables'][] = $table;
+			$this->restore['cleanup_db'][ 'Drop Temp Table `' . $this->table_prefix . $table_basename . '`' ] = sprintf( "DROP TABLE IF EXISTS `%s`;", $this->table_prefix . $table_basename );
+		} else {
+			// Delete db_1 from table queue.
+			unset( $this->restore['table_queue']['db_1.sql'] );
+			$temp_tables = $this->get_temp_table_names();
+
+			foreach ( $temp_tables as $temp_table ) {
+				$table_basename = preg_replace( '/' . preg_quote( $this->table_prefix ) . '/', '', $temp_table, 1 );
+				if ( in_array( $wpdb->prefix . $table_basename, $this->restore['imported_tables'], true ) ) {
+					continue;
+				}
+				$this->restore['table_queue'][]     = $wpdb->prefix . $table_basename;
+				$this->restore['imported_tables'][] = $wpdb->prefix . $table_basename;
+				$this->restore['cleanup_db'][ 'Drop Temp Table `' . $temp_table . '`' ] = sprintf( "DROP TABLE IF EXISTS `%s`;", $temp_table );
+			}
+		}
+
 		$this->save();
 		return true;
+	}
+
+	/**
+	 * Pull temp table names from single DB file import.
+	 */
+	private function get_temp_table_names() {
+		global $wpdb;
+
+		$temp_tables = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT `TABLE_NAME` FROM INFORMATION_SCHEMA.TABLES WHERE `TABLE_SCHEMA` = %s AND `TABLE_NAME` LIKE %s",
+				DB_NAME,
+				$this->table_prefix . '%'
+			)
+		);
+
+		return wp_list_pluck( $temp_tables, 'TABLE_NAME' );
 	}
 
 	/**
@@ -3164,6 +3249,7 @@ class BackupBuddy_Restore {
 		$wpdb->query( "SET FOREIGN_KEY_CHECKS=0;" );
 
 		foreach ( $this->restore['imported_tables'] as $table ) {
+
 			// Skip failed tables.
 			if ( in_array( $table, $this->restore['failed_tables'], true ) ) {
 				continue;
@@ -3176,20 +3262,25 @@ class BackupBuddy_Restore {
 
 			// Rename Original to Failsafe.
 			$table_basename = preg_replace( '/' . preg_quote( $wpdb->prefix ) . '/', '', $table, 1 );
+			$table_swap     = false;
 
 			if ( $table === $wpdb->options ) {
 				// Copy over cron option value to prevent malfunctions during restore.
 				$restored_options = $this->table_prefix . $table_basename;
 				$cron_value       = $wpdb->get_var( "SELECT `option_value` FROM {$wpdb->options} WHERE `option_name` = 'cron';" );
 				if ( $cron_value ) {
-					$wpdb->query( $wpdb->prepare( "UPDATE `$restored_options` SET `option_value` = %s WHERE `option_name` = 'cron';", $cron_value ) );
+					if ( false === $wpdb->query( $wpdb->prepare( "UPDATE `$restored_options` SET `option_value` = %s WHERE `option_name` = 'cron';", $cron_value ) ) ) {
+						$this->log( '× Unable to copy cron from original options table.' );
+					}
 				}
 			} elseif ( $table === $wpdb->usermeta ) {
 				// Copy over session tokens so user isn't logged out.
 				$restored_usermeta = $this->table_prefix . $table_basename;
 				$session_tokens    = $wpdb->get_var( $wpdb->prepare( "SELECT `meta_value` FROM {$wpdb->usermeta} WHERE `user_id` = %s AND `meta_key` = 'session_tokens';", get_current_user_id() ) );
 				if ( $session_tokens ) {
-					$wpdb->query( $wpdb->prepare( "UPDATE `$restored_usermeta` SET `meta_value` = %s WHERE `meta_key` = 'session_tokens' AND `user_id` = %s;", $session_tokens, get_current_user_id() ) );
+					if ( false === $wpdb->query( $wpdb->prepare( "UPDATE `$restored_usermeta` SET `meta_value` = %s WHERE `meta_key` = 'session_tokens' AND `user_id` = %s;", $session_tokens, get_current_user_id() ) ) ) {
+						$this->log( '× Unable to copy session tokens from original usermeta table.' );
+					}
 				}
 			}
 
@@ -3206,12 +3297,15 @@ class BackupBuddy_Restore {
 					$this->table_prefix . $table_basename, // Imported Table.
 					$table // New, restored table.
 				);
-			} else {
+			} elseif ( $this->table_exists( $this->table_prefix . $table_basename ) ) {
 				// Rename Imported to Original.
 				$table_swap = sprintf( "RENAME TABLE `%s` TO `%s`;", $this->table_prefix . $table_basename, $table );
+			} else {
+				$this->log( 'No table swap performed for `' . $this->table_prefix . $table_basename . '`. Table not found.' );
+				continue;
 			}
 
-			if ( false === $wpdb->query( $table_swap ) ) {
+			if ( $table_swap && false === $wpdb->query( $table_swap ) ) {
 				$this->restore['failed_tables'][] = $table;
 				$this->log_wpdb_error( 'Table restore failed on `' . $table . '`. Could not perform table swap.', true );
 				return false;
@@ -3225,7 +3319,7 @@ class BackupBuddy_Restore {
 
 			$this->restore['restored_tables'][] = $table;
 			$this->save();
-			return null;
+			// sleep( 0.5 );
 		}
 
 		if ( count( $this->restore['restored_tables'] ) !== count( $this->restore['imported_tables'] ) ) {

@@ -96,7 +96,11 @@ backupbuddy_backups()->show_cleanup();
 // Handle pagination.
 $marker = end( $backups );
 reset( $backups );
-$marker = base64_encode( $marker[0][0] );
+if ( isset( $marker[0][0] ) ) {
+	$marker = base64_encode( $marker[0][0] );
+} else {
+	$marker = '';
+}
 
 $url_prefix   = pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . htmlentities( $destination_id );
 $backup_count = count( $backups );

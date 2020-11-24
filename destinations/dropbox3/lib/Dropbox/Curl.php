@@ -83,16 +83,31 @@ final class Curl
 	 * @throws Exception_NetworkIO  When response body is false.
 	 *
 	 * @param string $contentType  Content type.
+	 * @param bool   $is_retry     If is retry without content length.
 	 *
 	 * @return HttpResponse  HTTP Response object.
 	 */
-	public function exec( $contentType = '' ) {
+	public function exec( $contentType = '', $is_retry = false ) {
 		if ( '' == $contentType ) {
 			// $contentType = 'application/json';
 		}
 
-		$this->headers = array_merge( $this->headers, array( 'Content-Type: '. $contentType ) );
-		if ( in_array( 'Content-Length: 0', $this->headers, true ) ) {
+		// Prevent Duplicate Content-Type headers.
+		if ( ! empty( $contentType ) ) {
+			$found_content_type = false;
+			foreach ( $this->headers as $index => $header ) {
+				if ( false !== strpos( strtolower( $header ), 'content-type' ) ) {
+					$this->headers[ $index ] = 'Content-Type: '. $contentType;
+					$found_content_type      = true;
+				}
+			}
+			if ( false === $found_content_type ) {
+				$this->headers = array_merge( $this->headers, array( 'Content-Type: '. $contentType ) );
+			}
+		}
+
+		// Try to remove Content-Length header upon failed request (if retry).
+		if ( $is_retry && in_array( 'Content-Length: 0', $this->headers, true ) ) {
 			foreach ( $this->headers as $index => $header ) {
 				if ( 'Content-Length: 0' === $header ) {
 					\pb_backupbuddy::status( 'details', 'Removing `Content-Length: 0` from cURL headers.' );
@@ -110,6 +125,10 @@ final class Curl
 		\pb_backupbuddy::status( 'details', 'About to exec in Curl.php curl_exec(). contentType: `' . $contentType . '`.' );
 		$body = curl_exec( $this->handle );
 		if ( false === $body ) {
+			if ( ! $is_retry ) {
+				\pb_backupbuddy::status( 'details', 'Attempting Curl exec retry due to false body.' );
+				return $this->exec( $contentType, true );
+			}
 			throw new Exception_NetworkIO( 'Error executing HTTP request: ' . curl_error( $this->handle ) );
 		}
 
@@ -119,6 +138,11 @@ final class Curl
 			fclose( $this->debugout );
 			$debug = ob_get_clean();
 			\pb_backupbuddy::status( 'details', 'Dropbox HTTP debug: `' . $debug . '`.' );
+		}
+
+		if ( 400 === $statusCode && ! $is_retry ) {
+			\pb_backupbuddy::status( 'details', 'Attempting Curl exec retry due to status 400.' );
+			return $this->exec( $contentType, true );
 		}
 
 		return new HttpResponse( $statusCode, $body );

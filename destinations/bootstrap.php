@@ -813,7 +813,7 @@ class pb_backupbuddy_destinations {
 
 					$extra_replacements = array();
 					$extra_replacements = array(
-						'{backup_file}'   => $file,
+						'{backup_file}'   => is_array( $file ) ? implode( ',', $file ) : $file,
 						'{backup_size}'   => $file_size,
 						'{backup_serial}' => $serial,
 					);

@@ -1,8 +1,10 @@
 {
+    "name": "wordpress-premium/plugins/backupbuddy",
+	"type": "wordpress-plugin",
+	"version": "8.6.2.0 ",
+	"time": "2020-10-07",
     "require": {
-        "krizalys/onedrive-php-sdk": "^2.6",
-        "stevenmaguire/oauth2-dropbox": "^3.0",
-        "google/apiclient": "^2.4",
-        "monolog/monolog": "1.25.3"
-    }
+        "composer/installers": ">=1.0"
+    },
+    "license": "GPLv2 or later"
 }

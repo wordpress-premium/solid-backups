@@ -679,6 +679,15 @@ class backupbuddy_core {
 				$backup_type  = $backup_options->options['type'];
 			}
 
+			if ( is_array( $archive_file ) ) {
+				$backup_file_text = '';
+				foreach ( $archive_file as $single_file ) {
+					$backup_file_text .= $backup_file_text ? ', ' . basename( $single_file ) : basename( $single_file );
+				}
+			} else {
+				$backup_file_text = basename( is_array( $archive_file ) );
+			}
+
 			$replacements = array(
 				'{site_url}'            => site_url(),
 				'{home_url}'            => home_url(),
@@ -689,7 +698,7 @@ class backupbuddy_core {
 
 				'{backup_serial}'       => $serial,
 				'{download_link}'       => pb_backupbuddy::ajax_url( 'download_archive' ) . '&backupbuddy_backup=' . basename( $archive_file ),
-				'{backup_file}'         => basename( $archive_file ),
+				'{backup_file}'         => $backup_file_text,
 				'{backup_size}'         => $backup_size,
 				'{backup_type}'         => $backup_type,
 			);
@@ -1063,7 +1072,16 @@ class backupbuddy_core {
 							$dat_settings['_chunks_sent'], // GDrive2.
 							$dat_settings['_chunks_total'], // GDrive2.
 							$dat_settings['_media_resumeUri'], // GDrive2.
-							$dat_settings['_media_progress'] // GDrive2.
+							$dat_settings['_media_progress'], // GDrive2.
+							$dat_settings['_multipart_id'], // S3v3.
+							$dat_settings['_multipart_file'], // S3v3.
+							$dat_settings['_multipart_partnumber'], // S3v3.
+							$dat_settings['_multipart_remotefile'], // S3v3.
+							$dat_settings['_multipart_etag_parts'], // S3v3.
+							$dat_settings['_multipart_transferspeeds'], // S3v3.
+							$dat_settings['_multipart_backup_type'], // S3v3.
+							$dat_settings['_multipart_backup_size'], // S3v3.
+							$dat_settings['_retry_stash_confirm'] // S3v3.
 						);
 						$dat_send_id = pb_backupbuddy::random_string( 12 );
 						self::schedule_single_event( time(), 'destination_send', array( $dat_settings, array( $data_file ), $dat_send_id, false, $dat_send_id ) );

@@ -602,6 +602,9 @@ class pb_backupbuddy_destination_s33 {
 	 */
 	public static function init_multipart( $settings, $file ) {
 		// Handle chunking of file into a multipart upload (if applicable).
+		if ( is_array( $file ) ) {
+			$file = $file[0];
+		}
 		$file_size = filesize( $file );
 		pb_backupbuddy::status( 'details', 'File size of `' . pb_backupbuddy::$format->file_size( $file_size ) . '`.' );
 
@@ -1136,7 +1139,7 @@ class pb_backupbuddy_destination_s33 {
 
 		// Loop through dat files looking for orphans.
 		foreach ( $files as $file ) {
-			$filename = $file['filename'];
+			$filename = isset( $file['Key'] ) ? $file['Key'] : $file['filename'];
 
 			// Appears to not be a dat file for this site.
 			if ( strpos( $filename, 'backup-' . $prefix ) === false ) {
@@ -1167,10 +1170,13 @@ class pb_backupbuddy_destination_s33 {
 		$settings = self::_init( $settings );
 		pb_backupbuddy::status( 'details', 'Getting download URL.' );
 
-		$command = self::$_client->getCommand( 'GetObject', array(
-			'Bucket' => $settings['bucket'],
-			'Key'    => $settings['directory'] . $remote_file,
-		));
+		$command = self::$_client->getCommand(
+			'GetObject',
+			array(
+				'Bucket' => $settings['bucket'],
+				'Key'    => $settings['directory'] . $remote_file,
+			)
+		);
 
 		try {
 			$request = self::$_client->createPresignedRequest( $command, '+60 minutes' );
@@ -1271,14 +1277,22 @@ class pb_backupbuddy_destination_s33 {
 			return self::_error( 'Error #84397849347: Unable to list existing multipart uploads. Details: `' . "$e" . '`' );
 		}
 
-		if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
-			pb_backupbuddy::status( 'details', 'Multipart upload check retrieved. Found `' . count( $response['Uploads'] ) . '` multipart uploads in progress / stalled. Full logging mode details: `' . print_r( $response, true ) . '`' );
+		if ( is_object( $response ) ) {
+			$uploads = (array) $response->get( 'Uploads' );
 		} else {
-			pb_backupbuddy::status( 'details', 'Multipart upload check retrieved. Found `' . count( $response['Uploads'] ) . '` multipart uploads in progress / stalled. Old BackupBuddy parts will be cleaned up (if any found) ...' );
+			$uploads = isset( $response['Uploads'] ) ? count( (array) $response['Uploads'] ) : array();
+		}
+
+		$parts = count( $uploads );
+
+		if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+			pb_backupbuddy::status( 'details', 'Multipart upload check retrieved. Found `' . $parts . '` multipart uploads in progress / stalled. Full logging mode details: `' . print_r( $response, true ) . '`' );
+		} else {
+			pb_backupbuddy::status( 'details', 'Multipart upload check retrieved. Found `' . $parts . '` multipart uploads in progress / stalled. Old BackupBuddy parts will be cleaned up (if any found) ...' );
 		}
 
 		// Loop through each incomplete multipart upload.
-		foreach ( (array) $response['Uploads'] as $upload ) {
+		foreach ( $uploads as $upload ) {
 			if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
 				pb_backupbuddy::status( 'details', 'Checking upload (full logging mode): ' . print_r( $upload, true ) );
 			}

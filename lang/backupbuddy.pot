@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the BackupBuddy package.
 msgid ""
 msgstr ""
-"Project-Id-Version: BackupBuddy 8.6.1.0\n"
+"Project-Id-Version: BackupBuddy 8.6.2.0\n"
 "Report-Msgid-Bugs-To: http://ithemes.com/support/\n"
-"POT-Creation-Date: 2020-08-12 14:26:16+00:00\n"
+"POT-Creation-Date: 2020-10-07 10:08:41+00:00\n"
 "PO-Revision-Date: 2020-MO-DA HO:MI+ZONE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -360,7 +360,7 @@ msgstr ""
 msgid "Multisite subsite export mode."
 msgstr ""
 
-#: classes/backup.php:353 classes/core.php:914
+#: classes/backup.php:353 classes/core.php:923
 msgid "Fatal Error #9034 A. Unable to access fileoptions data."
 msgstr ""
 
@@ -417,7 +417,7 @@ msgid "Database Server has gone away, unable to schedule next backup step. The b
 msgstr ""
 
 #: classes/backup.php:1253 classes/backup.php:1791 classes/backup.php:2277
-#: classes/core.php:2291 lib/mysqlbuddy/mysqlbuddy.php:654
+#: classes/core.php:2309 lib/mysqlbuddy/mysqlbuddy.php:654
 msgid "Database Server connection status unverified."
 msgstr ""
 
@@ -630,7 +630,7 @@ msgid "Database Rollback"
 msgstr ""
 
 #: classes/class-backupbuddy-backups.php:143
-#: classes/class-backupbuddy-restore.php:2771 views/_backup_listing.php:186
+#: classes/class-backupbuddy-restore.php:2813 views/_backup_listing.php:186
 #: views/backups-list.php:186
 msgid "Delete"
 msgstr ""
@@ -654,7 +654,7 @@ msgstr ""
 
 #: classes/class-backupbuddy-backups.php:161
 #: classes/class-backupbuddy-backups.php:819
-#: classes/class-backupbuddy-restore.php:735
+#: classes/class-backupbuddy-restore.php:739
 #: controllers/ajax/live_last_snapshot_details.php:53
 #: controllers/ajax/live_last_snapshot_details.php:102
 #: controllers/ajax/live_last_snapshot_details.php:158
@@ -701,7 +701,7 @@ msgstr ""
 
 #: classes/class-backupbuddy-backups.php:417
 #: destinations/dropbox3/_manage.php:44 destinations/s32/_manage.php:102
-#: destinations/s33/_manage.php:105 init_admin.php:490
+#: destinations/s33/_manage.php:109 init_admin.php:490
 msgid "file"
 msgid_plural "files"
 msgstr[0] ""
@@ -749,26 +749,26 @@ msgstr ""
 msgid "Plugins"
 msgstr ""
 
-#: classes/class-backupbuddy-backups.php:685 classes/core.php:1271
+#: classes/class-backupbuddy-backups.php:685 classes/core.php:1289
 #: init_admin.php:491
 msgid "files"
 msgstr ""
 
-#: classes/class-backupbuddy-backups.php:698 classes/core.php:1283
+#: classes/class-backupbuddy-backups.php:698 classes/core.php:1301
 #: views/backups/backup-detail.php:227
 msgid "Backup Status"
 msgstr ""
 
-#: classes/class-backupbuddy-backups.php:698 classes/core.php:1283
+#: classes/class-backupbuddy-backups.php:698 classes/core.php:1301
 msgid "View Details"
 msgstr ""
 
-#: classes/class-backupbuddy-backups.php:702 classes/core.php:1287
+#: classes/class-backupbuddy-backups.php:702 classes/core.php:1305
 #: views/backups/backup-detail.php:239 views/recent-backups.php:67
 msgid "View Backup Log"
 msgstr ""
 
-#: classes/class-backupbuddy-backups.php:702 classes/core.php:1287
+#: classes/class-backupbuddy-backups.php:702 classes/core.php:1305
 #: views/recent-backups.php:67
 msgid "View Log"
 msgstr ""
@@ -780,7 +780,7 @@ msgstr ""
 #: classes/class-backupbuddy-backups.php:847 destinations/dropbox3/init.php:731
 #: destinations/ftp/init.php:474 destinations/gdrive2/init.php:980
 #: destinations/onedrive/init.php:757 destinations/s32/init.php:802
-#: destinations/s33/init.php:868 destinations/sftp/init.php:290
+#: destinations/s33/init.php:871 destinations/sftp/init.php:290
 #: destinations/stash2/init.php:353 destinations/stash3/init.php:453
 msgid "Copy to Local"
 msgstr ""
@@ -794,7 +794,7 @@ msgstr ""
 msgid "Today"
 msgstr ""
 
-#: classes/class-backupbuddy-backups.php:1064 classes/core.php:1133
+#: classes/class-backupbuddy-backups.php:1064 classes/core.php:1151
 msgid "Deleted:"
 msgstr ""
 
@@ -863,117 +863,117 @@ msgstr ""
 msgid "Installed Version"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:664
-#: classes/class-backupbuddy-restore.php:764
+#: classes/class-backupbuddy-restore.php:665
+#: classes/class-backupbuddy-restore.php:768
 msgid "Restoring..."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:675
+#: classes/class-backupbuddy-restore.php:676
 msgid "Restore started..."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:678
+#: classes/class-backupbuddy-restore.php:679
 msgid "Downloading zip file..."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:683
+#: classes/class-backupbuddy-restore.php:684
 msgid "Verifying extraction..."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:685
+#: classes/class-backupbuddy-restore.php:686
 msgid "Handling permissions..."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:687
+#: classes/class-backupbuddy-restore.php:688
 msgid "Beginning zip extraction..."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:689
+#: classes/class-backupbuddy-restore.php:690
 msgid "Zip extraction complete."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:691
+#: classes/class-backupbuddy-restore.php:692
 msgid "Unzipping backup contents..."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:708
+#: classes/class-backupbuddy-restore.php:712
 msgid "Performing database restore..."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:710
+#: classes/class-backupbuddy-restore.php:714
 msgid "Checking for database restore..."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:714
+#: classes/class-backupbuddy-restore.php:718
 msgid "Preparing to restore database tables..."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:720
+#: classes/class-backupbuddy-restore.php:724
 msgid "Importing database tables"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:727
+#: classes/class-backupbuddy-restore.php:731
 msgid "Cleaning up..."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:729
+#: classes/class-backupbuddy-restore.php:733
 msgid "Restore Paused."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:738
+#: classes/class-backupbuddy-restore.php:742
 msgid "Restore failed."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:742
+#: classes/class-backupbuddy-restore.php:746
 msgid "Restore aborted."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:745
+#: classes/class-backupbuddy-restore.php:749
 msgid "Restore aborted by user."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:748
+#: classes/class-backupbuddy-restore.php:752
 msgid "Restore complete."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:888
+#: classes/class-backupbuddy-restore.php:892
 msgid "Could not load restore file."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:1437
+#: classes/class-backupbuddy-restore.php:1476
 msgid "Could not load restore data."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:1450
+#: classes/class-backupbuddy-restore.php:1489
 msgid "Restore Failed, missing files to restore."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:1455
+#: classes/class-backupbuddy-restore.php:1494
 msgid "Restore Failed, missing tables to restore."
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2613 controllers/actions.php:429
+#: classes/class-backupbuddy-restore.php:2655 controllers/actions.php:429
 #: controllers/ajax/live_setup.php:16 destinations/live/_manual_snapshot.php:69
 msgid "Full Backup"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2625
+#: classes/class-backupbuddy-restore.php:2667
 msgid "All"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2644
+#: classes/class-backupbuddy-restore.php:2686
 msgid "Folder"
 msgid_plural "Folders"
 msgstr[0] ""
 msgstr[1] ""
 
-#: classes/class-backupbuddy-restore.php:2650
+#: classes/class-backupbuddy-restore.php:2692
 msgid "File"
 msgid_plural "Files"
 msgstr[0] ""
 msgstr[1] ""
 
-#: classes/class-backupbuddy-restore.php:2657
+#: classes/class-backupbuddy-restore.php:2699
 #: views/restore/restore-detail.php:155 views/restore/restore-detail.php:165
 #: views/restore/restore-detail.php:175 views/restore/restore-detail.php:185
 #: views/restore/restore-detail.php:195
@@ -982,11 +982,11 @@ msgid_plural "Tables"
 msgstr[0] ""
 msgstr[1] ""
 
-#: classes/class-backupbuddy-restore.php:2659 destinations/live/_manage.php:893
+#: classes/class-backupbuddy-restore.php:2701 destinations/live/_manage.php:893
 msgid "Tables"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2704 classes/core.php:164
+#: classes/class-backupbuddy-restore.php:2746 classes/core.php:164
 #: classes/core.php:165 classes/core.php:167 classes/core.php:169
 #: classes/core.php:170 classes/core.php:171 classes/core.php:172
 #: classes/core.php:173 classes/core.php:174
@@ -1008,90 +1008,90 @@ msgstr ""
 msgid "Unknown"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2707
+#: classes/class-backupbuddy-restore.php:2749
 msgid "Not Started"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2709
+#: classes/class-backupbuddy-restore.php:2751
 msgid "Started"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2711
+#: classes/class-backupbuddy-restore.php:2753
 msgid "Downloading"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2713
+#: classes/class-backupbuddy-restore.php:2755
 msgid "Ready"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2715
+#: classes/class-backupbuddy-restore.php:2757
 msgid "Unzipping"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2717
+#: classes/class-backupbuddy-restore.php:2759
 msgid "Unzipped"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2719
-#: classes/class-backupbuddy-restore.php:2721
+#: classes/class-backupbuddy-restore.php:2761
+#: classes/class-backupbuddy-restore.php:2763
 msgid "Verifying"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2723
+#: classes/class-backupbuddy-restore.php:2765
 msgid "Handling Permissions"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2725
+#: classes/class-backupbuddy-restore.php:2767
 msgid "Preparing Database"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2727
+#: classes/class-backupbuddy-restore.php:2769
 msgid "Restoring Database Tables"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2729 destinations/live/_manage.php:486
+#: classes/class-backupbuddy-restore.php:2771 destinations/live/_manage.php:486
 #: destinations/live/_manage.php:494 destinations/live/_stats.php:89
 #: destinations/live/_stats.php:99
 msgid "Paused"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2731
+#: classes/class-backupbuddy-restore.php:2773
 msgid "Restoring"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2733
+#: classes/class-backupbuddy-restore.php:2775
 msgid "Copying"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2735
+#: classes/class-backupbuddy-restore.php:2777
 msgid "Restoring Database"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2737 views/diagnostics/_other.php:130
+#: classes/class-backupbuddy-restore.php:2779 views/diagnostics/_other.php:130
 msgid "Cleanup"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2739
+#: classes/class-backupbuddy-restore.php:2781
 msgid "Complete"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2741
+#: classes/class-backupbuddy-restore.php:2783
 msgid "Failed"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2743
+#: classes/class-backupbuddy-restore.php:2785
 msgid "Aborted by User"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:2745
+#: classes/class-backupbuddy-restore.php:2787
 msgid "Aborted"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:3311
+#: classes/class-backupbuddy-restore.php:3405
 msgid "Advanced Settings > Restore Permissions"
 msgstr ""
 
-#: classes/class-backupbuddy-restore.php:3312
+#: classes/class-backupbuddy-restore.php:3406
 msgid "WARNING: BackupBuddy has detected potential issues with creating new directories on your server. Double check file/folder permissions set here: "
 msgstr ""
 
@@ -1155,67 +1155,67 @@ msgstr ""
 msgid "Excluding inactive plugin directories."
 msgstr ""
 
-#: classes/core.php:807
+#: classes/core.php:816
 msgid "Error scheduling file transfer. Please check your BackupBuddy error log for details. A plugin may have prevented scheduling or the database rejected it."
 msgstr ""
 
-#: classes/core.php:980
+#: classes/core.php:989
 msgid "Fatal Error #9034 G. Unable to access fileoptions data."
 msgstr ""
 
-#: classes/core.php:1359
+#: classes/core.php:1377
 msgid "Error #458485945b: Unable to create temporary location."
 msgstr ""
 
-#: classes/core.php:1773
+#: classes/core.php:1791
 msgid "Running in Alternate WordPress Cron mode. HTTP Loopback Connections are not enabled on this server but you have overridden this in the wp-config.php file (this is a good thing)."
 msgstr ""
 
-#: classes/core.php:1773 classes/core.php:1793
+#: classes/core.php:1791 classes/core.php:1811
 msgid "Additional Information Here"
 msgstr ""
 
-#: classes/core.php:1775
+#: classes/core.php:1793
 msgid "HTTP Loopback Connections are not enabled on this server or are not functioning properly. You may encounter stalled, significantly delayed backups, or other difficulties. See details in the box below. This may be caused by a conflicting plugin such as a caching plugin."
 msgstr ""
 
-#: classes/core.php:1775 classes/core.php:1795
+#: classes/core.php:1793 classes/core.php:1813
 msgid "Click for instructions on how to resolve this issue."
 msgstr ""
 
-#: classes/core.php:1793
+#: classes/core.php:1811
 msgid "Running in Alternate WordPress Cron mode. HTTP cronback Connections are not enabled on this server but you have overridden this in the wp-config.php file (this is a good thing)."
 msgstr ""
 
-#: classes/core.php:1795
+#: classes/core.php:1813
 msgid "HTTP loopback connections are not enabled to the wp-cron.php on this server or are not functioning properly. You may encounter stalled, significantly delayed backups, or other difficulties. See details in the box below. This may be caused by a conflicting plugin such as a caching plugin."
 msgstr ""
 
-#: classes/core.php:1819
+#: classes/core.php:1837
 msgid "One or more caching or security plugins known to possibly cause problems was detected as activated. Some caching or security plugin configurations may possibly cache or interfere with backup processes or WordPress cron. If you encounter problems clear the caching plugin's cache or check security settings (deactivating the plugin may help) to troubleshoot."
 msgstr ""
 
-#: classes/core.php:1820
+#: classes/core.php:1838
 msgid "Activated caching plugins detected:"
 msgstr ""
 
-#: classes/core.php:1834
+#: classes/core.php:1852
 msgid "WordPress may have been detected in one or more subdirectories. Backing up multiple instances of WordPress may result in server timeouts due to increased backup time. You may exclude WordPress directories via the Settings page. Detected non-excluded locations:"
 msgstr ""
 
-#: classes/core.php:1900
+#: classes/core.php:1918
 msgid "A backup was recently started and reports unfinished steps. You should wait unless you are sure the previous backup has completed or failed to avoid placing a heavy load on your server."
 msgstr ""
 
-#: classes/core.php:2287
+#: classes/core.php:2305
 msgid "Database Server has gone away, unable to update remote destination transfer status. This is most often caused by mysql running out of memory or timing out far too early. Please contact your host."
 msgstr ""
 
-#: classes/core.php:3449
+#: classes/core.php:3467
 msgid "Creating DAT (data) file snapshotting site & backup information."
 msgstr ""
 
-#: classes/core.php:3589
+#: classes/core.php:3607
 msgid "Compensating for SSL in siteurl."
 msgstr ""
 
@@ -1688,8 +1688,8 @@ msgstr ""
 
 #: controllers/ajax/restore_file_view.php:51 destinations/s32/init.php:915
 #: destinations/s32/init.php:932 destinations/s32/init.php:942
-#: destinations/s33/init.php:982 destinations/s33/init.php:998
-#: destinations/s33/init.php:1007
+#: destinations/s33/init.php:985 destinations/s33/init.php:1001
+#: destinations/s33/init.php:1010
 msgid "Success."
 msgstr ""
 
@@ -3625,7 +3625,7 @@ msgstr ""
 #: destinations/local/init.php:278 destinations/rackspace/init.php:62
 #: destinations/s3/init.php:60 destinations/s32/init.php:261
 #: destinations/s32/init.php:758 destinations/s33/init.php:272
-#: destinations/s33/init.php:823 destinations/sftp/init.php:229
+#: destinations/s33/init.php:826 destinations/sftp/init.php:229
 #: destinations/sftp/init.php:321 destinations/site/init.php:52
 #: destinations/stash2/init.php:95 destinations/stash2/init.php:299
 #: destinations/stash3/init.php:95 destinations/stash3/init.php:392
@@ -3634,7 +3634,7 @@ msgstr ""
 
 #: destinations/dropbox2/init.php:199 destinations/ftp/init.php:570
 #: destinations/s3/init.php:415 destinations/s3/init.php:577
-#: destinations/s32/init.php:961 destinations/s33/init.php:1026
+#: destinations/s32/init.php:961 destinations/s33/init.php:1029
 msgid "Fatal Error #9034.84838. Unable to access fileoptions data."
 msgstr ""
 
@@ -3855,7 +3855,7 @@ msgstr ""
 #: destinations/dropbox3/init.php:728 destinations/ftp/init.php:473
 #: destinations/gdrive2/init.php:979 destinations/local/init.php:312
 #: destinations/onedrive/init.php:756 destinations/s32/init.php:801
-#: destinations/s33/init.php:867 destinations/sftp/init.php:289
+#: destinations/s33/init.php:870 destinations/sftp/init.php:289
 #: destinations/stash2/init.php:352 destinations/stash3/init.php:452
 msgid "Download Backup"
 msgstr ""
@@ -5417,11 +5417,11 @@ msgstr ""
 msgid "Check if directed by support."
 msgstr ""
 
-#: destinations/s33/_manage.php:120
+#: destinations/s33/_manage.php:124
 msgid "You have not completed sending any backups to this S3v3 destination (bucket + directory) for this site yet."
 msgstr ""
 
-#: destinations/s33/_manage.php:122
+#: destinations/s33/_manage.php:126
 msgid "You have not completed sending any backups to this S3v3 destination (bucket + directory)."
 msgstr ""
 
