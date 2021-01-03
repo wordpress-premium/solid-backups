@@ -265,7 +265,7 @@ class pb_backupbuddy_destination_s33 {
 	 *
 	 * @return bool|array  True on success, false on failure, array if a multipart chunked send so there is no status yet.
 	 */
-	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false, $delete_remote_after = false ) {
+	public static function send( $settings = array(), $file = '', $send_id = '', $delete_after = false, $delete_remote_after = false ) {
 		pb_backupbuddy::status( 'details', 'Starting s33 send().' );
 		global $pb_backupbuddy_destination_errors;
 		if ( '1' == $settings['disabled'] ) {
@@ -534,6 +534,7 @@ class pb_backupbuddy_destination_s33 {
 					if ( $bytesWeCouldSendWithTimeLeft < $chunkSizeBytes || $needed_memory > $available_memory ) { // We can send more than a whole chunk (including wiggle room) so send another bit.
 						pb_backupbuddy::status( 'message', 'Not enough time left (~`' . $timeRemaining  . '`) with max time of `' . $maxTime . '` sec to send another chunk at `' . pb_backupbuddy::$format->file_size( $bytesPerSec ) . '` / sec. Ran for ' . round( microtime( true ) - self::$_timeStart, 3 ) . ' sec. Proceeding to use chunking.' );
 						@fclose( $f );
+						unset( $fileoptions );
 
 						$cronTime   = time();
 						$cronArgs   = array( $settings, $file, $send_id, $delete_after );
@@ -551,9 +552,6 @@ class pb_backupbuddy_destination_s33 {
 							update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
 							spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
 						}
-
-						@fclose( $f );
-						unset( $fileoptions );
 
 						return array( $settings['_multipart_id'], 'Sent part ' . $settings['_multipart_partnumber'] . ' of ' . count( $settings['_multipart_counts'] ) . ' parts.' . $update_status );
 					} else { // End if.

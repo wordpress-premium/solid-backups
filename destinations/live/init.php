@@ -102,7 +102,7 @@ class pb_backupbuddy_destination_live {
 	 *	@param		array			$file			Array of one or more files to send.
 	 *	@return		boolean							True on success, else false.
 	 */
-	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false ) {
+	public static function send( $settings = array(), $file = '', $send_id = '', $delete_after = false ) {
 		$settings = self::_init( $settings );
 		//return true;
 		global $pb_backupbuddy_destination_errors;

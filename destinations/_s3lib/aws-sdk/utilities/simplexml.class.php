@@ -104,7 +104,7 @@ class CFSimpleXML extends SimpleXMLIterator
 	 * @param boolean $is_prefix (Optional) (No description provided by PHP.net.)
 	 * @return CFSimpleXML Creates a new <CFSimpleXML> element.
 	 */
-	public static function init($data, $options = 0, $data_is_url, $ns, $is_prefix = false)
+	public static function init($data, $options = 0, $data_is_url = false, $ns = '', $is_prefix = false)
 	{
 		if (version_compare(PHP_VERSION, '5.3.0', '<'))
 		{

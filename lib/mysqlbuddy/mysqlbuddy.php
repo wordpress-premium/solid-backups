@@ -891,6 +891,7 @@ class pb_backupbuddy_mysqlbuddy {
 			$insert_sql = '';
 
 			@fclose( $file_handle );
+			unset( $file_handle );
 
 			pb_backupbuddy::status( 'details', 'Finished dumping database table `' . $table . '`.' );
 			pb_backupbuddy::status( 'finishTableDump', $table );
@@ -904,8 +905,10 @@ class pb_backupbuddy_mysqlbuddy {
 
 		} // end foreach table.
 
-		@fclose( $file_handle );
-		unset( $file_handle );
+		if ( ! empty( $file_handle ) ) {
+			@fclose( $file_handle );
+			unset( $file_handle );
+		}
 
 		pb_backupbuddy::status( 'details', __( 'Finished PHP based SQL dump method. Ran for ' . round( microtime( true ) - $this->time_start, 3 ) . ' sec.', 'it-l10n-backupbuddy' ) );
 		return true;

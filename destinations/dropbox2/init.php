@@ -91,7 +91,7 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 	 *	@param		array			$file		Array of one or more files to send.
 	 *	@return		boolean						True on success single-process, array on multipart with remaining steps, else false (failed).
 	 */
-	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false ) {
+	public static function send( $settings = array(), $file = '', $send_id = '', $delete_after = false ) {
 		global $pb_backupbuddy_destination_errors;
 		if ( '1' == $settings['disabled'] ) {
 			$pb_backupbuddy_destination_errors[] = __( 'Error #48933: This destination is currently disabled. Enable it under this destination\'s Advanced Settings.', 'it-l10n-backupbuddy' );
@@ -494,19 +494,16 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 
 	} // End listFiles().
 
-
-
-	/*	getFile()
-	 *
+	/**
 	 * Download a file to local.
 	 *
-	 *	@param		array			$settings			Destination settings.
-	 *	@param		string			$remote_file		Remote file to retrieve. Filename only. Directory, path, bucket, etc handled in $destination_settings.
-	 *	@param		string			$local_file			Local file to save to.
-	 *	@return		array|boolean						Array of items in directory OR bool FALSE on failure.
+	 * @param array  $settings     Destination settings.
+	 * @param string $remote_file  Remote file to retrieve. Filename only. Directory, path, bucket, etc handled in $destination_settings.
+	 * @param string $local_file   Local file to save to.
+	 *
+	 * @return array|bool  Array of items in directory OR bool FALSE on failure.
 	 */
-	public static function getFile( $settings = array(), $remote_file, $local_file ) {
-
+	public static function getFile( $settings = array(), $remote_file = '', $local_file = '' ) {
 		pb_backupbuddy::status( 'details', 'Dropbox2 List Function Started.' );
 
 		// Normalize settings, apply defaults, etc.
@@ -516,7 +513,6 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 		if ( false === self::_connect( $settings['access_token'] ) ) { // Try to connect. Return false if fail.
 			return false;
 		}
-
 
 		// Open local file to write to.
 		$f = @fopen( $local_file, 'w+b' );
@@ -550,16 +546,15 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 
 	} // End getFile().
 
-
-
-	/*	delete()
+	/**
+	 * Delete files in this destination & directory. Path / directory provided in settings.
 	 *
-	 *	Delete files in this destination & directory. Path / directory provided in settings.
+	 * @param array $settings       Destination settings.
+	 * @param array $file_or_files  File or array of files.
 	 *
-	 *	@param		array			$settings		Destination settings.
-	 *	@return		bool|string						Bool TRUE on success, else string error message.
+	 * @return bool|string  Bool TRUE on success, else string error message.
 	 */
-	public static function delete( $settings = array(), $file_or_files ) {
+	public static function delete( $settings = array(), $file_or_files = array() ) {
 
 		if ( ! is_array( $file_or_files ) ) {
 			$files = array( $file_or_files );

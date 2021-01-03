@@ -2,9 +2,9 @@
 # This file is distributed under the same license as the BackupBuddy package.
 msgid ""
 msgstr ""
-"Project-Id-Version: BackupBuddy 8.6.2.0\n"
+"Project-Id-Version: BackupBuddy 8.7.2.0\n"
 "Report-Msgid-Bugs-To: http://ithemes.com/support/\n"
-"POT-Creation-Date: 2020-10-07 10:08:41+00:00\n"
+"POT-Creation-Date: 2020-12-23 22:54:23+00:00\n"
 "PO-Revision-Date: 2020-MO-DA HO:MI+ZONE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -780,8 +780,8 @@ msgstr ""
 #: classes/class-backupbuddy-backups.php:847 destinations/dropbox3/init.php:731
 #: destinations/ftp/init.php:474 destinations/gdrive2/init.php:980
 #: destinations/onedrive/init.php:757 destinations/s32/init.php:802
-#: destinations/s33/init.php:871 destinations/sftp/init.php:290
-#: destinations/stash2/init.php:353 destinations/stash3/init.php:453
+#: destinations/s33/init.php:869 destinations/sftp/init.php:290
+#: destinations/stash2/init.php:357 destinations/stash3/init.php:453
 msgid "Copy to Local"
 msgstr ""
 
@@ -1688,8 +1688,8 @@ msgstr ""
 
 #: controllers/ajax/restore_file_view.php:51 destinations/s32/init.php:915
 #: destinations/s32/init.php:932 destinations/s32/init.php:942
-#: destinations/s33/init.php:985 destinations/s33/init.php:1001
-#: destinations/s33/init.php:1010
+#: destinations/s33/init.php:983 destinations/s33/init.php:999
+#: destinations/s33/init.php:1008
 msgid "Success."
 msgstr ""
 
@@ -3625,7 +3625,7 @@ msgstr ""
 #: destinations/local/init.php:278 destinations/rackspace/init.php:62
 #: destinations/s3/init.php:60 destinations/s32/init.php:261
 #: destinations/s32/init.php:758 destinations/s33/init.php:272
-#: destinations/s33/init.php:826 destinations/sftp/init.php:229
+#: destinations/s33/init.php:824 destinations/sftp/init.php:229
 #: destinations/sftp/init.php:321 destinations/site/init.php:52
 #: destinations/stash2/init.php:95 destinations/stash2/init.php:299
 #: destinations/stash3/init.php:95 destinations/stash3/init.php:392
@@ -3634,7 +3634,7 @@ msgstr ""
 
 #: destinations/dropbox2/init.php:199 destinations/ftp/init.php:570
 #: destinations/s3/init.php:415 destinations/s3/init.php:577
-#: destinations/s32/init.php:961 destinations/s33/init.php:1029
+#: destinations/s32/init.php:961 destinations/s33/init.php:1027
 msgid "Fatal Error #9034.84838. Unable to access fileoptions data."
 msgstr ""
 
@@ -3855,8 +3855,8 @@ msgstr ""
 #: destinations/dropbox3/init.php:728 destinations/ftp/init.php:473
 #: destinations/gdrive2/init.php:979 destinations/local/init.php:312
 #: destinations/onedrive/init.php:756 destinations/s32/init.php:801
-#: destinations/s33/init.php:870 destinations/sftp/init.php:289
-#: destinations/stash2/init.php:352 destinations/stash3/init.php:452
+#: destinations/s33/init.php:868 destinations/sftp/init.php:289
+#: destinations/stash2/init.php:356 destinations/stash3/init.php:452
 msgid "Download Backup"
 msgstr ""
 
@@ -5756,11 +5756,11 @@ msgstr ""
 msgid "Your remote BackupBuddy Stash storage does not contain any traditional backup zip files yet."
 msgstr ""
 
-#: destinations/stash2/init.php:384 destinations/stash3/init.php:484
+#: destinations/stash2/init.php:388 destinations/stash3/init.php:484
 msgid "Snapshots Stored Remotely on Stash Live Servers"
 msgstr ""
 
-#: destinations/stash2/init.php:386 destinations/stash3/init.php:486
+#: destinations/stash2/init.php:390 destinations/stash3/init.php:486
 #: init_admin.php:516
 msgid "Stash Traditional Backup Files"
 msgstr ""
@@ -6849,12 +6849,12 @@ msgstr ""
 msgid "Zip process reported: Zip process reported: %1$s warning%2$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3112 lib/xzipbuddy/zbzipexec.php:3222
-#: lib/xzipbuddy/zbzipexec.php:3379 lib/xzipbuddy/zbzipexec.php:3481
-#: lib/xzipbuddy/zbzipexec.php:3579 lib/xzipbuddy/zbzipexec.php:3823
-#: lib/zipbuddy/zbzipexec.php:1536 lib/zipbuddy/zbzipexec.php:1666
-#: lib/zipbuddy/zbzipexec.php:1821 lib/zipbuddy/zbzipexec.php:1921
-#: lib/zipbuddy/zbzipexec.php:2017 lib/zipbuddy/zbzipexec.php:2260
+#: lib/xzipbuddy/zbzipexec.php:3112 lib/xzipbuddy/zbzipexec.php:3221
+#: lib/xzipbuddy/zbzipexec.php:3378 lib/xzipbuddy/zbzipexec.php:3480
+#: lib/xzipbuddy/zbzipexec.php:3578 lib/xzipbuddy/zbzipexec.php:3822
+#: lib/zipbuddy/zbzipexec.php:1536 lib/zipbuddy/zbzipexec.php:1664
+#: lib/zipbuddy/zbzipexec.php:1804 lib/zipbuddy/zbzipexec.php:1904
+#: lib/zipbuddy/zbzipexec.php:2000 lib/zipbuddy/zbzipexec.php:2243
 msgid "Using absolute unzip path: "
 msgstr ""
 
@@ -6866,72 +6866,72 @@ msgstr ""
 msgid "exec (unzip) failed to open/process file to extract contents (%1$s to %2$s) - Error Info: %3$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3180 lib/xzipbuddy/zbzipexec.php:3310
-#: lib/xzipbuddy/zbzipexec.php:3421 lib/xzipbuddy/zbzipexec.php:3552
-#: lib/xzipbuddy/zbzipexec.php:3627 lib/xzipbuddy/zbzipexec.php:3747
-#: lib/xzipbuddy/zbzipexec.php:3876 lib/zipbuddy/zbzipexec.php:1624
-#: lib/zipbuddy/zbzipexec.php:1752 lib/zipbuddy/zbzipexec.php:1861
-#: lib/zipbuddy/zbzipexec.php:1990 lib/zipbuddy/zbzipexec.php:2066
-#: lib/zipbuddy/zbzipexec.php:2184 lib/zipbuddy/zbzipexec.php:2311
+#: lib/xzipbuddy/zbzipexec.php:3180 lib/xzipbuddy/zbzipexec.php:3309
+#: lib/xzipbuddy/zbzipexec.php:3420 lib/xzipbuddy/zbzipexec.php:3551
+#: lib/xzipbuddy/zbzipexec.php:3626 lib/xzipbuddy/zbzipexec.php:3746
+#: lib/xzipbuddy/zbzipexec.php:3875 lib/zipbuddy/zbzipexec.php:1624
+#: lib/zipbuddy/zbzipexec.php:1737 lib/zipbuddy/zbzipexec.php:1844
+#: lib/zipbuddy/zbzipexec.php:1973 lib/zipbuddy/zbzipexec.php:2049
+#: lib/zipbuddy/zbzipexec.php:2167 lib/zipbuddy/zbzipexec.php:2294
 msgid "exec indicated as available method but exec function non-existent"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3272 lib/zipbuddy/zbzipexec.php:1714
+#: lib/xzipbuddy/zbzipexec.php:3271 lib/zipbuddy/zbzipexec.php:1704
 msgid "exec (unzip) extracted file contents (%1$s from %2$s to %3$s%4$s)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3290 lib/zipbuddy/zbzipexec.php:1732
+#: lib/xzipbuddy/zbzipexec.php:3289 lib/zipbuddy/zbzipexec.php:1722
 msgid "exec (unzip) failed to open/process file to extract contents (%1$s from %2$s to %3$s%4$s) - Error Info: %5$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3400 lib/zipbuddy/zbzipexec.php:1840
+#: lib/xzipbuddy/zbzipexec.php:3399 lib/zipbuddy/zbzipexec.php:1823
 msgid "File found (exec)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3405 lib/zipbuddy/zbzipexec.php:1845
+#: lib/xzipbuddy/zbzipexec.php:3404 lib/zipbuddy/zbzipexec.php:1828
 msgid "File not found (exec)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3411 lib/zipbuddy/zbzipexec.php:1851
+#: lib/xzipbuddy/zbzipexec.php:3410 lib/zipbuddy/zbzipexec.php:1834
 msgid "exec (unzip) failed to open/process file to check if file exists (looking for %1$s in %2$s) - Error Info: %3$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3531
+#: lib/xzipbuddy/zbzipexec.php:3530
 msgid "exec (xunzip) listed file contents (%1$s) - genereic"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3541 lib/zipbuddy/zbzipexec.php:1979
-#: lib/zipbuddy/zbzipexec.php:2055
+#: lib/xzipbuddy/zbzipexec.php:3540 lib/zipbuddy/zbzipexec.php:1962
+#: lib/zipbuddy/zbzipexec.php:2038
 msgid "exec (unzip) failed to open/process file to list contents (%1$s) - Error Info: %2$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3605
+#: lib/xzipbuddy/zbzipexec.php:3604
 msgid "exec (unzip) retrieved file contents (%1$s)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3616
+#: lib/xzipbuddy/zbzipexec.php:3615
 msgid "exec (unzip) failed to open/process file to retrieve contents (%1$s) - Error Info: %2$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3704 lib/xzipbuddy/zbzipproc.php:1195
-#: lib/zipbuddy/zbzipexec.php:1016 lib/zipbuddy/zbzipexec.php:2143
+#: lib/xzipbuddy/zbzipexec.php:3703 lib/xzipbuddy/zbzipproc.php:1195
+#: lib/zipbuddy/zbzipexec.php:1016 lib/zipbuddy/zbzipexec.php:2126
 #: lib/zipbuddy/zbzipproc.php:1195
 msgid "Using absolute zip path: "
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3728 lib/zipbuddy/zbzipexec.php:2165
+#: lib/xzipbuddy/zbzipexec.php:3727 lib/zipbuddy/zbzipexec.php:2148
 msgid "exec (zip) set comment in file %1$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3736 lib/zipbuddy/zbzipexec.php:2173
+#: lib/xzipbuddy/zbzipexec.php:3735 lib/zipbuddy/zbzipexec.php:2156
 msgid "exec (zip) failed to open/process file to set comment in file %1$s - Error Info: %2$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3857 lib/zipbuddy/zbzipexec.php:2292
+#: lib/xzipbuddy/zbzipexec.php:3856 lib/zipbuddy/zbzipexec.php:2275
 msgid "exec (unzip) retrieved comment in file %1$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipexec.php:3865 lib/zipbuddy/zbzipexec.php:2300
+#: lib/xzipbuddy/zbzipexec.php:3864 lib/zipbuddy/zbzipexec.php:2283
 msgid "exec (unzip) failed to open/process get comment in file %1$s - Error Info: %2$s."
 msgstr ""
 
@@ -6986,14 +6986,14 @@ msgid "Zip process reported: pclzip indicated as available method but error repo
 msgstr ""
 
 #: lib/xzipbuddy/zbzippclzip.php:1338 lib/xzipbuddy/zbzippclzip.php:3977
-#: lib/xzipbuddy/zbzippclzip.php:4044 lib/xzipbuddy/zbzippclzip.php:4244
-#: lib/xzipbuddy/zbzippclzip.php:4329 lib/xzipbuddy/zbzippclzip.php:4399
-#: lib/xzipbuddy/zbzippclzip.php:4458 lib/xzipbuddy/zbzippclzip.php:4513
+#: lib/xzipbuddy/zbzippclzip.php:4043 lib/xzipbuddy/zbzippclzip.php:4243
+#: lib/xzipbuddy/zbzippclzip.php:4328 lib/xzipbuddy/zbzippclzip.php:4398
+#: lib/xzipbuddy/zbzippclzip.php:4457 lib/xzipbuddy/zbzippclzip.php:4512
 #: lib/zipbuddy/zbzippclzip.php:1334 lib/zipbuddy/zbzippclzip.php:1541
-#: lib/zipbuddy/zbzippclzip.php:1943 lib/zipbuddy/zbzippclzip.php:2010
-#: lib/zipbuddy/zbzippclzip.php:2210 lib/zipbuddy/zbzippclzip.php:2295
-#: lib/zipbuddy/zbzippclzip.php:2365 lib/zipbuddy/zbzippclzip.php:2423
-#: lib/zipbuddy/zbzippclzip.php:2478
+#: lib/zipbuddy/zbzippclzip.php:1943 lib/zipbuddy/zbzippclzip.php:2006
+#: lib/zipbuddy/zbzippclzip.php:2174 lib/zipbuddy/zbzippclzip.php:2259
+#: lib/zipbuddy/zbzippclzip.php:2329 lib/zipbuddy/zbzippclzip.php:2387
+#: lib/zipbuddy/zbzippclzip.php:2442
 msgid "pclzip indicated as available method but error reported: %1$s"
 msgstr ""
 
@@ -7038,65 +7038,65 @@ msgstr ""
 msgid "pclzip extracted file contents (%1$s to %2$s)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4001 lib/xzipbuddy/zbzippclzip.php:4196
-#: lib/zipbuddy/zbzippclzip.php:1967 lib/zipbuddy/zbzippclzip.php:2162
+#: lib/xzipbuddy/zbzippclzip.php:4001 lib/xzipbuddy/zbzippclzip.php:4195
+#: lib/zipbuddy/zbzippclzip.php:1967 lib/zipbuddy/zbzippclzip.php:2126
 msgid "pclzip failed to open file to extract contents (%1$s to %2$s) - Error Info: %3$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4160 lib/zipbuddy/zbzippclzip.php:2126
+#: lib/xzipbuddy/zbzippclzip.php:4159 lib/zipbuddy/zbzippclzip.php:2099
 msgid "pclzip extracted file contents (%1$s from %2$s to %3$s%4$s)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4176 lib/zipbuddy/zbzippclzip.php:2142
+#: lib/xzipbuddy/zbzippclzip.php:4175 lib/zipbuddy/zbzippclzip.php:2112
 msgid "pclzip failed to open/process file to extract file contents (%1$s from %2$s to %3$s%4$s) - Error Info: %5$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4269 lib/zipbuddy/legacy.zipbuddy.php:307
-#: lib/zipbuddy/zbzippclzip.php:2235
+#: lib/xzipbuddy/zbzippclzip.php:4268 lib/zipbuddy/legacy.zipbuddy.php:307
+#: lib/zipbuddy/zbzippclzip.php:2199
 msgid "File found (pclzip)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4282 lib/zipbuddy/legacy.zipbuddy.php:315
-#: lib/zipbuddy/legacy.zipbuddy.php:623 lib/zipbuddy/zbzippclzip.php:2248
+#: lib/xzipbuddy/zbzippclzip.php:4281 lib/zipbuddy/legacy.zipbuddy.php:315
+#: lib/zipbuddy/legacy.zipbuddy.php:623 lib/zipbuddy/zbzippclzip.php:2212
 #: lib/zipbuddy/zipbuddy.php:2050
 msgid "File not found (pclzip)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4290 lib/zipbuddy/legacy.zipbuddy.php:322
-#: lib/zipbuddy/zbzippclzip.php:2256
+#: lib/xzipbuddy/zbzippclzip.php:4289 lib/zipbuddy/legacy.zipbuddy.php:322
+#: lib/zipbuddy/zbzippclzip.php:2220
 msgid "pclzip failed to open file to check if file exists (looking for %1$s in %2$s) - Error Info: %3$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4358 lib/zipbuddy/zbzippclzip.php:2324
+#: lib/xzipbuddy/zbzippclzip.php:4357 lib/zipbuddy/zbzippclzip.php:2288
 msgid "pclzip listed file contents (%1$s)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4368 lib/zipbuddy/zbzippclzip.php:2334
-#: lib/zipbuddy/zbzippclzip.php:2382
+#: lib/xzipbuddy/zbzippclzip.php:4367 lib/zipbuddy/zbzippclzip.php:2298
+#: lib/zipbuddy/zbzippclzip.php:2346
 msgid "pclzip failed to open file to list contents (%1$s) - Error Info: %2$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4417
+#: lib/xzipbuddy/zbzippclzip.php:4416
 msgid "pclzip failed to open file to get contents (%1$s) - Error Info: %2$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4471 lib/zipbuddy/legacy.zipbuddy.php:430
-#: lib/zipbuddy/zbzippclzip.php:2436
+#: lib/xzipbuddy/zbzippclzip.php:4470 lib/zipbuddy/legacy.zipbuddy.php:430
+#: lib/zipbuddy/zbzippclzip.php:2400
 msgid "PclZip set comment in file %1$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4478 lib/zipbuddy/legacy.zipbuddy.php:437
-#: lib/zipbuddy/zbzippclzip.php:2443
+#: lib/xzipbuddy/zbzippclzip.php:4477 lib/zipbuddy/legacy.zipbuddy.php:437
+#: lib/zipbuddy/zbzippclzip.php:2407
 msgid "PclZip failed to set comment in file %1$s - Error Info: %2$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4533 lib/zipbuddy/legacy.zipbuddy.php:555
-#: lib/zipbuddy/zbzippclzip.php:2490
+#: lib/xzipbuddy/zbzippclzip.php:4532 lib/zipbuddy/legacy.zipbuddy.php:555
+#: lib/zipbuddy/zbzippclzip.php:2454
 msgid "PclZip retrieved comment in file %1$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzippclzip.php:4540 lib/zipbuddy/legacy.zipbuddy.php:571
-#: lib/zipbuddy/zbzippclzip.php:2497
+#: lib/xzipbuddy/zbzippclzip.php:4539 lib/zipbuddy/legacy.zipbuddy.php:571
+#: lib/zipbuddy/zbzippclzip.php:2461
 msgid "PclZip failed to retrieve comment in file %1$s - Error Info: %2$s"
 msgstr ""
 
@@ -7310,14 +7310,14 @@ msgstr ""
 msgid "ZipArchive test FAILED: Unable to create/open zip file."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:695 lib/xzipbuddy/zbzipziparchive.php:778
-#: lib/xzipbuddy/zbzipziparchive.php:993 lib/xzipbuddy/zbzipziparchive.php:1070
-#: lib/xzipbuddy/zbzipziparchive.php:1146
-#: lib/xzipbuddy/zbzipziparchive.php:1216
-#: lib/xzipbuddy/zbzipziparchive.php:1287 lib/zipbuddy/zbzipziparchive.php:675
-#: lib/zipbuddy/zbzipziparchive.php:758 lib/zipbuddy/zbzipziparchive.php:973
-#: lib/zipbuddy/zbzipziparchive.php:1050 lib/zipbuddy/zbzipziparchive.php:1126
-#: lib/zipbuddy/zbzipziparchive.php:1193 lib/zipbuddy/zbzipziparchive.php:1264
+#: lib/xzipbuddy/zbzipziparchive.php:695 lib/xzipbuddy/zbzipziparchive.php:777
+#: lib/xzipbuddy/zbzipziparchive.php:992 lib/xzipbuddy/zbzipziparchive.php:1069
+#: lib/xzipbuddy/zbzipziparchive.php:1145
+#: lib/xzipbuddy/zbzipziparchive.php:1215
+#: lib/xzipbuddy/zbzipziparchive.php:1286 lib/zipbuddy/zbzipziparchive.php:675
+#: lib/zipbuddy/zbzipziparchive.php:753 lib/zipbuddy/zbzipziparchive.php:936
+#: lib/zipbuddy/zbzipziparchive.php:1013 lib/zipbuddy/zbzipziparchive.php:1089
+#: lib/zipbuddy/zbzipziparchive.php:1156 lib/zipbuddy/zbzipziparchive.php:1227
 msgid "ziparchive indicated as available method but error reported: %1$s"
 msgstr ""
 
@@ -7329,78 +7329,78 @@ msgstr ""
 msgid "ziparchive failed to extract file contents (%1$s to %2$s) - Error Info: %3$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:734 lib/xzipbuddy/zbzipziparchive.php:947
-#: lib/zipbuddy/zbzipziparchive.php:714 lib/zipbuddy/zbzipziparchive.php:927
+#: lib/xzipbuddy/zbzipziparchive.php:734 lib/xzipbuddy/zbzipziparchive.php:946
+#: lib/zipbuddy/zbzipziparchive.php:714 lib/zipbuddy/zbzipziparchive.php:891
 msgid "ZipArchive failed to open file to extract contents (%1$s to %2$s) - Error Info: %3$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:911 lib/zipbuddy/zbzipziparchive.php:891
+#: lib/xzipbuddy/zbzipziparchive.php:910 lib/zipbuddy/zbzipziparchive.php:864
 msgid "ziparchive extracted file contents (%1$s from %2$s to %3$s%4$s)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:927 lib/zipbuddy/zbzipziparchive.php:907
+#: lib/xzipbuddy/zbzipziparchive.php:926 lib/zipbuddy/zbzipziparchive.php:877
 msgid "ziparchive failed to open/process file to extract file contents (%1$s from %2$s to %3$s%4$s) - Error Info: %5$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1014 lib/zipbuddy/legacy.zipbuddy.php:242
-#: lib/zipbuddy/zbzipziparchive.php:994
+#: lib/xzipbuddy/zbzipziparchive.php:1013 lib/zipbuddy/legacy.zipbuddy.php:242
+#: lib/zipbuddy/zbzipziparchive.php:957
 msgid "File found (ziparchive)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1019 lib/zipbuddy/legacy.zipbuddy.php:247
-#: lib/zipbuddy/zbzipziparchive.php:999
+#: lib/xzipbuddy/zbzipziparchive.php:1018 lib/zipbuddy/legacy.zipbuddy.php:247
+#: lib/zipbuddy/zbzipziparchive.php:962
 msgid "File not found (ziparchive)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1028 lib/zipbuddy/legacy.zipbuddy.php:256
-#: lib/zipbuddy/zbzipziparchive.php:1008
+#: lib/xzipbuddy/zbzipziparchive.php:1027 lib/zipbuddy/legacy.zipbuddy.php:256
+#: lib/zipbuddy/zbzipziparchive.php:971
 msgid "ZipArchive failed to open file to check if file exists (looking for %1$s in %2$s) - Error Info: %3$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1103
-#: lib/xzipbuddy/zbzipziparchive.php:1162 lib/zipbuddy/zbzipziparchive.php:1083
-#: lib/zipbuddy/zbzipziparchive.php:1142
+#: lib/xzipbuddy/zbzipziparchive.php:1102
+#: lib/xzipbuddy/zbzipziparchive.php:1161 lib/zipbuddy/zbzipziparchive.php:1046
+#: lib/zipbuddy/zbzipziparchive.php:1105
 msgid "ziparchive listed file contents (%1$s)"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1113
-#: lib/xzipbuddy/zbzipziparchive.php:1173 lib/zipbuddy/zbzipziparchive.php:1093
-#: lib/zipbuddy/zbzipziparchive.php:1152
+#: lib/xzipbuddy/zbzipziparchive.php:1112
+#: lib/xzipbuddy/zbzipziparchive.php:1172 lib/zipbuddy/zbzipziparchive.php:1056
+#: lib/zipbuddy/zbzipziparchive.php:1115
 msgid "ZipArchive failed to open file to list contents (%1$s) - Error Info: %2$s."
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1235 lib/zipbuddy/legacy.zipbuddy.php:372
-#: lib/zipbuddy/zbzipziparchive.php:1212
+#: lib/xzipbuddy/zbzipziparchive.php:1234 lib/zipbuddy/legacy.zipbuddy.php:372
+#: lib/zipbuddy/zbzipziparchive.php:1175
 msgid "ZipArchive set comment in file %1$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1241 lib/zipbuddy/legacy.zipbuddy.php:378
-#: lib/zipbuddy/zbzipziparchive.php:1218
+#: lib/xzipbuddy/zbzipziparchive.php:1240 lib/zipbuddy/legacy.zipbuddy.php:378
+#: lib/zipbuddy/zbzipziparchive.php:1181
 msgid "ZipArchive failed to set comment in file %1$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1250 lib/zipbuddy/legacy.zipbuddy.php:386
-#: lib/zipbuddy/zbzipziparchive.php:1227
+#: lib/xzipbuddy/zbzipziparchive.php:1249 lib/zipbuddy/legacy.zipbuddy.php:386
+#: lib/zipbuddy/zbzipziparchive.php:1190
 msgid "ZipArchive failed to open file to set comment in file %1$s - Error Info: %2$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1329 lib/zipbuddy/legacy.zipbuddy.php:490
-#: lib/zipbuddy/zbzipziparchive.php:1298
+#: lib/xzipbuddy/zbzipziparchive.php:1328 lib/zipbuddy/legacy.zipbuddy.php:490
+#: lib/zipbuddy/zbzipziparchive.php:1261
 msgid "ZipArchive retrieved comment in file %1$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1335 lib/zipbuddy/legacy.zipbuddy.php:504
-#: lib/zipbuddy/zbzipziparchive.php:1304
+#: lib/xzipbuddy/zbzipziparchive.php:1334 lib/zipbuddy/legacy.zipbuddy.php:504
+#: lib/zipbuddy/zbzipziparchive.php:1267
 msgid "ZipArchive failed to retrieve comment in file %1$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1344 lib/zipbuddy/zbzipziparchive.php:1313
+#: lib/xzipbuddy/zbzipziparchive.php:1343 lib/zipbuddy/zbzipziparchive.php:1276
 msgid "ZipArchive failed to open file to get comment in file %1$s - Error Info: %2$s"
 msgstr ""
 
-#: lib/xzipbuddy/zbzipziparchive.php:1354 lib/zipbuddy/legacy.zipbuddy.php:263
+#: lib/xzipbuddy/zbzipziparchive.php:1353 lib/zipbuddy/legacy.zipbuddy.php:263
 #: lib/zipbuddy/legacy.zipbuddy.php:393 lib/zipbuddy/legacy.zipbuddy.php:519
-#: lib/zipbuddy/legacy.zipbuddy.php:1194 lib/zipbuddy/zbzipziparchive.php:1323
+#: lib/zipbuddy/legacy.zipbuddy.php:1194 lib/zipbuddy/zbzipziparchive.php:1286
 msgid "ziparchive indicated as available method but ZipArchive class non-existent"
 msgstr ""
 
@@ -7828,11 +7828,11 @@ msgstr ""
 msgid "Unzipping with `exec()` via `popen()`"
 msgstr ""
 
-#: lib/zipbuddy/zbzipexec.php:1969
+#: lib/zipbuddy/zbzipexec.php:1952
 msgid "exec (unzip) listed file contents (%1$s) - generic"
 msgstr ""
 
-#: lib/zipbuddy/zbzipexec.php:2042
+#: lib/zipbuddy/zbzipexec.php:2025
 msgid "exec (unzip) retrieved file contents for (%1$s)"
 msgstr ""
 

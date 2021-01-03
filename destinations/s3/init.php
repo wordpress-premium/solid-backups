@@ -54,7 +54,7 @@ class pb_backupbuddy_destination_s3 { // Change class name end to match destinat
 	 *	@param		array			$file			Array of one or more files to send.
 	 *	@return		boolean|array					True on success, false on failure, array if a multipart chunked send so there is no status yet.
 	 */
-	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false ) {
+	public static function send( $settings = array(), $file = '', $send_id = '', $delete_after = false ) {
 		global $pb_backupbuddy_destination_errors;
 		if ( '1' == $settings['disabled'] ) {
 			$pb_backupbuddy_destination_errors[] = __( 'Error #48933: This destination is currently disabled. Enable it under this destination\'s Advanced Settings.', 'it-l10n-backupbuddy' );

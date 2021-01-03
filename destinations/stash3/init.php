@@ -85,7 +85,7 @@ class pb_backupbuddy_destination_stash3 {
 	 *
 	 * @return bool|array  True on success, false on failure, array if a multipart chunked send so there is no status yet.
 	 */
-	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false, $delete_remote_after = false ) {
+	public static function send( $settings = array(), $file = '', $send_id = '', $delete_after = false, $delete_remote_after = false ) {
 		require_once pb_backupbuddy::plugin_path() . '/lib/stash/stash-api.php';
 
 		pb_backupbuddy::status( 'details', 'Starting stash3 send().' );

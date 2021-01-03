@@ -1635,24 +1635,22 @@ if ( !class_exists( "pluginbuddy_zbzipexec" ) ) {
 		}
 
 		/**
-		 *	extract_generic_selected()
+		 * Extracts the contents of a zip file to the specified directory using the best unzip methods possible.
 		 *
-		 *	Extracts the contents of a zip file to the specified directory using the best unzip methods possible.
+		 * @param string $zip_file              Full path & filename of ZIP file to extract from.
+		 * @param string $destination_directory Full directory path to extract into.
+		 * @param array  $items                 Mapping of what to extract and to what.
 		 *
-		 *	@param	string		$zip_file					Full path & filename of ZIP file to extract from.
-		 *	@param	string		$destination_directory		Full directory path to extract into.
-		 *	@param	array		$items						Mapping of what to extract and to what
-		 *	@return	bool									true on success (all extractions successful), false otherwise
+		 * @return bool  True on success (all extractions successful), false otherwise.
 		 */
-		protected function extract_generic_selected( $zip_file, $destination_directory = '', $items ) {
-
-			$summary = '';
-			$output = array();
-			$exit_code = 127;
-			$matches = array();
-			$result = false;
-			$zippath = '';
-			$command = '';
+		protected function extract_generic_selected( $zip_file, $destination_directory = '', $items = array() ) {
+			$summary         = '';
+			$output          = array();
+			$exit_code       = 127;
+			$matches         = array();
+			$result          = false;
+			$zippath         = '';
+			$command         = '';
 			$rename_required = false;
 
 			if ( function_exists( 'exec' ) ) {
@@ -1675,36 +1673,28 @@ if ( !class_exists( "pluginbuddy_zbzipexec" ) ) {
 				foreach ( $items as $what => $where ) {
 
 					$rename_required = false;
-					$result = false;
+					$result          = false;
 
 					// Decide how to extract based on where
-					if ( empty( $where) ) {
-
+					if ( empty( $where ) ) {
 						// Extract direct to destination directory with junked path
 						$unzip_command = $command . " -qqoj '{$zip_file}' '{$what}' -d '{$destination_directory}' ";
-
-					} elseif ( !empty( $where ) ) {
-
+					} elseif ( ! empty( $where ) ) {
 						if ( $what === $where ) {
-
 							// Extract to same directory structure - don't junk path, no need to add where to destnation as automatic
 							$unzip_command = $command . " -qqo '{$zip_file}' '{$what}' -d '{$destination_directory}' ";
-
 						} else {
-
 							// Firt we'll extract and junk the path
 							$unzip_command = $command . " -qqoj '{$zip_file}' '{$what}' -d '{$destination_directory}' ";
 
 							// Will need to rename if the extract is ok
 							$rename_required = true;
-
 						}
-
 					}
 
 					$unzip_command = ( self::OS_TYPE_WIN === $this->get_os_type() ) ? str_replace( '\'', '"', $unzip_command ) : $unzip_command;
 
-					@exec( $unzip_command, $output, $exit_code);
+					@exec( $unzip_command, $output, $exit_code );
 
 					// Note: we don't open the file and then do stuff but it's all done in one action
 					// so we need to interpret the return code to dedide what to do
@@ -1716,7 +1706,7 @@ if ( !class_exists( "pluginbuddy_zbzipexec" ) ) {
 							$result = true;
 
 							// Rename if we have to
-							if ( true === $rename_required) {
+							if ( true === $rename_required ) {
 
 								// Note: we junked the path on the extraction so just the filename of $what is the source but
 								// $where could be a simple file name or a file path
@@ -1739,15 +1729,10 @@ if ( !class_exists( "pluginbuddy_zbzipexec" ) ) {
 
 					// If the extraction failed (or rename after extraction) then break out of the foreach and simply return false
 					if ( false === $result ) {
-
 						break;
-
 					}
-
 				}
-
 			} else {
-
 				// Something fishy - the methods indicated exec but we couldn't find the function
 				pb_backupbuddy::status( 'details', __('exec indicated as available method but exec function non-existent','it-l10n-backupbuddy' ) );
 
@@ -1755,11 +1740,9 @@ if ( !class_exists( "pluginbuddy_zbzipexec" ) ) {
 				//$result = array( 1, "Class not available to match method" );
 				// Currently as we are returning an array as a valid result we just return false on failure
 				$result = false;
-
 			}
 
 			return $result;
-
 		}
 
 		/**

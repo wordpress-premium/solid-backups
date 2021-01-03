@@ -1867,10 +1867,12 @@ class pb_backupbuddy {
 			return;
 		}
 		if ( true !== self::$_has_flushed ) { // Only run this once.
-			if ( function_exists( 'apache_setenv' ) ) {
-				@apache_setenv( 'no-gzip', 1 ); // Compression could cause server to wait for page to finish before proceeding. Turn off compression.
+			if ( ! headers_sent() ) {
+				if ( function_exists( 'apache_setenv' ) ) {
+					@apache_setenv( 'no-gzip', 1 ); // Compression could cause server to wait for page to finish before proceeding. Turn off compression.
+				}
+				@ini_set( 'zlib.output_compression', 0 ); // Compression could cause server to wait for page to finish before proceeding. Turn off compression.
 			}
-			@ini_set( 'zlib.output_compression', 0 ); // Compression could cause server to wait for page to finish before proceeding. Turn off compression.
 			self::$_has_flushed = true;
 		}
 		flush();

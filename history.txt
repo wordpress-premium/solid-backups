@@ -2102,3 +2102,12 @@
 	Bug Fix: Added Restore support for db_1.sql where database backup is stored in a single file.
 	Bug Fix: Dropbox CURL Backwards compatibility fix.
 	Bug Fix: Fix issue where dat file fails to send on S3 destinations, thus triggering failure email.
+8.7.0.0 - 2020-12-22 - Brian DiChiara
+	Enhancement: Added PHP 8 Support.
+	Enhancement: Added WordPress 5.6 Support.
+	Enhancement: Updated package dependencies.
+	Bug Fix: Various minor fixes to Stash2 and S3v3 Destinations.
+8.7.1.0 - 2020-12-22 - Brian DiChiara
+	Bug Fix: Reverted Composer dependency updates due to PHP compatibility.
+8.7.2.0 - 2020-12-22 - Brian DiChiara
+	Bug Fix: Actually reverted Composer dependency updates due to PHP compatibility.

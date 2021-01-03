@@ -167,7 +167,7 @@ class backupbuddy_api {
 
 
 	// $sha1 = whether or not to use sha1 for file comparison. performance hit. bool or '1'/'0'. $destinationSettings = array of dest settings.
-	public static function getPreDeployInfo( $sha1 = false, $destinationSettings ) {
+	public static function getPreDeployInfo( $sha1 = false, $destinationSettings = array() ) {
 		self::_before();
 
 		if ( '1' == $sha1 ) {

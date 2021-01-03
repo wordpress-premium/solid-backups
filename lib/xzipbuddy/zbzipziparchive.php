@@ -751,16 +751,15 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 		}
 
 		/**
-		 *	extract_generic_selected()
+		 * Extracts the contents of a zip file to the specified directory using the best unzip methods possible.
 		 *
-		 *	Extracts the contents of a zip file to the specified directory using the best unzip methods possible.
+		 * @param string $zip_file               Full path & filename of ZIP file to extract from.
+		 * @param string $destination_directory  Full directory path to extract into.
+		 * @param array  $items                  Mapping of what to extract and to what
 		 *
-		 *	@param	string		$zip_file					Full path & filename of ZIP file to extract from.
-		 *	@param	string		$destination_directory		Full directory path to extract into.
-		 *	@param	array		$items						Mapping of what to extract and to what
-		 *	@return	bool									true on success (all extractions successful), false otherwise
+		 * @return bool  True on success (all extractions successful), false otherwise.
 		 */
-		protected function extract_generic_selected( $zip_file, $destination_directory = '', $items ) {
+		protected function extract_generic_selected( $zip_file, $destination_directory = '', $items = array() ) {
 
 			$result = false;
 			$za = NULL;

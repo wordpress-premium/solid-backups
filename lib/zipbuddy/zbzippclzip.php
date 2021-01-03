@@ -1982,52 +1982,43 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 		}
 
 		/**
-		 *	extract_generic_selected()
+		 * Extracts the contents of a zip file to the specified directory using the best unzip methods possible.
 		 *
-		 *	Extracts the contents of a zip file to the specified directory using the best unzip methods possible.
+		 * @param string $zip_file               Full path & filename of ZIP file to extract from.
+		 * @param string $destination_directory  Full directory path to extract into.
+		 * @param array  $items                  Mapping of what to extract and to what.
 		 *
-		 *	@param	string		$zip_file					Full path & filename of ZIP file to extract from.
-		 *	@param	string		$destination_directory		Full directory path to extract into.
-		 *	@param	array		$items						Mapping of what to extract and to what
-		 *	@return	bool									true on success (all extractions successful), false otherwise
+		 * @return bool  True on success (all extractions successful), false otherwise.
 		 */
-		protected function extract_generic_selected( $zip_file, $destination_directory = '', $items ) {
+		protected function extract_generic_selected( $zip_file, $destination_directory = '', $items = array() ) {
 
 			$result = false;
-			$za = NULL;
-			$stat = array();
+			$za     = null;
+			$stat   = array();
 
 			// This should give us a new archive object, if not catch it and bail out
 			try {
-
 				$za = new pluginbuddy_PclZip( $zip_file );
 				$result = true;
-
 			} catch ( Exception $e ) {
-
 				// Something fishy - the methods indicated ziparchive but we couldn't find the class
 				$error_string = $e->getMessage();
-				pb_backupbuddy::status( 'details', sprintf( __('pclzip indicated as available method but error reported: %1$s','it-l10n-backupbuddy' ), $error_string ) );
+				pb_backupbuddy::status( 'details', sprintf( __( 'pclzip indicated as available method but error reported: %1$s','it-l10n-backupbuddy' ), $error_string ) );
 				$result = false;
-
 			}
 
 			// Only continue if we have a valid archive object
 			if ( true === $result ) {
-
 				// Make sure we opened the zip ok and it has content
 				if ( ( $content_list = $za->listContent() ) !== 0 ) {
-
 					// Now we need to take each item and run an unzip for it - unfortunately there is no easy way of combining
 					// arbitrary extractions into a single command if some might be to a
 					foreach ( $items as $what => $where ) {
-
 						$rename_required = false;
-						$result = false;
+						$result          = false;
 
 						// Decide how to extract based on where
-						if ( empty( $where) ) {
-
+						if ( empty( $where ) ) {
 							// First we'll extract and junk the path
 							// Note: For some odd reason when we have a $what file that is a hidden (dot) file
 							// the file_exists() test in pclzip for the filepath to extract to returns true even
@@ -2038,15 +2029,11 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 
 							// Check whether we succeeded or not (would only be no list array for a zip file problem)
 							// but extraction of the file itself may still have failed
-							$result = ( $extract_list !== 0  && ( $extract_list[ 0 ][ 'status' ] == 'ok' ) );
-
-						} elseif ( !empty( $where ) ) {
-
+							$result = ( $extract_list !== 0  && ( $extract_list[0]['status'] == 'ok' ) );
+						} elseif ( ! empty( $where ) ) {
 							if ( $what === $where ) {
-
 								// Check for wildcard directory extraction like dir/* => dir/*
 								if ( "*" == substr( trim( $what ), -1 ) ) {
-
 									// Turn this into a preg_match pattern
 									$whatmatch = "|^" . $what . "|";
 
@@ -2061,27 +2048,19 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 									// Check whether we succeeded or not (would only be no list array for a zip file problem)
 									// but extraction of individual files themselves may still have failed
 									if ( 0 !== $extract_list ) {
-
 										// So far so good - assume everything will be ok
 										$result = true;
 
 										// At least we got no major failure so check the extracted files
 										foreach ( $extract_list as $file ) {
-
-											if ( 'ok' !== $file[ 'status' ] ) {
-
+											if ( 'ok' !== $file['status'] ) {
 												// Oops - we found a file that didn't extract ok so bail out with false
 												$result = false;
 												break;
-
 											}
-
 										}
-
 									}
-
 								} else {
-
 									// It's just a single file extraction - breath a sign of relief
 									// Extract to same directory structure - don't junk path, no need to add where to destnation as automatic
 									// Note: For some odd reason when we have a $what file that is a hidden (dot) file
@@ -2093,12 +2072,9 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 
 									// Check whether we succeeded or not (would only be no list array for a zip file problem)
 									// but extraction of the file itself may still have failed
-									$result = ( $extract_list !== 0  && ( isset( $extract_list[ 0 ] ) ) && ( $extract_list[ 0 ][ 'status' ] == 'ok' ) );
-
+									$result = ( $extract_list !== 0  && ( isset( $extract_list[0] ) ) && ( $extract_list[0]['status'] == 'ok' ) );
 								}
-
 							} else {
-
 								// First we'll extract and junk the path
 								// Note: For some odd reason when we have a $what file that is a hidden (dot) file
 								// the file_exists() test in pclzip for the filepath to extract to returns true even
@@ -2109,73 +2085,61 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 
 								// Check whether we succeeded or not (would only be no list array for a zip file problem)
 								// but extraction of the file itself may still have failed
-								$result = ( $extract_list !== 0  && ( $extract_list[ 0 ][ 'status' ] == 'ok' ) );
+								$result = ( $extract_list !== 0  && ( $extract_list[0]['status'] == 'ok' ) );
 
 								// Will need to rename if the extract is ok
 								$rename_required = true;
-
 							}
-
 						}
 
 						// Note: we don't open the file and then do stuff but it's all done in one action
 						// so we need to interpret the return code to dedide what to do
 						// Currently we can only distinguish between success and failure but no finer grain
 						if ( true === $result ) {
-
 							pb_backupbuddy::status( 'details', sprintf( __('pclzip extracted file contents (%1$s from %2$s to %3$s%4$s)','it-l10n-backupbuddy' ), $what, $zip_file, $destination_directory, $where ) );
 
 							// Rename if we have to
-							if ( true === $rename_required) {
-
+							if ( true === $rename_required ) {
 								// Note: we junked the path on the extraction so just the filename of $what is the source but
 								// $where could be a simple file name or a file path
 								$result = $result && rename( $destination_directory . DIRECTORY_SEPARATOR . basename( $what ),
 															 $destination_directory . DIRECTORY_SEPARATOR . $where );
 
 							}
-
 						} else {
-
 							// For now let's just print the error code and drop through
 							$error_string = $za->errorInfo();
-							pb_backupbuddy::status( 'details', sprintf( __('pclzip failed to open/process file to extract file contents (%1$s from %2$s to %3$s%4$s) - Error Info: %5$s.','it-l10n-backupbuddy' ), $what, $zip_file, $destination_directory, $where, $error_string ) );
+							pb_backupbuddy::status( 'details', sprintf( __( 'pclzip failed to open/process file to extract file contents (%1$s from %2$s to %3$s%4$s) - Error Info: %5$s.','it-l10n-backupbuddy' ), $what, $zip_file, $destination_directory, $where, $error_string ) );
 
 							// May seem redundant but belt'n'braces
 							$result = false;
-
 						}
 
 						// If the extraction failed (or rename after extraction) then break out of the foreach and simply return false
 						if ( false === $result ) {
-
 							break;
-
 						}
-
 					}
-
 				} else {
-
 					// Couldn't open archive - will return for maybe another method to try
 					$error_string = $za->errorInfo( $result );
-					pb_backupbuddy::status( 'details', sprintf( __('pclzip failed to open file to extract contents (%1$s to %2$s) - Error Info: %3$s.','it-l10n-backupbuddy' ), $zip_file, $destination_directory, $error_string ) );
+					pb_backupbuddy::status( 'details', sprintf( __( 'pclzip failed to open file to extract contents (%1$s to %2$s) - Error Info: %3$s.','it-l10n-backupbuddy' ), $zip_file, $destination_directory, $error_string ) );
 
 					// Return an error code and a description - this needs to be handled more generically
 					//$result = array( 1, "Unable to get archive contents" );
 					// Currently as we are returning an array as a valid result we just return false on failure
 					$result = false;
-
 				}
 
 				$za->close();
 
 			}
 
-		  	if ( NULL != $za ) { unset( $za ); }
+		  	if ( null != $za ) {
+		  		unset( $za );
+		  	}
 
 			return $result;
-
 		}
 
 		/**

@@ -254,7 +254,7 @@ class pb_backupbuddy_destination_s32 {
 	 *
 	 * @return bool  True on success, false on failure, array if a multipart chunked send so there is no status yet.
 	 */
-	public static function send( $settings = array(), $file, $send_id = '', $delete_after = false ) {
+	public static function send( $settings = array(), $file = '', $send_id = '', $delete_after = false ) {
 		pb_backupbuddy::status( 'details', 'Starting S32 send().' );
 		global $pb_backupbuddy_destination_errors;
 		if ( '1' == $settings['disabled'] ) {

@@ -149,7 +149,7 @@ class pb_backupbuddy_form {
 	 * @param string $rules     (optional) Rules to validate this form item against.
 	 * @param array  $settings  WordPress settings array to pass to wp_editor(). @see wp_editor().
 	 */
-	public function wysiwyg( $name, $value, $rules = '', $settings ) {
+	public function wysiwyg( $name, $value, $rules = '', $settings = array() ) {
 		$this->_inputs[ $name ] = array(
 			'type'     => __FUNCTION__,
 			'value'    => $value,

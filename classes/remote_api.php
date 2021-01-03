@@ -120,7 +120,7 @@ class backupbuddy_remote_api {
 	 * @param	bool	$returnRaw		When true returns body raw text/data rather than decoding encoded data first.
 	 *
 	 */
-	public static function remoteCall( $remoteAPI, $verb, $moreParams = array(), $timeout, $files = array(), $returnRaw = false ) {
+	public static function remoteCall( $remoteAPI, $verb, $moreParams = array(), $timeout = null, $files = array(), $returnRaw = false ) {
 		pb_backupbuddy::status( 'details', 'Preparing remote API call verb `' . $verb . '`.' );
 		$now = time();
 

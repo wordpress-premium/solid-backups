@@ -270,7 +270,7 @@ class pb_backupbuddy_backup {
 	 *
 	 * @return bool  True on success; false otherwise.
 	 */
-	public function pre_backup( $serial, $archiveFile, $profile, $trigger, $pre_backup = array(), $post_backup = array(), $schedule_title = '', $export_plugins = array(), $deployDirection, $deployDestinationSettings ) {
+	public function pre_backup( $serial, $archiveFile, $profile, $trigger, $pre_backup = array(), $post_backup = array(), $schedule_title = '', $export_plugins = array(), $deployDirection = '', $deployDestinationSettings = array() ) {
 
 		pb_backupbuddy::status(
 			'startFunction',
