@@ -6,7 +6,6 @@
     "author": "Brian DiChiara",
     "require": {
         "composer/installers": ">=1.6",
-        "krizalys/onedrive-php-sdk": "^2.6",
         "stevenmaguire/oauth2-dropbox": "^3.0",
         "google/apiclient": "^2.4",
         "monolog/monolog": "1.25.3"
