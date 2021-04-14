@@ -6,9 +6,9 @@
 
 **BackupBuddy** is by far best and most reliable backup and migration.
 
-	Need to change hosts or domains for your WordPress site? You can do that with BackupBuddy, too. BackupBuddy helps you move a WordPress site to a new host or domain easily.
+> Need to change hosts or domains for your WordPress site? You can do that with BackupBuddy, too. BackupBuddy helps you move a WordPress site to a new host or domain easily.
 
-BackupBuddy's WordPress migration feature is a very popular feature for WordPress developers who build custom sites for clients locally or on a temporary domain and then move the entire site over to a live domain.
+> BackupBuddy's WordPress migration feature is a very popular feature for WordPress developers who build custom sites for clients locally or on a temporary domain and then move the entire site over to a live domain.
 
 
 ## Installation
