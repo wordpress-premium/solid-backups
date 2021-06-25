@@ -12,5 +12,5 @@
         "google/apiclient": "^2.4",
         "monolog/monolog": "1.25.3"
     },
-    "license": "GPLv3 or later"
+    "license": "GPL-3.0-or-later"
 }
