@@ -402,7 +402,7 @@ class pb_backupbuddy {
 	 */
 	public static function _POST( $value = null ) {
 		if ( '' == $value || null == $value ) { // Requesting $_POST variable.
-			if ( pb_is_standalone() && ! get_magic_quotes_gpc() ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
+			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
 				return $_POST;
 			}
 			return stripslashes_deep( $_POST );
@@ -411,7 +411,7 @@ class pb_backupbuddy {
 			if ( isset( $_POST[ $value ] ) ) {
 				$post_value = $_POST[ $value ];
 			}
-			if ( pb_is_standalone() && ! get_magic_quotes_gpc() ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
+			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
 				return $post_value;
 			} else {
 				return stripslashes_deep( $post_value ); // Remove WordPress' magic-quotes-style escaping of data.
@@ -430,7 +430,7 @@ class pb_backupbuddy {
 	 */
 	public static function _GET( $value = '' ) {
 		if ( '' == $value || null == $value ) { // Requesting $_GET variable.
-			if ( pb_is_standalone() && ! get_magic_quotes_gpc() ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
+			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
 				return $_GET;
 			}
 			return stripslashes_deep( $_GET );
@@ -439,7 +439,7 @@ class pb_backupbuddy {
 			if ( isset( $_GET[ $value ] ) ) {
 				$get_value = $_GET[ $value ];
 			}
-			if ( pb_is_standalone() && ! get_magic_quotes_gpc() ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
+			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
 				return $get_value;
 			} else {
 				return stripslashes_deep( $get_value ); // Remove WordPress' magic-quotes-style escaping of data.

@@ -2111,3 +2111,5 @@
 	Bug Fix: Reverted Composer dependency updates due to PHP compatibility.
 8.7.2.0 - 2020-12-22 - Brian DiChiara
 	Bug Fix: Actually reverted Composer dependency updates due to PHP compatibility.
+8.7.3.0 - 2021-06-24 - Lew Ayotte	
+	Bug Fix: PHP 8 Compat fix for import buddy
