@@ -22,10 +22,10 @@ final class Curl
     function __construct($url)
     {
 
-    		if ( \pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+		if ( \pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
 			ob_start();
 			$this->debugout = fopen('php://output', 'w');
-    		}
+		}
 
         // Make sure there aren't any spaces in the URL (i.e. the caller forgot to URL-encode).
         if (strpos($url, ' ') !== false) {
@@ -49,7 +49,11 @@ final class Curl
 
         // Force the use of TLS (SSL v2 and v3 are not secure).
         // TODO: Use "CURL_SSLVERSION_TLSv1" instead of "1" once we can rely on PHP 5.5+.
-        $this->set(CURLOPT_SSLVERSION, 1);
+        if ( defined( 'CURL_SSLVERSION_TLSv1_2' ) ) {
+	        $this->set(CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+        } else {
+			throw new Exception_NetworkIO( 'Error executing HTTP request: TLS v1.2 or greater is required, please update your version of CURL' );
+        }
 
         // Limit the set of ciphersuites used.
         global $sslCiphersuiteList;

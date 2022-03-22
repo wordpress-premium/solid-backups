@@ -2115,3 +2115,5 @@
 	Bug Fix: PHP 8 Compat fix for import buddy
 8.7.4.0 - 2021-07-21 - Lew Ayotte
 	Bug Fix: Dropbox v3 authentication SDK fix
+8.7.4.1 - 2022-03-11 - Lew Ayotte
+	Bug Fix: Fixing TLS version for Dropbox v3 from 1.0 to 1.2 min, required by Dropbox
