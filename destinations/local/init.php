@@ -152,7 +152,7 @@ class pb_backupbuddy_destination_local {
 
 		$remote_files = self::listFiles( $settings );
 
-		if ( count( $remote_files ) >= $limit ) {
+		if ( count( $remote_files ) <= $limit ) {
 			pb_backupbuddy::status( 'details', 'Archives count (' . count( $remote_files ) . ') fewer or equal to limit (' . $limit . '). Trimming unnecessary.' );
 			return false;
 		}
