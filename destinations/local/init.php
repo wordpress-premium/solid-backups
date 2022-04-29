@@ -493,15 +493,14 @@ class pb_backupbuddy_destination_local {
 		}
 
 		foreach ( $files as $file ) {
-			$full_path = $settings['path'] . $file;
-			if ( ! file_exists( $full_path ) ) {
+			if ( ! file_exists( $file ) ) {
 				pb_backupbuddy::status( 'details', __( 'Attempt to delete Local destination file `' . $file . '` failed: File not found.', 'it-l10n-backupbuddy' ) );
 				return false;
 			}
 
-			@unlink( $full_path );
+			@unlink( $file );
 
-			if ( file_exists( $full_path ) ) {
+			if ( file_exists( $file ) ) {
 				pb_backupbuddy::status( 'error', __( 'Attempt to delete Local destination file `' . $file . '` failed: Unlink unsuccessful.', 'it-l10n-backupbuddy' ) );
 				return false;
 			}
