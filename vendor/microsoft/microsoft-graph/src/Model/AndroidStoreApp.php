@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,42 +18,12 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class AndroidStoreApp extends MobileApp
 {
-    /**
-    * Gets the packageId
-    * The package identifier.
-    *
-    * @return string The packageId
-    */
-    public function getPackageId()
-    {
-        if (array_key_exists("packageId", $this->_propDict)) {
-            return $this->_propDict["packageId"];
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-    * Sets the packageId
-    * The package identifier.
-    *
-    * @param string $val The packageId
-    *
-    * @return AndroidStoreApp
-    */
-    public function setPackageId($val)
-    {
-        $this->_propDict["packageId"] = $val;
-        return $this;
-    }
-    
     /**
     * Gets the appStoreUrl
     * The Android app store URL.
@@ -114,6 +83,35 @@ class AndroidStoreApp extends MobileApp
     public function setMinimumSupportedOperatingSystem($val)
     {
         $this->_propDict["minimumSupportedOperatingSystem"] = $val;
+        return $this;
+    }
+    
+    /**
+    * Gets the packageId
+    * The package identifier.
+    *
+    * @return string The packageId
+    */
+    public function getPackageId()
+    {
+        if (array_key_exists("packageId", $this->_propDict)) {
+            return $this->_propDict["packageId"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the packageId
+    * The package identifier.
+    *
+    * @param string $val The packageId
+    *
+    * @return AndroidStoreApp
+    */
+    public function setPackageId($val)
+    {
+        $this->_propDict["packageId"] = $val;
         return $this;
     }
     

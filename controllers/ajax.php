@@ -8,7 +8,7 @@
  */
 
 /**
- * BackupBuddy AJAX Controller
+ * Solid Backups AJAX Controller
  */
 class pb_backupbuddy_ajax extends pb_backupbuddy_ajaxcore {
 

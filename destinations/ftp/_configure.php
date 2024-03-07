@@ -8,7 +8,6 @@
 if ( 'save' != $mode ) {
 	// Load filetree sources if not already loaded.
 	pb_backupbuddy::load_script( 'filetree.js' );
-	pb_backupbuddy::load_style( 'filetree.css' );
 	itbub_file_icon_styles( '6px 6px', true );
 	?>
 	<script>
@@ -119,8 +118,8 @@ if ( ! empty( $destination_settings['disable_file_management'] ) ) {
 	$browse_and_select = ' <span class="description">File Management Disabled.</span>';
 } else {
 	$browse_and_select = ' <span class="pb_backupbuddy_ftpdestination_pathpicker">
-                                <a href="#" class="button secondary-button" title="Browse FTP Folders">Browse & Select FTP Path</a>
-                                <img class="pb_backupbuddy_ftppicker_load" style="vertical-align: -3px; margin-left: 5px; display: none;" src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" title="Loading... This may take a few seconds...">
+                                <a href="#" class="button button-secondary secondary-button" title="Browse FTP Folders">Browse & Select FTP Path</a>
+                                <img class="pb_backupbuddy_ftppicker_load" style="vertical-align: -3px; margin-left: 5px; display: none;" src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/loading.gif" title="Loading... This may take a few seconds...">
                             </span>
                             <div class="pb_backupbuddy_ftpdestination_pathpickerbox" style="margin-top: 10px; display: none;">Loading...</div>';
 }
@@ -129,7 +128,7 @@ $settings_form->add_setting(
 		'type'  => 'text',
 		'name'  => 'path',
 		'title' => __( 'Remote path (optional)', 'it-l10n-backupbuddy' ),
-		'tip'   => __( '[Example: /public_html/backups] - Remote path to place uploaded files into on the destination FTP server. Make sure this path is correct; if it does not exist BackupBuddy will attempt to create it. No trailing slash is needed.', 'it-l10n-backupbuddy' ),
+		'tip'   => __( '[Example: /public_html/backups] - Remote path to place uploaded files into on the destination FTP server. Make sure this path is correct; if it does not exist Solid Backups will attempt to create it. No trailing slash is needed.', 'it-l10n-backupbuddy' ),
 		'rules' => 'string[0-500]',
 		'css'   => 'width: 300px;',
 		'after' => $browse_and_select,
@@ -146,11 +145,12 @@ $settings_form->add_setting(
 	array(
 		'type'    => 'text',
 		'name'    => 'url',
-		'title'   => __( 'Migration URL', 'it-l10n-backupbuddy' ) . '<br><span class="description">Optional, for migrations</span>',
+		'title'   => __( 'Migration URL', 'it-l10n-backupbuddy' ),
 		'tip'     => __( 'Enter the URL corresponding to the FTP destination path. This URL must lead to the location where files uploaded to this remote destination would end up. If the destination is in a subdirectory make sure to match it in the corresponding URL.', 'it-l10n-backupbuddy' ),
 		'css'     => 'width: 50%; max-width: 700px;',
 		'default' => $default_url,
 		'rules'   => 'string[0-500]',
+		'after'   =>  '<br><span class="description">' . __( 'Optional, for migrations', 'it-l10n-backupbuddy' ) . '</span>',
 	)
 );
 
@@ -170,7 +170,7 @@ $settings_form->add_setting(
 	array(
 		'type'      => 'title',
 		'name'      => 'advanced_begin',
-		'title'     => '<span class="dashicons dashicons-arrow-right"></span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
+		'title'     => '<span class="advanced-toggle-title-icon">' . pb_backupbuddy::$ui->get_icon( 'chevronleft' ) . '</span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
 		'row_class' => 'advanced-toggle-title',
 	)
 );
@@ -186,7 +186,7 @@ $settings_form->add_setting(
 		),
 		'tip'       => __( '[Default: Passive] - Determines whether the FTP file transfer happens in FTP active or passive mode.  Some servers or those behind a firewall may need to use PASV, or passive mode as a workaround.', 'it-l10n-backupbuddy' ),
 		'rules'     => 'required',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 
@@ -203,7 +203,7 @@ $settings_form->add_setting(
 		'css'       => '',
 		'after'     => '<span class="description"> ' . __( 'Not supported by most servers', 'it-l10n-backupbuddy' ) . '</span>',
 		'rules'     => 'required',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 
@@ -217,11 +217,11 @@ if ( $mode !== 'edit' || '0' == $destination_settings['disable_file_management']
 				'checked'   => '1',
 			),
 			'title'     => __( 'Disable file management', 'it-l10n-backupbuddy' ),
-			'tip'       => __( '[[Default: unchecked] - When checked, selecting this destination disables browsing or accessing files stored at this destination from within BackupBuddy. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination.', 'it-l10n-backupbuddy' ),
+			'tip'       => __( '[[Default: unchecked] - When checked, selecting this destination disables browsing or accessing files stored at this destination from within Solid Backups. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination.', 'it-l10n-backupbuddy' ),
 			'css'       => '',
 			'rules'     => '',
 			'after'     => __( 'Once disabled you must recreate the destination to re-enable.', 'it-l10n-backupbuddy' ),
-			'row_class' => 'advanced-toggle',
+			'row_class' => 'advanced-toggle advanced-toggle-hidden',
 		)
 	);
 }
@@ -239,6 +239,6 @@ $settings_form->add_setting(
 		'css'       => '',
 		'after'     => '<span class="description"> ' . __( 'Check to disable this destination until re-enabled.', 'it-l10n-backupbuddy' ) . '</span>',
 		'rules'     => '',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );

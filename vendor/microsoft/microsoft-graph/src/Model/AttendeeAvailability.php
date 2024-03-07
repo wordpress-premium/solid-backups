@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 /**
@@ -18,10 +17,9 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class AttendeeAvailability extends Entity
 {
@@ -61,7 +59,7 @@ class AttendeeAvailability extends Entity
 
     /**
     * Gets the availability
-    * The availability status of the attendee. The possible values are: free, tentative, busy, oof, workingElsewhere, unknown.
+    * The availability status of the attendee. Possible values are: free, tentative, busy, oof, workingElsewhere, unknown.
     *
     * @return FreeBusyStatus The availability
     */
@@ -80,7 +78,7 @@ class AttendeeAvailability extends Entity
 
     /**
     * Sets the availability
-    * The availability status of the attendee. The possible values are: free, tentative, busy, oof, workingElsewhere, unknown.
+    * The availability status of the attendee. Possible values are: free, tentative, busy, oof, workingElsewhere, unknown.
     *
     * @param FreeBusyStatus $val The value to assign to the availability
     *

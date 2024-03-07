@@ -11,6 +11,11 @@
  * @return false|array  Array of license info or false on error.
  */
 function backupbuddy_get_package_license() {
+	if ( empty( $GLOBALS['ithemes_updater_path'] ) ) {
+		pb_backupbuddy::status( 'error', __( 'Unable to locate valid plugin license information.', 'it-l10n-backupbuddy' ) );
+		return false;
+	}
+
 	require_once $GLOBALS['ithemes_updater_path'] . '/keys.php';
 	require_once $GLOBALS['ithemes_updater_path'] . '/packages.php';
 

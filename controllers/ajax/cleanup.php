@@ -24,7 +24,7 @@ if ( 'local' !== $rel ) {
 }
 
 if ( ! backupbuddy_backups()->do_cleanup() ) {
-	$response['error'] = '<p>' . __( 'BackupBuddy encountered a problem during file clean up. Please contact support for more information.', 'it-l10n-backupbuddy' ) . '</p>';
+	$response['error'] = '<p>' . __( 'Solid Backups encountered a problem during file clean up. Please contact support for more information.', 'it-l10n-backupbuddy' ) . '</p>';
 } else {
 	$response['success'] = true;
 }

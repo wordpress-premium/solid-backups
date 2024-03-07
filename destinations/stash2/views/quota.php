@@ -87,11 +87,11 @@
 
 	<div style="text-align: center;">
 		<b><?php esc_html_e( 'Upgrade storage', 'it-l10n-backupbuddy' ); ?>:</b> &nbsp;
-		<a href="https://ithemes.com/member/cart.php?action=add&id=290" target="_blank" style="text-decoration: none;">+ 5GB</a>, &nbsp;
-		<a href="https://ithemes.com/member/cart.php?action=add&id=291" target="_blank" style="text-decoration: none;">+ 10GB</a>, &nbsp;
-		<a href="https://ithemes.com/member/cart.php?action=add&id=292" target="_blank" style="text-decoration: none;">+ 25GB</a>
+		<a href="https://go.solidwp.com/solid-backups-stash" target="_blank" style="text-decoration: none;">+ 5GB</a>, &nbsp;
+		<a href="https://go.solidwp.com/solid-backups-stash" target="_blank" style="text-decoration: none;">+ 10GB</a>, &nbsp;
+		<a href="https://go.solidwp.com/solid-backups-stash" target="_blank" style="text-decoration: none;">+ 25GB</a>
 
-		&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href="https://sync.ithemes.com/stash/" target="_blank" style="text-decoration: none;"><b>Manage Stash & Stash Live Files</b></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href="https://sync.ithemes.com/stash/" target="_blank" style="text-decoration: none;"><b>Manage Account</b></a>
+		&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href="https://go.solidwp.com/solid-stash-central-account-login" target="_blank" style="text-decoration: none;"><b>Manage Stash & Stash Live Files</b></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href="https://go.solidwp.com/solid-backups-stash" target="_blank" style="text-decoration: none;"><b>Manage Account</b></a>
 		<br><br>
 	</div>
 </div>

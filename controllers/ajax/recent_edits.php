@@ -54,7 +54,8 @@ foreach ( $recent_edits as $edit ) {
 	$edit_groups[ $edit['action'] ][] = $edit;
 }
 
-pb_backupbuddy::$ui->ajax_header();
+
+pb_backupbuddy::$ui->ajax_header( true, true, 'backupbuddy-admin-iframe-white' );
 require_once pb_backupbuddy::plugin_path() . '/views/widgets/recent-edits.php';
 pb_backupbuddy::$ui->ajax_footer();
 

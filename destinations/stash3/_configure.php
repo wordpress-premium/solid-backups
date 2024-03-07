@@ -27,8 +27,8 @@ if ( 'add' === $mode ) { // ADD MODE.
 		array(
 			'type'  => 'text',
 			'name'  => 'itxapi_username',
-			'title' => esc_html__( 'iThemes username', 'it-l10n-backupbuddy' ),
-			'tip'   => esc_html__( '[Example: kerfuffle] - Your iThemes.com membership username.', 'it-l10n-backupbuddy' ), // Is a username example necessary here?
+			'title' => esc_html__( 'SolidWP username', 'it-l10n-backupbuddy' ),
+			'tip'   => esc_html__( '[Example: kerfuffle] - Your solidwp.com membership username.', 'it-l10n-backupbuddy' ), // Is a username example necessary here?
 			'rules' => 'required|string[1-45]',
 		)
 	);
@@ -36,21 +36,21 @@ if ( 'add' === $mode ) { // ADD MODE.
 		array(
 			'type'  => 'password',
 			'name'  => 'itxapi_password_raw',
-			'title' => esc_html__( 'iThemes password', 'it-l10n-backupbuddy' ),
-			'tip'   => esc_html__( '[Example: 48dsds!s08K%x2s] - Your iThemes.com membership password.', 'it-l10n-backupbuddy' ), // Is a password example necessary here?
+			'title' => esc_html__( 'SolidWP password', 'it-l10n-backupbuddy' ),
+			'tip'   => esc_html__( '[Example: 48dsds!s08K%x2s] - Your solidwp.com membership password.', 'it-l10n-backupbuddy' ), // Is a password example necessary here?
 			'rules' => 'required|string[1-250]',
 		)
 	);
 
 	$settings_result = $credentials_form->process();
 
-	$login_welcome = esc_html__( 'Log in with your iThemes.com member account to begin.', 'it-l10n-backupbuddy' );
+	$login_welcome = esc_html__( 'Log in with your solidwp.com member account to begin.', 'it-l10n-backupbuddy' );
 
 	if ( 0 === count( $settings_result ) ) { // No form submitted.
 
 		echo $login_welcome; // @codingStandardsIgnoreLine: ok.
 
-		$credentials_form->display_settings( 'Submit' );
+		$credentials_form->display_settings( __( 'Submit', 'it-l10n-backupbuddy' ), '', '', 'button-no-ml' );
 
 		$pb_hide_test = true;
 		$pb_hide_save = true;
@@ -59,7 +59,7 @@ if ( 'add' === $mode ) { // ADD MODE.
 		if ( count( $settings_result['errors'] ) > 0 ) { // Form errors.
 			echo $login_welcome; // @codingStandardsIgnoreLine: ok.
 			pb_backupbuddy::alert( implode( '<br>', $settings_result['errors'] ) );
-			$credentials_form->display_settings( 'Submit' );
+			$credentials_form->display_settings( __( 'Submit', 'it-l10n-backupbuddy' ), '', '', 'button-no-ml' );
 
 			$pb_hide_test = true;
 			$pb_hide_save = true;
@@ -80,17 +80,17 @@ if ( 'add' === $mode ) { // ADD MODE.
 
 			if ( ! is_array( $response ) ) { // Error message.
 				pb_backupbuddy::alert( 'Error #23333: Unexpected server response. Check your login and try again. Detailed response: `' . print_r( $response, true ) . '`.' );
-				$credentials_form->display_settings( 'Submit' );
+				$credentials_form->display_settings( __( 'Submit', 'it-l10n-backupbuddy' ), '', '', 'button-no-ml' );
 			} else {
 				if ( isset( $response['error'] ) ) {
 					pb_backupbuddy::alert( 'Error: ' . $response['error']['message'] );
-					$credentials_form->display_settings( 'Submit' );
+					$credentials_form->display_settings( __( 'Submit', 'it-l10n-backupbuddy' ), '', '', 'button-no-ml' );
 				} else {
 					if ( isset( $response['token'] ) ) {
 						$itxapi_token = $response['token'];
 					} else {
 						pb_backupbuddy::alert( 'Error #382383232: Unexpected server response. Token missing. Check your login and try again. Detailed response: `' . print_r( $response, true ) . '`.' );
-						$credentials_form->display_settings( 'Submit' );
+						$credentials_form->display_settings( __( 'Submit', 'it-l10n-backupbuddy' ), '', '', 'button-no-ml' );
 					}
 				}
 			}
@@ -124,7 +124,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			$pb_hide_save = false;
 		}
 
-		$account_details = esc_html__( 'Welcome to your BackupBuddy Stash', 'it-l10n-backupbuddy' ) .
+		$account_details = esc_html__( 'Welcome to your Solid Backups Stash', 'it-l10n-backupbuddy' ) .
 			sprintf( ', <b>%s</b>. ', $itxapi_username ) .
 			esc_html__( 'Your account is ', 'it-l10n-backupbuddy' );
 
@@ -155,7 +155,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 				if ( 'stash3' === $destination['type'] || 'stash' === $destination['type'] ) {
 					if ( isset( $destination['itxapi_username'] ) && strtolower( $destination['itxapi_username'] ) === strtolower( $itxapi_username ) ) {
 						echo '<br><br>';
-						pb_backupbuddy::alert( 'Note: You already have a Stash destination set up under the provided iThemes account username.  It is unnecessary to create multiple Stash destinations that go to the same user account as they are effectively the same destination and a duplicate.' );
+						pb_backupbuddy::alert( 'Note: You already have a Stash destination set up under the provided SolidWP account username.  It is unnecessary to create multiple Stash destinations that go to the same user account as they are effectively the same destination and a duplicate.' );
 						break;
 					}
 				}
@@ -186,7 +186,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of Full (complete) backup archives to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 			'rules' => 'int[0-9999999]',
 			'css'   => 'width: 50px;',
-			'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+			'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 		)
 	);
 	$settings_form->add_setting(
@@ -197,7 +197,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of Database Only backup archives to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 			'rules' => 'int[0-9999999]',
 			'css'   => 'width: 50px;',
-			'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+			'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 		)
 	);
 
@@ -209,7 +209,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 			'rules' => 'int[0-9999999]',
 			'css'   => 'width: 50px;',
-			'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+			'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 		)
 	);
 	$settings_form->add_setting(
@@ -220,7 +220,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 			'rules' => 'int[0-9999999]',
 			'css'   => 'width: 50px;',
-			'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+			'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 		)
 	);
 	$settings_form->add_setting(
@@ -231,7 +231,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 			'rules' => 'int[0-9999999]',
 			'css'   => 'width: 50px;',
-			'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+			'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 		)
 	);
 	$settings_form->add_setting(
@@ -242,7 +242,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 			'rules' => 'int[0-9999999]',
 			'css'   => 'width: 50px;',
-			'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+			'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 		)
 	);
 
@@ -250,7 +250,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 		array(
 			'type'      => 'title',
 			'name'      => 'advanced_begin',
-			'title'     => '<span class="dashicons dashicons-arrow-right"></span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
+			'title'     => '<span class="advanced-toggle-title-icon">' . pb_backupbuddy::$ui->get_icon( 'chevronleft' ) . '</span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
 			'row_class' => 'advanced-toggle-title',
 		)
 	);
@@ -264,7 +264,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'rules'     => 'required|int[5-9999999]',
 			'css'       => 'width: 50px;',
 			'after'     => ' MB',
-			'row_class' => 'advanced-toggle',
+			'row_class' => 'advanced-toggle advanced-toggle-hidden',
 		)
 	);
 	$settings_form->add_setting(
@@ -276,7 +276,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'rules'     => '',
 			'css'       => 'width: 50px;',
 			'after'     => ' secs. <span class="description">' . __( 'Blank for detected default:', 'it-l10n-backupbuddy' ) . ' ' . backupbuddy_core::detectMaxExecutionTime() . ' sec</span>',
-			'row_class' => 'advanced-toggle',
+			'row_class' => 'advanced-toggle advanced-toggle-hidden',
 		)
 	);
 	$settings_form->add_setting(
@@ -290,9 +290,9 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'title'     => __( 'Encrypt connection', 'it-l10n-backupbuddy' ) . '*',
 			'tip'       => __( '[Default: enabled] - When enabled, all transfers will be encrypted with SSL encryption. Disabling this may aid in connection troubles but results in lessened security. Note: Once your files arrive on our server they are encrypted using AES256 encryption. They are automatically decrypted upon download as needed.', 'it-l10n-backupbuddy' ),
 			'css'       => '',
-			'after'     => '<span class="description"> ' . __( 'Enable connecting over SSL.', 'it-l10n-backupbuddy' ) . '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Files are always encrypted with AES256 upon arrival.</span>',
+			'after'     => '<span class="description"> ' . __( 'Enable connecting over SSL.', 'it-l10n-backupbuddy' ) . '<br>* Files are always encrypted with AES256 upon arrival.</span>',
 			'rules'     => '',
-			'row_class' => 'advanced-toggle',
+			'row_class' => 'advanced-toggle advanced-toggle-hidden',
 		)
 	);
 	$settings_form->add_setting(
@@ -304,11 +304,11 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 				'checked'   => '1',
 			),
 			'title'     => __( 'Use system CA bundle', 'it-l10n-backupbuddy' ),
-			'tip'       => __( '[Default: disabled] - When enabled, BackupBuddy will use your web server\'s certificate bundle for connecting to the server instead of BackupBuddy bundle. Use this if SSL fails due to SSL certificate issues.', 'it-l10n-backupbuddy' ),
+			'tip'       => __( '[Default: disabled] - When enabled, Solid Backups will use your web server\'s certificate bundle for connecting to the server instead of Solid Backups bundle. Use this if SSL fails due to SSL certificate issues.', 'it-l10n-backupbuddy' ),
 			'css'       => '',
-			'after'     => '<span class="description"> ' . __( 'Use webserver certificate bundle instead of BackupBuddy\'s.', 'it-l10n-backupbuddy' ) . '</span>',
+			'after'     => '<span class="description"> ' . __( 'Use webserver certificate bundle instead of Solid Backups\'.', 'it-l10n-backupbuddy' ) . '</span>',
 			'rules'     => '',
-			'row_class' => 'advanced-toggle',
+			'row_class' => 'advanced-toggle advanced-toggle-hidden',
 		)
 	);
 	$settings_form->add_setting(
@@ -324,7 +324,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'css'       => '',
 			'after'     => '<span class="description"> ' . __( 'Check only if directed by support. Use with caution.', 'it-l10n-backupbuddy' ) . '</span>',
 			'rules'     => '',
-			'row_class' => 'advanced-toggle',
+			'row_class' => 'advanced-toggle advanced-toggle-hidden',
 		)
 	);
 	$settings_form->add_setting(
@@ -340,7 +340,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'css'       => '',
 			'after'     => '<span class="description"> ' . __( 'Check if directed by support.', 'it-l10n-backupbuddy' ) . '</span>',
 			'rules'     => '',
-			'row_class' => 'advanced-toggle',
+			'row_class' => 'advanced-toggle advanced-toggle-hidden',
 		)
 	);
 	if ( 'edit' !== $mode ) {
@@ -353,10 +353,10 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 					'checked'   => '1',
 				),
 				'title'     => __( 'Disable file management', 'it-l10n-backupbuddy' ),
-				'tip'       => __( '[Default: unchecked] - When checked, selecting this destination disables browsing or accessing files stored at this destination from within BackupBuddy.', 'it-l10n-backupbuddy' ),
+				'tip'       => __( '[Default: unchecked] - When checked, selecting this destination disables browsing or accessing files stored at this destination from within Solid Backups.', 'it-l10n-backupbuddy' ),
 				'css'       => '',
 				'rules'     => '',
-				'row_class' => 'advanced-toggle',
+				'row_class' => 'advanced-toggle advanced-toggle-hidden',
 			)
 		);
 	}
@@ -373,7 +373,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'css'       => '',
 			'after'     => '<span class="description"> ' . __( 'Check to disable this destination until re-enabled.', 'it-l10n-backupbuddy' ) . '</span>',
 			'rules'     => '',
-			'row_class' => 'advanced-toggle',
+			'row_class' => 'advanced-toggle advanced-toggle-hidden',
 		)
 	);
 	$settings_form->add_setting(

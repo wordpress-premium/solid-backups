@@ -23,7 +23,7 @@ if ( ! is_array( $response ) ) {
 }
 
 pb_backupbuddy::status( 'details', 'Retrieved live snapshot status.' );
-if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+if ( pb_backupbuddy::full_logging() ) {
 	pb_backupbuddy::status( 'details', 'live-snapshot-status response due to logging level: `' . print_r( $response, true ) . '`. Call params: `' . print_r( $additional_params, true ) . ' `.' );
 }
 

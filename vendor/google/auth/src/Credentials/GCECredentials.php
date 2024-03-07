@@ -18,12 +18,15 @@
 namespace Google\Auth\Credentials;
 
 use Google\Auth\CredentialsLoader;
+use Google\Auth\GetQuotaProjectInterface;
 use Google\Auth\HttpHandler\HttpClientCache;
 use Google\Auth\HttpHandler\HttpHandlerFactory;
 use Google\Auth\Iam;
+use Google\Auth\IamSignerTrait;
 use Google\Auth\ProjectIdProviderInterface;
 use Google\Auth\SignBlobInterface;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ServerException;
 use GuzzleHttp\Psr7\Request;
@@ -55,9 +58,14 @@ use InvalidArgumentException;
  */
 class GCECredentials extends CredentialsLoader implements
     SignBlobInterface,
-    ProjectIdProviderInterface
+    ProjectIdProviderInterface,
+    GetQuotaProjectInterface
 {
+    use IamSignerTrait;
+
+    // phpcs:disable
     const cacheKey = 'GOOGLE_AUTH_PHP_GCE';
+    // phpcs:enable
 
     /**
      * The metadata IP address on appengine instances.
@@ -121,6 +129,8 @@ class GCECredentials extends CredentialsLoader implements
 
     /**
      * Result of fetchAuthToken.
+     *
+     * @var array<mixed>
      */
     protected $lastReceivedToken;
 
@@ -135,11 +145,6 @@ class GCECredentials extends CredentialsLoader implements
     private $projectId;
 
     /**
-     * @var Iam|null
-     */
-    private $iam;
-
-    /**
      * @var string
      */
     private $tokenUri;
@@ -150,21 +155,41 @@ class GCECredentials extends CredentialsLoader implements
     private $targetAudience;
 
     /**
+     * @var string|null
+     */
+    private $quotaProject;
+
+    /**
+     * @var string|null
+     */
+    private $serviceAccountIdentity;
+
+    /**
      * @param Iam $iam [optional] An IAM instance.
-     * @param string|array $scope [optional] the scope of the access request,
+     * @param string|string[] $scope [optional] the scope of the access request,
      *        expressed either as an array or as a space-delimited string.
      * @param string $targetAudience [optional] The audience for the ID token.
+     * @param string $quotaProject [optional] Specifies a project to bill for access
+     *   charges associated with the request.
+     * @param string $serviceAccountIdentity [optional] Specify a service
+     *   account identity name to use instead of "default".
      */
-    public function __construct(Iam $iam = null, $scope = null, $targetAudience = null)
-    {
+    public function __construct(
+        Iam $iam = null,
+        $scope = null,
+        $targetAudience = null,
+        $quotaProject = null,
+        $serviceAccountIdentity = null
+    ) {
         $this->iam = $iam;
 
         if ($scope && $targetAudience) {
             throw new InvalidArgumentException(
-                'Scope and targetAudience cannot both be supplied');
+                'Scope and targetAudience cannot both be supplied'
+            );
         }
 
-        $tokenUri = self::getTokenUri();
+        $tokenUri = self::getTokenUri($serviceAccountIdentity);
         if ($scope) {
             if (is_string($scope)) {
                 $scope = explode(' ', $scope);
@@ -172,41 +197,84 @@ class GCECredentials extends CredentialsLoader implements
 
             $scope = implode(',', $scope);
 
-            $tokenUri = $tokenUri . '?scopes='. $scope;
+            $tokenUri = $tokenUri . '?scopes=' . $scope;
         } elseif ($targetAudience) {
-            $tokenUri = sprintf('http://%s/computeMetadata/%s?audience=%s',
-                self::METADATA_IP,
-                self::ID_TOKEN_URI_PATH,
-                $targetAudience
-            );
+            $tokenUri = self::getIdTokenUri($serviceAccountIdentity);
+            $tokenUri = $tokenUri . '?audience=' . $targetAudience;
             $this->targetAudience = $targetAudience;
         }
 
         $this->tokenUri = $tokenUri;
+        $this->quotaProject = $quotaProject;
+        $this->serviceAccountIdentity = $serviceAccountIdentity;
     }
 
     /**
      * The full uri for accessing the default token.
      *
+     * @param string $serviceAccountIdentity [optional] Specify a service
+     *   account identity name to use instead of "default".
      * @return string
      */
-    public static function getTokenUri()
+    public static function getTokenUri($serviceAccountIdentity = null)
     {
         $base = 'http://' . self::METADATA_IP . '/computeMetadata/';
+        $base .= self::TOKEN_URI_PATH;
 
-        return $base . self::TOKEN_URI_PATH;
+        if ($serviceAccountIdentity) {
+            return str_replace(
+                '/default/',
+                '/' . $serviceAccountIdentity . '/',
+                $base
+            );
+        }
+        return $base;
     }
 
     /**
      * The full uri for accessing the default service account.
      *
+     * @param string $serviceAccountIdentity [optional] Specify a service
+     *   account identity name to use instead of "default".
      * @return string
      */
-    public static function getClientNameUri()
+    public static function getClientNameUri($serviceAccountIdentity = null)
     {
         $base = 'http://' . self::METADATA_IP . '/computeMetadata/';
+        $base .= self::CLIENT_ID_URI_PATH;
 
-        return $base . self::CLIENT_ID_URI_PATH;
+        if ($serviceAccountIdentity) {
+            return str_replace(
+                '/default/',
+                '/' . $serviceAccountIdentity . '/',
+                $base
+            );
+        }
+
+        return $base;
+    }
+
+    /**
+     * The full uri for accesesing the default identity token.
+     *
+     * @param string $serviceAccountIdentity [optional] Specify a service
+     *   account identity name to use instead of "default".
+     * @return string
+     */
+    private static function getIdTokenUri($serviceAccountIdentity = null)
+    {
+        $base = 'http://' . self::METADATA_IP . '/computeMetadata/';
+        $base .= self::ID_TOKEN_URI_PATH;
+
+        if ($serviceAccountIdentity) {
+            return str_replace(
+                '/default/',
+                '/' . $serviceAccountIdentity . '/',
+                $base
+            );
+        }
+
+        return $base;
     }
 
     /**
@@ -225,11 +293,11 @@ class GCECredentials extends CredentialsLoader implements
      * Determines if this an App Engine Flexible instance, by accessing the
      * GAE_INSTANCE environment variable.
      *
-     * @return true if this an App Engine Flexible Instance, false otherwise
+     * @return bool true if this an App Engine Flexible Instance, false otherwise
      */
     public static function onAppEngineFlexible()
     {
-        return substr(getenv('GAE_INSTANCE'), 0, 4) === 'aef-';
+        return substr((string) getenv('GAE_INSTANCE'), 0, 4) === 'aef-';
     }
 
     /**
@@ -269,6 +337,7 @@ class GCECredentials extends CredentialsLoader implements
             } catch (ClientException $e) {
             } catch (ServerException $e) {
             } catch (RequestException $e) {
+            } catch (ConnectException $e) {
             }
         }
         return false;
@@ -282,15 +351,14 @@ class GCECredentials extends CredentialsLoader implements
      *
      * @param callable $httpHandler callback which delivers psr7 request
      *
-     * @return array A set of auth related metadata, based on the token type.
+     * @return array<mixed> {
+     *     A set of auth related metadata, based on the token type.
      *
-     * Access tokens have the following keys:
-     *   - access_token (string)
-     *   - expires_in (int)
-     *   - token_type (string)
-     * ID tokens have the following keys:
-     *   - id_token (string)
-     *
+     *     @type string $access_token for access tokens
+     *     @type int    $expires_in   for access tokens
+     *     @type string $token_type   for access tokens
+     *     @type string $id_token     for ID tokens
+     * }
      * @throws \Exception
      */
     public function fetchAuthToken(callable $httpHandler = null)
@@ -303,7 +371,7 @@ class GCECredentials extends CredentialsLoader implements
             $this->hasCheckedOnGce = true;
         }
         if (!$this->isOnGce) {
-            return array();  // return an empty array with no access token
+            return [];  // return an empty array with no access token
         }
 
         $response = $this->getFromMetadata($httpHandler, $this->tokenUri);
@@ -316,9 +384,10 @@ class GCECredentials extends CredentialsLoader implements
             throw new \Exception('Invalid JSON response');
         }
 
+        $json['expires_at'] = time() + $json['expires_in'];
+
         // store this so we can retrieve it later
         $this->lastReceivedToken = $json;
-        $this->lastReceivedToken['expires_at'] = time() + $json['expires_in'];
 
         return $json;
     }
@@ -332,7 +401,7 @@ class GCECredentials extends CredentialsLoader implements
     }
 
     /**
-     * @return array|null
+     * @return array{access_token:string,expires_at:int}|null
      */
     public function getLastReceivedToken()
     {
@@ -372,39 +441,12 @@ class GCECredentials extends CredentialsLoader implements
             return '';
         }
 
-        $this->clientName = $this->getFromMetadata($httpHandler, self::getClientNameUri());
+        $this->clientName = $this->getFromMetadata(
+            $httpHandler,
+            self::getClientNameUri($this->serviceAccountIdentity)
+        );
 
         return $this->clientName;
-    }
-
-    /**
-     * Sign a string using the default service account private key.
-     *
-     * This implementation uses IAM's signBlob API.
-     *
-     * @see https://cloud.google.com/iam/credentials/reference/rest/v1/projects.serviceAccounts/signBlob SignBlob
-     *
-     * @param string $stringToSign The string to sign.
-     * @param bool $forceOpenSsl [optional] Does not apply to this credentials
-     *        type.
-     * @return string
-     */
-    public function signBlob($stringToSign, $forceOpenSsl = false)
-    {
-        $httpHandler = HttpHandlerFactory::build(HttpClientCache::getHttpClient());
-
-        // Providing a signer is useful for testing, but it's undocumented
-        // because it's not something a user would generally need to do.
-        $signer = $this->iam ?: new Iam($httpHandler);
-
-        $email = $this->getClientName($httpHandler);
-
-        $previousToken = $this->getLastReceivedToken();
-        $accessToken = $previousToken
-            ? $previousToken['access_token']
-            : $this->fetchAuthToken($httpHandler)['access_token'];
-
-        return $signer->signBlob($email, $accessToken, $stringToSign);
     }
 
     /**
@@ -455,5 +497,31 @@ class GCECredentials extends CredentialsLoader implements
         );
 
         return (string) $resp->getBody();
+    }
+
+    /**
+     * Get the quota project used for this API request
+     *
+     * @return string|null
+     */
+    public function getQuotaProject()
+    {
+        return $this->quotaProject;
+    }
+
+    /**
+     * Set whether or not we've already checked the GCE environment.
+     *
+     * @param bool $isOnGce
+     *
+     * @return void
+     */
+    public function setIsOnGce($isOnGce)
+    {
+        // Implicitly set hasCheckedGce to true
+        $this->hasCheckedOnGce = true;
+
+        // Set isOnGce
+        $this->isOnGce = $isOnGce;
     }
 }

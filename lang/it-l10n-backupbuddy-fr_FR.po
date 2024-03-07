@@ -471,11 +471,11 @@ msgstr "Astuce"
 
 #: controllers/ajax/_destination_picker.php:380
 msgid ""
-"If you encounter difficulty try the ImportBuddy tool. Verify the destination "
+"If you encounter difficulty try the Importer tool. Verify the destination "
 "URL by entering the \"Migration URL\", and clicking \"Test Settings\" before "
 "proceeding."
 msgstr ""
-"Si vous rencontrez des difficultes, essayez avec ImportBuddy. Verifiez lURL "
+"Si vous rencontrez des difficultes, essayez avec Importer. Verifiez lURL "
 "de destination en entrant \"lURL de Migration\", et cliquez sur \"Tester "
 "les paramètres\" avant de commencer."
 
@@ -4833,14 +4833,14 @@ msgstr ""
 
 #: views/migrate-home.php:29
 msgid ""
-"To download, enter a password to lock the ImportBuddy script from "
+"To download, enter a password to lock the Importer script from "
 "unauthorized access. You will be prompted for this password when you go to "
 "importbuddy.php in your browser. Since you have not defined a default "
 "password yet this will be used as your default and can be changed later from "
 "the Settings page."
 msgstr ""
 "Pour telecharger, entrez un mot de passe pour verrouiller le script "
-"ImportBuddy et empêcher quun intrus y accède. Il vous sera demande lorsque "
+"Importer et empêcher quun intrus y accède. Il vous sera demande lorsque "
 "accederez à importbuddy.php dans votre navigateur. Etant donne que vous "
 "navez pas encore defini un mot de passe par defaut, celui-ci sera utilise "
 "par defaut et peut être modifie ulterieurement sur la page des paramètres."
@@ -4848,12 +4848,12 @@ msgstr ""
 #: views/migrate-home.php:41
 msgid ""
 "To download, either enter a new password for just this download OR LEAVE "
-"BLANK to use your default ImportBuddy password (set on the Settings page) to "
-"lock the ImportBuddy script from unauthorized access."
+"BLANK to use your default Importer password (set on the Settings page) to "
+"lock the Importer script from unauthorized access."
 msgstr ""
 "Pour telecharger, entrez un nouveau mot de passe pour ce telechargement OU "
-"LAISSEZ VIDE pour utiliser votre mot de passe ImportBuddy par defaut (defini "
-"sur la page des paramètres) pour eviter que le script ImportBuddy soit "
+"LAISSEZ VIDE pour utiliser votre mot de passe Importer par defaut (defini "
+"sur la page des paramètres) pour eviter que le script Importer soit "
 "accessible au public."
 
 #: views/migrate-home.php:95
@@ -5026,8 +5026,8 @@ msgstr ""
 "indisponibles."
 
 #: views/settings/_advanced.php:44
-msgid "Include ImportBuddy in full backup archive"
-msgstr "Inclure le script ImportBuddy dans la sauvegarde"
+msgid "Include Importer in full backup archive"
+msgstr "Inclure le script Importer dans la sauvegarde"
 
 #: views/settings/_advanced.php:45
 msgid ""
@@ -5044,9 +5044,9 @@ msgstr ""
 "inclus dans les sauvegardes complètes lorsque cette option est activee."
 
 #: views/settings/_advanced.php:47
-msgid "Uncheck to skip adding ImportBuddy to backup archive."
+msgid "Uncheck to skip adding Importer to backup archive."
 msgstr ""
-"Desactivez pour sauter letape dajout dImportBuddy dans la sauvegarde."
+"Desactivez pour sauter letape dajout dImporter dans la sauvegarde."
 
 #: views/settings/_advanced.php:54
 msgid "Disable local SSL certificate verification"
@@ -5560,17 +5560,17 @@ msgid "General"
 msgstr "General"
 
 #: views/settings/_general.php:56
-msgid "ImportBuddy & RepairBuddy password"
-msgstr "Mot de passe ImportBuddy et RepairBuddy"
+msgid "Importer & RepairBuddy password"
+msgstr "Mot de passe Importer et RepairBuddy"
 
 #: views/settings/_general.php:57
 msgid ""
-"[Example: myp@ssw0rD] - Required password for running the ImportBuddy import/"
+"[Example: myp@ssw0rD] - Required password for running the Importer import/"
 "migration script. This prevents unauthorized access when using this tool. "
 "You should not use your WordPress password here."
 msgstr ""
 "[Exemple: m0nM0t2pa55e] - Mot de passe requis pour lancer le script dimport/"
-"export ImportBuddy. Cela permet de prevenir les accès non autorises lorsque "
+"export Importer. Cela permet de prevenir les accès non autorises lorsque "
 "vous utilisez cet outil. Vous devez utiliser votre mot de NOT passe WordPress (do NOT use WordPress password) "
 "ici."
 

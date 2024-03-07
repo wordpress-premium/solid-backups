@@ -1,15 +1,14 @@
 <?php
 /**
- * Plugin Name: BackupBuddy
- * Plugin URI: http://ithemes.com/purchase/backupbuddy/
- * Description: The most complete WordPress solution for Backup, Restoration, Migration, and Deployment to the same host or a new domain. Backs up a customizable selection of files, settings, and content for a complete snapshot of your site. Stash Live feature allows for real-time live backups to the cloud.
- * Version: 8.7.4.1
- * Author: iThemes
- * Author URI: http://ithemes.com/
+ * Plugin Name: Solid Backups
+ * Plugin URI: https://go.solidwp.com/solid-backups-home
+ * Description: Safely store your website with automated backups and one click restore.
+ * Version: 9.1.10
+ * Author: SolidWP
+ * Author URI: https://go.solidwp.com/solid-backups-home
+ *
+ * // This ensures the SolidWP Updater loads. Don't remove it.
  * iThemes Package: backupbuddy
- *
- * @package BackupBuddy
- *
  *
  * INSTALLATION:
  *
@@ -18,30 +17,28 @@
  *      3. Upload the entire plugin directory to your `/wp-content/plugins/` directory.
  *      4. Activate the plugin through the 'Plugins' menu in WordPress Administration.
  *
- *
- * USAGE:
- *
- *      1. Navigate to the new plugin menu labeled 'BackupBuddy' in the WordPress Administration Panel.
- *
- *
  * CONTRIBUTORS (since BackupBuddy v1.0; launched March 4, 2010):
  *
- *      Dustin Bolton (creation, lead BB dev, anything & everything 2010-present), Chris Jean (early zip), Josh Benham (misc code, support, testing),
+ *      Dustin Bolton (creation, lead BB dev, anything & everything 2010-2018), Chris Jean (early zip), Josh Benham (misc code, support, testing),
  *      Skyler Moore (ftp, misc code, support, testing), Jeremy Trask (xzip, misc code, support), Ronald Huereca (early multisite)
  *      Dustin Akers (lead BB support, testing), Daniel Harzheim (testing, settings form verification, PB framework contributions),
  *      Bradford Ulrich (UI, graphics), Glenn Ansley (misc code, support), Thomas Oliver (support), Ty Carlson (Stash UI, graphics),
  *      Brian DiChiara (lead BackupBuddy Dev 2018), Tyler Gilbet (support, testing), Yobani Mendoza (support, testing), Matthew Cortinas (support, testing).
  */
 
-// Plugin defaults. Settings stored in wp_options under "pb_backupbuddy". Auditing notifications stored in "pb_backupbuddy_notificiations" as of 6.1.0.0.
+/**
+ * Plugin defaults.
+ *
+ * Settings stored in wp_options under "pb_backupbuddy".
+ * Auditing notifications stored in "pb_backupbuddy_notifications" as of 6.1.0.0.
+ */
 $pluginbuddy_settings = array(
 	'slug'                       => 'backupbuddy',
 	'series'                     => '',
 	'default_options'            => array(
 		'data_version'                            => '18',     // Data structure version. Added BB 2.0 to ease updating.
-		'importbuddy_pass_hash'                   => '',       // ImportBuddy password hash.
-		'importbuddy_pass_length'                 => 0,        // Length of the ImportBuddy password before it was hashed.
-		'backup_reminders'                        => 1,        // Remind to backup after post, pre-upgrade, etc.
+		'importbuddy_pass_hash'                   => '',       // Importer password hash.
+		'importbuddy_pass_length'                 => 0,        // Length of the Importer password before it was hashed.
 		'edits_since_last'                        => array(    // Number of recent edits since the last backup began.
 			'all'    => 0, // All recent edits total.
 			'post'   => 0, // Post edits total.
@@ -53,20 +50,20 @@ $pluginbuddy_settings = array(
 		'last_backup_start'                       => 0,        // Timestamp of when last backup started.
 		'last_backup_finish'                      => 0,        // Timestamp of when the last backup finished.
 		'last_backup_serial'                      => '',       // Serial of last backup zip.
-		'last_backup_stats'                       => array(),  // Some misc stats about the last backup which completed. Also used by iThemes Sync.
+		'last_backup_stats'                       => array(),  // Some misc stats about the last backup which completed. Also used by Solid Central.
 		'last_error_email_time'                   => 0,        // Timestamp last error email sent. Tracked to prevent flooding.
 		'force_compatibility'                     => 0,        // Force compatibility mode even if normal is detected.
 		'force_mysqldump_compatibility'           => 0,        // Force compatibility mode for mysql db dumping. Uses PHP-based rather than command line mysqldump.
 		'schedules'                               => array(),  // Array of scheduled schedules.
 		'log_level'                               => '1',      // Valid options: 0 = none, 1 = errors only, 2 = errors + warnings, 3 = debugging (all kinds of actions).
-		'backup_reminders'                        => 1,        // Whether or not to show reminders to backup on post/page edits & on the WP upgrade page.
+		'backup_reminders'                        => 1,        // Whether to show reminders to back up on post/page edits & on the WP upgrade page.
 		'high_security'                           => 0,        // TODO: Future feature. Strip mysql password & admin user password. Prompt on import.
 		'next_schedule_index'                     => 100,      // Next schedule index. Prevent any risk of hanging scheduled crons from having the same ID as a new schedule.
 		'archive_limit'                           => 0,        // Maximum number of archives to storage. Deletes oldest if exceeded.
 		'archive_limit_full'                      => 0,
 		'archive_limit_db'                        => 0,
 		'archive_limit_files'                     => 0,
-		'archive_limit_size'                      => 0,        // Maximum size of all archives to store. Deletes oldest if exeeded.
+		'archive_limit_size'                      => 0,        // Maximum size of all archives to store. Deletes oldest if exceeded.
 		'archive_limit_size_big'                  => 50000,    // Secondary over-arching archive size limit. More buried away on Advanced Settings page.
 		'archive_limit_age'                       => 0,        // Maximum age (in days) backup files can be before being deleted. Any exceeding age deleted on backup.
 		'delete_archives_pre_backup'              => 0,        // Whether or not to delete all backups prior to backing up.
@@ -74,18 +71,21 @@ $pluginbuddy_settings = array(
 		'set_greedy_execution_time'               => 0,        // Whether or not to try and override PHP max execution time to a higher value. Most hosts block this.
 
 		'email_notify_scheduled_start'            => '',  // Email address(es) to send to when a scheduled backup begins.
-		'email_notify_scheduled_start_subject'    => 'BackupBuddy Scheduled Backup Started - {home_url}',
-		'email_notify_scheduled_start_body'       => "A scheduled backup has started with BackupBuddy v{backupbuddy_version} on {current_datetime} for the site {home_url}.\n\nDetails:\r\n\r\n{message}",
+		'email_notify_scheduled_start_subject'    => 'Solid Backups Scheduled Backup Started - {home_url}',
+		'email_notify_scheduled_start_body'       => "A scheduled backup has started with Solid Backups v{backupbuddy_version} on {current_datetime} for the site {home_url}.\n\nDetails:\r\n\r\n{message}",
 		'email_notify_scheduled_complete'         => '',  // Email address(es) to send to when a scheduled backup completes.
-		'email_notify_scheduled_complete_subject' => 'BackupBuddy Scheduled Backup Complete - {home_url}',
-		'email_notify_scheduled_complete_body'    => "A scheduled backup has completed with BackupBuddy v{backupbuddy_version} on {current_datetime} for the site {home_url}.\n\nDetails:\r\n\r\n{message}",
+		'email_notify_scheduled_complete_subject' => 'Solid Backups Scheduled Backup Complete - {home_url}',
+		'email_notify_scheduled_complete_body'    => "A scheduled backup has completed with Solid Backups v{backupbuddy_version} on {current_datetime} for the site {home_url}.\n\nDetails:\r\n\r\n{message}",
 		'email_notify_send_finish'                => '',  // Email address(es) to send to when a send finishes.
-		'email_notify_send_finish_subject'        => 'BackupBuddy File Send Finished - {home_url}',
-		'email_notify_send_finish_body'           => "A destination file send of file {backup_file} has finished with BackupBuddy v{backupbuddy_version} on {current_datetime} for the site {home_url}.\n\nDetails:\r\n\r\n{message}",
+		'email_notify_send_finish_banner'         => 'Your backup is complete for: ',
+		'email_notify_send_finish_subject'        => 'Solid Backups File Send Finished - {home_url}',
+		'email_notify_send_finish_body'           => "A destination file send of file {backup_file} has finished with Solid Backups v{backupbuddy_version} on {current_datetime} for the site {home_url}.\n\nDetails:\r\n\r\n{message}",
 		'email_notify_error'                      => '',  // Email address(es) to send to when an error is encountered.
-		'email_notify_error_subject'              => 'BackupBuddy Server Error - {home_url}',
-		'email_notify_error_body'                 => "BackupBuddy v{backupbuddy_version} encountered a server error on {current_datetime} for the site {home_url}. Error details:\r\n\r\n{message}",
+		'email_notify_error_subject'              => 'Solid Backups Server Error - {home_url}',
+		'email_notify_error_body'                 => "Solid Backups v{backupbuddy_version} encountered a server error on {current_datetime} for the site {home_url}. Error details:\r\n\r\n{message}",
+		'email_notify_error_banner'               => "An error occurred for site: ",
 		'email_return'                            => '',  // Return email address for emails sent. Defaults to admin email if none specified.
+		'built_email_logo'                        => plugin_dir_url( __FILE__ ) . 'assets/dist/images/solid_backups_email_logo.png',
 
 		'remote_destinations'                     => array(),             // Array of remote destinations (S3, Rackspace, email, ftp, etc).
 		'remote_send_timeout_retries'             => '1',                 // Number of times to attempt to resend timed out remote destination. IMPORTANT: Currently only permits values or 1 or 0. 1 max tries.
@@ -151,12 +151,12 @@ $pluginbuddy_settings = array(
 		'max_send_stats_count'                    => '6',            // Maxn numeric amount of most recent send fileoptions stats files to keep. Configurable in settings.
 		'max_notifications_age_days'              => '21',           // Max days to keep notifications.
 		'save_backup_sum_log'                     => '1',            // 1 or 0.  When 1 the full backup status log will be saved in a log file with _sum_ in it. This allows viewing the full status log regardless of Log Level setting.
-		'limit_single_cron_per_pass'              => '1',            // Prevents multiple BackupBuddy crons from running per PHP page load by re-scheduling and delaying them to the next load.
-		'tested_php_runtime'                      => 0,              // Actual tested max PHP runtime based on backupbuddy_core::php_runtime_test() results.
-		'tested_php_memory'                       => 0,              // Actual tested max PHP memory based on backupbuddy_core::php_memory_test() results.
-		'last_tested_php_runtime'                 => 0,              // Timestamp PHP runtime was last tested.
-		'last_tested_php_memory'                  => 0,              // Timestamp PHP memory was last tested.
-		'use_internal_cron'                       => '0',            // When 1, we will try to use our own cron system to work around cron caching issues.
+		'limit_single_cron_per_pass'              => '0',            // Prevents multiple Solid Backups crons from running per PHP page load by re-scheduling and delaying them to the next load.
+		'tested_php_runtime'                      => ini_get( 'max_execution_time' ), // Actual tested max PHP runtime based on backupbuddy_core::php_runtime_test() results. Default set to aid in plugin activation.
+		'tested_php_memory'                       => solid_backups_get_initial_tested_memory(), // Actual tested max PHP memory based on backupbuddy_core::php_memory_test() results. Default set to aid in plugin activation.
+		'last_tested_php_runtime'                 => time(),         // Timestamp PHP runtime was last tested. Default set to aid in plugin activation.
+		'last_tested_php_memory'                  => time(),         // Timestamp PHP memory was last tested. Default set to aid in plugin activation.
+		'use_internal_cron'                       => '0',            // Deprecated in v9.1.5. Remove in 9.2.0.
 		'umask_check'                             => false,          // Stores umask server tests.
 		'default_restores_permissions'            => 'standard',     // Permission set to be used during backup restores.
 		'disable_dat_file_creation'               => 0,              // Allows support/users to turn of dat file creation for debugging.
@@ -207,7 +207,7 @@ $pluginbuddy_settings = array(
 				'active_plugins_only'           => '0',                   // Only backup active plugins.
 			),
 		),
-		'show_all_cron_schedules'                 => 0,             // Show cron schedules defined by all plugins/theme or only private schedules defiend by BackupBuddy (prefix itbub-) (default).
+		'show_all_cron_schedules'                 => 0,             // Show cron schedules defined by all plugins/theme or only private schedules defiend by Solid Backups (prefix itbub-) (default).
 	),
 	'deployment_defaults'        => array(
 		'siteurl' => '',
@@ -264,15 +264,35 @@ $pluginbuddy_settings = array(
 		'message'  => '',
 		'data'     => array(),
 		'urgent'   => false,
-		'syncSent' => false,          // Whether or not this notification has been sent to iThemes Sync yet.
+		'syncSent' => false,          // Whether or not this notification has been sent to Solid Sync yet.
 	),
 	'wp_minimum'                 => '3.5.0',
-	'php_minimum'                => '5.2',
+	'php_minimum'                => '7.2',
 	'modules'                    => array(
 		'filesystem' => true,
 		'format'     => true,
 	),
 );
+
+/**
+ * Get initial tested memory.
+ *
+ * @return int  The memory limit in MB.
+ */
+function solid_backups_get_initial_tested_memory() {
+	$memory_limit = ini_get('memory_limit');
+	// Convert the memory limit to MB, whether it is in MB or not.
+	if ( preg_match( '/^(\d+)(.)$/', $memory_limit, $matches ) ) {
+		if ( 'M' === $matches[2] ) {
+			$memory_limit = $matches[1];
+		} elseif ( 'K' === $matches[2] ) {
+			$memory_limit = round( $matches[1] / 1024 );
+		} elseif ( 'G' === $matches[2] ) {
+			$memory_limit = $matches[1] * 1024;
+		}
+	}
+	return $memory_limit;
+}
 
 define( 'BACKUPBUDDY_PLUGIN_FILE', __FILE__ );
 define( 'BACKUPBUDDY_PLUGIN_PATH', dirname( BACKUPBUDDY_PLUGIN_FILE ) );
@@ -282,6 +302,14 @@ $pluginbuddy_init = basename( BACKUPBUDDY_PLUGIN_FILE );
 
 // Load composer autoload.
 require_once BACKUPBUDDY_PLUGIN_PATH . '/vendor/autoload.php';
+require_once BACKUPBUDDY_PLUGIN_PATH . '/vendor-prefixed/autoload.php';
+
+// Telemetry.
+require_once BACKUPBUDDY_PLUGIN_PATH . '/classes/class-container.php';
+require_once BACKUPBUDDY_PLUGIN_PATH . '/classes/class-telemetry.php';
+add_action( 'plugins_loaded', function() {
+	Solid_Backups_Telemetry::run_hooks();
+}, 9 );
 
 // Load PHP7 helpers.
 require_once BACKUPBUDDY_PLUGIN_PATH . '/helpers/php7.php';

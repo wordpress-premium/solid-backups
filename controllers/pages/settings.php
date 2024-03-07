@@ -136,7 +136,7 @@ if ( isset( $_POST['pb_backupbuddy_backup_directory'] ) ) {
 		} else {
 			$_POST['pb_backupbuddy_backup_directory'] = $backup_directory;
 		}
-		pb_backupbuddy::alert( 'Your backup storage directory has been updated from "' . $old_backup_dir . '" to "' . $new_backup_dir . '". ' . $old_backups_moved . ' backup(s) have been moved to the new location. You should perform a manual backup to verify that your backup storage directory changes perform as expected.' );
+		pb_backupbuddy::alert( 'Your backup storage directory has been updated from "' . esc_attr( $old_backup_dir ) . '" to "' . esc_attr( $new_backup_dir ) . '". ' . $old_backups_moved . ' backup(s) have been moved to the new location. You should perform a manual backup to verify that your backup storage directory changes perform as expected.' );
 	}
 }
 /* END VERIFYING BACKUP DIRECTORY */
@@ -153,7 +153,7 @@ if ( 'myp@ssw0rd' === strtolower( pb_backupbuddy::_POST( 'pb_backupbuddy_importb
 /* BEGIN VERIFYING PASSWORD CONFIRMATIONS MATCH */
 $importbuddy_pass_match_fail = false;
 if ( pb_backupbuddy::_POST( 'pb_backupbuddy_importbuddy_pass_hash' ) !== pb_backupbuddy::_POST( 'pb_backupbuddy_importbuddy_pass_hash_confirm' ) ) {
-	pb_backupbuddy::alert( 'Error: The provided ImportBuddy password and confirmation do not match. Please make sure you type the password and re-type it correctly.' );
+	pb_backupbuddy::alert( 'Error: The provided Importer password and confirmation do not match. Please make sure you type the password and re-type it correctly.' );
 	$_POST['pb_backupbuddy_importbuddy_pass_hash']         = '';
 	$_POST['pb_backupbuddy_importbuddy_pass_hash_confirm'] = '';
 	$importbuddy_pass_match_fail                           = true;

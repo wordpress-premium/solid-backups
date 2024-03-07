@@ -10,7 +10,11 @@ backupbuddy_core::verifyAjaxAccess();
 $serial = pb_backupbuddy::_GET( 'serial' );
 $serial = str_replace( '/\\', '', $serial );
 pb_backupbuddy::load();
-pb_backupbuddy::$ui->ajax_header();
+pb_backupbuddy::$ui->ajax_header( true, true, 'backupbuddy-admin-iframe-white diagnostics-iframe' );
+
+?>
+<div class="diagnostics-iframe-inner">
+<?php
 
 pb_backupbuddy::status( 'details', 'Loading fileoptions data instance #27...' );
 require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
@@ -46,7 +50,7 @@ if ( isset( $integrity['status_details'] ) ) { // $integrity['status_details'] i
 		$item_value = str_replace( '<br>', "\n     ", $item_value );
 		echo $item_name . ' => ' . $item_value . "\n";
 	}
-	echo '</textarea><br><br><b>Note:</b> It is normal to see several "file not found" entries as BackupBuddy checks for expected files in multiple locations, expecting to only find each file once in one of those locations.';
+	echo '</textarea><br><br><b>Note:</b> It is normal to see several "file not found" entries as Solid Backups checks for expected files in multiple locations, expecting to only find each file once in one of those locations.';
 } else { // $integrity['status_details'] is array.
 
 	echo '<br>';
@@ -228,15 +232,17 @@ if ( isset( $integrity['scan_time'] ) ) {
 	$scanned = pb_backupbuddy::$format->date( pb_backupbuddy::$format->localize_time( $integrity['scan_time'] ) );
 	echo ucfirst( $trigger ) . " backup {$integrity['file']} last scanned {$scanned}.";
 }
-echo '<br><br><br>';
+echo '<br>';
 
-echo '<a class="button secondary-button" onclick="jQuery(\'#pb_backupbuddy_advanced_debug\').slideToggle();">Display Advanced Debugging</a>';
+echo '<a class="button button-secondary secondary-button" onclick="jQuery(\'#pb_backupbuddy_advanced_debug\').slideToggle();">Display Advanced Debugging</a>';
 echo '<div id="pb_backupbuddy_advanced_debug" style="display: none;">From options file: `' . $options_file . '`.<br>';
 echo '<textarea style="width: 100%; height: 400px;" wrap="on">';
 echo print_r( $backup_options->options, true );
-echo '</textarea><br><br>';
-echo '</div><br><br>';
+echo '</textarea>';
+echo '</div>';
 
-
+?>
+</div>
+<?php
 pb_backupbuddy::$ui->ajax_footer();
 die();

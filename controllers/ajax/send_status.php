@@ -111,7 +111,7 @@ echo '<br><br>';
 // ***** END STEPS.
 echo '<br><br><br>';
 
-echo '<a class="button secondary-button" onclick="jQuery(\'#pb_backupbuddy_advanced_debug\').slideToggle();">Display Advanced Debugging</a>';
+echo '<a class="button button-secondary secondary-button" onclick="jQuery(\'#pb_backupbuddy_advanced_debug\').slideToggle();">Display Advanced Debugging</a>';
 echo '<div id="pb_backupbuddy_advanced_debug" style="display: none;">';
 echo '<textarea style="width: 100%; height: 400px;" wrap="on">';
 echo print_r( $send_options->options, true );

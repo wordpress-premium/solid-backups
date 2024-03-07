@@ -47,7 +47,7 @@ $backupInfo = array(
 	array( 'Site URL', $restoreData['dat']['siteurl'] ),
 	array( 'Blog Name', $restoreData['dat']['blogname'] ),
 	array( 'Blog Description', $restoreData['dat']['blogdescription'] ),
-	array( 'BackupBuddy Version', $restoreData['dat']['backupbuddy_version'] ),
+	array( 'Solid Backups Version', $restoreData['dat']['backupbuddy_version'] ),
 	array( 'WordPress Version', $wp_version ),
 	array( 'Database Prefix', $restoreData['dat']['db_prefix'] ),
 	array( 'Active Plugins', $restoreData['dat']['active_plugins'] ),

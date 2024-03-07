@@ -12,7 +12,7 @@ echo ' <span style="position: relative; top: -0.5em; font-size: 0.7em;">&dagger;
 _e( 'WordPress core files will not be transferred between sites.', 'it-l10n-backupbuddy' );
 
 echo ' <span style="position: relative; top: -0.5em; font-size: 0.7em;">&Dagger;</span> ';
-_e( 'BackupBuddy plugin files will not be transferred between sites.', 'it-l10n-backupbuddy' );
+_e( 'Solid Backups plugin files will not be transferred between sites.', 'it-l10n-backupbuddy' );
 
 
 if ( $deployData['remoteInfo']['activeTheme'] == $localInfo['activeTheme'] ) {
@@ -37,7 +37,7 @@ if ( isset( $deployData['remoteInfo']['activeChildTheme'] ) ) {
 	$remoteActiveChildTheme = $deployData['remoteInfo']['activeChildTheme'];
 } else {
 	$activeChildThemeBInfo = '';
-	$remoteActiveChildTheme = __( 'Unknown [NOTE: Remote site does not support detecting child theme. Update remote BackupBuddy]', 'it-l10n-backupbuddy' );
+	$remoteActiveChildTheme = __( 'Unknown [NOTE: Remote site does not support detecting child theme. Update remote Solid Backups]', 'it-l10n-backupbuddy' );
 }
 
 $activePluginsBInfo = ' <a href="javascript:void(0);" class="deploy-show-files" rel="pushPluginFiles" title="Click to list files.">(' . count( $deployData['pushPluginFiles'] ) . ' files to push)</a>';
@@ -52,7 +52,7 @@ $pushRows = array(
 	'Memory Limit' => array( $localInfo['php']['memory_limit'] . ' MB', $deployData['remoteInfo']['php']['memory_limit'] . ' MB' ),
 	//'PHP Upload Limit' => array( $localInfo['php']['upload_max_filesize'], $deployData['remoteInfo']['php']['upload_max_filesize'] ),
 	'WordPress Version <span style="position: relative; top: -0.5em; font-size: 0.7em;">&dagger;</span>' => array( $localInfo['wordpressVersion'], $deployData['remoteInfo']['wordpressVersion'] ),
-	'BackupBuddy Version <span style="position: relative; top: -0.5em; font-size: 0.7em;">&Dagger;</span>' => array( $localInfo['backupbuddyVersion'], $deployData['remoteInfo']['backupbuddyVersion'] ),
+	'Solid Backups Version <span style="position: relative; top: -0.5em; font-size: 0.7em;">&Dagger;</span>' => array( $localInfo['backupbuddyVersion'], $deployData['remoteInfo']['backupbuddyVersion'] ),
 	'Active Plugins' => array( $activePluginsA, $activePluginsB . $activePluginsBInfo ),
 	'Active Theme' => array( $localInfo['activeTheme'], $deployData['remoteInfo']['activeTheme'] . ' ' . $activeThemeBInfo ),
 	'Active Child Theme' => array( $localInfo['activeChildTheme'], $remoteActiveChildTheme . ' ' . $activeChildThemeBInfo ),

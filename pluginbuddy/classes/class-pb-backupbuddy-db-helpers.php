@@ -104,11 +104,7 @@ class PB_Backupbuddy_DB_Helpers {
 
 			// Fallback on mysql*_get_server_info.
 			if ( ! isset( $version_info['db_version'] ) ) {
-				if ( $wpdb->use_mysqli ) {
-					$version_info['db_version'] = mysqli_get_server_info( $wpdb->dbh );
-				} else {
-					$version_info['db_version'] = mysql_get_server_info( $wpdb->dbh );
-				}
+				$version_info['db_version'] = mysqli_get_server_info( $wpdb->dbh );
 			}
 
 			if ( isset( $version_info['db_version'] ) ) {

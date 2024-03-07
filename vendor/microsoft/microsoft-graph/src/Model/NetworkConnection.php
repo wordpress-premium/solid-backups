@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 /**
@@ -18,10 +17,9 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class NetworkConnection extends Entity
 {
@@ -107,6 +105,34 @@ class NetworkConnection extends Entity
     public function setDestinationDomain($val)
     {
         $this->_propDict["destinationDomain"] = $val;
+        return $this;
+    }
+    /**
+    * Gets the destinationLocation
+    * Location (by IP address mapping) associated with the destination of a network connection.
+    *
+    * @return string The destinationLocation
+    */
+    public function getDestinationLocation()
+    {
+        if (array_key_exists("destinationLocation", $this->_propDict)) {
+            return $this->_propDict["destinationLocation"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+    * Sets the destinationLocation
+    * Location (by IP address mapping) associated with the destination of a network connection.
+    *
+    * @param string $val The value of the destinationLocation
+    *
+    * @return NetworkConnection
+    */
+    public function setDestinationLocation($val)
+    {
+        $this->_propDict["destinationLocation"] = $val;
         return $this;
     }
     /**
@@ -201,14 +227,14 @@ class NetworkConnection extends Entity
 
     /**
     * Gets the domainRegisteredDateTime
-    * Date when the destination domain was registered. The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 would look like this: '2014-01-01T00:00:00Z'
+    * Date when the destination domain was registered. The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
     *
     * @return \DateTime The domainRegisteredDateTime
     */
     public function getDomainRegisteredDateTime()
     {
         if (array_key_exists("domainRegisteredDateTime", $this->_propDict)) {
-            if (is_a($this->_propDict["domainRegisteredDateTime"], "Microsoft\Graph\Model\\DateTime")) {
+            if (is_a($this->_propDict["domainRegisteredDateTime"], "\DateTime")) {
                 return $this->_propDict["domainRegisteredDateTime"];
             } else {
                 $this->_propDict["domainRegisteredDateTime"] = new \DateTime($this->_propDict["domainRegisteredDateTime"]);
@@ -220,7 +246,7 @@ class NetworkConnection extends Entity
 
     /**
     * Sets the domainRegisteredDateTime
-    * Date when the destination domain was registered. The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 would look like this: '2014-01-01T00:00:00Z'
+    * Date when the destination domain was registered. The Timestamp type represents date and time information using ISO 8601 format and is always in UTC time. For example, midnight UTC on Jan 1, 2014 is 2014-01-01T00:00:00Z
     *
     * @param \DateTime $val The value to assign to the domainRegisteredDateTime
     *
@@ -458,6 +484,34 @@ class NetworkConnection extends Entity
     public function setSourceAddress($val)
     {
         $this->_propDict["sourceAddress"] = $val;
+        return $this;
+    }
+    /**
+    * Gets the sourceLocation
+    * Location (by IP address mapping) associated with the source of a network connection.
+    *
+    * @return string The sourceLocation
+    */
+    public function getSourceLocation()
+    {
+        if (array_key_exists("sourceLocation", $this->_propDict)) {
+            return $this->_propDict["sourceLocation"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+    * Sets the sourceLocation
+    * Location (by IP address mapping) associated with the source of a network connection.
+    *
+    * @param string $val The value of the sourceLocation
+    *
+    * @return NetworkConnection
+    */
+    public function setSourceLocation($val)
+    {
+        $this->_propDict["sourceLocation"] = $val;
         return $this;
     }
     /**

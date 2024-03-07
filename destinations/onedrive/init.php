@@ -455,7 +455,9 @@ class pb_backupbuddy_destination_onedrive {
 
 			pb_backupbuddy::status( 'details', __( 'Starting OneDrive upload for', 'it-l10n-backupbuddy' ) . ' `' . basename( $file ) . '`.' );
 
-			$args = array();
+			$args = array(
+				'range_size' => 10 * 1024 * 1024, // 10 MB.
+			);
 			if ( $mime_type ) {
 				$args['contentType'] = $mime_type;
 			}

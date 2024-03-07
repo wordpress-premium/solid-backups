@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 /**
@@ -18,50 +17,16 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class AutomaticRepliesSetting extends Entity
 {
 
     /**
-    * Gets the status
-    * Configurations status for automatic replies. The possible values are: disabled, alwaysEnabled, scheduled.
-    *
-    * @return AutomaticRepliesStatus The status
-    */
-    public function getStatus()
-    {
-        if (array_key_exists("status", $this->_propDict)) {
-            if (is_a($this->_propDict["status"], "Microsoft\Graph\Model\AutomaticRepliesStatus")) {
-                return $this->_propDict["status"];
-            } else {
-                $this->_propDict["status"] = new AutomaticRepliesStatus($this->_propDict["status"]);
-                return $this->_propDict["status"];
-            }
-        }
-        return null;
-    }
-
-    /**
-    * Sets the status
-    * Configurations status for automatic replies. The possible values are: disabled, alwaysEnabled, scheduled.
-    *
-    * @param AutomaticRepliesStatus $val The value to assign to the status
-    *
-    * @return AutomaticRepliesSetting The AutomaticRepliesSetting
-    */
-    public function setStatus($val)
-    {
-        $this->_propDict["status"] = $val;
-         return $this;
-    }
-
-    /**
     * Gets the externalAudience
-    * The set of audience external to the signed-in user's organization who will receive the ExternalReplyMessage, if Status is AlwaysEnabled or Scheduled. The possible values are: none, contactsOnly, all.
+    * The set of audience external to the signed-in user's organization who will receive the ExternalReplyMessage, if Status is AlwaysEnabled or Scheduled. Possible values are: none, contactsOnly, all.
     *
     * @return ExternalAudienceScope The externalAudience
     */
@@ -80,7 +45,7 @@ class AutomaticRepliesSetting extends Entity
 
     /**
     * Sets the externalAudience
-    * The set of audience external to the signed-in user's organization who will receive the ExternalReplyMessage, if Status is AlwaysEnabled or Scheduled. The possible values are: none, contactsOnly, all.
+    * The set of audience external to the signed-in user's organization who will receive the ExternalReplyMessage, if Status is AlwaysEnabled or Scheduled. Possible values are: none, contactsOnly, all.
     *
     * @param ExternalAudienceScope $val The value to assign to the externalAudience
     *
@@ -89,6 +54,95 @@ class AutomaticRepliesSetting extends Entity
     public function setExternalAudience($val)
     {
         $this->_propDict["externalAudience"] = $val;
+         return $this;
+    }
+    /**
+    * Gets the externalReplyMessage
+    * The automatic reply to send to the specified external audience, if Status is AlwaysEnabled or Scheduled.
+    *
+    * @return string The externalReplyMessage
+    */
+    public function getExternalReplyMessage()
+    {
+        if (array_key_exists("externalReplyMessage", $this->_propDict)) {
+            return $this->_propDict["externalReplyMessage"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+    * Sets the externalReplyMessage
+    * The automatic reply to send to the specified external audience, if Status is AlwaysEnabled or Scheduled.
+    *
+    * @param string $val The value of the externalReplyMessage
+    *
+    * @return AutomaticRepliesSetting
+    */
+    public function setExternalReplyMessage($val)
+    {
+        $this->_propDict["externalReplyMessage"] = $val;
+        return $this;
+    }
+    /**
+    * Gets the internalReplyMessage
+    * The automatic reply to send to the audience internal to the signed-in user's organization, if Status is AlwaysEnabled or Scheduled.
+    *
+    * @return string The internalReplyMessage
+    */
+    public function getInternalReplyMessage()
+    {
+        if (array_key_exists("internalReplyMessage", $this->_propDict)) {
+            return $this->_propDict["internalReplyMessage"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+    * Sets the internalReplyMessage
+    * The automatic reply to send to the audience internal to the signed-in user's organization, if Status is AlwaysEnabled or Scheduled.
+    *
+    * @param string $val The value of the internalReplyMessage
+    *
+    * @return AutomaticRepliesSetting
+    */
+    public function setInternalReplyMessage($val)
+    {
+        $this->_propDict["internalReplyMessage"] = $val;
+        return $this;
+    }
+
+    /**
+    * Gets the scheduledEndDateTime
+    * The date and time that automatic replies are set to end, if Status is set to Scheduled.
+    *
+    * @return DateTimeTimeZone The scheduledEndDateTime
+    */
+    public function getScheduledEndDateTime()
+    {
+        if (array_key_exists("scheduledEndDateTime", $this->_propDict)) {
+            if (is_a($this->_propDict["scheduledEndDateTime"], "Microsoft\Graph\Model\DateTimeTimeZone")) {
+                return $this->_propDict["scheduledEndDateTime"];
+            } else {
+                $this->_propDict["scheduledEndDateTime"] = new DateTimeTimeZone($this->_propDict["scheduledEndDateTime"]);
+                return $this->_propDict["scheduledEndDateTime"];
+            }
+        }
+        return null;
+    }
+
+    /**
+    * Sets the scheduledEndDateTime
+    * The date and time that automatic replies are set to end, if Status is set to Scheduled.
+    *
+    * @param DateTimeTimeZone $val The value to assign to the scheduledEndDateTime
+    *
+    * @return AutomaticRepliesSetting The AutomaticRepliesSetting
+    */
+    public function setScheduledEndDateTime($val)
+    {
+        $this->_propDict["scheduledEndDateTime"] = $val;
          return $this;
     }
 
@@ -126,91 +180,35 @@ class AutomaticRepliesSetting extends Entity
     }
 
     /**
-    * Gets the scheduledEndDateTime
-    * The date and time that automatic replies are set to end, if Status is set to Scheduled.
+    * Gets the status
+    * Configurations status for automatic replies. Possible values are: disabled, alwaysEnabled, scheduled.
     *
-    * @return DateTimeTimeZone The scheduledEndDateTime
+    * @return AutomaticRepliesStatus The status
     */
-    public function getScheduledEndDateTime()
+    public function getStatus()
     {
-        if (array_key_exists("scheduledEndDateTime", $this->_propDict)) {
-            if (is_a($this->_propDict["scheduledEndDateTime"], "Microsoft\Graph\Model\DateTimeTimeZone")) {
-                return $this->_propDict["scheduledEndDateTime"];
+        if (array_key_exists("status", $this->_propDict)) {
+            if (is_a($this->_propDict["status"], "Microsoft\Graph\Model\AutomaticRepliesStatus")) {
+                return $this->_propDict["status"];
             } else {
-                $this->_propDict["scheduledEndDateTime"] = new DateTimeTimeZone($this->_propDict["scheduledEndDateTime"]);
-                return $this->_propDict["scheduledEndDateTime"];
+                $this->_propDict["status"] = new AutomaticRepliesStatus($this->_propDict["status"]);
+                return $this->_propDict["status"];
             }
         }
         return null;
     }
 
     /**
-    * Sets the scheduledEndDateTime
-    * The date and time that automatic replies are set to end, if Status is set to Scheduled.
+    * Sets the status
+    * Configurations status for automatic replies. Possible values are: disabled, alwaysEnabled, scheduled.
     *
-    * @param DateTimeTimeZone $val The value to assign to the scheduledEndDateTime
+    * @param AutomaticRepliesStatus $val The value to assign to the status
     *
     * @return AutomaticRepliesSetting The AutomaticRepliesSetting
     */
-    public function setScheduledEndDateTime($val)
+    public function setStatus($val)
     {
-        $this->_propDict["scheduledEndDateTime"] = $val;
+        $this->_propDict["status"] = $val;
          return $this;
-    }
-    /**
-    * Gets the internalReplyMessage
-    * The automatic reply to send to the audience internal to the signed-in user's organization, if Status is AlwaysEnabled or Scheduled.
-    *
-    * @return string The internalReplyMessage
-    */
-    public function getInternalReplyMessage()
-    {
-        if (array_key_exists("internalReplyMessage", $this->_propDict)) {
-            return $this->_propDict["internalReplyMessage"];
-        } else {
-            return null;
-        }
-    }
-
-    /**
-    * Sets the internalReplyMessage
-    * The automatic reply to send to the audience internal to the signed-in user's organization, if Status is AlwaysEnabled or Scheduled.
-    *
-    * @param string $val The value of the internalReplyMessage
-    *
-    * @return AutomaticRepliesSetting
-    */
-    public function setInternalReplyMessage($val)
-    {
-        $this->_propDict["internalReplyMessage"] = $val;
-        return $this;
-    }
-    /**
-    * Gets the externalReplyMessage
-    * The automatic reply to send to the specified external audience, if Status is AlwaysEnabled or Scheduled.
-    *
-    * @return string The externalReplyMessage
-    */
-    public function getExternalReplyMessage()
-    {
-        if (array_key_exists("externalReplyMessage", $this->_propDict)) {
-            return $this->_propDict["externalReplyMessage"];
-        } else {
-            return null;
-        }
-    }
-
-    /**
-    * Sets the externalReplyMessage
-    * The automatic reply to send to the specified external audience, if Status is AlwaysEnabled or Scheduled.
-    *
-    * @param string $val The value of the externalReplyMessage
-    *
-    * @return AutomaticRepliesSetting
-    */
-    public function setExternalReplyMessage($val)
-    {
-        $this->_propDict["externalReplyMessage"] = $val;
-        return $this;
     }
 }

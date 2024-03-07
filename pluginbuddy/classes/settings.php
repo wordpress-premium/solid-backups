@@ -19,7 +19,7 @@ class pb_backupbuddy_settings {
 	/**
 	 * The Form Object
 	 *
-	 * @var pb_bakcupbuddy_form
+	 * @var pb_backupbuddy_form
 	 */
 	private $_form;
 
@@ -345,12 +345,10 @@ class pb_backupbuddy_settings {
 
 			if ( 'title' === $settings['type'] ) { // Title item.
 				if ( true === $first_title ) { // First title in list.
-					$return     .= '<tr style="border: 0;"><th colspan="2" style="border: 0; padding-top: 0; padding-bottom: 0;" class="' . $settings['row_class'] . '"><h3 class="title ' . $settings['class'] . '"';
-					$return     .= ' style="margin-top: 0; margin-bottom: 0.5em;"';
+					$return     .= '<tr class="iframe-form-table-heading"><th colspan="2" class="' . $settings['row_class'] . '"><h3 class="solid-backups-form-heading title ' . $settings['class'] . '"';
 					$first_title = false;
 				} else { // Subsequent titles.
-					$return .= '<tr style="border: 0;"><th colspan="2" style="border: 0;" class="' . $settings['row_class'] . '"><h3 class="title ' . $settings['class'] . '"';
-					$return .= ' style="margin: 0.5em 0;"';
+					$return .= '<tr class="iframe-form-table-heading"><th colspan="2" class="' . $settings['row_class'] . '"><h3 class="solid-backups-form-heading title ' . $settings['class'] . '"';
 				}
 
 				$return .= '>' . $settings['title'] . '</h3></th>';
@@ -361,7 +359,7 @@ class pb_backupbuddy_settings {
 				if ( false === strpos( $settings['rules'], 'no-th' ) ) {
 					$return .= '<th scope="row" class="' . $settings['row_class'] . '"';
 					if ( '' != $this->_custom_title_width ) {
-						$return .= ' style="width: ' . $this->_custom_title_width . 'px; ' . $th_css . '"';
+						$return .= ' style="min-width: ' . $this->_custom_title_width . 'px; ' . $th_css . '"';
 					} else {
 						$return .= ' style="' . $th_css . '"';
 					}

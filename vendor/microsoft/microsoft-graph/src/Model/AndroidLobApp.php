@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,42 +18,12 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class AndroidLobApp extends MobileLobApp
 {
-    /**
-    * Gets the packageId
-    * The package identifier.
-    *
-    * @return string The packageId
-    */
-    public function getPackageId()
-    {
-        if (array_key_exists("packageId", $this->_propDict)) {
-            return $this->_propDict["packageId"];
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-    * Sets the packageId
-    * The package identifier.
-    *
-    * @param string $val The packageId
-    *
-    * @return AndroidLobApp
-    */
-    public function setPackageId($val)
-    {
-        $this->_propDict["packageId"] = $val;
-        return $this;
-    }
-    
     /**
     * Gets the minimumSupportedOperatingSystem
     * The value for the minimum applicable operating system.
@@ -89,31 +58,31 @@ class AndroidLobApp extends MobileLobApp
     }
     
     /**
-    * Gets the versionName
-    * The version name of Android Line of Business (LoB) app.
+    * Gets the packageId
+    * The package identifier.
     *
-    * @return string The versionName
+    * @return string The packageId
     */
-    public function getVersionName()
+    public function getPackageId()
     {
-        if (array_key_exists("versionName", $this->_propDict)) {
-            return $this->_propDict["versionName"];
+        if (array_key_exists("packageId", $this->_propDict)) {
+            return $this->_propDict["packageId"];
         } else {
             return null;
         }
     }
     
     /**
-    * Sets the versionName
-    * The version name of Android Line of Business (LoB) app.
+    * Sets the packageId
+    * The package identifier.
     *
-    * @param string $val The versionName
+    * @param string $val The packageId
     *
     * @return AndroidLobApp
     */
-    public function setVersionName($val)
+    public function setPackageId($val)
     {
-        $this->_propDict["versionName"] = $val;
+        $this->_propDict["packageId"] = $val;
         return $this;
     }
     
@@ -143,6 +112,35 @@ class AndroidLobApp extends MobileLobApp
     public function setVersionCode($val)
     {
         $this->_propDict["versionCode"] = $val;
+        return $this;
+    }
+    
+    /**
+    * Gets the versionName
+    * The version name of Android Line of Business (LoB) app.
+    *
+    * @return string The versionName
+    */
+    public function getVersionName()
+    {
+        if (array_key_exists("versionName", $this->_propDict)) {
+            return $this->_propDict["versionName"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the versionName
+    * The version name of Android Line of Business (LoB) app.
+    *
+    * @param string $val The versionName
+    *
+    * @return AndroidLobApp
+    */
+    public function setVersionName($val)
+    {
+        $this->_propDict["versionName"] = $val;
         return $this;
     }
     

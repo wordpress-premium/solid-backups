@@ -46,7 +46,7 @@ $disableBackingUp = false;
 foreach( $preflight_checks as $preflight_check ) {
 	if ( $preflight_check['success'] !== true ) {
 		//$alert_message[] = $preflight_check['message'];
-		pb_backupbuddy::disalert( $preflight_check['test'], $preflight_check['message'] );
+		pb_backupbuddy::disalert( $preflight_check['test'], '<div class="preflight-check-message">' . $preflight_check['message'] . '</div>' );
 		if ( 'backup_dir_permissions' == $preflight_check['test'] ) {
 			$disableBackingUp = true;
 		} elseif ( 'temp_dir_permissions' == $preflight_check['test'] ) {
@@ -71,15 +71,19 @@ foreach( $preflight_checks as $preflight_check ) {
 
 	<?php
 	if ( true === $disableBackingUp ) {
-		echo '&nbsp;&nbsp;<span class="description">' . __( 'Backing up disabled due to errors listed above. This often caused by permission problems on files/directories. Please correct the errors above and refresh to try again.', 'it-l10n-backupbuddy' ) . '</span><br>';
+		echo '&nbsp;&nbsp;<span class="description">' . esc_html_e( 'Backing up disabled due to errors listed above. This often caused by permission problems on files/directories. Please correct the errors above and refresh to try again.', 'it-l10n-backupbuddy' ) . '</span><br>';
 	} else {
 		function bb_home_show_profiles( $profile_id, $profile ) {
 			?>
 			<div class="profile_item">
-				<a class="profile_item_select" href="<?php echo pb_backupbuddy::page_url(); ?>&backupbuddy_backup=<?php echo $profile_id; ?>" title="Create this <?php echo $profile['type']; ?> backup.">
-					<span class="profile_type profile_type-<?php echo $profile['type']; ?>" title="<?php esc_attr_e( backupbuddy_core::pretty_backup_type( $profile['type'] ), 'it-l10n-backupbuddy' ); ?>"></span>
-					<span<?php if ( 1 == $profile_id || 2 == $profile_id ) { echo 'style="font-weight: 600 !important;"'; } ?> class="profile_text" id="profile_title_<?php echo esc_attr( $profile_id ); ?>"><?php echo esc_html( $profile['title'] ); ?></span>
-				</a><a href="#settings" rel="<?php echo $profile_id; ?>" class="profile_settings dashicons dashicons-admin-generic" title="<?php esc_attr_e( "Configure this profile's settings.", 'it-l10n-backupbuddy' ); ?>"></a>
+				<a class="profile_item_select" href="<?php echo esc_attr( pb_backupbuddy::page_url() ); ?>&backupbuddy_backup=<?php echo esc_attr( $profile_id ); ?>" title="Create this <?php echo esc_attr( $profile['type'] ); ?> backup.">
+					<span class="profile_type profile_type-<?php echo esc_attr( $profile['type'] ); ?>" title="<?php echo esc_attr( backupbuddy_core::pretty_backup_type( $profile['type'] ) ); ?>">
+						<?php pb_backupbuddy::$ui->render_icon_by_profile_type( $profile['type'] ); ?>
+					</span>
+					<span class="profile_text" id="profile_title_<?php echo esc_attr( $profile_id ); ?>"><?php echo esc_html( $profile['title'] ); ?></span>
+				</a>
+				<?php /* translators: The data-title is the title of the profile that will be displayed in the modal (ThickBox). */ ?>
+				<a href="#settings" rel="<?php echo esc_attr( ucwords( $profile_id ) ); ?>" class="profile_settings" data-title="<?php echo esc_html( sprintf( __( '%s Profile', 'it-l10n-backupbuddy' ), ucwords( $profile['title'] ) ) ); ?>" title="<?php esc_attr_e( "Configure this profile's settings.", 'it-l10n-backupbuddy' ); ?>"><?php pb_backupbuddy::$ui->render_icon( 'cog' ); ?></a>
 			</div>
 			<?php
 		}
@@ -104,15 +108,21 @@ foreach( $preflight_checks as $preflight_check ) {
 
 		$profile_style = $adding_profile ? '' : ' style="display: none;"';
 		$selected = pb_backupbuddy::_POST( 'type' );
+		$button_style = $adding_profile ? ' style="display: none;"' : '';
 		?>
-
-		<div class="profile_item" id="pb_backupbuddy_profileadd"<?php echo $profile_style; ?> href="<?php echo pb_backupbuddy::ajax_url( 'backup_profile_settings' ); ?>&profile=<?php echo esc_attr( $profile_id ); ?>">
-			<div class="profile_item_noselect" style="padding: 6px;">
+		<div class="profile_item" id="pb_backupbuddy_profileadd_plusbutton"<?php echo $button_style; ?>>
+			<a class="profile_item_noselect profile_item_add_select">
+				<span><?php pb_backupbuddy::$ui->render_icon( 'create' ); ?></span>
+				<?php esc_html_e( 'Create New Profile', 'it-l10n-backupbuddy' ); ?>
+			</a>
+		</div>
+		<div class="profile_item profile_item_profileadd" id="pb_backupbuddy_profileadd"<?php echo $profile_style; ?> href="<?php echo pb_backupbuddy::ajax_url( 'backup_profile_settings' ); ?>&profile=<?php echo esc_attr( $profile_id ); ?>">
+			<div class="profile_item_noselect">
 				<form method="post" action="?page=pb_backupbuddy_backup" style="white-space:nowrap;">
 					<?php pb_backupbuddy::nonce(); ?>
 					<input type="hidden" name="add_profile" value="true">
-					<span class="profile_text"><input type="text" style="padding: 6px;" name="title" maxlength="20" placeholder="<?php _e( 'New profile title...', 'it-l10n-backupbuddy' ); ?>" value="<?php echo esc_attr( sanitize_text_field( pb_backupbuddy::_POST( 'title' ) ) ); ?>"></span>
-					<span class="profile_type" style="margin-right: 0;">
+					<span class="profile_text"><input type="text" name="title" maxlength="20" placeholder="<?php _e( 'New profile title...', 'it-l10n-backupbuddy' ); ?>" value="<?php echo esc_attr( sanitize_text_field( pb_backupbuddy::_POST( 'title' ) ) ); ?>"></span>
+					<span class="profile_type">
 						<select name="type">
 							<option value="full"<?php selected( 'full', $selected ); ?>><?php esc_html_e( 'Full (Files & Database)', 'it-l10n-backupbuddy' ); ?></option>
 							<option value="db" <?php selected( 'db', $selected ); ?>><?php esc_html_e( 'Database Only', 'it-l10n-backupbuddy' ); ?></option>
@@ -124,9 +134,9 @@ foreach( $preflight_checks as $preflight_check ) {
 							<option value="files" <?php selected( 'files', $selected ); ?>><?php esc_html_e( 'Custom Files', 'it-l10n-backupbuddy' ); ?></option>
 						</select>
 					</span>
-					<input type="submit" name="submit" value="+ <?php esc_html_e( 'Add', 'it-l10n-backupbuddy' ); ?>" class="button button-primary" style="vertical-align: 0;">
-					<a class="profile_item_cancel_add_select" title="<?php esc_html_e( 'Cancel new profile.', 'it-l10n-backupbuddy' ); ?>">
-						<span class="profile_add_cancel">&times;</span>
+					<input type="submit" name="submit" value="+ <?php esc_html_e( 'Add', 'it-l10n-backupbuddy' ); ?>" class="button button-primary">
+					<a class="profile_item_cancel_add_select button button-secondary" title="<?php esc_html_e( 'Cancel new profile.', 'it-l10n-backupbuddy' ); ?>">
+						<span class="profile_add_cancel"><?php pb_backupbuddy::$ui->render_icon( 'closesmall' ); ?> <?php esc_html_e( 'Cancel', 'it-l10n-backupbuddy' ); ?></span>
 					</a>
 				</form>
 			</div>
@@ -143,13 +153,6 @@ foreach( $preflight_checks as $preflight_check ) {
 
 			<input type="hidden" name="remote_destination" id="pb_backupbuddy_backup_remotedestination">
 			<input type="hidden" name="delete_after" id="pb_backupbuddy_backup_deleteafter">
-
-			<?php $button_style = $adding_profile ? ' style="display: none;"' : ''; ?>
-			<div class="profile_item" id="pb_backupbuddy_profileadd_plusbutton"<?php echo $button_style; ?>>
-				<a class="profile_item_noselect profile_item_add_select">
-					<?php esc_html_e( 'Create New Profile', 'it-l10n-backupbuddy' ); ?>
-				</a>
-			</div>
 
 		</div>
 	<?php } // end disabling backups ?>

@@ -8,7 +8,7 @@
  */
 
 /**
- * BackupBuddy Restore Class
+ * Solid Backups Restore Class
  */
 class backupbuddy_restore {
 
@@ -280,8 +280,8 @@ class backupbuddy_restore {
 			$datFile = $this->_state['datLocation'];
 		}
 
-		if ( false === ( $datData = backupbuddy_core::get_dat_file_array( $datFile ) ) ) {
-			$this->_error( 'Error #4839484: Unable to retrieve DAT file. The backup may have failed opening due to lack of memory, permissions issues, or other reason. Use ImportBuddy to restore or check the Advanced Log above for details.' );
+		if ( false === ( $datData = backupbuddy_data_file()->get_dat_file_array( $datFile ) ) ) {
+			$this->_error( 'Error #4839484: Unable to retrieve DAT file. The backup may have failed opening due to lack of memory, permissions issues, or other reason. Use the Importer to restore or check the Advanced Log above for details.' );
 			return false;
 		}
 		$this->_state['dat'] = $datData;
@@ -290,7 +290,7 @@ class backupbuddy_restore {
 		if ( pb_is_standalone() ) {
 			$simpleVersion = substr( pb_backupbuddy::$options['bb_version'], 0, strpos( pb_backupbuddy::$options['bb_version'], ' ' ) );
 			if ( isset( $this->_state['dat']['backupbuddy_version'] ) && ( version_compare( $this->_state['dat']['backupbuddy_version'], $simpleVersion, '>' ) ) ) {
-				pb_backupbuddy::status( 'error', 'Warning: You are attempting to restore an archive which was created with a newer version of BackupBuddy (' . $this->_state['dat']['backupbuddy_version'] . ') than this ImportBuddy (' . $simpleVersion . '). For best results use an ImportBuddy that is as least as up to date as the BackupBuddy which created the archive.' );
+				pb_backupbuddy::status( 'error', 'Warning: You are attempting to restore an archive which was created with a newer version of Solid Backups (' . $this->_state['dat']['backupbuddy_version'] . ') than this Importer (' . $simpleVersion . '). For best results use an Importer that is as least as up to date as the Solid Backups which created the archive.' );
 			}
 		}
 
@@ -318,7 +318,7 @@ class backupbuddy_restore {
 			$undo_source = dirname( __FILE__ ) . '/_rollback_undo.php';
 			$undo_dest = ABSPATH . $this->_state['undoFile'];
 			if ( false === copy( $undo_source, $undo_dest ) ) {
-				$this->_error( 'Warning: Unable to create undo script in site root. You will not be able to automated undoing the rollback if something fails so BackupBuddy will not continue. Tried to copy file `' . $undo_source . '` to `' . $undo_dest . '`.' );
+				$this->_error( 'Warning: Unable to create undo script in site root. You will not be able to automated undoing the rollback if something fails so Solid Backups will not continue. Tried to copy file `' . $undo_source . '` to `' . $undo_dest . '`.' );
 				return false;
 			}
 			$this->_state['undoURL'] = $undoURL;
@@ -456,9 +456,9 @@ class backupbuddy_restore {
 		if ( false !== $this->_state['restoreDatabase'] ) {
 			if ( count( $this->_state['databaseSettings']['sqlFiles'] ) == 0 ) {
 				if ( 'deploy' == $this->_state['type'] ) { // Can be normal for deployment so no warning.
-					pb_backupbuddy::status( 'details', 'Unable to find db_1.sql or other expected database file in the extracted files in the expected location. This is normal if no tables were selected to back up. Make sure you did not rename your backup ZIP file. You may manually restore your SQL file if you can find it via phpmyadmin or similar tool then on Step 1 of ImportBuddy select the advanced option to skip database import. This will allow you to proceed.' );
+					pb_backupbuddy::status( 'details', 'Unable to find db_1.sql or other expected database file in the extracted files in the expected location. This is normal if no tables were selected to back up. Make sure you did not rename your backup ZIP file. You may manually restore your SQL file if you can find it via phpmyadmin or similar tool then on Step 1 of the Importer select the advanced option to skip database import. This will allow you to proceed.' );
 				} else {
-					pb_backupbuddy::status( 'warning', 'Warning #34748734: Unable to find db_1.sql or other expected database file in the extracted files in the expected location. This is normal if no tables were selected to back up. Make sure you did not rename your backup ZIP file. You may manually restore your SQL file if you can find it via phpmyadmin or similar tool then on Step 1 of ImportBuddy select the advanced option to skip database import. This will allow you to proceed.' );
+					pb_backupbuddy::status( 'warning', 'Warning #34748734: Unable to find db_1.sql or other expected database file in the extracted files in the expected location. This is normal if no tables were selected to back up. Make sure you did not rename your backup ZIP file. You may manually restore your SQL file if you can find it via phpmyadmin or similar tool then on Step 1 of the Importer select the advanced option to skip database import. This will allow you to proceed.' );
 				}
 				return false;
 			} else {
@@ -475,7 +475,7 @@ class backupbuddy_restore {
 	 * ROLLBACK, RESTORE
 	 * Renames existing tables then imports the database SQL data into mysql. Turns on maintenance mode during this.
 	 *
-	 8 @param	string		$overridePrefix		If not empty string then use this db prefix insead of the one set in the state data.
+	 * @param	string		$overridePrefix		If not empty string then use this db prefix insead of the one set in the state data.
 	 * @return	bool|array						true on success, false on failure, OR array if chunking needed for DB continuation. chunks mid-db table import and/or for each individual .sql file. depends on method, runtime left, etc. see mysqlbuddy for chunking details.
 	 */
 	public function restoreDatabase( $overridePrefix = '' ) {
@@ -583,7 +583,7 @@ class backupbuddy_restore {
 	/**
 	 * Copies BUB settings from old options table over to new options table
 	 * This function is not currently called if the options table was not included in the backup
-	 * NOTE: Also handles swapping iThemes Licensing & Sync authentication.
+	 * NOTE: Also handles swapping SolidWP Licensing & Sync authentication.
 	 */
 	public function swapDatabaseBBSettings() {
 		$this->_before( __FUNCTION__ );
@@ -607,14 +607,14 @@ class backupbuddy_restore {
 		);
 
 		foreach ( $options_to_keep as $option ) {
-			// Get current iThemes Licensing for current site (if any).
+			// Get current SolidWP Licensing for current site (if any).
 			pb_backupbuddy::status( 'details', 'Copying data from options table for option `' . $option . '`, from table prefixed with `' . $oldPrefix . '` to `' . $newPrefix . '` to retain and not get overwritten by incoming site data.' );
 			$sql = "SELECT option_value FROM `{$oldPrefix}options` WHERE option_name='{$option}' LIMIT 1;";
 			$results = $wpdb->get_results( $sql, ARRAY_A );
 			if ( count( $results ) > 0 ) {
 				// Delete any existing settings.
 				$wpdb->query( "DELETE FROM `{$newPrefix}options` WHERE option_name='{$option}' LIMIT 1;" );
-				// Overwrite incoming site BackupBuddy settings in its temp table.
+				// Overwrite incoming site Solid Backups settings in its temp table.
 				if ( false === $wpdb->query( "INSERT INTO `{$newPrefix}options` ( option_name, option_value ) VALUES( '" . $option . "', '" . backupbuddy_core::dbEscape( $results[0]['option_value'] ) . "' )" ) ) {
 					pb_backupbuddy::status( 'error', 'Error #2379332: Unable to copy over data from live site to incoming database in temp table. Details: `' . $wpdb->last_error . '`. Option name: `' . $option . '`.' );
 				} else {
@@ -863,9 +863,9 @@ class backupbuddy_restore {
 				} else {
 					pb_backupbuddy::status( 'details', '.maintenance file deleted whether importbuddy-created or not.' );
 				}
-			} else { // See if ImportBuddy created it before deleting.
+			} else { // See if Importer created it before deleting.
 
-				pb_backupbuddy::status( 'details', '.maintenance file exists. Checking to see if ImportBuddy generated it.' );
+				pb_backupbuddy::status( 'details', '.maintenance file exists. Checking to see if the Importer generated it.' );
 				$maintenance_contents = @file_get_contents( ABSPATH . '.maintenance' );
 				if ( false === $maintenance_contents ) { // Cannot read.
 					pb_backupbuddy::status( 'error', '.maintenance file unreadable. You may need to manually delete it to view your site.' );
@@ -873,7 +873,7 @@ class backupbuddy_restore {
 					if ( trim( $maintenance_contents ) == "<?php if ( empty( \$_REQUEST['action'] ) || 'pb_backupbuddy_backupbuddy' != \$_REQUEST['action'] ) { header('HTTP/1.1 503 Service Temporarily Unavailable'); header('Status: 503 Service Temporarily Unavailable'); header('Retry-After: 3600'); die( 'Site undergoing maintenance.' ); }" ) { // Our file. Delete it!
 						$maintenance_unlink = @unlink( ABSPATH . '.maintenance' );
 						if ( true === $maintenance_unlink ) {
-							pb_backupbuddy::status( 'details', 'Temporary .maintenance file created by ImportBuddy successfully deleted.' );
+							pb_backupbuddy::status( 'details', 'Temporary .maintenance file created by the Importer successfully deleted.' );
 						} else {
 							pb_backupbuddy::status( 'error', 'Unable to delete temporary .maintenance file.  This is likely due to permissions. You may need to manually delete it to view your site.' );
 						}
@@ -1143,7 +1143,7 @@ class backupbuddy_restore {
 		} else { // Exists, check if AddHandler inside.
 			$contents = @file_get_contents( ABSPATH . '.htaccess' );
 			if ( strstr( $contents, 'AddHandler' ) ) {
-				$trouble[] = 'Warning: An AddHandler directive has been found in your .htaccess file. This could result in WordPress and PHP not running properly if configured improperly, especially when migrating to a new server. If you encounter problems such as an Internal Server Error or Error 500, try removing this line from your .htaccess file. Solution: Delete this AddHandler line from the .htaccess file. <a target="_blank" href="https://ithemeshelp.zendesk.com/hc/en-us/articles/211132357-Frequently-Seen-Support-Issues#Addhandler">Click here for more information & help.</a>';
+				$trouble[] = 'Warning: An AddHandler directive has been found in your .htaccess file. This could result in WordPress and PHP not running properly if configured improperly, especially when migrating to a new server. If you encounter problems such as an Internal Server Error or Error 500, try removing this line from your .htaccess file. Solution: Delete this AddHandler line from the .htaccess file. <a target="_blank" href="https://go.solidwp.com/addhandler">Click here for more information & help.</a>';
 			}
 		}
 
@@ -1166,7 +1166,7 @@ class backupbuddy_restore {
 
 	/* scrubIndexFiles()
 	 *
-	 * Deletes index.htm file if it appears to have the contents that ImportBuddy created it with.
+	 * Deletes index.htm file if it appears to have the contents that the Importer created it with.
 	 * Non-importbuddy created index.htm files are left in place to be warned about later as the user may want it there.
 	 *
 	 */
@@ -1176,7 +1176,7 @@ class backupbuddy_restore {
 		$indexFiles = array( 'index.htm', 'index.html' );
 		foreach ( $indexFiles as $indexFile ) {
 			if ( file_exists( ABSPATH . $indexFile ) ) {
-				pb_backupbuddy::status( 'details', $indexFile . ' file exists. Checking to see if ImportBuddy generated it or it is empty.' );
+				pb_backupbuddy::status( 'details', $indexFile . ' file exists. Checking to see if the Importer generated it or it is empty.' );
 				$index_contents = @file_get_contents( ABSPATH . $indexFile );
 				if ( false === $index_contents ) { // Cannot read.
 					pb_backupbuddy::status( 'error', $indexFile . ' file unreadable. You may need to manually delete it to view your site.' );
@@ -1190,7 +1190,7 @@ class backupbuddy_restore {
 							pb_backupbuddy::status( 'error', 'Unable to delete ' . $indexFile . ' file.  This is likely due to permissions. You may need to manually delete it to view your site.' );
 						}
 					} else { // Not our file. Leave alone. We will warn about this later though.
-						pb_backupbuddy::status( 'details', $indexFile . ' file not generated by ImportBuddy and not empty. Leaving as is. You may need to delete it to view your site.' );
+						pb_backupbuddy::status( 'details', $indexFile . ' file not generated by the Importer and not empty. Leaving as is. You may need to delete it to view your site.' );
 					}
 				}
 			} else { // No index.htm file.
@@ -1202,7 +1202,7 @@ class backupbuddy_restore {
 
 
 	/**
-	 * Renames .htaccess to .htaccess.bb_temp until last ImportBuddy step to avoid complications.
+	 * Renames .htaccess to .htaccess.bb_temp until last Importer step to avoid complications.
 	 *
 	 * @return bool true  Always returns true.
 	 */
@@ -1217,7 +1217,7 @@ class backupbuddy_restore {
 
 		$result = @rename( ABSPATH . '.htaccess', ABSPATH . '.htaccess.bb_temp' );
 		if ( $result === true ) { // Rename succeeded.
-			pb_backupbuddy::status( 'message', 'Renamed `.htaccess` file to `.htaccess.bb_temp` until final ImportBuddy step.' );
+			pb_backupbuddy::status( 'message', 'Renamed `.htaccess` file to `.htaccess.bb_temp` until final Importer step.' );
 		} else { // Rename failed.
 			pb_backupbuddy::status( 'warning', 'Unable to rename `.htaccess` file to `.htaccess.bb_temp`. Your file permissions may be too strict. You may wish to manually rename this file and/or check permissions before proceeding.' );
 		}
@@ -1229,7 +1229,7 @@ class backupbuddy_restore {
 
 	/*	renameHtaccessTempBack()
      *
-	 *	Renames .htaccess to .htaccess.bb_temp until last ImportBuddy step to avoid complications.
+	 *	Renames .htaccess to .htaccess.bb_temp until last Importer step to avoid complications.
      *
 	 *	@return		null
 	 */

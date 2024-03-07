@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,43 +18,12 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class MacOSGeneralDeviceConfiguration extends DeviceConfiguration
 {
-
-     /** 
-     * Gets the compliantAppsList
-    * List of apps in the compliance (either allow list or block list, controlled by CompliantAppListType). This collection can contain a maximum of 10000 elements.
-     *
-     * @return array The compliantAppsList
-     */
-    public function getCompliantAppsList()
-    {
-        if (array_key_exists("compliantAppsList", $this->_propDict)) {
-           return $this->_propDict["compliantAppsList"];
-        } else {
-            return null;
-        }
-    }
-    
-    /** 
-    * Sets the compliantAppsList
-    * List of apps in the compliance (either allow list or block list, controlled by CompliantAppListType). This collection can contain a maximum of 10000 elements.
-    *
-    * @param AppListItem $val The compliantAppsList
-    *
-    * @return MacOSGeneralDeviceConfiguration
-    */
-    public function setCompliantAppsList($val)
-    {
-		$this->_propDict["compliantAppsList"] = $val;
-        return $this;
-    }
-    
     /**
     * Gets the compliantAppListType
     * List that is in the CompliantAppsList. Possible values are: none, appsInListCompliant, appsNotInListCompliant.
@@ -86,6 +54,36 @@ class MacOSGeneralDeviceConfiguration extends DeviceConfiguration
     public function setCompliantAppListType($val)
     {
         $this->_propDict["compliantAppListType"] = $val;
+        return $this;
+    }
+    
+
+     /** 
+     * Gets the compliantAppsList
+    * List of apps in the compliance (either allow list or block list, controlled by CompliantAppListType). This collection can contain a maximum of 10000 elements.
+     *
+     * @return array The compliantAppsList
+     */
+    public function getCompliantAppsList()
+    {
+        if (array_key_exists("compliantAppsList", $this->_propDict)) {
+           return $this->_propDict["compliantAppsList"];
+        } else {
+            return null;
+        }
+    }
+    
+    /** 
+    * Sets the compliantAppsList
+    * List of apps in the compliance (either allow list or block list, controlled by CompliantAppListType). This collection can contain a maximum of 10000 elements.
+    *
+    * @param AppListItem $val The compliantAppsList
+    *
+    * @return MacOSGeneralDeviceConfiguration
+    */
+    public function setCompliantAppsList($val)
+    {
+		$this->_propDict["compliantAppsList"] = $val;
         return $this;
     }
     
@@ -322,6 +320,35 @@ class MacOSGeneralDeviceConfiguration extends DeviceConfiguration
     }
     
     /**
+    * Gets the passwordRequired
+    * Whether or not to require a password.
+    *
+    * @return bool The passwordRequired
+    */
+    public function getPasswordRequired()
+    {
+        if (array_key_exists("passwordRequired", $this->_propDict)) {
+            return $this->_propDict["passwordRequired"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the passwordRequired
+    * Whether or not to require a password.
+    *
+    * @param bool $val The passwordRequired
+    *
+    * @return MacOSGeneralDeviceConfiguration
+    */
+    public function setPasswordRequired($val)
+    {
+        $this->_propDict["passwordRequired"] = boolval($val);
+        return $this;
+    }
+    
+    /**
     * Gets the passwordRequiredType
     * Type of password that is required. Possible values are: deviceDefault, alphanumeric, numeric.
     *
@@ -351,35 +378,6 @@ class MacOSGeneralDeviceConfiguration extends DeviceConfiguration
     public function setPasswordRequiredType($val)
     {
         $this->_propDict["passwordRequiredType"] = $val;
-        return $this;
-    }
-    
-    /**
-    * Gets the passwordRequired
-    * Whether or not to require a password.
-    *
-    * @return bool The passwordRequired
-    */
-    public function getPasswordRequired()
-    {
-        if (array_key_exists("passwordRequired", $this->_propDict)) {
-            return $this->_propDict["passwordRequired"];
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-    * Sets the passwordRequired
-    * Whether or not to require a password.
-    *
-    * @param bool $val The passwordRequired
-    *
-    * @return MacOSGeneralDeviceConfiguration
-    */
-    public function setPasswordRequired($val)
-    {
-        $this->_propDict["passwordRequired"] = boolval($val);
         return $this;
     }
     

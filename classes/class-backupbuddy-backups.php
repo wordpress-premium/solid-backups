@@ -416,7 +416,7 @@ class BackupBuddy_Backups {
 		$use     = false === $this->get_destination_id() ? 'in use' : 'used by this destination';
 		$files   = _n( 'file', 'files', $count, 'it-l10n-backupbuddy' );
 		$these   = _n( 'this file', 'these files', $count, 'it-l10n-backupbuddy' );
-		$message = sprintf( 'BackupBuddy found <strong>%s</strong> %s no longer %s that can be removed. Click "%s" to remove %s.', $count, $files, $use, $cleanup_now, $these );
+		$message = sprintf( 'Solid Backups found %s %s no longer %s that can be removed. Click "%s" to remove %s.', $count, $files, $use, $cleanup_now, $these );
 
 		// Action Buttons HTML.
 		$buttons = '<div class="button-actions"><button class="button button-primary" data-id="' . $id . '">' . $cleanup_now . '</button> <button class="button button-secondary" data-id="' . $id . '">' . $show_details . '</button></div>';
@@ -694,12 +694,12 @@ class BackupBuddy_Backups {
 				}
 			}
 
-			$integrity_data['output'] .= '<a href="' . pb_backupbuddy::page_url() . '&reset_integrity=' . $serial . '" title="Rescan integrity. Last checked ' . pb_backupbuddy::$format->date( $backup_integrity['scan_time'] ) . '."><img src="' . pb_backupbuddy::plugin_url() . '/images/refresh_gray.gif" style="vertical-align: -1px;"></a>';
+			$integrity_data['output'] .= '<a href="' . esc_attr( pb_backupbuddy::page_url() ) . '&reset_integrity=' . $serial . '" title="Rescan integrity. Last checked ' . pb_backupbuddy::$format->date( $backup_integrity['scan_time'] ) . '."><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/refresh_gray.gif" style="vertical-align: -1px;"></a>';
 			$integrity_data['output'] .= '<div class="row-actions"><a title="' . __( 'Backup Status', 'it-l10n-backupbuddy' ) . '" href="' . pb_backupbuddy::ajax_url( 'integrity_status' ) . '&serial=' . $serial . '&#038;TB_iframe=1&#038;width=640&#038;height=600" class="thickbox">' . __( 'View Details', 'it-l10n-backupbuddy' ) . '</a></div>';
 
 			$sum_log_file = backupbuddy_core::getLogDirectory() . 'status-' . $serial . '_' . pb_backupbuddy::$options['log_serial'] . '.txt';
 			if ( file_exists( $sum_log_file ) ) {
-				$integrity_data['output'] .= '<div class="row-actions"><a title="' . __( 'View Backup Log', 'it-l10n-backupbuddy' ) . '" href="' . pb_backupbuddy::ajax_url( 'view_log' ) . '&serial=' . $serial . '&#038;TB_iframe=1&#038;width=640&#038;height=600" class="thickbox">' . __( 'View Log', 'it-l10n-backupbuddy' ) . '</a></div>';
+				$integrity_data['output'] .= '<div class="row-actions"><a title="' . __( 'View Backup Log', 'it-l10n-backupbuddy' ) . '" href="' . pb_backupbuddy::ajax_url( 'view_log' ) . '&serial=' . esc_attr( $serial ) . '&#038;TB_iframe=1&#038;width=640&#038;height=600" class="thickbox">' . __( 'View Log', 'it-l10n-backupbuddy' ) . '</a></div>';
 			}
 		}
 
@@ -759,7 +759,7 @@ class BackupBuddy_Backups {
 	 */
 	public function get_restore_buttons( $file, $backup_type = false, $file_id = null ) {
 		$restore_buttons   = '';
-		$button            = '<a href="%s" class="button restore-button%s"%s>%s</a>';
+		$button            = '<a href="%s" class="button button-secondary button-flex restore-button%s"%s>%s</a>';
 		$full_restore_attr = sprintf(
 			' data-zip="%s" data-destination-id="%s"',
 			basename( $file ),
@@ -808,15 +808,16 @@ class BackupBuddy_Backups {
 	/**
 	 * Backup Details Link.
 	 *
-	 * @param string $file  Path to backup file.
+	 * @param string $file  Path to back up file.
 	 *
 	 * @return string  Details link.
 	 */
-	public function get_details_link( $file ) {
+	public function get_details_link( $file, $label = '' ) {
+
 		$details = sprintf(
 			'<a href="#backup-details" data-backup-zip="%s"%%s class="backup-details">',
 			esc_attr( basename( $file ) )
-		) . esc_html__( 'Details', 'it-l10n-backupbuddy' ) . '</a>';
+		) . (! empty( $label ) ? $label : esc_html__( 'Details', 'it-l10n-backupbuddy' )) . '</a>';
 
 		$d_id_attr = '';
 
@@ -827,8 +828,7 @@ class BackupBuddy_Backups {
 			);
 		}
 
-		$details = sprintf( $details, $d_id_attr );
-		return $details;
+		return sprintf( $details, $d_id_attr );
 	}
 
 	/**
@@ -889,7 +889,7 @@ class BackupBuddy_Backups {
 		 *
 		 * @param array  $action_menu  Action menu array.
 		 * @param string $file         Backup File.
-		 * @param object $this         BackupBuddy Backups class instance.
+		 * @param object $this         Solid Backups Backups class instance.
 		 */
 		$action_menu = apply_filters( 'backupbuddy_backups_action_menu', $action_menu, $file, $this );
 
@@ -897,7 +897,7 @@ class BackupBuddy_Backups {
 			return;
 		}
 
-		$actions  = '<a href="#actions" class="backup-actions">&hellip;</a>';
+		$actions  = '<a href="#actions" class="backup-actions"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" aria-hidden="true" focusable="false"><path d="M11 13h2v-2h-2v2zm-6 0h2v-2H5v2zm12-2v2h2v-2h-2z"></path></svg></a>';
 		$actions .= '<div class="backup-actions-menu">';
 		$actions .= implode( $action_menu );
 		$actions .= '</div>';
@@ -946,23 +946,14 @@ class BackupBuddy_Backups {
 
 		$mode     = $settings['display_mode'];
 		$filename = basename( $file );
-		$label    = pb_backupbuddy::$format->date( $modified, $label_format );
-		$label   .= ' (' . $time_ago . ')';
-		$url      = $link_url ? $link_url : pb_backupbuddy::ajax_url( 'download_archive' ) . '&backupbuddy_backup=' . $filename;
+		$label    = pb_backupbuddy::$format->date( $modified, $label_format ) . ' (' . $time_ago . ')';
 
 		if ( 'default' === $mode ) { // Default backup listing.
-			$output = '<a href="' . esc_attr( $url ) . '"' . $link_target . ' class="backupbuddyFileTitle" title="' . $filename . '">' . $label . '</a>';
-		} elseif ( 'legacy' === $mode ) { // Copied default in case of changes.
-			$output = '<a href="' . esc_attr( $url ) . '" class="backupbuddyFileTitle" title="' . $filename . '">' . $label . '</a>';
-			$integrity_data = $this->get_integrity_data( $file );
-			if ( ! empty( $integrity_data['comment'] ) ) {
-				$output .= '<br><span class="description">Note: <span class="pb_backupbuddy_notetext">' . htmlentities( $integrity_data['comment'] ) . '</span></span>';
-			}
-			$output .= '<br><span class="description" style="color: #AAA; display: inline-block; margin-top: 5px;">' . $filename . '</span>';
-		} elseif ( 'restore' === $mode ) { // Default backup listing.
+			$output = $this->get_details_link( $file, $label );
+		}  elseif ( 'restore' === $mode ) { // Default backup listing.
 			$output = '<span class="backupbuddyFileTitle" title="' . $filename . '">' . $label . '</span>';
 		} elseif ( 'migrate' === $mode ) { // Migration backup listing.
-			$output = '<a class="pb_backupbuddy_hoveraction_migrate backupbuddyFileTitle" rel="' . $filename . '" href="' . pb_backupbuddy::page_url() . '&migrate=' . $filename . '&value=' . $filename . '" title="' . $filename . '">' . $label . '</a>';
+			$output = '<a class="pb_backupbuddy_hoveraction_migrate backupbuddyFileTitle" rel="' . $filename . '" href="' . esc_attr( pb_backupbuddy::page_url() ) . '&migrate=' . $filename . '&value=' . $filename . '" title="' . $filename . '">' . $label . '</a>';
 		} else {
 			$output = '{Unknown render mode.}';
 		}
@@ -1051,7 +1042,7 @@ class BackupBuddy_Backups {
 					$needs_save = true;
 				}
 			} else {
-				pb_backupbuddy::alert( 'Error: Unable to delete backup file `' . $item . '`. Please verify permissions and file exists.', true, '', '', '', array( 'class' => 'below-h2' ) );
+				pb_backupbuddy::alert( 'Error: Unable to delete backup file `' . esc_attr( $item ) . '`. Please verify permissions and file exists.', true, '', '', '', array( 'class' => 'below-h2' ) );
 			}
 		} // End foreach.
 
@@ -1061,7 +1052,7 @@ class BackupBuddy_Backups {
 
 		$this->clear_cache();
 
-		pb_backupbuddy::alert( __( 'Deleted:', 'it-l10n-backupbuddy' ) . ' ' . implode( ', ', $deleted_files ), false, '', '', '', array( 'class' => 'below-h2' ) );
+		pb_backupbuddy::alert( __( 'Deleted:', 'it-l10n-backupbuddy' ) . ' ' . implode( ', ', $deleted_files ), false, '', '', '', array() );
 	}
 
 	/**

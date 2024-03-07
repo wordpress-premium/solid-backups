@@ -326,8 +326,8 @@ if ( true !== $backupbuddy_onedrive_folder_selector_printed ) {
 	?>
 	<span class="backupbuddy-onedrive-breadcrumbs">/</span>
 	<div class="backupbuddy-onedrive-folder-list"></div>
-	<button class="backupbuddy-onedrive-back thickbox button secondary-button">&larr; <?php esc_html_e( 'Back', 'it-l10n-backupbuddy' ); ?></button>&nbsp;&nbsp;
-	<button class="backupbuddy-onedrive-create-folder thickbox button secondary-button"><?php esc_html_e( 'Create Folder', 'it-l10n-backupbuddy' ); ?></button>
-	&nbsp;<span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px; vertical-align: -5px;"><img src="<?php echo esc_attr( pb_backupbuddy::plugin_url() ); ?>/images/loading.gif" alt="<?php echo esc_attr( __( 'Loading...', 'it-l10n-backupbuddy' ) ); ?>" title="<?php echo esc_attr( __( 'Loading...', 'it-l10n-backupbuddy' ) ); ?>" width="16" height="16" style="vertical-align: -3px;" /></span>
+	<button class="backupbuddy-onedrive-back thickbox button button-secondary secondary-button">&larr; <?php esc_html_e( 'Back', 'it-l10n-backupbuddy' ); ?></button>&nbsp;&nbsp;
+	<button class="backupbuddy-onedrive-create-folder thickbox button button-secondary secondary-button"><?php esc_html_e( 'Create Folder', 'it-l10n-backupbuddy' ); ?></button>
+	&nbsp;<span class="pb_backupbuddy_loading" style="display: none; vertical-align: -5px;"></span>
 	&nbsp;<span class="backupbuddy-onedrive-status-text" style="vertical-align: -5px; font-style: italic;"></span>
 </div>

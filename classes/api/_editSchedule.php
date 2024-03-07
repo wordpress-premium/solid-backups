@@ -65,27 +65,18 @@ pb_backupbuddy::$options['schedules'][ $schedule_id ]['interval'] = $interval;
 // Update delete_after.
 pb_backupbuddy::$options['schedules'][ $schedule_id ]['delete_after'] = $delete_after;
 
-// Update Schedudle if needed.
+pb_backupbuddy::$options['schedules'][ $schedule_id ]['on_off'] = $enabled ? '1' : '0';
+
+// Update Schedule if needed.
 if ( pb_backupbuddy::$options['schedules'][ $schedule_id ]['first_run'] != $first_run || pb_backupbuddy::$options['schedules'][ $schedule_id ]['interval'] != $interval ) {
 	pb_backupbuddy::$options['schedules'][ $schedule_id ]['first_run'] = $first_run;
 
 	// Remove old schedule.
-	$next_scheduled_time = wp_next_scheduled( 'backupbuddy_cron', array( 'run_scheduled_backup', array( (int) $schedule_id ) ) );
-	$result              = backupbuddy_core::unschedule_event(
-		$next_scheduled_time, 'backupbuddy_cron', array(
-			'run_scheduled_backup',
-			array( (int) $schedule_id ),
-		)
-	);
-
-	if ( false === $result ) {
-		return false;
-	}
+	BackupBuddy_Schedules::unschedule_recurring_backup( $schedule_id );
 
 	// Add new schedule.
-	$result = backupbuddy_core::schedule_event( $first_run, $interval, 'run_scheduled_backup', array( (int) $schedule_id ) );
-	if ( false === $result ) {
-		return false;
+	if ( $enabled ) {
+		BackupBuddy_Schedules::schedule_recurring_backup( $first_run, $interval, 'run_scheduled_backup', array( (int) $schedule_id ) );
 	}
 }
 

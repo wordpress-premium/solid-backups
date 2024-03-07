@@ -42,6 +42,7 @@ class pb_backupbuddy_fileoptions {
 	private $_loaded = false; // Has file been succesfully loaded yet?
 	private $_live = false; // Stash Live mode.
 	private $_my_lock_id = ''; // Track my lock ID for this instance so we do not unlock for other instances/page loads by default.
+	private $_last_seen_lock_id = ''; // The last seen lock's ID for output and comparison
 
 	/* __construct()
 	 *
@@ -131,7 +132,10 @@ class pb_backupbuddy_fileoptions {
 
 		// Check if file exists.
 		if ( ! file_exists( $this->_file ) ) {
-			@unlink( $this->_file . '.lock' ); // fileoptions file did not exist so delete lock file for it if it exists.
+			$lockfile = $this->_file . '.lock';
+			if ( file_exists( $lockfile ) ) {
+				@unlink( $lockfile ); // fileoptions file did not exist so delete lock file for it if it exists.
+			}
 			if ( true !== $create_file ) {
 				pb_backupbuddy::status( 'warning', 'Warning #3489347944: Fileoptions file `' . $this->_file . '` not found and NOT in create mode. Verify file exists & check permissions.' );
 				$this->_is_ok = 'ERROR_FILE_MISSING_NON_CREATE_MODE';
@@ -145,9 +149,9 @@ class pb_backupbuddy_fileoptions {
 
 			// Not set to ignore lock.
 			if ( false === $ignore_lock ) {
-				sleep( 1 ); // Wait 1 second befoe trying again.
+				sleep( 1 ); // Wait 1 second before trying again.
 				if ( true === $this->is_locked() ) { // Check lock one more time.
-					sleep( 3 ); // Wait 1 second before trying again.
+					sleep( 3 ); // Wait 3 second before trying again.
 					if ( true === $this->is_locked() ) { // Check lock one more time.
 						pb_backupbuddy::status( 'warning', 'Warning #54555. Unable to read fileoptions file `' . $this->_file . '` as it is currently locked. Lock file ID: `' . $this->_last_seen_lock_id . '`. My lock ID: `' . $this->_my_lock_id . '`.' );
 						$this->_is_ok = 'ERROR_LOCKED';
@@ -200,7 +204,7 @@ class pb_backupbuddy_fileoptions {
 			}
 		}
 
-		// BackupBuddy Stash Live mode. (one array entry per line for performance/memory usage).
+		// Solid Backups Stash Live mode. (one array entry per line for performance/memory usage).
 		if ( true === $this->_live ) {
 			$found_start = false;
 			$found_end = false;
@@ -242,7 +246,7 @@ class pb_backupbuddy_fileoptions {
 					}
 					*/
 					if ( ! isset( $buffer[1] ) ) {
-						$error = 'BackupBuddy Error #893484: Corrupt fileoptions line skipped in `' . $this->_file .  '`: `' . print_r( $buffer, true ) . '`.';
+						$error = 'Solid Backups Error #893484: Corrupt fileoptions line skipped in `' . $this->_file .  '`: `' . print_r( $buffer, true ) . '`.';
 						error_log( $error );
 						pb_backupbuddy::status( 'error', $error );
 						$found_corrupt = true;
@@ -383,7 +387,7 @@ class pb_backupbuddy_fileoptions {
 		}
 
 
-		// BackupBuddy Stash Live mode. (one array entry per line for performance/memory usage).
+		// Solid Backups Stash Live mode. (one array entry per line for performance/memory usage).
 		if ( true === $this->_live ) {
 
 			// Open for writing.
@@ -513,9 +517,8 @@ class pb_backupbuddy_fileoptions {
 				$this->_my_lock_id = $lockID;
 				pb_backupbuddy::status( 'details', 'Created fileoptions lock file `' . basename( $lockFile ) . '` with ID: ' . $lockID . '.' );
 			}
-			@fclose( $handle );
+			return @fclose( $handle );
 		}
-
 	}
 
 

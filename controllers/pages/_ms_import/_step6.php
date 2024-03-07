@@ -5,7 +5,7 @@ $new_db_prefix = $wpdb->get_blog_prefix( $blog_id );
 //switch_to_blog( $blog_id );
 
 echo $this->status_box( 'Migrating URLs in imported data . . .' );
-echo '<div id="pb_importbuddy_working" style="width: 100px;"><center><img src="' . pb_backupbuddy::plugin_url() . '/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
+echo '<div id="pb_importbuddy_working" style="width: 100px;"><center><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
 pb_backupbuddy::flush();
 
 // Set up destination upload path and URL information.
@@ -73,7 +73,7 @@ pb_backupbuddy::flush();
 
 
 global $current_site;
-	$errors = false;	
+	$errors = false;
 	$blog = $domain = $path = '';
 	$form_url = add_query_arg( array(
 		'step' => '7',

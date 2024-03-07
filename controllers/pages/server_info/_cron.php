@@ -55,6 +55,7 @@ foreach ( (array) $cron as $time => $cron_item ) {
 				// Determine arguments.
 				if ( ! empty( $item['args'] ) ) {
 					$arguments = '';
+					$arguments = '';
 					foreach ( $item['args'] as $args ) {
 						$arguments_inner = array();
 						$is_array        = false;
@@ -70,12 +71,7 @@ foreach ( (array) $cron as $time => $cron_item ) {
 								}
 							}
 						}
-						if ( true === $is_array ) {
-							$arguments_inner = 'Array( ' . implode( ', ', $arguments_inner ) . ' )';
-						} else {
-							$arguments_inner = implode( ', ', $arguments_inner );
-						}
-						$arguments .= '<textarea wrap="off">' . $arguments_inner . '</textarea>';
+						$arguments .= '<textarea wrap="off">' . print_r( $arguments_inner, true ) . '</textarea>';
 					}
 				} else {
 					$arguments = __( 'none', 'it-l10n-backupbuddy' );
@@ -83,15 +79,18 @@ foreach ( (array) $cron as $time => $cron_item ) {
 
 				// If run time is in the past, note this.
 				$past_time = '';
-				if ( $time < time() ) {
-					$warning = 'WARNING: Next run time has passed. It should have run ' . pb_backupbuddy::$format->time_ago( $time ) . ' ago. Cron problem?';
-					$msg     = 'Something may be wrong with your WordPress cron such as a malfunctioning caching plugin or webhost problems.';
+
+				// 3 minutes allows for most Action Scheduler actions to run.
+				// This prevents unnecessarily alarming messages to be presented to users.
+				if ( $time < ( time() - ( 3 + MINUTE_IN_SECONDS ) ) ) {
+					$warning = 'Warning: Next run time has passed. It should have run ' . pb_backupbuddy::$format->time_ago( $time ) . ' ago.';
+					$msg     = 'Something may be wrong with your WordPress cron such as a caching plugin or webhost problems.';
 					if ( isset( pb_backupbuddy::$ui ) && is_object( pb_backupbuddy::$ui ) ) {
 						$tip = pb_backupbuddy::$ui->tip( $msg, '', false );
 					} else {
 						$tip = '(' . $msg . ')';
 					}
-					$past_time       = '<br><span style="color: red;"> ** ' . $warning . ' ** ' . $tip . '</span>';
+					$past_time       = '<br><span style="color: red;">' . $warning . ' ' . $tip . '</span>';
 					$cron_warnings[] = $warning;
 				}
 

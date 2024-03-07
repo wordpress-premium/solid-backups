@@ -546,8 +546,6 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 
 					}
 
-					$za->close();
-
 					$result = false;
 
 				}
@@ -707,6 +705,7 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 
 					$this->log_archive_file_stats( $zip_file );
 
+					$za->close();
 				} else {
 
 					// Couldn't open archive - will return for maybe another method to try
@@ -719,8 +718,6 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 					$result = false;
 
 				}
-
-				$za->close();
 
 			}
 
@@ -885,6 +882,8 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 							break;
 						}
 					}
+
+					$za->close();
 				} else {
 					// Couldn't open archive - will return for maybe another method to try
 					$error_string = $za->errorInfo( $result );
@@ -896,7 +895,6 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 					$result = false;
 				}
 
-				$za->close();
 			}
 
 		  	if ( null != $za ) {
@@ -964,6 +962,8 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 
 					}
 
+					// We have finished with the archive (leave_open ignored for now)
+					$za->close();
 				} else {
 
 					// Couldn't open archive - will return for maybe another method to try
@@ -974,9 +974,6 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 					$result = array( 1, "Failed to open/process file" );
 
 				}
-
-				// We have finished with the archive (leave_open ignored for now)
-				$za->close();
 
 			}
 
@@ -1049,6 +1046,7 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 
 					$result = &$file_list;
 
+					$za->close();
 				} else {
 
 					// Couldn't open archive - will return for maybe another method to try
@@ -1061,8 +1059,6 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 					$result = false;
 
 				}
-
-				$za->close();
 
 			}
 
@@ -1108,6 +1104,7 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 						$result = false;
 					}
 
+					$za->close();
 				} else {
 
 					// Couldn't open archive - will return for maybe another method to try
@@ -1120,8 +1117,6 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 					$result = false;
 
 				}
-
-				$za->close();
 
 			}
 
@@ -1183,6 +1178,7 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 
 					}
 
+					$za->close();
 				} else {
 
 					// If we couldn't open the zip file then log it (?) and drop through
@@ -1191,8 +1187,6 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 					$result = false;
 
 				}
-
-				$za->close();
 
 			}
 
@@ -1269,6 +1263,7 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 
 					}
 
+					$za->close();
 				} else {
 
 					// If we couldn't open the zip file then log it (?) and drop through
@@ -1277,8 +1272,6 @@ if ( !class_exists( "pluginbuddy_zbzipziparchive" ) ) {
 					$result = false;
 
 				}
-
-				$za->close();
 
 			} else {
 

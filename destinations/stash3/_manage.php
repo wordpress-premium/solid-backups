@@ -18,6 +18,22 @@ if ( isset( $destination['disabled'] ) && '1' == $destination['disabled'] ) {
 	die( __( '<span class="description">This destination is currently disabled based on its settings. Re-enable it under its Advanced Settings.</span>', 'it-l10n-backupbuddy' ) );
 }
 
+/**
+ * Add a body class to the Stash Live listing iframe content.
+ *
+ * @param string $body_classes String of current body classes.
+ *
+ * @return string  Modified with the Stash Live Admin Class.
+ */
+function backupbuddy_stash3_iframe_admin_body_class( $body_classes = '' ) {
+	return $body_classes .= ' backupbuddy-admin-page-stash3';
+}
+add_filter( 'backupbuddy_admin_iframe_body_classes', 'backupbuddy_stash3_iframe_admin_body_class' );
+
+if ( false !== stristr( pb_backupbuddy::_GET( 'page' ), 'backupbuddy' ) ) {
+	add_action( 'in_admin_header', 'bb_admin_head' );
+}
+
 if ( ! isset( $destination_id ) ) {
 	$destination_id = pb_backupbuddy::_GET( 'destination_id' );
 }
@@ -78,17 +94,14 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 
 // Handle copying files to local.
 if ( pb_backupbuddy::_GET( 'cpy' ) ) {
-	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
+	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the transfer gets interrupted, click the "Refresh" icon after the transfer is complete to try again.' );
 	echo '<br>';
 	pb_backupbuddy::status( 'details', 'Scheduling Cron for creating Stash copy.' );
 
 	$file = pb_backupbuddy::_GET( 'cpy' );
-	backupbuddy_core::schedule_single_event( time(), 'process_remote_copy', array( 'stash3', $file, $destination ) );
+	backupbuddy_core::trigger_async_event( 'process_remote_copy', array( 'stash3', $file, $destination ) );
 
-	if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-		update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-		spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-	}
+	backupbuddy_core::maybe_spawn_cron();
 } // end copying to local.
 
 backupbuddy_backups()->set_destination_id( $destination_id );
@@ -110,13 +123,13 @@ $backup_count = count( $backups );
 $no_backups   = '';
 
 if ( 0 === $backup_count ) {
-	$no_backups = '<br><center><b>';
+	$no_backups = '<center>';
 	if ( 'live' === $destination['type'] ) {
-		$no_backups .= esc_html__( 'Your remote BackupBuddy Stash storage does not contain any Snapshot zip files yet. It may take several minutes after a Snapshot for them to display.', 'it-l10n-backupbuddy' );
+		$no_backups .= esc_html__( 'Your remote Solid Backups Stash storage does not contain any Snapshot zip files yet. It may take several minutes after a Snapshot for them to display.', 'it-l10n-backupbuddy' );
 	} else {
-		$no_backups .= esc_html__( 'Your remote BackupBuddy Stash storage does not contain any traditional backup zip files yet.', 'it-l10n-backupbuddy' );
+		$no_backups .= esc_html__( 'Your remote Solid Backups Stash storage does not contain any traditional backup zip files yet.', 'it-l10n-backupbuddy' );
 	}
-	$no_backups .= '</b></center>';
+	$no_backups .= '</center>';
 }
 
 // Render table listing files.
@@ -134,7 +147,6 @@ if ( 'live' === $destination['type'] ) {
 backupbuddy_backups()->table( 'default', $backups, $table_args );
 
 // Display troubleshooting subscriber key.
-echo '<br style="clear: both;">';
 
 /*
 //if ( 'live' == $destination['type'] ) {

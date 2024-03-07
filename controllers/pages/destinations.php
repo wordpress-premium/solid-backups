@@ -15,9 +15,9 @@ wp_print_styles( 'jquery-ui-core' );
 wp_enqueue_script( 'jquery-ui-progressbar' );
 wp_print_styles( 'jquery-ui-progressbar' );
 
-$deployment_enabled_status = __( 'disabled', 'it-l10n-backupbuddy' );
+$deployment_enabled_status = __( 'Disabled', 'it-l10n-backupbuddy' );
 if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && true == BACKUPBUDDY_API_ENABLE ) {
-	$deployment_enabled_status = __( 'enabled', 'it-l10n-backupbuddy' );
+	$deployment_enabled_status = __( 'Enabled', 'it-l10n-backupbuddy' );
 }
 ?>
 
@@ -42,7 +42,7 @@ if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && true == BACKUPBUDDY_API_ENABLE ) {
 
 		} else {
 			<?php $admin_url = is_network_admin() ? network_admin_url( 'admin.php' ) : admin_url( 'admin.php' ); ?>
-			window.location.href = '<?php echo $admin_url; ?>?page=pb_backupbuddy_backup&custom=remoteclient&destination_id=' + destination_id;
+			window.location.href = '<?php echo esc_url( $admin_url ); ?>?page=pb_backupbuddy_backup&custom=remoteclient&destination_id=' + parseInt( destination_id );
 		}
 	}
 
@@ -109,32 +109,30 @@ if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && true == BACKUPBUDDY_API_ENABLE ) {
 			<?php pb_backupbuddy::nonce(); ?>
 			<input type="hidden" name="regenerate_api_key" value="1">
 				<h3 style="margin-top: 0;"><?php esc_html_e( 'Deployment Key', 'it-l10n-backupbuddy' ); ?></h3>
-				<p>
-					<?php esc_html_e( 'Copy this Deployment Key into the other BackupBuddy Site you wish to have access to Push to or Pull from this site.', 'it-l10n-backupbuddy' ); ?>
-					<br>
-					<?php esc_html_e( 'If this site\'s URL changes you will need to generate a new key and update other sites\' destination settings using the old key.', 'it-l10n-backupbuddy' ); ?>
-				</p>
-				<textarea id="backupbuddy-deployment-regenerateKey-textarea" cols="90" rows="4" style="padding: 15px; background: #fcfcfc;" readonly="readonly" onClick="this.focus();this.select();"><?php echo pb_backupbuddy::$options['remote_api']['keys'][0]; ?></textarea>
-				<br><br>
-				<input id="backupbuddy-deployment-regenerateKey" type="submit" name="submit" value="<?php esc_html_e( 'Generate New Deployment Key', 'it-l10n-backupbuddy' ); ?>" class="button button-primary" style="margin-top: -5px;">
-				&nbsp;<span class="pb_backupbuddy_loading-regenerateKey" style="display: none; margin-left: 10px;"><img src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/loading.gif" alt="<?php esc_html_e( 'Loading...', 'it-l10n-backupbuddy' ); ?>" title="<?php esc_html_e( 'Loading...', 'it-l10n-backupbuddy' ); ?>" width="16" height="16" style="vertical-align: -3px;" /></span>
+				<?php
+					echo wp_kses_post( __( '<p>Copy this Deployment Key into the other Solid Backups Site you wish to have access to Push to or Pull from this site.</p>
+					<p>If this site\'s URL changes you will need to generate a new key and update other sites\' destination settings using the old key.</p>', 'it-l10n-backupbuddy' ) );
+				?>
+				<textarea id="backupbuddy-deployment-regenerateKey-textarea" class="backupbuddy_api_key-hide_textarea backupbuddy_api_key-hide_textarea_large" readonly="readonly" onClick="this.focus();this.select();"><?php echo esc_textarea( pb_backupbuddy::$options['remote_api']['keys'][0] ); ?></textarea>
+				<input id="backupbuddy-deployment-regenerateKey" type="submit" name="submit" value="<?php esc_html_e( 'Generate New Deployment Key', 'it-l10n-backupbuddy' ); ?>" class="button button-primary">
+				&nbsp;<span class="pb_backupbuddy_loading-regenerateKey" style="display: none; margin-left: 10px;"><img src="<?php echo pb_backupbuddy::plugin_url(); ?>/assets/dist/images/loading.gif" alt="<?php esc_html_e( 'Loading...', 'it-l10n-backupbuddy' ); ?>" title="<?php esc_html_e( 'Loading...', 'it-l10n-backupbuddy' ); ?>" width="16" height="16" style="vertical-align: -3px;" /></span>
 		</form>
 
 		<?php
 	} else {
 		?>
-		<h3 style="margin-top: 0;"><?php esc_html_e( 'Deployment', 'it-l10n-backupbuddy' ); ?></h3>
-		Remote API Access allows other sites with your API access key entered to push to or pull data from this site.
-		<br><br>
-		<b>For added security you must manually enable the API via an entry into your wp-config.php file.
-		<br><br>
-		To do this <i>add the following to your wp-config.php file ABOVE the line commenting "That's all, stop editing!"</i>. <i>Refresh this page after adding</i> the following:</b>
-		<br>
-<textarea style="width: 100%; padding: 15px;" readonly="readonly" onClick="this.focus();this.select();">
-define( 'BACKUPBUDDY_API_ENABLE', true ); // Enable BackupBuddy Deployment access.
-</textarea>
-		<br>
+		<h3><?php esc_html_e( 'Deployment', 'it-l10n-backupbuddy' ); ?></h3>
+
 		<?php
+			echo wp_kses_post( __( '<p>To enable Solid Backups Deployment, add the code below to your <span style="white-space: nowrap">wp-config.php</a> file.</p><p>Remote API Access allows other sites with your API access key to push to or pull data from this site.</p>
+			<p><strong>To enable this feature, add the code below to your <span style="white-space: nowrap">wp-config.php</a> file.</strong></p>', 'it-l10n-backupbuddy' ) );
+		?>
+		<?php // Don't mess with the formatting here. ?>
+		<textarea class="backupbuddy_api_key-hide_textarea" readonly="readonly" onClick="this.focus();this.select();">// Enable Solid Backups Deployment access.
+define( 'BACKUPBUDDY_API_ENABLE', true );</textarea>
+		<?php
+		echo wp_kses_post( __('<p>Be sure to place it <strong class="underline">above</strong> the line that says <code class="wpconfig">/* That\'s all, stop editing! Happy publishing. */</code></p>
+		<p>...then refresh this page.</p>', 'it-l10n-backupbuddy' ) );
 	}
 	?>
 </div>

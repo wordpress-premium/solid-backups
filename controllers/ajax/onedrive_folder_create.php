@@ -16,7 +16,7 @@ $response    = array(
 );
 $parent_id   = pb_backupbuddy::_POST( 'parent_id' ); // OneDrive folder parent ID to list within.
 $parent_id   = trim( str_replace( array( '\\', '/', "'", '"' ), '', $parent_id ) );
-$folder_name = pb_backupbuddy::_POST( 'folder_name' ); // BackupBuddy destination ID number for remote destinations array.
+$folder_name = pb_backupbuddy::_POST( 'folder_name' ); // Solid Backups destination ID number for remote destinations array.
 
 if ( ! $parent_id ) {
 	$parent_id = false;

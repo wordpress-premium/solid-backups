@@ -11,21 +11,21 @@ is_admin() || die( 'Access denied' );
 $php_minimum = '5.3';
 if ( version_compare( PHP_VERSION, $php_minimum, '<' ) ) { // Server's PHP is insufficient.
 	echo '<br>';
-	pb_backupbuddy::alert( '<h3>' . __( 'We have a problem...', 'it-l10n-backupbuddy' ) . '</h3><br>' . __( '<span style="font-size:1.5em;font-weight:bold;">Uh oh!</span><br />BackupBuddy Stash Live requires PHP version 5.3 or newer to run. Please upgrade your PHP version or contact your host for details on upgrading.', 'it-l10n-backupbuddy' ) . ' ' . __( 'Current PHP version', 'it-l10n-backupbuddy' ) . ': ' . PHP_VERSION );
+	pb_backupbuddy::alert( '<h3>' . __( 'We have a problem...', 'it-l10n-backupbuddy' ) . '</h3><br>' . __( '<span style="font-size:1.5em;font-weight:bold;">Uh oh!</span><br />Solid Backups Stash Live requires PHP version 5.3 or newer to run. Please upgrade your PHP version or contact your host for details on upgrading.', 'it-l10n-backupbuddy' ) . ' ' . __( 'Current PHP version', 'it-l10n-backupbuddy' ) . ': ' . PHP_VERSION );
 	return;
 }
 
 // Check for curl.
 if ( ! function_exists( 'curl_version' ) ) {
 	echo '<br>';
-	pb_backupbuddy::alert( '<h3>' . __( 'We have a problem...', 'it-l10n-backupbuddy' ) . '</h3><br>' . __( 'BackupBuddy Stash Live requires the PHP "curl" extension to run. Please install or contact your host to install curl. This is a standard extension and should be available on all hosts.', 'it-l10n-backupbuddy' ) );
+	pb_backupbuddy::alert( '<h3>' . __( 'We have a problem...', 'it-l10n-backupbuddy' ) . '</h3><br>' . __( 'Solid Backups Stash Live requires the PHP "curl" extension to run. Please install or contact your host to install curl. This is a standard extension and should be available on all hosts.', 'it-l10n-backupbuddy' ) );
 	return;
 }
 
 // Check if Godaddy Managed WordPress hosting.
 if ( defined( 'GD_SYSTEM_PLUGIN_DIR' ) || class_exists( '\\WPaaS\\Plugin' ) ) {
 	echo '<br>';
-	pb_backupbuddy::disalert( 'godaddy_managed_wp_detected', __( '<span style="font-size:1.5em;font-weight:bold;">GoDaddy Managed WordPress Hosting Detected</span><br><br>GoDaddy\'s Managed WordPress Hosting recently experienced problems resulting in the WordPress cron not working properly resulting in WordPress\' built-in scheduling and automation functionality malfunctioning. <b>GoDaddy has addressed this issue for US-based customers and we believe it to be resolved for those hosted in the USA. Non-US customers should contact GoDaddy support.</b><br><br>However, if you still experience issues and require a partial workaround go to BackupBuddy -> "Settings" page -> "Advanced Settings / Troubleshooting" tab -> Check the box "Force internal cron" -> Scroll down and "Save" the settings.  This may help you be able to make a manual traditional backup though it may be slow and is not guaranteed.', 'it-l10n-backupbuddy' ) );
+	pb_backupbuddy::disalert( 'godaddy_managed_wp_detected', __( '<span style="font-size:1.5em;font-weight:bold;">GoDaddy Managed WordPress Hosting Detected</span><br><br>GoDaddy\'s Managed WordPress Hosting recently experienced problems resulting in the WordPress cron not working properly resulting in WordPress\' built-in scheduling and automation functionality malfunctioning. <b>GoDaddy has addressed this issue for US-based customers and we believe it to be resolved for those hosted in the USA. Non-US customers should contact GoDaddy support.</b><br><br>However, if you still experience issues and require a partial workaround go to Solid Backups -> "Settings" page -> "Advanced Settings" tab -> Check the box "Force internal cron" -> Scroll down and "Save" the settings.  This may help you be able to make a manual traditional backup though it may be slow and is not guaranteed.', 'it-l10n-backupbuddy' ) );
 }
 
 $admin_url = is_network_admin() ? network_admin_url( 'admin.php' ) : admin_url( 'admin.php' );
@@ -47,7 +47,7 @@ foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => 
 if ( 'disconnect' == pb_backupbuddy::_GET( 'live_action' ) && false !== $live_destination_id ) { // If disconnecting and not already disconnected.
 	$disconnected = false;
 	require_once pb_backupbuddy::plugin_path() . '/destinations/live/live_periodic.php';
-	require_once pb_backupbuddy::plugin_path() . '/destinations/stash2/class.itx_helper2.php';
+	require_once pb_backupbuddy::plugin_path() . '/destinations/stash3/class.itx_helper2.php';
 	$destination_settings = backupbuddy_live_periodic::get_destination_settings();
 
 	if ( 'yes' == pb_backupbuddy::_POST( 'disconnect' ) ) {
@@ -102,6 +102,11 @@ if ( 'disconnect' == pb_backupbuddy::_GET( 'live_action' ) && false !== $live_de
 				backupbuddy_core::clearLiveLogs( $live_serial );
 			}
 
+			// Remove any remaining events.
+			require_once pb_backupbuddy::plugin_path() . '/destinations/live/live.php';
+			backupbuddy_live_periodic::delete_all_events();
+			backupbuddy_live::remove_all_live_actions();
+
 			pb_backupbuddy::disalert( '', 'You have disconnected from Stash Live.' );
 			$live_destination_id = false;
 		}
@@ -111,32 +116,34 @@ if ( 'disconnect' == pb_backupbuddy::_GET( 'live_action' ) && false !== $live_de
 	if ( false === $disconnected ) {
 		$admin_url = is_multisite() ? network_admin_url( 'admin.php' ) : admin_url( 'admin.php' );
 		?>
-		<h1 style="zoom: 1.05;">
-			<span class="backupbuddy-stash-live-icon"></span>
-			<?php esc_html_e( 'Disconnect from Stash Live', 'it-l10n-backupbuddy' ); ?>
-		</h1>
-		<?php esc_html_e( 'To disconnect you must verify you have access to this account. Please authenticate with your iThemes Member Login to validate your access and disconnect this site from Stash Live.', 'it-l10n-backupbuddy' ); ?><br><br>
-		<form method="post" action="<?php echo pb_backupbuddy::nonce_url( $admin_url . '?page=pb_backupbuddy_live&live_action=disconnect' ); ?>">
-			<input type="hidden" name="disconnect" value="yes">
-			<table>
-				<tr>
-					<td>iThemes Username:</td>
-					<td><input type="text" name="username" value="<?php echo esc_attr( $destination_settings['itxapi_username'] ); ?>" readonly="true" style="width: 100%;"></td>
-				</tr>
-				<tr>
-					<td>iThemes Password:</td>
-					<td><input type="password" name="password" style="width: 100%;"></td>
-				</tr>
-				<tr><td colspan="2">&nbsp;</td></tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td>
-						<input type="submit" name="submit" value="Disconnect Stash Live" class="button-primary">
-						<a href="<?php echo esc_attr( $admin_url . '?page=pb_backupbuddy_live' ); ?>" class="button button-secondary"><?php esc_html_e( 'Cancel', 'it-l10n-backupbuddy' ); ?></a>
-					</td>
-				</tr>
-			</table>
-		</form>
+		<div class="disconnect-form">
+			<h1 class="heading-disconnect">
+				<span class="backupbuddy-stash-live-icon"></span>
+				<?php esc_html_e( 'Disconnect from Stash Live', 'it-l10n-backupbuddy' ); ?>
+			</h1>
+			<p><?php esc_html_e( 'To disconnect you must verify you have access to this account. Please authenticate with your iThemes Member Login to validate your access and disconnect this site from Stash Live.', 'it-l10n-backupbuddy' ); ?></p>
+			<form method="post" class="solid-backups-form" action="<?php echo pb_backupbuddy::nonce_url( $admin_url . '?page=pb_backupbuddy_live&live_action=disconnect' ); ?>">
+				<input type="hidden" name="disconnect" value="yes">
+				<table>
+					<tr>
+						<td><?php esc_html_e( 'SolidWP Username:', 'it-l10n-backupbuddy' ); ?></td>
+						<td><input type="text" name="username" value="<?php echo esc_attr( $destination_settings['itxapi_username'] ); ?>" readonly="true" style="width: 100%;"></td>
+					</tr>
+					<tr>
+						<td><?php esc_html_e( 'SolidWP Password:', 'it-l10n-backupbuddy' ); ?></td>
+						<td><input type="password" name="password" style="width: 100%;"></td>
+					</tr>
+					<tr><td colspan="2">&nbsp;</td></tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td>
+							<input type="submit" name="submit" value="Disconnect Stash Live" class="button button-primary">
+							<a href="<?php echo esc_attr( $admin_url . '?page=pb_backupbuddy_live' ); ?>" class="button button-secondary"><?php esc_html_e( 'Cancel', 'it-l10n-backupbuddy' ); ?></a>
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
 		<?php
 		return;
 	}
@@ -151,7 +158,6 @@ if ( false === $live_destination_id ) {
 // Load normal manage page.
 pb_backupbuddy::$ui->title( esc_html__( 'Stash Live', 'it-l10n-backupbuddy' ), true, false, 'backupbuddy-stash-live-icon' );
 ?>
-<br>
 
 <script>
 	jQuery(function() {
@@ -164,7 +170,7 @@ pb_backupbuddy::$ui->title( esc_html__( 'Stash Live', 'it-l10n-backupbuddy' ), t
 
 		jQuery('#screen-meta-links').append(
 			'<div class="backupbuddy-meta-link-wrap hide-if-no-js screen-meta-toggle">' +
-				'<a href="<?php echo pb_backupbuddy::ajax_url( 'live_settings' ); ?>&#038;TB_iframe=1&#038;width=640&#038;height=600" class="add-new-h2 thickbox show-settings no-dropdown"><?php esc_html_e( 'Live Settings', 'it-l10n-backupbuddy' ); ?></a>' +
+				'<a href="<?php echo pb_backupbuddy::ajax_url( 'live_settings' ); ?>&#038;TB_iframe=1&#038;width=640&#038;height=600" title="<?php echo esc_attr( __( 'Stash Live Settings', 'it-l10n-backupbuddy' ) ); ?>" class="add-new-h2 thickbox show-settings no-dropdown"><?php esc_html_e( 'Live Settings', 'it-l10n-backupbuddy' ); ?></a>' +
 			'</div>'
 		);
 

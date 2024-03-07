@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 /**
@@ -18,13 +17,40 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class SiteCollection extends Entity
 {
+    /**
+    * Gets the dataLocationCode
+    * The geographic region code for where this site collection resides. Read-only.
+    *
+    * @return string The dataLocationCode
+    */
+    public function getDataLocationCode()
+    {
+        if (array_key_exists("dataLocationCode", $this->_propDict)) {
+            return $this->_propDict["dataLocationCode"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+    * Sets the dataLocationCode
+    * The geographic region code for where this site collection resides. Read-only.
+    *
+    * @param string $val The value of the dataLocationCode
+    *
+    * @return SiteCollection
+    */
+    public function setDataLocationCode($val)
+    {
+        $this->_propDict["dataLocationCode"] = $val;
+        return $this;
+    }
     /**
     * Gets the hostname
     * The hostname for the site collection. Read-only.

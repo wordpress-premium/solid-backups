@@ -295,9 +295,8 @@
 	<span class="backupbuddy-gdrive2-breadcrumbs">/</span>
 	<div class="backupbuddy-gdrive2-folderList"></div>
 
-	<button class="backupbuddy-gdrive2-back thickbox button secondary-button">&larr; Back</button>&nbsp;&nbsp;
-	<button class="backupbuddy-gdrive2-createFolder thickbox button secondary-button">Create Folder</button>&nbsp;
-	<span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px; vertical-align: -5px;">
-		<img src="<?php echo esc_attr( pb_backupbuddy::plugin_url() ); ?>/images/loading.gif" alt="<?php esc_attr_e( 'Loading...', 'it-l10n-backupbuddy' ); ?>" title="<?php esc_attr_e( 'Loading...', 'it-l10n-backupbuddy' ); ?>" width="16" height="16" style="vertical-align: -3px;" /></span>&nbsp;
+	<button class="backupbuddy-gdrive2-back thickbox button button-secondary secondary-button">&larr; Back</button>&nbsp;&nbsp;
+	<button class="backupbuddy-gdrive2-createFolder thickbox button button-secondary secondary-button">Create Folder</button>&nbsp;
+	<span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px; vertical-align: -5px;"></span>&nbsp;
 		<span class="backupbuddy-gdrive2-statusText" style="vertical-align: -5px; font-style: italic;"></span>
 </div>

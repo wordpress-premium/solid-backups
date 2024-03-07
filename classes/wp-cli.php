@@ -12,12 +12,12 @@ if ( ! class_exists( 'WP_CLI_Command' ) ) {
 class backupbuddy_wp_cli extends WP_CLI_Command {
 	
 	/**
-	 * Run a BackupBuddy backup. http://getbackupbuddy.com
+	 * Run a Solid Backups backup. http://getbackupbuddy.com
 	 *
 	 * ## OPTIONS
 	 * 
 	 * <profile>
-	 * : Profile may either specify the profile ID number, "full" to run the first defined Full backup profile, or "db" to run the first defined Database-only backup profile. The first Full and Database-only profiles are always available as they are not user-deletable. To find the profile number, run a backup inside BackupBuddy in WordPress and note the number at the end of the URL (3 in this case): http://...&backupbuddy_backup=3
+	 * : Profile may either specify the profile ID number, "full" to run the first defined Full backup profile, or "db" to run the first defined Database-only backup profile. The first Full and Database-only profiles are always available as they are not user-deletable. To find the profile number, run a backup inside Solid Backups in WordPress and note the number at the end of the URL (3 in this case): http://...&backupbuddy_backup=3
 	 *
 	 * [--quiet]
 	 * : Suppresses display of status log information from being output to the screen.

@@ -21,8 +21,10 @@ class pb_backupbuddy_destination_stash2 {
 	 * @var array
 	 */
 	public static $destination_info = array(
+		// Hide this destination from being added by user. Deprecated May 2023.
+		'deprecated'  => true,
 		'name'        => 'BackupBuddy Stash (v2)',
-		'description' => '<b>The easiest of all destinations</b> for PHP v5.3.3+; just enter your iThemes login and Stash away! Store your backups in the BackupBuddy cloud safely with high redundancy and encrypted storage.  Supports multipart uploads for larger file support with both bursting and chunking. Active BackupBuddy customers receive <b>free</b> storage! Additional storage upgrades optionally available. <a href="http://ithemes.com/backupbuddy-stash/" target="_blank">Learn more here.</a>',
+		'description' => '<b>The easiest of all destinations</b> for PHP v5.3.3+; just enter your SolidWP login and Stash away! Store your backups in the BackupBuddy cloud safely with high redundancy and encrypted storage.  Supports multipart uploads for larger file support with both bursting and chunking. Active BackupBuddy customers receive <b>free</b> storage! Additional storage upgrades optionally available. <a href="https://go.solidwp.com/solid-stash" target="_blank">Learn more here.</a>',
 		'category'    => 'normal', // best, normal, or legacy.
 	);
 
@@ -33,32 +35,32 @@ class pb_backupbuddy_destination_stash2 {
 	 */
 	public static $default_settings = array(
 		'data_version'            => '1',
-		'type'                    => 'stash2',   // MUST MATCH your destination slug. Required destination field.
-		'title'                   => '',         // Required destination field.
+		'type'                    => 'stash2', // MUST MATCH your destination slug. Required destination field.
+		'title'                   => '', // Required destination field.
 
-		'itxapi_username'         => '',         // Username to connect to iThemes API.
-		'itxapi_token'            => '',         // Site token for iThemes API.
+		'itxapi_username'         => '', // Username to connect to Solid API.
+		'itxapi_token'            => '', // Site token for Solid API.
 
-		'ssl'                     => '1',        // Whether or not to use SSL encryption for connecting.
-		'server_encryption'       => 'AES256',   // Encryption (if any) to have the destination enact. Empty string for none.
-		'max_time'                => '',         // Default max time in seconds to allow a send to run for. Set to 0 for no time limit. Aka no chunking.
-		'max_burst'               => '10',       // Max size in mb of each burst within the same page load.
-		'use_packaged_cert'       => '0',        // When 1, use the packaged cacert.pem file included with the AWS SDK.
+		'ssl'                     => '1', // Whether or not to use SSL encryption for connecting.
+		'server_encryption'       => 'AES256', // Encryption (if any) to have the destination enact. Empty string for none.
+		'max_time'                => '', // Default max time in seconds to allow a send to run for. Set to 0 for no time limit. Aka no chunking.
+		'max_burst'               => '10', // Max size in mb of each burst within the same page load.
+		'use_packaged_cert'       => '0', // When 1, use the packaged cacert.pem file included with the AWS SDK.
 
-		'db_archive_limit'        => '0',        // Maximum number of db backups for this site in this directory for this account. No limit if zero 0.
-		'full_archive_limit'      => '0',        // Maximum number of full backups for this site in this directory for this account. No limit if zero 0.
+		'db_archive_limit'        => '0', // Maximum number of db backups for this site in this directory for this account. No limit if zero 0.
+		'full_archive_limit'      => '0', // Maximum number of full backups for this site in this directory for this account. No limit if zero 0.
 		'themes_archive_limit'    => '0',
 		'plugins_archive_limit'   => '0',
 		'media_archive_limit'     => '0',
 		'files_archive_limit'     => '0',
 
-		'manage_all_files'        => '0',        // Allow user to manage all files in Stash? If enabled then user can view all files after entering their password. If disabled the link to view all is hidden.
-		'disable_file_management' => '0',        // When 1, _manage.php will not load which renders remote file management DISABLED.
-		'disabled'                => '0',        // When 1, disable this destination.
-		'skip_bucket_prepare'     => '1',        // Always skip bucket prepare for Stash.
-		'stash_mode'              => '1',        // Master destination is Stash.
+		'manage_all_files'        => '0', // Allow user to manage all files in Stash? If enabled then user can view all files after entering their password. If disabled the link to view all is hidden.
+		'disable_file_management' => '0', // When 1, _manage.php will not load which renders remote file management DISABLED.
+		'disabled'                => '0', // When 1, disable this destination.
+		'skip_bucket_prepare'     => '1', // Always skip bucket prepare for Stash.
+		'stash_mode'              => '1', // Master destination is Stash.
 
-		'_multipart_id'           => '',         // Instance var. Internal use only for continuing a chunked upload.
+		'_multipart_id' => '', // Instance var. Internal use only for continuing a chunked upload.
 	);
 
 	/**
@@ -69,7 +71,7 @@ class pb_backupbuddy_destination_stash2 {
 	 * @return array  Formatted destination settings.
 	 */
 	public static function _init( $settings ) {
-		require_once pb_backupbuddy::plugin_path() . '/destinations/s32/init.php';
+		require_once pb_backupbuddy::plugin_path() . '/destinations/s33/init.php';
 		$settings = self::_formatSettings( $settings );
 		return $settings;
 	} // End _init().
@@ -115,16 +117,16 @@ class pb_backupbuddy_destination_stash2 {
 				return false;
 			}
 
-			if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+			if ( pb_backupbuddy::full_logging() ) {
 				pb_backupbuddy::status( 'details', 'Stash API upload action response due to logging level: `' . print_r( $response, true ) . '`' );
 			}
 
 			$settings               = array_merge( $settings, $response );
-			$settings['stash_mode'] = '1'; // Stash is calling the s32 destination.
+			$settings['stash_mode'] = '1'; // Stash is calling the s33 destination.
 		}
 
 		// Send file.
-		$result = pb_backupbuddy_destination_s32::send( $settings, $file, $send_id, $delete_after, $delete_remote_after );
+		$result = pb_backupbuddy_destination_s33::send( $settings, $file, $send_id, $delete_after, $delete_remote_after );
 
 		if ( is_array( $result ) ) { // Chunking. Notify Stash API to kick cron.
 			self::cron_kick_api( $settings, false );
@@ -142,7 +144,7 @@ class pb_backupbuddy_destination_stash2 {
 	 */
 	public static function test( $settings ) {
 		$settings = self::_init( $settings );
-		return pb_backupbuddy_destination_s32::test( $settings );
+		return pb_backupbuddy_destination_s33::test( $settings );
 	} // End test().
 
 	/**
@@ -256,7 +258,7 @@ class pb_backupbuddy_destination_stash2 {
 	public static function _formatSettings( $settings ) {
 		$settings['skip_bucket_prepare'] = '1';
 		$settings['stash_mode']          = '1';
-		return pb_backupbuddy_destination_s32::_formatSettings( $settings );
+		return pb_backupbuddy_destination_s33::_formatSettings( $settings );
 	} // End _formatSettings().
 
 	/**
@@ -331,7 +333,7 @@ class pb_backupbuddy_destination_stash2 {
 			$uploaded      = $file['uploaded_timestamp'];
 			$backup_date   = backupbuddy_core::parse_file( $backup, 'datetime' );
 			$size          = (float) $file['size'];
-			$download_link = admin_url() . sprintf( '?stash2-destination-id=%s&stash2-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
+			$download_link = admin_url() . sprintf( '?stash-destination-id=%s&stash-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
 
 			add_filter( 'backupbuddy_backup_columns', array( 'pb_backupbuddy_destination_stash2', 'set_table_column_header' ), 10, 2 );
 
@@ -454,13 +456,13 @@ class pb_backupbuddy_destination_stash2 {
 			$file = $remote_path . $file;
 		}
 
-		return pb_backupbuddy_destination_s32::deleteFiles( $settings, $files );
+		return pb_backupbuddy_destination_s33::deleteFiles( $settings, $files );
 	}
 
 	/**
 	 * Enforce archive limits.
 	 *
-	 * Called from s32 init.php.
+	 * Called from s33 init.php.
 	 *
 	 * @param array  $settings     Destination settings.
 	 * @param string $backup_type  Type of backup.
@@ -484,7 +486,7 @@ class pb_backupbuddy_destination_stash2 {
 			'delete' => true,
 		);
 
-		if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+		if ( pb_backupbuddy::full_logging() ) {
 			pb_backupbuddy::status( 'details', 'Trim params based on settings: `' . print_r( $additional_params, true ) . '`.' );
 		}
 
@@ -575,7 +577,7 @@ class pb_backupbuddy_destination_stash2 {
 				if ( ! isset( $response['success'] ) || ( '1' != $response['success'] ) ) {
 					pb_backupbuddy::status( 'error', 'Error #3289327932: Something went wrong. Success was not reported. Detailed response: `' . print_r( $response, true ) . '`.' );
 				} else {
-					pb_backupbuddy::status( 'details', 'Successfully inititated cron kicker with API.' );
+					pb_backupbuddy::status( 'details', 'Successfully initiated cron kicker with API.' );
 					return true;
 				}
 			}

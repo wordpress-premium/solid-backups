@@ -6,11 +6,14 @@
  */
 
 ?>
-<script>jQuery( '#pageTitle' ).html( 'Authentication Required' );</script>
+<script>
+jQuery( '#pageTitle' ).addClass('login-screen').html( 'Welcome, please log in to continue.' );
+jQuery('.main_box_wrap').addClass('main_box_wrap--small');
+</script>
 <?php
 if ( '' != pb_backupbuddy::_POST( 'password' ) ) {
 	global $pb_login_attempts;
-	pb_backupbuddy::alert( 'Invalid password. Please enter the password you provided within BackupBuddy Settings. Attempt #' . $pb_login_attempts . '.' );
+	pb_backupbuddy::alert( 'Invalid password. Please enter the password you provided within Solid Backups Settings. Attempt #' . $pb_login_attempts . '.' );
 	echo '<br>';
 }
 
@@ -21,14 +24,14 @@ if ( ! is_callable( 'json_decode' ) ) {
 }
 ?>
 
-<p>Enter your ImportBuddy password below to begin.</p>
+<p>Enter your Importer password below to begin.</p>
 
 <br>
 
 <form method="post" id="importbuddy-auth-form">
 	<input type="hidden" name="action" value="login">
 	<input type="password" name="password" style="width: 250px; vertical-align: -2px;">
-	<input type="submit" name="submit" value="Authenticate" class="it-button">
+	<input type="submit" name="submit" value="Authenticate" class="button button-primary">
 	<button href="#pb_forgotpassword_modal" class="button button-secondary leanModal createdb_modal_link">Forgot Password?</button>
 </form>
 
@@ -37,7 +40,7 @@ if ( ! is_callable( 'json_decode' ) ) {
 		jQuery( '#importbuddy-auth-form input[type=password]' ).focus();
 
 		jQuery('.leanModal').leanModal(
-			{ top : 45, overlay : 0.4, closeButton: ".modal_close" }
+			{ top : 45, overlay : 0.7, closeButton: ".modal_close" }
 		);
 
 		jQuery( '#createpass_form' ).submit(function(){
@@ -76,9 +79,13 @@ if ( ! is_callable( 'json_decode' ) ) {
 <div id="pb_forgotpassword_modal" style="display: none;">
 	<div class="modal">
 		<div class="modal_header">
-			<a class="modal_close">&times;</a>
-			<h2>Password Reset</h2>
-			After submitting you will need to edit your importbuddy.php file on this server and edit a line of code with a hashed version of this password.
+			<div>
+				<h2>Password Reset</h2>
+				<p>After submitting you will need to edit your importbuddy.php file on this server and edit a line of code with a hashed version of this password.</p>
+			</div>
+			<a class="modal_close">
+				<span class="modal_close_icon">&times;</span><span>Close</span>
+			</a>
 		</div>
 		<div class="modal_content">
 
@@ -96,9 +103,9 @@ if ( ! is_callable( 'json_decode' ) ) {
 								<td>Confirm Password</td><td><input type="password" name="newpassword_confirm" id="new_pass_confirm"></td>
 							</tr>
 						</table>
-						<input type="submit" name="submit" value="Submit" class="button-primary">
+						<input type="submit" name="submit" value="Submit" class="button button-primary">
 					</form>
-					<span class="createpass_loading" style="display: none; margin-left: 10px;"><img src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/loading.gif" alt="'Loading..." title="Loading..." width="16" height="16" style="vertical-align: -3px;"></span>
+					<span class="createpass_loading" style="display: none; margin-left: 10px;"><img src="<?php echo pb_backupbuddy::plugin_url(); ?>/assets/dist/images/loading.gif" alt="'Loading..." title="Loading..." width="16" height="16" style="vertical-align: -3px;"></span>
 				</center>
 
 			</div>

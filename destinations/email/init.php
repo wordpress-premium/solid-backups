@@ -62,8 +62,8 @@ class pb_backupbuddy_destination_email {
 		}
 
 		pb_backupbuddy::status( 'details', 'Sending remote email.' );
-		$headers        = 'From: BackupBuddy <' . $email_return . '>' . "\r\n";
-		$wp_mail_result = wp_mail( $email, 'BackupBuddy backup for ' . site_url(), 'BackupBuddy backup for ' . site_url(), $headers, $files );
+		$headers        = 'From: Solid Backups <' . $email_return . '>' . "\r\n";
+		$wp_mail_result = wp_mail( $email, 'Solid Backups backup for ' . site_url(), 'Solid Backups backup for ' . site_url(), $headers, $files );
 		pb_backupbuddy::status( 'details', 'Sent remote email.' );
 
 		if ( true === $wp_mail_result ) { // WP sent. Hopefully it makes it!

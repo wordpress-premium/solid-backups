@@ -1,11 +1,11 @@
 <?php
-/* BackupBuddy Stash Live Remote Tables Viewer
+/* Solid Backups Stash Live Remote Tables Viewer
  *
  * @author Dustin Bolton
  * @since 7.0
  *
  */
- 
+
 pb_backupbuddy::verify_nonce();
 
 // @author Dustin Bolton 2015.
@@ -41,7 +41,7 @@ if ( pb_backupbuddy::_POST( 'bulk_action' ) == 'delete_backup' ) {
 	$deleteFiles = array();
 	foreach( (array)pb_backupbuddy::_POST( 'items' ) as $file ) {
 		$file = base64_decode( $file );
-		
+
 		if ( FALSE !== strstr( $file, '?' ) ) {
 			$file = substr( $file, 0, strpos( $file, '?' ) );
 		}
@@ -50,7 +50,7 @@ if ( pb_backupbuddy::_POST( 'bulk_action' ) == 'delete_backup' ) {
 	$deleteSettings = $settings;
 	$deleteSettings['directory'] = $remotePath;
 	$response = pb_backupbuddy_destination_live::deleteFiles( $deleteSettings, $deleteFiles );
-	
+
 	if ( true === $response ) {
 		pb_backupbuddy::alert( 'Deleted ' . implode( ', ', $deleteFiles ) . '.' );
 	} else {
@@ -82,14 +82,6 @@ if ( ! is_array( $files ) ) {
 	die();
 }
 
-/*
-echo '<pre>';
-print_r( $files );
-echo '</pre>';
-*/
-
-
-
 $backup_list_temp = array();
 foreach( (array)$files as $file ) {
 	$last_modified = strtotime( $file['LastModified'] );
@@ -104,7 +96,7 @@ $backup_list = array();
 foreach( $backup_list_temp as $file ) {
 	$last_modified = strtotime( $file['LastModified'] );
 	$size = (double) $file['Size'];
-	
+
 	$key = base64_encode( $file['Key'] );
 	$backup_list[ $key ] = array(
 		array( $key, '<span title="' . $file['Key'] . '">' . $file['Key'] . '</span>' ),
@@ -125,7 +117,7 @@ $urlPrefix = pb_backupbuddy::nonce_url( pb_backupbuddy::page_url() . '&live_acti
 
 <center>
 	<b><?php $backup_count = count( $backup_list ); echo $backup_count; ?> files displayed.</b><br><br>
-	
+
 	<?php if ( $backup_count >= $settings['max_filelist_keys'] ) { ?>
 		<?php if ( '' != pb_backupbuddy::_GET( 'marker' ) ) { ?>
 			<a href="<?php echo pb_backupbuddy::nonce_url( pb_backupbuddy::page_url() . '&live_action=view_files_tables&marker=' . urlencode( pb_backupbuddy::_GET( 'back' ) ) ); ?>" class="button button-secondary button-tertiary">Previous Page</a>
@@ -148,7 +140,7 @@ if ( count( $backup_list ) == 0 ) {
 		$backup_list,
 		array(
 			'action'		=>	$urlPrefix,
-			'columns'		=>	array( 'Backup File <img src="' . pb_backupbuddy::plugin_url() . '/images/sort_down.png" style="vertical-align: 0px;" title="Sorted alphabetically">', 'Uploaded', 'File Size' ),
+			'columns'		=>	array( 'Backup File <img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/sort_down.png" style="vertical-align: 0px;" title="Sorted alphabetically">', 'Uploaded', 'File Size' ),
 			'hover_actions'	=>	array( $urlPrefix . '&downloadlink_file=' => 'Get download link' ),
 			'hover_action_column_key'	=>	'0',
 			'bulk_actions'	=>	array( 'delete_backup' => 'Delete' ),
@@ -161,10 +153,10 @@ if ( count( $backup_list ) == 0 ) {
 
 <center>
 	<b><?php echo count( $backup_list ); ?> files displayed.</b><br><br>
-	
+
 	<?php if ( $backup_count >= $settings['max_filelist_keys'] ) { ?>
 		<?php if ( '' != pb_backupbuddy::_GET( 'marker' ) ) { ?>
-			<a href="<?php echo pb_backupbuddy::page_url(); ?>&live_action=view_files&marker=<?php echo urlencode( pb_backupbuddy::_GET( 'back' ) ); ?>" class="button button-secondary button-tertiary">Previous Page</a>
+			<a href="<?php echo esc_url( pb_backupbuddy::page_url() ); ?>&live_action=view_files&marker=<?php echo urlencode( pb_backupbuddy::_GET( 'back' ) ); ?>" class="button button-secondary button-tertiary">Previous Page</a>
 		<?php } ?>
 		&nbsp;
 		<a href="<?php echo pb_backupbuddy::nonce_url( pb_backupbuddy::page_url() . '&live_action=view_files_tables&marker=' . urlencode( $marker ) . '&back=' . urlencode( pb_backupbuddy::_GET( 'marker' ) ) ); ?>" class="button button-secondary button-tertiary">Next Page</a>

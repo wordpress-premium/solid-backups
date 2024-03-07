@@ -442,6 +442,19 @@ if ( pb_backupbuddy::$options['data_version'] < 18 ) {
 	pb_backupbuddy::save();
 }
 // ********** END 8.2 UPGRADE **********
+
+// ********** BEGIN Solid Backups UPGRADE **********
+if ( pb_backupbuddy::$options['data_version'] < 19 ) {
+	pb_backupbuddy::$options['data_version'] = '19';
+
+	// Update backup dir.
+	$default_backup_dir = ABSPATH . 'wp-content/uploads/backupbuddy_backups/';
+	if ( pb_backupbuddy::$options['backup_directory'] == $default_backup_dir ) { // If backup dir is in the default location, set blank.
+		pb_backupbuddy::$options['backup_directory'] = '';
+	}
+}
+// ********** END Solid Backups UPGRADE **********
+
 // ***** MISC BELOW *****
 // Remote any saved plaintext confirmation of importbuddy password.
 if ( isset( pb_backupbuddy::$options['importbuddy_pass_hash_confirm'] ) ) {
@@ -473,21 +486,6 @@ if ( '0' === pb_backupbuddy::$options['zip_method_strategy'] ) {
 backupbuddy_core::verifyHousekeeping();
 backupbuddy_core::verifyLiveCron();
 
-// Attempt to actually test PHP max execution time. Forces on activation in case new server.
-backupbuddy_housekeeping::schedule_php_runtime_tests( true );
-backupbuddy_housekeeping::schedule_php_memory_tests( true );
-
-// @TODO Remove this next block as it does nothing and will not be needed in future versions.
-// Verify existance of default S3 config (currently blank to fix shell_exec() warning issue. Added 3.1.8.3 Jan 29, 2013 - Dustin.
-$s3_config = pb_backupbuddy::plugin_path() . '/destinations/_s3lib/aws-sdk/config.inc.php';
-if ( ! @file_exists( $s3_config ) ) {
-	if ( true === @touch( $s3_config ) ) {
-		// Be silent as to not risk breaking activation as this is minor. Just in case of logging issues.
-		// pb_backupbuddy::status( 'details', 'Created default blank destination config `' . $s3_config . '`.' );
-	} else {
-		// Be silent as to not risk breaking activation as this is minor. Just in case of logging issues.
-		// pb_backupbuddy::status( 'error', 'Unable to create default blank destination config `' . $s3_config . '`. Check permissions.' );
-	}
-}
-unset( $s3_config );
+// Runs 20 minutes from now to prevent stalling when the plugin is first activated.
+backupbuddy_core::schedule_single_event( time() + ( 20 * 60 ), 'run_initial_php_tests' );
 

@@ -1,16 +1,14 @@
 <?php
 /**
- * Destination Picker
+ * Destination Picker.
+ *
+ * This appears as a modal on the Backup Profiles page.
  *
  * @package BackupBuddy
  */
 
 // Make sure ajax cam be accessed.
 backupbuddy_core::verifyAjaxAccess();
-
-// Can we combine these 2 files?
-pb_backupbuddy::load_style( 'backupProcess.css' );
-pb_backupbuddy::load_style( 'backupProcess2.css' );
 
 $default_tab = 0;
 if ( is_numeric( pb_backupbuddy::_GET( 'tab' ) ) ) {
@@ -27,7 +25,7 @@ if ( 'migration' === $mode ) {
 		$picker_url = pb_backupbuddy::ajax_url( 'destinationTabs' );
 	}
 	if ( pb_backupbuddy::_GET( 'tab' ) ) {
-		$picker_url .= pb_backupbuddy::_GET( 'tab' );
+		$picker_url .= esc_attr( pb_backupbuddy::_GET( 'tab' ) );
 	}
 }
 
@@ -36,15 +34,10 @@ if ( '' != pb_backupbuddy::_GET( 'action_verb' ) ) {
 	$action_verb = ' ' . htmlentities( pb_backupbuddy::_GET( 'action_verb' ) );
 }
 
-pb_backupbuddy::load_style( 'admin' );
-pb_backupbuddy::load_style( 'destination_picker.css' );
 pb_backupbuddy::load_script( 'jquery' );
 pb_backupbuddy::load_script( 'jquery-ui-core' );
 pb_backupbuddy::load_script( 'jquery-ui-widget' );
-
-// Load accordion JS. Pre WP v3.3 we need to load our own JS file.
-global $wp_version;
-pb_backupbuddy::load_script( version_compare( $wp_version, '3.3', '<' ) ? 'jquery.ui.accordion.min.js' : 'jquery-ui-accordion' );
+pb_backupbuddy::load_script( 'jquery-ui-accordion' );
 
 // Destinations may hide the add and test buttons by altering these variables.
 global $pb_hide_save, $pb_hide_test;
@@ -55,7 +48,6 @@ $pb_hide_test = false;
 require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
 
 pb_backupbuddy::load_script( 'filetree.js' );
-pb_backupbuddy::load_style( 'filetree.css' );
 ?>
 <script>
 	jQuery(function() {
@@ -71,10 +63,9 @@ pb_backupbuddy::load_style( 'filetree.css' );
 
 			var pb_remote_id = 'NEW'; //jQuery(this).closest('.backupbuddy-destination-wrap').attr('data-destination_id');
 			var new_title = jQuery(this).closest('form').find( '#pb_backupbuddy_title' ).val();
-			jQuery(this).closest('form').find( '.pb_backupbuddy_destpicker_saveload' ).show();
-			jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'remote_save' ); ?>&pb_backupbuddy_destinationid=' + pb_remote_id, jQuery(this).parent( 'form' ).serialize(),
+			jQuery(this).closest('form').find( '.pb_backupbuddy_destpicker_saveload' ).removeClass( 'hidden' );
+			jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'remote_save' ); ?>&pb_backupbuddy_destinationid=' + pb_remote_id, jQuery(this).closest( 'form' ).serialize(),
 				function(data) {
-					 // data = jQuery.trim( data );
 
 					if ( data.success ) {
 						if ( 'added' === data.status ) {
@@ -88,14 +79,14 @@ pb_backupbuddy::load_style( 'filetree.css' );
 							<?php
 							}
 							?>
-							window.location.href = '<?php echo $picker_url . '&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ); ?>&tab='+data.new_tab+'&sending=<?php echo pb_backupbuddy::_GET( 'sending' ); ?>&selecting=<?php echo pb_backupbuddy::_GET( 'selecting' ); ?>&alert_notice=' + encodeURIComponent( 'New destination successfully added.' );
+							window.location.href = '<?php echo $picker_url . '&callback_data=' . esc_attr( pb_backupbuddy::_GET( 'callback_data' ) ); ?>&tab='+data.new_tab+'&sending=<?php echo esc_attr( pb_backupbuddy::_GET( 'sending' ) ); ?>&selecting=<?php esc_attr_e( pb_backupbuddy::_GET( 'selecting' ) ); ?>&alert_notice=' + encodeURIComponent( 'New destination successfully added.' );
 							win.scrollTo(0,0);
 						} else if ( 'saved' === data.status ) {
-							jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
+							jQuery( '.pb_backupbuddy_destpicker_saveload' ).addClass( 'hidden');
 							jQuery( '.nav-tab-active' ).find( '.destination_title' ).text( new_title );
 						}
 					} else {
-						jQuery( '.pb_backupbuddy_destpicker_saveload' ).hide();
+						jQuery( '.pb_backupbuddy_destpicker_saveload' ).addClass( 'hidden' );
 						alert( "Error: \n\n" + data.error );
 					}
 
@@ -144,7 +135,7 @@ pb_backupbuddy::load_style( 'filetree.css' );
 			var delete_after = jQuery( '#pb_backupbuddy_remote_delete' ).is( ':checked' );
 
 			var win = window.dialogArguments || parent || opener || top;
-			win.pb_backupbuddy_selectdestination( destinationID, jQuery(this).attr( 'title' ), '<?php echo pb_backupbuddy::_GET( 'callback_data' ); ?>', jQuery('#pb_backupbuddy_remote_delete').is(':checked'), '<?php echo $mode; ?>' );
+			win.pb_backupbuddy_selectdestination( destinationID, jQuery(this).attr( 'title' ), '<?php esc_attr_e( pb_backupbuddy::_GET( 'callback_data' ) ); ?>', jQuery('#pb_backupbuddy_remote_delete').is(':checked'), '<?php echo $mode; ?>' );
 			win.tb_remove();
 			return false;
 		});
@@ -152,10 +143,10 @@ pb_backupbuddy::load_style( 'filetree.css' );
 		// Test a remote destination.
 		jQuery( '.pb_backupbuddy_destpicker_test' ).click( function() {
 
-			jQuery(this).children( '.pb_backupbuddy_destpicker_testload' ).show();
-			jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'remote_test' ); ?>', jQuery(this).parent( 'form' ).serialize(),
+			jQuery(this).children( '.pb_backupbuddy_destpicker_testload' ).removeClass( 'hidden' );
+			jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'remote_test' ); ?>', jQuery(this).closest( 'form' ).serialize(),
 				function(data) {
-					jQuery( '.pb_backupbuddy_destpicker_testload' ).hide();
+					jQuery( '.pb_backupbuddy_destpicker_testload' ).addClass( 'hidden' );
 					data = jQuery.trim( data );
 					alert( data );
 				}
@@ -169,7 +160,7 @@ pb_backupbuddy::load_style( 'filetree.css' );
 
 <style type="text/css">
 	.bb-dest-option .settings:before {
-		background: url('<?php echo pb_backupbuddy::plugin_url(); ?>/images/dest_arrow.jpg') top right no-repeat;
+		background: url('<?php echo pb_backupbuddy::plugin_url(); ?>/assets/dist/images/dest_arrow.jpg') top right no-repeat;
 		display: block;
 		content: '';
 		height: 9px;
@@ -222,27 +213,12 @@ pb_backupbuddy::load_style( 'filetree.css' );
 		display: inline-block;
 		margin-right: 15px;
 	}
-	.pb_backupbuddy_destpicker_testload {
-		display: none;
-		vertical-align: -2px;
-		margin-left: 10px;
-		width: 12px;
-		height: 12px;
-	}
 	.pb_backupbuddy_destpicker_save {
 		/*width: 90px;*/
 		text-align: center;
 		display: inline-block;
 		margin-right: 15px;
 	}
-	.pb_backupbuddy_destpicker_saveload,.pb_backupbuddy_destpicker_deleteload {
-		display: none;
-		vertical-align: -4px;
-		margin-left: 5px;
-		width: 16px;
-		height: 16px;
-	}
-
 
 	.pb_backupbuddy_destpicker_newdest {
 		background-color:#EEEEEE;
@@ -256,10 +232,6 @@ pb_backupbuddy::load_style( 'filetree.css' );
 	.pb_backupbuddy_destpicker_newdest_select {
 		float: right;
 		padding-top: 10px;
-	}
-
-	.form-table tbody tr th {
-		/*font-size: 12px;*/
 	}
 
 	.button-primary:hover {
@@ -279,7 +251,7 @@ if ( 'migration' === $mode ) {
 	pb_backupbuddy::alert(
 		'
 		<b>' . __( 'Tip', 'it-l10n-backupbuddy' ) . ':</b>
-		' . __( 'If you encounter difficulty try the ImportBuddy tool. Verify the destination URL by entering the "Migration URL", and clicking "Test Settings" before proceeding.', 'it-l10n-backupbuddy' ) .
+		' . __( 'If you encounter difficulty try the Importer tool. Verify the destination URL by entering the "Migration URL", and clicking "Test Settings" before proceeding.', 'it-l10n-backupbuddy' ) .
 		' ' . __( 'Only Local & FTP destinations may be used for automated migrations.', 'it-l10n-backupbuddy' ) . '
 	'
 	);
@@ -299,7 +271,7 @@ if ( '' != pb_backupbuddy::_GET( 'add' ) ) {
 	</script>
 	<?php
 	$destination_info = pb_backupbuddy_destinations::get_info( $destination_type );
-	echo '<h3>' . $destination_info['name'] . '</h3>';
+	echo '<h2 class="solid-backups-form-heading">' . $destination_info['name'] . '</h2>';
 	echo '<div class="pb_backupbuddy_destpicker_id bb-dest-option" rel="NEW">';
 	$settings = pb_backupbuddy_destinations::configure( array( 'type' => $destination_type ), 'add' );
 
@@ -307,13 +279,17 @@ if ( '' != pb_backupbuddy::_GET( 'add' ) ) {
 		echo 'Error #556656a. Unable to display configuration.';
 	} else {
 		if ( true !== $pb_hide_test ) {
-			$test_button = '<a href="#" class="button secondary-button pb_backupbuddy_destpicker_test" href="#" title="Test destination settings.">Test Settings<img class="pb_backupbuddy_destpicker_testload" src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" title="Testing... This may take several seconds..."></a>&nbsp;&nbsp;';
+			$test_button = '<button class="button button-secondary button-spinner secondary-button pb_backupbuddy_destpicker_test" title="Test destination settings.">Test Settings<span class="pb_backupbuddy_destpicker_testload hidden">&nbsp;</span></button>&nbsp;&nbsp;';
 		} else {
 			$test_button = '';
 		}
 		if ( true !== $pb_hide_save ) {
-			$save_button = '<img class="pb_backupbuddy_destpicker_saveload" src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" title="Saving... This may take a few seconds...">';
-			echo $settings->display_settings( '+ Add Destination', $test_button, $save_button, 'pb_backupbuddy_destpicker_save' ); // title, before, after, class
+			$save_button = '<span class="pb_backupbuddy_destpicker_saveload hidden">&nbsp;</span>';
+			echo $settings->display_settings(
+				__( '+ Add Destination', 'it-l10n-backupbuddy' ),
+				'<div class="solid-backups-form-buttons form-buttons form-buttons-no-margin-x">' . $test_button, $save_button . '</div>',
+				'pb_backupbuddy_destpicker_save'
+			); // title, before, after, class
 		}
 	}
 	echo '</div>';
@@ -337,11 +313,17 @@ if ( $mode == 'migration' ) {
 function pb_bb_add_box( $mode, $picker_url, $hide_back = false ) {
 	?>
 	<div class="bb_destinations-group bb_destinations-new">
-		<h3>What kind of destination would you like to add?</h3>
-		<ul>
+		<h3 class="solid-title-medium">What kind of destination would you like to add?</h3>
+		<ul class="bb_destination-list bb_destination-list-iframe">
 			<?php
 			$i = 0;
+			$list = '';
+			$lower_priority_list = '';
 			foreach ( pb_backupbuddy_destinations::get_destinations_list() as $destination_name => $destination ) {
+				if ( ! empty( $destination['deprecated'] ) ) {
+					continue;
+				}
+
 				// Never show Deployment ("site") destination here.
 				if ( ( 'site' == $destination['type'] ) || ( 'live' == $destination['type'] ) ) {
 					continue;
@@ -363,10 +345,12 @@ function pb_bb_add_box( $mode, $picker_url, $hide_back = false ) {
 				if ( ! empty( $destination['name'] ) ) {
 					$i++;
 
-					printf(
+					$category = isset( $destination['category'] ) ? $destination['category'] : false;
+
+					$item = sprintf(
 						'<li class="bb_destination-item bb_destination-%s bb_destination-new-item"><a href="%s&add=%s&callback_data=%s&sending=%s&selecting=%s" rel="%s">%s</a></li>',
 						esc_attr( $destination_name ),
-						esc_attr( $picker_url ),
+						$picker_url,
 						esc_attr( $destination_name ),
 						esc_attr( pb_backupbuddy::_GET( 'callback_data' ) ),
 						esc_attr( pb_backupbuddy::_GET( 'sending' ) ),
@@ -374,20 +358,20 @@ function pb_bb_add_box( $mode, $picker_url, $hide_back = false ) {
 						esc_attr( $destination_name ),
 						esc_html( $destination['name'] )
 					);
-				}
 
-				if ( $i >= 5 ) {
-					echo '<span class="bb_destination-break"></span>';
-					$i = 0;
+					if ( 'best' == $category ) {
+						$list .= $item;
+					} else {
+						$lower_priority_list .= $item;
+					}
 				}
 			}
-
-			if ( false === $hide_back ) {
+			echo wp_kses_post( $list . $lower_priority_list );
 			?>
-				<br><br>
-				<a href="javascript:void(0)" class="btn btn-small btn-white btn-with-icon btn-back btn-back-add"  onClick="jQuery('.bb_destinations-new').hide(); jQuery('.bb_destinations-existing').show();"><span class="btn-icon"></span>Back to existing destinations</a>
-			<?php } ?>
 		</ul>
+		<?php if ( false === $hide_back ) : ?>
+			<a href="javascript:void(0)" class="button button-secondary tn btn-small btn-white btn-with-icon btn-back btn-back-add"  onClick="jQuery('.bb_destinations-new').hide(); jQuery('.bb_destinations-existing').show();"><span class="btn-icon"></span>Back to existing destinations</a>
+		<?php endif; ?>
 	</div>
 	<?php
 }
@@ -405,14 +389,13 @@ if ( 'true' != pb_backupbuddy::_GET( 'show_add' ) && $destination_list_count > 0
 
 	<div class="bb_actions bb_actions_after slidedown">
 		<?php require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php'; ?>
-		<div class="bb_destinations" style="display: block;">
+		<div class="bb_destinations bb_destinations-backup-perform" style="display: block;">
 			<div class="bb_destinations-group bb_destinations-existing">
-				<h3>Send to one of your existing destinations?</h3><br>
+				<h3 class="solid-title-medium"><?php esc_html_e( 'Send to one of your existing destinations?', 'it-l10n-backupbuddy' ); ?></h3>
 				<?php if ( '' != pb_backupbuddy::_GET( 'sending' ) && ! $is_importbuddy ) { ?>
 					<label><input type="checkbox" name="delete_after" id="pb_backupbuddy_remote_delete" value="1">Delete local backup after successful delivery?</label>
-					<br><br>
 				<?php } ?>
-				<ul>
+				<ul class="bb_destination-list bb_destination-list-iframe">
 					<?php
 					foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => $destination ) {
 
@@ -428,7 +411,7 @@ if ( 'true' != pb_backupbuddy::_GET( 'show_add' ) && $destination_list_count > 0
 							}
 						}
 
-						// Never show Deployment ("site") or BackupBuddy Stash Live destination here.
+						// Never show Deployment ("site") or Solid Backups Stash Live destination here.
 						$hide_types = array(
 							'site',
 							'live',
@@ -453,11 +436,10 @@ if ( 'true' != pb_backupbuddy::_GET( 'show_add' ) && $destination_list_count > 0
 						);
 					}
 					?>
-					<br><br><br>
-					<?php if ( false === apply_filters( 'itbub_disable_add_destination_tab', false ) ) : ?>
-						<a href="javascript:void(0)" class="btn btn-small btn-addnew" onClick="jQuery('.bb_destinations-existing').hide(); jQuery('.bb_destinations-new').show();">Add New Destination +</a>
-					<?php endif; ?>
 				</ul>
+				<?php if ( false === apply_filters( 'itbub_disable_add_destination_tab', false ) ) : ?>
+						<a href="javascript:void(0)" class="button button-primary btn-addnew" onClick="jQuery('.bb_destinations-existing').hide(); jQuery('.bb_destinations-new').show();"><?php esc_html_e( 'Add New Destination +', 'it-l10n-backupbuddy' ); ?></a>
+					<?php endif; ?>
 			</div>
 			<?php pb_bb_add_box( $mode, $picker_url ); ?>
 		</div>

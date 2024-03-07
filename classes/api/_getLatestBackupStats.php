@@ -1,5 +1,5 @@
 <?php
-$timeoutMinutes = 5; // Minutes after which BackupBuddy assumed a backup has timed out & no longer running.
+$timeoutMinutes = 5; // Minutes after which Solid Backups assumed a backup has timed out & no longer running.
 
 
 if ( '' == pb_backupbuddy::$options['last_backup_serial'] ) { // no backup made yet.

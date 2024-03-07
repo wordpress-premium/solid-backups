@@ -145,7 +145,7 @@ if (!class_exists("pluginbuddy_dbreplace")) {
 
 			// No primary key found; unsafe to edit this table. @since 2.2.32.
 			if ( count( $key_results ) == 0 ) {
-				pb_backupbuddy::status( 'message', 'Error #9029: Warning only! Table `'.  $table .'` does not contain a primary key; BackupBuddy cannot safely modify the contents of this table. Skipping migration of this table. (serialized()).' );
+				pb_backupbuddy::status( 'message', 'Error #9029: Warning only! Table `'.  $table .'` does not contain a primary key; Solid Backups cannot safely modify the contents of this table. Skipping migration of this table. (serialized()).' );
 				return true;
 			}
 
@@ -340,7 +340,7 @@ if (!class_exists("pluginbuddy_dbreplace")) {
 
 			// Skips migration of this table if there is no primary key. Modifying on any other key is not safe. mysql automatically returns a PRIMARY if a UNIQUE non-primary is found according to http://dev.mysql.com/doc/refman/5.1/en/create-table.html  @since 2.2.32.
 			if ( $found_primary_key === false ) {
-				pb_backupbuddy::status( 'warning', 'Error #9029b: Warning only! Table `' . $table . '` does not contain a primary key; BackupBuddy cannot safely modify the contents of this table. Skipping migration of this table. (bruteforce_table()).' );
+				pb_backupbuddy::status( 'warning', 'Error #9029b: Warning only! Table `' . $table . '` does not contain a primary key; Solid Backups cannot safely modify the contents of this table. Skipping migration of this table. (bruteforce_table()).' );
 				return true;
 			}
 
@@ -401,11 +401,7 @@ if (!class_exists("pluginbuddy_dbreplace")) {
 						$UPDATE_SQL = $UPDATE_SQL . $WHERE_SQL;
 						$result = $wpdb->query( $UPDATE_SQL );
 						if ( false === $result ) {
-							if ( ! empty( $wpdb->use_mysqli ) ) {
-								$mysql_error = mysqli_error( $wpdb->dbh );
-							} else {
-								$mysql_error = mysql_error( $wpdb->dbh );
-							}
+							$mysql_error = mysqli_error( $wpdb->dbh );
 							pb_backupbuddy::status( 'error', 'ERROR: mysql error updating db: ' . $mysql_error . '. SQL Query: ' . htmlentities( $UPDATE_SQL ) );
 						}
 					}

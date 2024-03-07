@@ -15,8 +15,8 @@ global $wpdb;
 if ( 'true' != pb_backupbuddy::_GET( 'deploy' ) ) { // deployment mode pre-loads state data in a file instead of passing via post.
 	// Parse submitted restoreData restore state from previous step.
 	$restoreData = pb_backupbuddy::_POST( 'restoreData' );
-	
-	
+
+
 	// Decode submitted data, reporting details on failure.
 	$decodeFailReason = '';
 	if ( false === ( $restoreData = base64_decode( $restoreData ) ) ) { // false if failed
@@ -39,8 +39,8 @@ if ( 'true' != pb_backupbuddy::_GET( 'deploy' ) ) { // deployment mode pre-loads
 		pb_backupbuddy::status( 'error', $message );
 		die();
 	}
-	
-	
+
+
 } else {
 	if ( isset( pb_backupbuddy::$options['default_state_overrides'] ) && ( count( pb_backupbuddy::$options['default_state_overrides'] ) > 0 ) ) { // Default state overrides exist. Apply them.
 		$restoreData = pb_backupbuddy::$options['default_state_overrides'];
@@ -61,11 +61,11 @@ if ( false === $restore->_state['restoreDatabase'] ) {
 	echo "<script>bb_action( 'databaseRestoreSkipped' );</script>";
 } else {
 	pb_backupbuddy::status( 'details', 'Connecting to database.' );
-	
-	// Connect ImportBuddy to the database with these settings.
+
+	// Connect Importer to the database with these settings.
 	$restore->connectDatabase();
-	
-	
+
+
 	// CAUTION: Wipe database tables with matching prefix if option was selected.
 	if ( TRUE === $restore->_state['databaseSettings']['wipePrefix'] ) {
 		if ( ( ! isset( $restore->_state['databaseSettings']['importResumeFiles'] ) ) && ( '' == $restore->_state['databaseSettings']['importResumePoint'] ) ) { // Only do this if not in process of resuming.
@@ -75,8 +75,8 @@ if ( false === $restore->_state['restoreDatabase'] ) {
 			}
 		}
 	}
-	
-	
+
+
 	// DANGER: Wipe database of ALL TABLES if option was selected.
 	if ( TRUE === $restore->_state['databaseSettings']['wipeDatabase'] ) {
 		if ( ( ! isset( $restore->_state['databaseSettings']['importResumeFiles'] ) ) && ( '' == $restore->_state['databaseSettings']['importResumePoint'] ) ) { // Only do this if not in process of resuming.
@@ -86,41 +86,41 @@ if ( false === $restore->_state['restoreDatabase'] ) {
 			}
 		}
 	}
-	
-	
+
+
 	// Restore the database.
 	if ( 'true' == pb_backupbuddy::_GET( 'deploy' ) ) {
 		// Drop any previous incomplete deployment / rollback tables.
 		pb_backupbuddy::status( 'details', 'Dropping any existing temporary deployment or rollback tables.' );
-		
+
 		$results = $wpdb->get_results( "SELECT table_name AS `table_name` FROM information_schema.tables WHERE ( ( table_name LIKE 'bbnew-\_%' ) OR ( table_name LIKE 'bbold-\_%' ) ) AND table_schema = DATABASE()", ARRAY_A );
 		if ( count( $results ) > 0 ) {
 			foreach( $results as $result ) {
 				if ( false === $wpdb->query( "DROP TABLE `" . backupbuddy_core::dbEscape( $result['table_name'] ) . "`" ) ) {
-					return $this->_error( 'Error #372837683: Unable to copy over BackupBuddy settings from live site to incoming database in temp table. Details: `' . $wpdb->last_error . '`.' );
+					return $this->_error( 'Error #372837683: Unable to copy over Solid Backups settings from live site to incoming database in temp table. Details: `' . $wpdb->last_error . '`.' );
 					pb_backupbuddy::status( 'details', 'Error #8493984: Unable to drop temp rollback/deploy table `' . $result['table_name'] . '`. Details: `' . $wpdb->last_error . '`.' );
 				}
 			}
 		}
-		
+
 		$restore->_state['databaseSettings']['tempPrefix'] = 'bbnew-' . substr( $restore->_state['serial'], 0, 4 ) . '_' . $restore->_state['databaseSettings']['prefix'];
 	}
-	
-	
+
+
 	pb_backupbuddy::status( 'details', 'About to restore database.' );
 	$restoreResult = $restore->restoreDatabase( $restore->_state['databaseSettings']['tempPrefix'] );
-	
-	
+
+
 	if ( 'true' == pb_backupbuddy::_GET( 'deploy' ) ) {
-		
+
 		if ( is_array( $restoreResult ) ) { // Chunking. Resume same step.
 			$nextStepNum = 4;
 		} else { // Next step.
 			$nextStepNum = 5;
 		}
 		echo '<!-- AUTOPROCEED TO STEP ' . $nextStepNum . ' -->';
-		
-		
+
+
 		// Write default state overrides.
 		global $importbuddy_file;
 		$importFileSerial = backupbuddy_core::get_serial_from_file( $importbuddy_file );
@@ -137,15 +137,15 @@ if ( false === $restore->_state['restoreDatabase'] ) {
 		}
 		fclose( $file_handle );
 		?>
-		<form method="post" action="?ajax=<?php echo $nextStepNum; ?>&v=<?php echo pb_backupbuddy::_GET( 'v' ); ?>&deploy=true&direction=<?php echo pb_backupbuddy::_GET( 'direction' ); ?>&display_mode=embed" id="deploy-autoProceed">
+		<form method="post" action="?ajax=<?php echo $nextStepNum; ?>&v=<?php esc_attr_e( pb_backupbuddy::_GET( 'v' ) ); ?>&deploy=true&direction=<?php esc_attr_e( pb_backupbuddy::_GET( 'direction' ) ); ?>&display_mode=embed" id="deploy-autoProceed">
 			<!-- input type="hidden" name="restoreData" value="<?php //echo base64_encode( urlencode( json_encode( $restore->_state ) ) ); ?>" -->
 			<input type="submit" name="my-submit" value="Next Step" style="visibility: hidden;">
 		</form>
 		<script>jQuery( '#deploy-autoProceed' ).submit();</script>
 		<?php
-		
+
 	} else { // Normal import.
-		
+
 		if ( TRUE !== $restoreResult ) {
 			if ( is_array( $restoreResult ) ) {
 				pb_backupbuddy::status( 'details', 'Database restore did not fully complete this pass. Chunking in progress. Resuming where left off. If the process does not proceed check your browser error console or PHP error log.' );
@@ -167,14 +167,14 @@ if ( false === $restore->_state['restoreDatabase'] ) {
 				echo "<script>bb_action( 'databaseRestoreFailed' );</script>";
 				return false;
 			}
-			
-			
+
+
 			return;
 		} else { // Success.
 			pb_backupbuddy::status( 'details', 'Database restore completed.' );
 			echo "<script>bb_action( 'databaseRestoreSuccess' );</script>";
 		}
-		
+
 	}
 }
 

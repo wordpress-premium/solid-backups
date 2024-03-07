@@ -7,8 +7,8 @@ class pb_backupbuddy_destination_site {
 	const TIME_WIGGLE_ROOM = 5;								// Number of seconds to fudge up the time elapsed to give a little wiggle room so we don't accidently hit the edge and time out.
 
 	public static $destination_info = array(
-		'name'			=>		'BackupBuddy Deployment',
-		'description'	=>		'Push to or Pull from another instance of this WordPress site running BackupBuddy. Great for rapidly copying a site to and from a development version back and forth with a live site.',
+		'name'			=>		'Solid Backups Deployment',
+		'description'	=>		'Push to or Pull from another instance of this WordPress site running Solid Backups. Great for rapidly copying a site to and from a development version back and forth with a live site.',
 		'category'		=>		'best', // best, normal, legacy
 	);
 
@@ -212,11 +212,7 @@ class pb_backupbuddy_destination_site {
 							pb_backupbuddy::status( 'error', 'Next Site chunk step cron event FAILED to be scheduled.' );
 						}
 
-						if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-							update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-							spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-						}
-
+						backupbuddy_core::maybe_spawn_cron();
 
 						return array( $prevPointer, 'Sent part ' . $settings['chunks_sent'] . ' of ~' . $settings['chunks_total'] . ' parts.' ); // filepointer location, elapsed time during the import
 					} else { // End if.
@@ -321,7 +317,7 @@ class pb_backupbuddy_destination_site {
 		} elseif ( 'customroot' == $type ) {
 			$root = $customRoot;
 		} else {
-			$error = 'BackupBuddy Error #48439484: Invalid get_exclusions() type `' . $type . '`.';
+			$error = 'Solid Backups Error #48439484: Invalid get_exclusions() type `' . $type . '`.';
 			error_log( $error );
 			pb_backupbuddy::status( 'error', $error );
 			return false;

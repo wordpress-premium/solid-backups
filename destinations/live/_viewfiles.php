@@ -1,6 +1,6 @@
 <?php
 /**
- * BackupBuddy Stash Live Remote Files Viewer
+ * Solid Backups Stash Live Remote Files Viewer
  *
  * @author Dustin Bolton
  * @since 7.0
@@ -58,12 +58,9 @@ if ( pb_backupbuddy::_GET( 'cpy' ) ) {
 	pb_backupbuddy::status( 'details', 'Scheduling Cron for creating Stash copy.' );
 
 	$file = pb_backupbuddy::_GET( 'cpy' );
-	backupbuddy_core::schedule_single_event( time(), 'process_remote_copy', array( 'live', $file, $settings ) );
+	backupbuddy_core::trigger_async_event( 'process_remote_copy', array( 'live', $file, $settings ) );
 
-	if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-		update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-		spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-	}
+	backupbuddy_core::maybe_spawn_cron();
 } // end copying to local.
 
 /*
@@ -128,7 +125,7 @@ if ( count( $backup_list ) == 0 ) {
 		$backup_list,
 		array(
 			'action'		=>	pb_backupbuddy::page_url() . '&live_action=view_files',
-			'columns'		=>	array( 'Backup File <img src="' . pb_backupbuddy::plugin_url() . '/images/sort_down.png" style="vertical-align: 0px;" title="Sorted alphabetically">', 'Uploaded', 'File Size' ),
+			'columns'		=>	array( 'Backup File <img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/sort_down.png" style="vertical-align: 0px;" title="Sorted alphabetically">', 'Uploaded', 'File Size' ),
 			'hover_actions'	=>	array( pb_backupbuddy::nonce_url( $urlPrefix ) . '&downloadlink_file=' => 'Get download link' ), // pb_backupbuddy::nonce_url( $urlPrefix ) . '&cpy_file=' => 'Copy to Local'
 			'hover_action_column_key'	=>	'0',
 			'bulk_actions'	=>	array( 'delete_backup' => 'Delete' ),

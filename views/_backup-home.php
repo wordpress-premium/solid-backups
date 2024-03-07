@@ -32,7 +32,7 @@ if (
 			( '' == pb_backupbuddy::$options['importbuddy_pass_hash'] )
 		)
 	) ) {
-	pb_backupbuddy::$ui->title( 'BackupBuddy Quick Setup Wizard' );
+	pb_backupbuddy::$ui->title( 'Quick Setup Wizard' );
 	pb_backupbuddy::load_view( '_quicksetup', array() );
 	return;
 }
@@ -51,8 +51,6 @@ if ( function_exists( 'wp_enqueue_code_editor' ) ) {
 }
 
 $v = date( 'Ymdhis' ); // pb_backupbuddy::settings( 'version' ).
-wp_register_style( 'backupbuddy-restore', pb_backupbuddy::plugin_url() . '/css/backupbuddy-restore.css', array(), $v );
-pb_backupbuddy::load_style( 'backupbuddy-restore' );
 
 if ( $dat_zip_file ) {
 	$restore_url = admin_url( 'admin.php?page=pb_backupbuddy_backup' ) . $restore_url;
@@ -65,7 +63,7 @@ wp_enqueue_script( 'thickbox' );
 wp_print_scripts( 'thickbox' );
 wp_print_styles( 'thickbox' );
 
-
+pb_backupbuddy::$ui->banner();
 pb_backupbuddy::$ui->title( __( 'Backups', 'it-l10n-backupbuddy' ), true, false );
 
 $adding_profile      = 'true' == pb_backupbuddy::_POST( 'add_profile' ); // Add new profile.
@@ -135,7 +133,7 @@ $tabs = new BackupBuddy_Tabs(
 		'between' => function() {
 			// Quickwizard just completed.
 			if ( '' != pb_backupbuddy::_GET( 'quickstart_wizard' ) ) {
-				pb_backupbuddy::disalert( 'quickstart_wizard_finished', __( 'Quick Setup Wizard complete. Select a backup profile below to start backing up. See the <a href="admin.php?page=pb_backupbuddy_settings" target="_blank">Settings</a> page for all configuration options.', 'it-l10n-backupbuddy' ), false, '', array( 'class' => 'below-h2' ) );
+				pb_backupbuddy::disalert( 'quickstart_wizard_finished', __( 'Quick Setup Wizard complete. Select a backup profile below to start backing up. See the&nbsp;<a href="admin.php?page=pb_backupbuddy_settings" target="_blank">Settings</a>&nbsp;page for all configuration options.', 'it-l10n-backupbuddy' ), false, '', array( 'class' => 'below-h2' ) );
 			}
 		},
 	)

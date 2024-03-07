@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 /**
@@ -18,17 +17,16 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class TimeConstraint extends Entity
 {
 
     /**
     * Gets the activityDomain
-    * The nature of the activity, optional. The possible values are: work, personal, unrestricted, or unknown.
+    * The nature of the activity, optional. Possible values are: work, personal, unrestricted, or unknown.
     *
     * @return ActivityDomain The activityDomain
     */
@@ -47,7 +45,7 @@ class TimeConstraint extends Entity
 
     /**
     * Sets the activityDomain
-    * The nature of the activity, optional. The possible values are: work, personal, unrestricted, or unknown.
+    * The nature of the activity, optional. Possible values are: work, personal, unrestricted, or unknown.
     *
     * @param ActivityDomain $val The value to assign to the activityDomain
     *

@@ -9,7 +9,7 @@ $form_url = add_query_arg( array( 'action' => 'step2' ) , pb_backupbuddy::page_u
 global $current_site;
 ?>
 
-<?php _e( 'Multisite import allows you to import a site from a BackupBuddy backup archive as a new site within this Multisite network with a new URL.  Please upload your BackupBuddy backup archive into the root of your site before proceeding or select an existing backup.','it-l10n-backupbuddy' ) ?>
+<?php _e( 'Multisite import allows you to import a site from a Solid Backups backup archive as a new site within this Multisite network with a new URL.  Please upload your Solid Backups backup archive into the root of your site before proceeding or select an existing backup.','it-l10n-backupbuddy' ) ?>
 
 <?php _e( 'Only FULL backups may be imported into a Multisite Network.' ); ?>
 <br><br>
@@ -37,7 +37,7 @@ global $current_site;
 			<?php
 		}
 		if ( count( $files ) == 0 ) {
-			_e( 'No BackupBuddy backups found in the root directory of the site.','it-l10n-backupbuddy' );
+			_e( 'No Solid Backups backups found in the root directory of the site.','it-l10n-backupbuddy' );
 			echo '<br>';
 		}
 
@@ -63,7 +63,7 @@ global $current_site;
 			<?php
 		}
 		if ( count( $files ) == 0 ) {
-			_e( 'No BackupBuddy backups found in this site\'s backup directory.','it-l10n-backupbuddy' );
+			_e( 'No Solid Backups backups found in this site\'s backup directory.','it-l10n-backupbuddy' );
 			echo '<br>';
 		}
 		?>

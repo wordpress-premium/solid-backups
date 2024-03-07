@@ -18,7 +18,7 @@ $destination_id = pb_backupbuddy::_GET( 'destination_id' );
 // Welcome text.
 $site_only = 'true' != pb_backupbuddy::_GET( 'listAll' );
 $action    = $site_only ? 'true' : 'false';
-$text      = $site_only ? __( 'List all site\'s files', 'it-l10n-backupbuddy' ) : __( 'Only list this site\'s files', 'it-l10n-backupbuddy' );
+$text      = $site_only ? __( 'List all Backups from all sites', 'it-l10n-backupbuddy' ) : __( 'Only list this site\'s Backups', 'it-l10n-backupbuddy' );
 $swap_list = sprintf(
 	'<a href="%s&destination_id=%s&listAll=%s" style="text-decoration: none;">%s</a>',
 	esc_attr( pb_backupbuddy::ajax_url( 'remoteClient' ) ),
@@ -34,11 +34,11 @@ require_once pb_backupbuddy::plugin_path() . '/destinations/s33/init.php';
 $settings = array();
 
 // Settings.
-if ( $destination_id || '0' === $destination_id || 0 === $destination_id ) {
-	if ( empty( pb_backupbuddy::$options['remote_destinations'][ $destination_id ] ) ) {
+if ( is_numeric( $destination_id ) ) {
+	if ( empty( pb_backupbuddy::$options['remote_destinations'][ (int) $destination_id ] ) ) {
 		die( 'Error #9828332: Destination not found.' );
 	}
-	$settings = &pb_backupbuddy::$options['remote_destinations'][ $destination_id ];
+	$settings = &pb_backupbuddy::$options['remote_destinations'][ (int) $destination_id ];
 	$settings = pb_backupbuddy_destination_s33::_formatSettings( $settings );
 }
 
@@ -62,15 +62,12 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 
 // Handle copying files to local.
 if ( pb_backupbuddy::_GET( 'cpy' ) ) {
-	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
+	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the transfer gets interrupted, click the "Refresh" icon after the transfer is complete to try again.' );
 	echo '<br>';
 	pb_backupbuddy::status( 'details', 'Scheduling Cron for creating S3 copy.' );
-	backupbuddy_core::schedule_single_event( time(), 'process_remote_copy', array( 's33', pb_backupbuddy::_GET( 'cpy' ), $settings ) );
+	backupbuddy_core::trigger_async_event( 'process_remote_copy', array( 's33', pb_backupbuddy::_GET( 'cpy' ), $settings ) );
 
-	if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-		update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-		spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-	}
+	backupbuddy_core::maybe_spawn_cron();
 } // end copying to local.
 
 // Handle pagination.

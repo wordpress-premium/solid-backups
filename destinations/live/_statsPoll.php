@@ -1,5 +1,5 @@
 <?php
-/* BackupBuddy Stash Live Stats Poller (for Live Stash page AND global in wp-admin if admin bar enabled.
+/* Solid Backups Stash Live Stats Poller (for Live Stash page AND global in wp-admin if admin bar enabled.
  *
  * @author Dustin Bolton
  * @since 7.0
@@ -36,13 +36,13 @@
 						try {
 							stats = jQuery.parseJSON( stats );
 
-							<?php if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled. ?>
+							<?php if ( pb_backupbuddy::full_logging() ) { ?>
 								console.log( 'Live Stats (due to log level):' );
 								console.dir( stats );
 							<?php } ?>
 
 						} catch(e) { // NOT json or some error.
-							alert( 'Error #937734: Unable to process BackupBuddy Stash Live stats. Invalid JSON. See browser console for details or here: `' + stats + '`.' );
+							alert( 'Error #937734: Unable to process Solid Backups Stash Live stats. Invalid JSON. See browser console for details or here: `' + stats + '`.' );
 							console.log( 'Live Stats Response (ERROR #4397347934):' );
 							console.dir( stats );
 							return false;

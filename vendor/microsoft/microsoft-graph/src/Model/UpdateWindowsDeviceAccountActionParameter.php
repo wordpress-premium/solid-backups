@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 /**
@@ -18,13 +17,40 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class UpdateWindowsDeviceAccountActionParameter extends Entity
 {
+    /**
+    * Gets the calendarSyncEnabled
+    * Not yet documented
+    *
+    * @return bool The calendarSyncEnabled
+    */
+    public function getCalendarSyncEnabled()
+    {
+        if (array_key_exists("calendarSyncEnabled", $this->_propDict)) {
+            return $this->_propDict["calendarSyncEnabled"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+    * Sets the calendarSyncEnabled
+    * Not yet documented
+    *
+    * @param bool $val The value of the calendarSyncEnabled
+    *
+    * @return UpdateWindowsDeviceAccountActionParameter
+    */
+    public function setCalendarSyncEnabled($val)
+    {
+        $this->_propDict["calendarSyncEnabled"] = $val;
+        return $this;
+    }
 
     /**
     * Gets the deviceAccount
@@ -57,62 +83,6 @@ class UpdateWindowsDeviceAccountActionParameter extends Entity
     {
         $this->_propDict["deviceAccount"] = $val;
          return $this;
-    }
-    /**
-    * Gets the passwordRotationEnabled
-    * Not yet documented
-    *
-    * @return bool The passwordRotationEnabled
-    */
-    public function getPasswordRotationEnabled()
-    {
-        if (array_key_exists("passwordRotationEnabled", $this->_propDict)) {
-            return $this->_propDict["passwordRotationEnabled"];
-        } else {
-            return null;
-        }
-    }
-
-    /**
-    * Sets the passwordRotationEnabled
-    * Not yet documented
-    *
-    * @param bool $val The value of the passwordRotationEnabled
-    *
-    * @return UpdateWindowsDeviceAccountActionParameter
-    */
-    public function setPasswordRotationEnabled($val)
-    {
-        $this->_propDict["passwordRotationEnabled"] = $val;
-        return $this;
-    }
-    /**
-    * Gets the calendarSyncEnabled
-    * Not yet documented
-    *
-    * @return bool The calendarSyncEnabled
-    */
-    public function getCalendarSyncEnabled()
-    {
-        if (array_key_exists("calendarSyncEnabled", $this->_propDict)) {
-            return $this->_propDict["calendarSyncEnabled"];
-        } else {
-            return null;
-        }
-    }
-
-    /**
-    * Sets the calendarSyncEnabled
-    * Not yet documented
-    *
-    * @param bool $val The value of the calendarSyncEnabled
-    *
-    * @return UpdateWindowsDeviceAccountActionParameter
-    */
-    public function setCalendarSyncEnabled($val)
-    {
-        $this->_propDict["calendarSyncEnabled"] = $val;
-        return $this;
     }
     /**
     * Gets the deviceAccountEmail
@@ -168,6 +138,34 @@ class UpdateWindowsDeviceAccountActionParameter extends Entity
     public function setExchangeServer($val)
     {
         $this->_propDict["exchangeServer"] = $val;
+        return $this;
+    }
+    /**
+    * Gets the passwordRotationEnabled
+    * Not yet documented
+    *
+    * @return bool The passwordRotationEnabled
+    */
+    public function getPasswordRotationEnabled()
+    {
+        if (array_key_exists("passwordRotationEnabled", $this->_propDict)) {
+            return $this->_propDict["passwordRotationEnabled"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+    * Sets the passwordRotationEnabled
+    * Not yet documented
+    *
+    * @param bool $val The value of the passwordRotationEnabled
+    *
+    * @return UpdateWindowsDeviceAccountActionParameter
+    */
+    public function setPasswordRotationEnabled($val)
+    {
+        $this->_propDict["passwordRotationEnabled"] = $val;
         return $this;
     }
     /**

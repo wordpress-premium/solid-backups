@@ -12,7 +12,7 @@ echo ' <span style="position: relative; top: -0.5em; font-size: 0.7em;">&dagger;
 _e( 'WordPress core files will not be transferred between sites.', 'it-l10n-backupbuddy' );
 
 echo ' <span style="position: relative; top: -0.5em; font-size: 0.7em;">&Dagger;</span> ';
-_e( 'BackupBuddy plugin files will not be transferred between sites.', 'it-l10n-backupbuddy' );
+_e( 'Solid Backups plugin files will not be transferred between sites.', 'it-l10n-backupbuddy' );
 
 
 if ( $deployData['remoteInfo']['activeTheme'] == $localInfo['activeTheme'] ) {
@@ -36,7 +36,7 @@ if ( isset( $deployData['remoteInfo']['activeChildTheme'] ) ) {
 	$remoteActiveChildTheme = $deployData['remoteInfo']['activeChildTheme'];
 } else {
 	$activeChildThemeBInfo = '';
-	$remoteActiveChildTheme = __( 'Unknown [NOTE: Remote site does not support detecting child theme. Update remote BackupBuddy]', 'it-l10n-backupbuddy' );
+	$remoteActiveChildTheme = __( 'Unknown [NOTE: Remote site does not support detecting child theme. Update remote Solid Backups]', 'it-l10n-backupbuddy' );
 }
 
 
@@ -54,7 +54,7 @@ $pushRows = array(
 	'Memory Limit' => array( $deployData['remoteInfo']['php']['memory_limit'] . ' MB', $localInfo['php']['memory_limit'] . ' MB' ),
 	//'PHP Upload Limit' => array( $localInfo['php']['upload_max_filesize'], $deployData['remoteInfo']['php']['upload_max_filesize'] ),
 	'WordPress Version <span style="position: relative; top: -0.5em; font-size: 0.7em;">&dagger;</span>' => array( $deployData['remoteInfo']['wordpressVersion'], $localInfo['wordpressVersion'] ),
-	'BackupBuddy Version <span style="position: relative; top: -0.5em; font-size: 0.7em;">&Dagger;</span>' => array( $deployData['remoteInfo']['backupbuddyVersion'], $localInfo['backupbuddyVersion'] ),
+	'Solid Backups Version <span style="position: relative; top: -0.5em; font-size: 0.7em;">&Dagger;</span>' => array( $deployData['remoteInfo']['backupbuddyVersion'], $localInfo['backupbuddyVersion'] ),
 	'Active Plugins' => array( $activePluginsB, $activePluginsA . $activePluginsAInfo ),
 	'Active Theme' => array( $deployData['remoteInfo']['activeTheme'], $localInfo['activeTheme'] . ' ' . $activeThemeBInfo ),
 	'Active Child Theme' => array( $remoteActiveChildTheme, $localInfo['activeChildTheme'] . ' ' . $activeChildThemeBInfo ),

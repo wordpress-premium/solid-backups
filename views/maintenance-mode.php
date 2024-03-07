@@ -9,7 +9,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>BackupBuddy Maintenance Mode</title>
+	<title>Solid Backups Maintenance Mode</title>
 	<style type="text/css" media="screen">
 		body {
 			text-align: center;

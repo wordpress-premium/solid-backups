@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,16 +18,15 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class Domain extends Entity
 {
     /**
     * Gets the authenticationType
-    * Indicates the configured authentication type for the domain. The value is either Managed or Federated. Managed indicates a cloud managed domain where Azure AD performs user authentication.Federated indicates authentication is federated with an identity provider such as the tenant's on-premises Active Directory via Active Directory Federation Services. This property is read-only and is not nullable.
+    * Indicates the configured authentication type for the domain. The value is either Managed or Federated. Managed indicates a cloud managed domain where Azure AD performs user authentication.Federated indicates authentication is federated with an identity provider such as the tenant's on-premises Active Directory via Active Directory Federation Services. This propert is read-only and is not nullable.
     *
     * @return string The authenticationType
     */
@@ -43,7 +41,7 @@ class Domain extends Entity
     
     /**
     * Sets the authenticationType
-    * Indicates the configured authentication type for the domain. The value is either Managed or Federated. Managed indicates a cloud managed domain where Azure AD performs user authentication.Federated indicates authentication is federated with an identity provider such as the tenant's on-premises Active Directory via Active Directory Federation Services. This property is read-only and is not nullable.
+    * Indicates the configured authentication type for the domain. The value is either Managed or Federated. Managed indicates a cloud managed domain where Azure AD performs user authentication.Federated indicates authentication is federated with an identity provider such as the tenant's on-premises Active Directory via Active Directory Federation Services. This propert is read-only and is not nullable.
     *
     * @param string $val The authenticationType
     *
@@ -86,7 +84,7 @@ class Domain extends Entity
     
     /**
     * Gets the isAdminManaged
-    * The value of the property is false if the DNS record management of the domain has been delegated to Office 365. Otherwise, the value is true. Not nullable
+    * The value of the property is false if the DNS record management of the domain has been delegated to Microsoft 365. Otherwise, the value is true. Not nullable
     *
     * @return bool The isAdminManaged
     */
@@ -101,7 +99,7 @@ class Domain extends Entity
     
     /**
     * Sets the isAdminManaged
-    * The value of the property is false if the DNS record management of the domain has been delegated to Office 365. Otherwise, the value is true. Not nullable
+    * The value of the property is false if the DNS record management of the domain has been delegated to Microsoft 365. Otherwise, the value is true. Not nullable
     *
     * @param bool $val The isAdminManaged
     *
@@ -230,6 +228,60 @@ class Domain extends Entity
     }
     
     /**
+    * Gets the manufacturer
+    *
+    * @return string The manufacturer
+    */
+    public function getManufacturer()
+    {
+        if (array_key_exists("manufacturer", $this->_propDict)) {
+            return $this->_propDict["manufacturer"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the manufacturer
+    *
+    * @param string $val The manufacturer
+    *
+    * @return Domain
+    */
+    public function setManufacturer($val)
+    {
+        $this->_propDict["manufacturer"] = $val;
+        return $this;
+    }
+    
+    /**
+    * Gets the model
+    *
+    * @return string The model
+    */
+    public function getModel()
+    {
+        if (array_key_exists("model", $this->_propDict)) {
+            return $this->_propDict["model"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the model
+    *
+    * @param string $val The model
+    *
+    * @return Domain
+    */
+    public function setModel($val)
+    {
+        $this->_propDict["model"] = $val;
+        return $this;
+    }
+    
+    /**
     * Gets the passwordNotificationWindowInDays
     * Specifies the number of days before a user receives notification that their password will expire. If the property is not set, a default value of 14 days will be used.
     *
@@ -288,35 +340,6 @@ class Domain extends Entity
     }
     
     /**
-    * Gets the supportedServices
-    * The capabilities assigned to the domain.Can include 0, 1 or more of following values: Email, Sharepoint, EmailInternalRelayOnly, OfficeCommunicationsOnline, SharePointDefaultDomain, FullRedelegation, SharePointPublic, OrgIdAuthentication, Yammer, Intune The values which you can add/remove using Graph API include: Email, OfficeCommunicationsOnline, YammerNot nullable
-    *
-    * @return string The supportedServices
-    */
-    public function getSupportedServices()
-    {
-        if (array_key_exists("supportedServices", $this->_propDict)) {
-            return $this->_propDict["supportedServices"];
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-    * Sets the supportedServices
-    * The capabilities assigned to the domain.Can include 0, 1 or more of following values: Email, Sharepoint, EmailInternalRelayOnly, OfficeCommunicationsOnline, SharePointDefaultDomain, FullRedelegation, SharePointPublic, OrgIdAuthentication, Yammer, Intune The values which you can add/remove using Graph API include: Email, OfficeCommunicationsOnline, YammerNot nullable
-    *
-    * @param string $val The supportedServices
-    *
-    * @return Domain
-    */
-    public function setSupportedServices($val)
-    {
-        $this->_propDict["supportedServices"] = $val;
-        return $this;
-    }
-    
-    /**
     * Gets the state
     * Status of asynchronous operations scheduled for the domain.
     *
@@ -346,6 +369,65 @@ class Domain extends Entity
     public function setState($val)
     {
         $this->_propDict["state"] = $val;
+        return $this;
+    }
+    
+    /**
+    * Gets the supportedServices
+    * The capabilities assigned to the domain.Can include 0, 1 or more of following values: Email, Sharepoint, EmailInternalRelayOnly, OfficeCommunicationsOnline, SharePointDefaultDomain, FullRedelegation, SharePointPublic, OrgIdAuthentication, Yammer, Intune The values which you can add/remove using Graph API include: Email, OfficeCommunicationsOnline, YammerNot nullable
+    *
+    * @return string The supportedServices
+    */
+    public function getSupportedServices()
+    {
+        if (array_key_exists("supportedServices", $this->_propDict)) {
+            return $this->_propDict["supportedServices"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the supportedServices
+    * The capabilities assigned to the domain.Can include 0, 1 or more of following values: Email, Sharepoint, EmailInternalRelayOnly, OfficeCommunicationsOnline, SharePointDefaultDomain, FullRedelegation, SharePointPublic, OrgIdAuthentication, Yammer, Intune The values which you can add/remove using Graph API include: Email, OfficeCommunicationsOnline, YammerNot nullable
+    *
+    * @param string $val The supportedServices
+    *
+    * @return Domain
+    */
+    public function setSupportedServices($val)
+    {
+        $this->_propDict["supportedServices"] = $val;
+        return $this;
+    }
+    
+
+     /** 
+     * Gets the domainNameReferences
+    * Read-only, Nullable
+     *
+     * @return array The domainNameReferences
+     */
+    public function getDomainNameReferences()
+    {
+        if (array_key_exists("domainNameReferences", $this->_propDict)) {
+           return $this->_propDict["domainNameReferences"];
+        } else {
+            return null;
+        }
+    }
+    
+    /** 
+    * Sets the domainNameReferences
+    * Read-only, Nullable
+    *
+    * @param DirectoryObject $val The domainNameReferences
+    *
+    * @return Domain
+    */
+    public function setDomainNameReferences($val)
+    {
+		$this->_propDict["domainNameReferences"] = $val;
         return $this;
     }
     
@@ -406,36 +488,6 @@ class Domain extends Entity
     public function setVerificationDnsRecords($val)
     {
 		$this->_propDict["verificationDnsRecords"] = $val;
-        return $this;
-    }
-    
-
-     /** 
-     * Gets the domainNameReferences
-    * Read-only, Nullable
-     *
-     * @return array The domainNameReferences
-     */
-    public function getDomainNameReferences()
-    {
-        if (array_key_exists("domainNameReferences", $this->_propDict)) {
-           return $this->_propDict["domainNameReferences"];
-        } else {
-            return null;
-        }
-    }
-    
-    /** 
-    * Sets the domainNameReferences
-    * Read-only, Nullable
-    *
-    * @param DirectoryObject $val The domainNameReferences
-    *
-    * @return Domain
-    */
-    public function setDomainNameReferences($val)
-    {
-		$this->_propDict["domainNameReferences"] = $val;
         return $this;
     }
     

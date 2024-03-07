@@ -1,13 +1,13 @@
 <?php
 /**
- * Ithemes Sync Verb to Edit BackupBuddy Schedule
+ * Ithemes Sync Verb to Edit Solid Backups Schedule
  *
  * @package BackupBuddy
  * @author Glenn Ansley
  */
 
 /**
- * Main Class for Editing BackupBuddy Schedule
+ * Main Class for Editing Solid Backups Schedule
  */
 class Ithemes_Sync_Verb_Backupbuddy_Edit_Schedule extends Ithemes_Sync_Verb {
 

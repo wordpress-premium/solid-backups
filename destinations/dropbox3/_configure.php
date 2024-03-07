@@ -20,6 +20,8 @@ pb_backupbuddy_destination_dropbox3::add_settings( $destination_settings );
 $code  = pb_backupbuddy_destination_dropbox3::$settings['oauth_code'];
 $state = pb_backupbuddy_destination_dropbox3::get_state( false );
 $token = pb_backupbuddy_destination_dropbox3::$settings['oauth_token'];
+$token_expires = pb_backupbuddy_destination_dropbox3::$settings['oauth_token_expires'];
+$refresh_token = pb_backupbuddy_destination_dropbox3::$settings['refresh_token'];
 
 if ( 'auth_dropbox' === pb_backupbuddy::_POST( 'dropbox_action' ) ) {
 	$state = pb_backupbuddy::_POST( 'oauth_state' );
@@ -36,6 +38,8 @@ if ( 'auth_dropbox' === pb_backupbuddy::_POST( 'dropbox_action' ) ) {
 			// Refresh state and token var for hidden input.
 			$state = pb_backupbuddy_destination_dropbox3::get_state( false );
 			$token = pb_backupbuddy_destination_dropbox3::$settings['oauth_token'];
+			$token_expires = pb_backupbuddy_destination_dropbox3::$settings['oauth_token_expires'];
+			$refresh_token = pb_backupbuddy_destination_dropbox3::$settings['refresh_token'];
 		}
 	}
 }
@@ -46,7 +50,7 @@ if ( 'add' === $mode && ! $code ) {
 
 	// If plugin not licensed, throw error and stop.
 	if ( ! backupbuddy_get_package_license() ) {
-		if ( count( $pb_backupbuddy_destination_errors ) ) {
+		if ( is_array( $pb_backupbuddy_destination_errors ) ) {
 			pb_backupbuddy::alert( $pb_backupbuddy_destination_errors[0], true );
 		} else {
 			pb_backupbuddy::alert( __( 'Plugin license information could not be found. Please contact support for further assistance.', 'it-l10n-backupbuddy' ), true );
@@ -193,6 +197,24 @@ $settings_form->add_setting(
 	)
 );
 
+$settings_form->add_setting(
+	array(
+		'type'    => 'hidden',
+		'name'    => 'oauth_token_expires',
+		'default' => $token_expires,
+	)
+);
+
+$settings_form->add_setting(
+	array(
+		'type'    => 'hidden',
+		'name'    => 'refresh_token',
+		'default' => $refresh_token,
+	)
+);
+
+
+
 $folder_id   = $destination_settings['dropbox_folder_id'];
 $folder_path = $destination_settings['dropbox_folder_path'];
 $folder_name = $destination_settings['dropbox_folder_name'];
@@ -269,7 +291,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 
@@ -281,7 +303,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 
@@ -293,7 +315,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 
@@ -305,7 +327,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 
@@ -316,7 +338,7 @@ $settings_form->add_setting(
 	array(
 		'type'      => 'title',
 		'name'      => 'advanced_begin',
-		'title'     => '<span class="dashicons dashicons-arrow-right"></span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
+		'title'     => '<span class="advanced-toggle-title-icon">' . pb_backupbuddy::$ui->get_icon( 'chevronleft' ) . '</span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
 		'row_class' => 'advanced-toggle-title',
 	)
 );
@@ -330,7 +352,7 @@ $settings_form->add_setting(
 		'rules'     => 'required|int[0-150]',
 		'css'       => 'width: 50px;',
 		'after'     => ' MB (Recommended; Use 80MB if unsure)',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 
@@ -344,11 +366,11 @@ if ( 'edit' !== $mode || '0' == $destination_settings['disable_file_management']
 				'checked'   => '1',
 			),
 			'title'     => __( 'Disable file management', 'it-l10n-backupbuddy' ),
-			'tip'       => __( '[[Default: unchecked] - When checked, selecting this destination disables browsing or accessing files stored at this destination from within BackupBuddy. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination.', 'it-l10n-backupbuddy' ),
+			'tip'       => __( '[[Default: unchecked] - When checked, selecting this destination disables browsing or accessing files stored at this destination from within Solid Backups. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination.', 'it-l10n-backupbuddy' ),
 			'css'       => '',
 			'rules'     => '',
 			'after'     => __( 'Once disabled you must recreate the destination to re-enable.', 'it-l10n-backupbuddy' ),
-			'row_class' => 'advanced-toggle',
+			'row_class' => 'advanced-toggle advanced-toggle-hidden',
 		)
 	);
 }
@@ -366,6 +388,6 @@ $settings_form->add_setting(
 		'css'       => '',
 		'after'     => '<span class="description"> ' . __( 'Check to disable this destination until re-enabled.', 'it-l10n-backupbuddy' ) . '</span>',
 		'rules'     => '',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );

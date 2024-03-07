@@ -29,7 +29,7 @@ if ( pb_backupbuddy::_POST( 'bulk_action' ) == 'delete_backup' ) {
 		if ( true === $response ) {
 			$deleted_files++;
 		} else {
-			pb_backupbuddy::alert( 'Error: Unable to delete `' . $item . '`. Verify permissions or try again.' );
+			pb_backupbuddy::alert( 'Error: Unable to delete `' . esc_attr( $item ) . '`. Verify permissions or try again.' );
 		}
 
 
@@ -51,21 +51,13 @@ if ( '' != pb_backupbuddy::_GET( 'downloadlink_file' ) ) {
 if ( '' != pb_backupbuddy::_GET( 'cpy_file' ) ) {
 	$destinationFile =
 	$fileMeta = pb_backupbuddy_destination_gdrive::getFileMeta( $settings, pb_backupbuddy::_GET( 'cpy_file' ) );
-	/*
-	echo '<pre>';
-	print_r( $fileMeta );
-	echo '</pre>';
-	*/
 
 	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
 	echo '<br>';
 	pb_backupbuddy::status( 'details',  'Scheduling Cron for creating Google Drive copy.' );
 	backupbuddy_core::schedule_single_event( time(), 'process_destination_copy', array( $destination, $fileMeta->originalFilename, pb_backupbuddy::_GET( 'cpy_file' ) ) );
 
-	if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-		update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-		spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-	}
+	backupbuddy_core::maybe_spawn_cron();
 }
 ?>
 
@@ -88,7 +80,6 @@ if ( false === $folderMeta ) {
 	<?php
 	return false;
 }
-//echo '<h3>Files in folder "<a href="' . $folderMeta->alternateLink . '" target="_new">' . $folderMeta->title . '</a>" <span style="font-size: 0.6em;">(Used ' . pb_backupbuddy::$format->file_size( $info['quotaUsed'] ) . ' of ' . pb_backupbuddy::$format->file_size( $info['quotaTotal'] ) . ' available space)</span></h3>';
 
 $usagePercent = ceil( ( $info['quotaUsed'] / $info['quotaTotal'] ) * 100 );
 echo '<center><b>Usage</b>:&nbsp; ' . pb_backupbuddy::$format->file_size( $info['quotaUsed'] ) . ' &nbsp;of&nbsp; ' . pb_backupbuddy::$format->file_size( $info['quotaTotal'] ) . ' &nbsp;( ' . $usagePercent . ' % )';
@@ -97,12 +88,7 @@ if ( '' != $settings['service_account_file'] ) {
 }
 echo '</center>';
 
-
-
-
 $files = pb_backupbuddy_destination_gdrive::listFiles( $settings, "title contains 'backup-' AND '" . $folderID . "' IN parents AND trashed=false" ); //"title contains 'backup' and trashed=false" );
-
-
 
 if ( false === $files ) {
 	die( 'Error #834843: Error attempting to list files.' );
@@ -112,16 +98,8 @@ if ( false === $files ) {
 <?php
 
 
-/*
-echo '<pre>';
-print_r( $files );
-echo '</pre>';
-*/
-
-
 $backup_files = array();
 foreach( $files as $file ) {
-	//echo 'file: ' .$file->originalFilename . '<br>';
 	if ( '' == $file->originalFilename ) {
 		continue;
 	}

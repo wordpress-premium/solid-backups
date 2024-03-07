@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 /**
@@ -18,16 +17,15 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class KeyValue extends Entity
 {
     /**
     * Gets the key
-    * Key for the key-value pair.
+    * Key.
     *
     * @return string The key
     */
@@ -42,7 +40,7 @@ class KeyValue extends Entity
 
     /**
     * Sets the key
-    * Key for the key-value pair.
+    * Key.
     *
     * @param string $val The value of the key
     *
@@ -55,7 +53,7 @@ class KeyValue extends Entity
     }
     /**
     * Gets the value
-    * Value for the key-value pair.
+    * Value.
     *
     * @return string The value
     */
@@ -70,7 +68,7 @@ class KeyValue extends Entity
 
     /**
     * Sets the value
-    * Value for the key-value pair.
+    * Value.
     *
     * @param string $val The value of the value
     *

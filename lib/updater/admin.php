@@ -3,7 +3,7 @@
 /*
 Set up admin interface elements.
 Written by Chris Jean for iThemes.com
-Version 1.2.2
+Version 1.3.0
 
 Version History
 	1.0.0 - 2013-09-19 - Chris Jean
@@ -17,6 +17,8 @@ Version History
 		Added "License" links to Network Admin Plugins and Themes pages.
 	1.2.2 - 2014-10-23 - Chris Jean
 		Updated code formating to WordPress coding standards.
+	1.3.0 - 2020-03-24 - Timothy Jacobs
+		Added support for limiting packages to render UI for.
 */
 
 
@@ -31,28 +33,36 @@ class Ithemes_Updater_Admin {
 
 	public function __construct() {
 		require_once( $GLOBALS['ithemes_updater_path'] . '/settings.php' );
+		require_once( $GLOBALS['ithemes_updater_path'] . '/packages.php' );
+		$show_ui = count( Ithemes_Updater_Packages::get_packages_to_include_in_ui() ) > 0;
 
-		if ( ! is_multisite() || is_super_admin() ) {
+		if ( $show_ui && ( ! is_multisite() || is_super_admin() ) ) {
 			add_action( 'admin_menu', array( $this, 'add_admin_pages' ) );
 		}
 
-		add_action( 'network_admin_menu', array( $this, 'add_network_admin_pages' ) );
+		if ( $show_ui ) {
+			add_action( 'network_admin_menu', array( $this, 'add_network_admin_pages' ) );
+		}
 
-		add_action( 'admin_head-plugins.php', array( $this, 'show_activation_message' ) );
-		add_action( 'admin_head-themes.php', array( $this, 'show_activation_message' ) );
-		add_action( 'deactivated_plugin', array( $this, 'clear_activation_package' ) );
+		if ( $show_ui ) {
+			add_action( 'admin_head-plugins.php', array( $this, 'show_activation_message' ) );
+			add_action( 'admin_head-themes.php', array( $this, 'show_activation_message' ) );
+			add_action( 'deactivated_plugin', array( $this, 'clear_activation_package' ) );
+		}
 
 		add_filter( 'upgrader_pre_install', array( $this, 'filter_upgrader_pre_install' ) );
 		add_filter( 'upgrader_post_install', array( $this, 'filter_upgrader_post_install' ), 10, 3 );
 		add_filter( 'plugins_api', array( $this, 'filter_plugins_api' ), 10, 3 );
 
-		if ( ! is_multisite() || is_super_admin() ) {
+		if ( $show_ui && ( ! is_multisite() || is_super_admin() ) ) {
 			add_filter( 'plugin_action_links', array( $this, 'filter_plugin_action_links' ), 10, 4 );
 			add_filter( 'theme_action_links', array( $this, 'filter_theme_action_links' ), 10, 2 );
 		}
 
-		add_filter( 'network_admin_plugin_action_links', array( $this, 'filter_plugin_action_links' ), 10, 4 );
-		add_filter( 'network_admin_theme_action_links', array( $this, 'filter_theme_action_links' ), 10, 2 );
+		if ( $show_ui ) {
+			add_filter( 'network_admin_plugin_action_links', array( $this, 'filter_plugin_action_links' ), 10, 4 );
+			add_filter( 'network_admin_theme_action_links', array( $this, 'filter_theme_action_links' ), 10, 2 );
+		}
 	}
 
 	public function filter_plugins_api( $value, $action, $args ) {
@@ -154,6 +164,7 @@ class Ithemes_Updater_Admin {
 
 	public function show_activation_message() {
 		$new_packages = $GLOBALS['ithemes-updater-settings']->get_new_packages();
+		$new_packages = array_filter( $new_packages, 'Ithemes_Updater_Packages::show_ui_for_package' );
 
 		if ( empty( $new_packages ) ) {
 			return;
@@ -165,7 +176,7 @@ class Ithemes_Updater_Admin {
 		$names = array();
 
 		foreach ( $new_packages as $package ) {
-			$names = Ithemes_Updater_Functions::get_package_name( $package );
+			$names[] = esc_html( Ithemes_Updater_Functions::get_package_name( $package ) );
 		}
 
 		if ( is_multisite() && is_network_admin() ) {
@@ -174,20 +185,20 @@ class Ithemes_Updater_Admin {
 			$url = admin_url( 'options-general.php' ) . "?page={$this->page_name}";
 		}
 
-		echo '<div class="updated fade"><p>' . wp_sprintf( __( 'To receive automatic updates for %l, use the <a href="%s">iThemes Licensing</a> page found in the Settings menu.', 'it-l10n-backupbuddy' ), $names, $url ) . '</p></div>';
+		echo '<div class="updated fade"><p>' . wp_sprintf( __( 'To receive automatic updates for %l, use the <a href="%s">SolidWP Licensing</a> page found in the Settings menu.', 'it-l10n-backupbuddy' ), $names, $url ) . '</p></div>';
 
 
 		$GLOBALS['ithemes-updater-settings']->update_packages();
 	}
 
 	public function add_admin_pages() {
-		$this->page_ref = add_options_page( __( 'iThemes Licensing', 'it-l10n-backupbuddy' ), __( 'iThemes Licensing', 'it-l10n-backupbuddy' ), 'manage_options', $this->page_name, array( $this, 'settings_index' ) );
+		$this->page_ref = add_options_page( __( 'SolidWP Licensing', 'it-l10n-backupbuddy' ), __( 'SolidWP Licensing', 'it-l10n-backupbuddy' ), 'manage_options', $this->page_name, array( $this, 'settings_index' ) );
 
 		add_action( "load-{$this->page_ref}", array( $this, 'load_settings_page' ) );
 	}
 
 	public function add_network_admin_pages() {
-		$this->page_ref = add_submenu_page( 'settings.php', __( 'iThemes Licensing', 'it-l10n-backupbuddy' ), __( 'iThemes Licensing', 'it-l10n-backupbuddy' ), 'manage_options', $this->page_name, array( $this, 'settings_index' ) );
+		$this->page_ref = add_submenu_page( 'settings.php', __( 'SolidWP Licensing', 'it-l10n-backupbuddy' ), __( 'SolidWP Licensing', 'it-l10n-backupbuddy' ), 'manage_options', $this->page_name, array( $this, 'settings_index' ) );
 
 		add_action( "load-{$this->page_ref}", array( $this, 'load_settings_page' ) );
 	}
@@ -215,14 +226,14 @@ class Ithemes_Updater_Admin {
 		}
 
 		$url = admin_url( 'options-general.php' ) . "?page={$this->page_name}";
-		$this->registration_link = sprintf( '<a href="%1$s" title="%2$s">%3$s</a>', $url, __( 'Manage iThemes product licenses to receive automatic upgrade support', 'it-l10n-backupbuddy' ), __( 'License', 'it-l10n-backupbuddy' ) );
+		$this->registration_link = sprintf( '<a href="%1$s" title="%2$s">%3$s</a>', $url, __( 'Manage SolidWP product licenses to receive automatic upgrade support', 'it-l10n-backupbuddy' ), __( 'License', 'it-l10n-backupbuddy' ) );
 	}
 
 	public function filter_plugin_action_links( $actions, $plugin_file, $plugin_data, $context ) {
 		$this->set_package_details();
 		$this->set_registration_link();
 
-		if ( isset( $this->package_details[$plugin_file] ) && is_array( $actions ) ) {
+		if ( isset( $this->package_details[ $plugin_file ] ) && is_array( $actions ) && Ithemes_Updater_Packages::show_ui_for_package( $this->package_details[ $plugin_file ]['package'] ) ) {
 			$actions[] = $this->registration_link;
 		}
 
@@ -241,7 +252,7 @@ class Ithemes_Updater_Admin {
 			$path = '';
 		}
 
-		if ( isset( $this->package_details[$path] ) && is_array( $actions ) ) {
+		if ( isset( $this->package_details[$path] ) && is_array( $actions ) && Ithemes_Updater_Packages::show_ui_for_package( $this->package_details[ $path ]['package'] ) ) {
 			$actions[] = $this->registration_link;
 		}
 

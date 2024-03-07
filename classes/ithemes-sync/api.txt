@@ -1,6 +1,6 @@
 backupbuddy-get-overview
 	Description:
-		Get any overview of BackupBuddy information for this site.
+		Get any overview of Solid Backups information for this site.
 	Arguments:
 		none
 	Return Array:
@@ -8,7 +8,7 @@ backupbuddy-get-overview
 			status- Whether or not the action succeeded. Possible values: ok, error
 			message- Text status message.
 			overview- Array of overview information.
-				backupbuddyVersion- BackupBuddy version.
+				backupbuddyVersion- Solid Backups version.
 				localTime- Current timestamp of server. (PHP's time()).
 				lastBackupStart- Timestamp last backup began. This MAY differ from the backup in lastBackupStats as this includes any unfinished backups.
 				lastBackupSerial- Serial ID of the last backup to start.
@@ -245,7 +245,7 @@ backupbuddy-add-destination
 		Create a new destionation.
 	Arguments:
 		settings- (array) Destination settings for the new destination. This should be the complete destination settings array.
-					Defaults are applied by BackupBuddy whenever these settings are called so defaults shoudl not be mandatory.
+					Defaults are applied by Solid Backups whenever these settings are called so defaults shoudl not be mandatory.
 					These settings are NOT validated and are expected to be trusted and functional. Use the test verb for testing these same settings.
 					Accepts the exact settings also used for backupbuddy-test-destination verb.
 	Return Array:
@@ -270,7 +270,7 @@ backupbuddy-edit-destination
 
 backupbuddy-get-liveStats
 	Description:
-		Returns various statistics about local BackupBuddy Stash Live status.
+		Returns various statistics about local Solid Backups Stash Live status.
 		NOTE: Returns bool FALSE if Live is not set up for this site.
 	Arguments:
 		[none]
@@ -320,7 +320,7 @@ backupbuddy-get-liveStats
 
 backupbuddy-set-liveStatus
 	Description:
-		Pause/Resume BackupBuddy Stash Live status for continuous database and/or periodic scans (files).
+		Pause/Resume Solid Backups Stash Live status for continuous database and/or periodic scans (files).
 	Arguments:
 		pause_continuous-  (bool|string)  Bool true to pause, bool false to unpause, empty string '' to leave at current state. Continuous is Live database backup.
 		pause_periodic-    (bool|string)  Bool true to pause, bool false to unpause, empty string '' to leave at current state. Periodic includes file scan, db dump, cleanup, periodic snapshot triggering, etc.

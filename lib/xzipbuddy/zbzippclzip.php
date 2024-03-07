@@ -1481,7 +1481,7 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 
 					}
 
-					$this->log( 'details', __('Zip process reported: Excluding','it-l10n-backupbuddy' ) . ': ' . $exclude );
+					$this->log( 'details', __('Zip process reported: Excluding','it-l10n-backupbuddy' ) . ': ' . esc_html( $exclude ) );
 
 					$exclude_count++;
 
@@ -1780,7 +1780,8 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 				// to the final location after completion if it is a good completion
 				$temp_zip = $tempdir . basename( $zip );
 
-				// Use anonymous function to weed out the unreadable and non-existent files (common reason for failure)
+				// Let's add our utility function the the PCLZip callback array so that we can skip certain files if needed.
+				// We'll weed out the unreadable and non-existent files (common reason for failure)
 				// and possibly symlinks based on user settings.
 				// PclZip will record these files as 'skipped' in the file status and we can post-process to determine
 				// if we had any of these and hence either stop the backup or continue dependent on whether the user
@@ -1790,91 +1791,7 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 				// be too hard.
 				// TODO: Consider moving this into the PclZip wrapper and have a method to set the various pre/post
 				// functions or select predefined functions (such as this).
-				if ( true ) {
-
-					// Note: This could be simplified - it's written to be extensible but may not need to be
-					$args = '$event, &$header';
-					$code = '';
-//					$code .= 'static $symlinks = array(); ';
-					$code .= '$result = true; ';
-
-					// Handle symlinks - keep the two cases of ignoring/not-ignoring separate for now to make logic more
-					// apparent - but could be merged with different conditional handling
-					// For a valid symlink: is_link() -> true; is_file()/is_dir() -> true; file_exists() -> true
-					// For a broken symlink: is_link() -> true; is_file()/is_dir() -> false; file_exists() -> false
-					// Note: pclzip first tests every file using file_exists() before ever trying to add the file so
-					// for a broken symlink it will _always_ error out immediately it discovers a broken symlink so
-					// we never have a chance to filter these out at this stage.
-					// Note: now that we are generating the file list and not following symlinks at that stage we
-					// never have the situation where we need to remember a symdir prefix to filter out dirs/files
-					// under that symdir (once you have passed "through" a dir symlink the dirs/files under that
-					// do not register as symlinks because they themselves are not so previously when pclzip was
-					// generating the list internally we had to make sure we skipped such dirs/files based on
-					// there being a dir symlink as a prefix to the dir/file path).
-					if ( true === $zip_ignoring_symlinks ) {
-
-						// If it's a symlink or it's neither a file nor a directory then ignore it. A broken symlink
-						// will never get this far because pclzip will have choked on it
-						$code .= 'if ( ( true === $result ) && !( @is_link( $header[\'filename\'] ) ) ) { ';
-						$code .= '    if ( @is_file( $header[\'filename\'] ) || @is_dir( $header[\'filename\'] ) ) { ';
-						$code .= '        $result = true; ';
-// 						$code .= '        foreach ( $symlinks as $prefix ) { ';
-// 						$code .= '            if ( !( false === strpos( $header[\'filename\'], $prefix ) ) ) { ';
-// 						$code .= '                $result = false; ';
-// 						$code .= '                break; ';
-// 						$code .= '             } ';
-// 						$code .= '        } ';
-						$code .= '    } else { ';
-//						$code .= '        error_log( "Neither a file nor a directory (ignoring): \'" . $header[\'filename\'] . "\'" ); ';
-						$code .= '        $result = false; ';
-						$code .= '    } ';
-						$code .= '} else { ';
-//						$code .= '    error_log( "File is a symlink (ignoring): \'" . $header[\'filename\'] . "\'" ); ';
-//						$code .= '    $symlinks[] = $header[\'filename\']; ';
-//						$code .= '    error_log( "Symlinks Array: \'" . print_r( $symlinks, true ) . "\'" ); ';
-						$code .= '    $result = false; ';
-						$code .= '} ';
-
-					} else {
-
-						// If it's neither a file nor directory then ignore it - a valid symlink will register as a file
-						// or directory dependent on what it is pointing at. A broken symlink will never get this far.
-						// because pclzip will have barfed on its file_exists() check before calling the pre-add. We may
-						// choose later to catch this earlier during the list creation I think.
-						$code .= 'if ( ( true === $result ) && ( @is_file( $header[\'filename\'] ) || @is_dir( $header[\'filename\'] ) ) ) { ';
-						$code .= '    $result = true; ';
-						$code .= '} else { ';
-//						$code .= '    error_log( "Neither a file nor a directory (ignoring): \'" . $header[\'filename\'] . "\'" ); ';
-						$code .= '    $result = false; ';
-						$code .= '} ';
-
-					}
-
-					// Add the code block for ignoring unreadable files
-					if ( true ) {
-
-						$code .= 'if ( ( true === $result ) && ( @is_readable( $header[\'filename\'] ) ) ) { ';
-						$code .= '    $result = true; ';
-						$code .= '} else { ';
-//						$code .= '    error_log( "File not readable: \'" . $header[\'filename\'] . "\'" ); ';
-						$code .= '    $result = false; ';
-						$code .= '} ';
-
-					}
-
-					// Return true (to include file) if file passes conditions otherwise false (to skip file) if not
-					$code .= 'return ( ( true === $result ) ? 1 : 0 ); ';
-
-					$pre_add_func = create_function( $args, $code );
-
-				}
-
-				// If we had cause to create a pre add function then add it to the argument list here
-				if ( !empty( $pre_add_func ) ) {
-
-					array_push( $arguments, PCLZIP_CB_PRE_ADD, $pre_add_func );
-
-				}
+				array_push( $arguments, PCLZIP_CB_PRE_ADD, 'backupbuddy_xpclzip_pre_add' );
 
 				// Add a post-add function for progress monitoring, usage data monitoring,
 				// burst handling and server tickling - using the zip helper object
@@ -1890,7 +1807,7 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 // 					$code .= '$result = $zm->event_handler( $event, $header );';
 // 					$code .= 'return $result;';
 //
-// 					$post_add_func = create_function( $args, $code );
+// 					$post_add_func = create_ function( $args, $code );
 //
 // 				}
 
@@ -2135,12 +2052,17 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 					// First implode any embedded array in the argument list and truncate the result if too long
 					// Assume no arrays embedded in arrays - currently no reason for that
 					// Make sure that there are no non-printable characters (such as in pre- or post-add function
-					// names created by create_function()) by replacing with "*" using preg_replace()
+					// names created by imploder_func) by replacing with "*" using preg_replace()
 					// TODO: Make the summary length configurable so that can see more if required
 					// TODO: Consider mapping pclzip argument identifiers to string representations for clarity
-					$args = '$item';
-					$code = 'if ( is_array( $item ) ) { $string_item = implode( ",", $item); return ( ( strlen( $string_item ) <= 50 ) ? preg_replace( "/[^[:print:]]/", "*", $string_item ) : "List: " . preg_replace( "/[^[:print:]]/", "*", substr( $string_item, 0, 50 ) ) . "..." ); } else { return preg_replace( "/[^[:print:]]/", "*", $item ); }; ';
-					$imploder_func = create_function( $args, $code );
+					$imploder_func = function( $item ) {
+						if ( is_array( $item ) ) {
+							$string_item = implode( ",", $item );
+							return ( ( strlen( $string_item ) <= 50 ) ? preg_replace( "/[^[:print:]]/", "*", $string_item ) : "List: " . preg_replace( "/[^[:print:]]/", "*", substr( $string_item, 0, 50 ) ) . "..." );
+						} else {
+							return preg_replace( "/[^[:print:]]/", "*", $item );
+						}
+					};
 					$imploded_arguments = array_map( $imploder_func, $arguments );
 
 					$this->log( 'details', sprintf( __( 'Zip process reported: Burst requests %1$s (directories + files) items with %2$s bytes of content to be added to backup zip archive', 'it-l10n-backupbuddy' ), $zm->get_burst_content_count(), $zm->get_burst_content_size() ) );
@@ -2941,7 +2863,8 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 				// to the final location after completion if it is a good completion
 				$temp_zip = $tempdir . basename( $zip );
 
-				// Use anonymous function to weed out the unreadable and non-existent files (common reason for failure)
+				// Let's add our utility function the the PCLZip callback array so that we can skip certain files if needed.
+				// We'll weed out the unreadable and non-existent files (common reason for failure)
 				// and possibly symlinks based on user settings.
 				// PclZip will record these files as 'skipped' in the file status and we can post-process to determine
 				// if we had any of these and hence either stop the backup or continue dependent on whether the user
@@ -2951,91 +2874,7 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 				// be too hard.
 				// TODO: Consider moving this into the PclZip wrapper and have a method to set the various pre/post
 				// functions or select predefined functions (such as this).
-				if ( true ) {
-
-					// Note: This could be simplified - it's written to be extensible but may not need to be
-					$args = '$event, &$header';
-					$code = '';
-//					$code .= 'static $symlinks = array(); ';
-					$code .= '$result = true; ';
-
-					// Handle symlinks - keep the two cases of ignoring/not-ignoring separate for now to make logic more
-					// apparent - but could be merged with different conditional handling
-					// For a valid symlink: is_link() -> true; is_file()/is_dir() -> true; file_exists() -> true
-					// For a broken symlink: is_link() -> true; is_file()/is_dir() -> false; file_exists() -> false
-					// Note: pclzip first tests every file using file_exists() before ever trying to add the file so
-					// for a broken symlink it will _always_ error out immediately it discovers a broken symlink so
-					// we never have a chance to filter these out at this stage.
-					// Note: now that we are generating the file list and not following symlinks at that stage we
-					// never have the situation where we need to remember a symdir prefix to filter out dirs/files
-					// under that symdir (once you have passed "through" a dir symlink the dirs/files under that
-					// do not register as symlinks because they themselves are not so previously when pclzip was
-					// generating the list internally we had to make sure we skipped such dirs/files based on
-					// there being a dir symlink as a prefix to the dir/file path).
-					if ( true === $zip_ignoring_symlinks ) {
-
-						// If it's a symlink or it's neither a file nor a directory then ignore it. A broken symlink
-						// will never get this far because pclzip will have choked on it
-						$code .= 'if ( ( true === $result ) && !( @is_link( $header[\'filename\'] ) ) ) { ';
-						$code .= '    if ( @is_file( $header[\'filename\'] ) || @is_dir( $header[\'filename\'] ) ) { ';
-						$code .= '        $result = true; ';
-// 						$code .= '        foreach ( $symlinks as $prefix ) { ';
-// 						$code .= '            if ( !( false === strpos( $header[\'filename\'], $prefix ) ) ) { ';
-// 						$code .= '                $result = false; ';
-// 						$code .= '                break; ';
-// 						$code .= '             } ';
-// 						$code .= '        } ';
-						$code .= '    } else { ';
-//						$code .= '        error_log( "Neither a file nor a directory (ignoring): \'" . $header[\'filename\'] . "\'" ); ';
-						$code .= '        $result = false; ';
-						$code .= '    } ';
-						$code .= '} else { ';
-//						$code .= '    error_log( "File is a symlink (ignoring): \'" . $header[\'filename\'] . "\'" ); ';
-//						$code .= '    $symlinks[] = $header[\'filename\']; ';
-//						$code .= '    error_log( "Symlinks Array: \'" . print_r( $symlinks, true ) . "\'" ); ';
-						$code .= '    $result = false; ';
-						$code .= '} ';
-
-					} else {
-
-						// If it's neither a file nor directory then ignore it - a valid symlink will register as a file
-						// or directory dependent on what it is pointing at. A broken symlink will never get this far.
-						// because pclzip will have barfed on its file_exists() check before calling the pre-add. We may
-						// choose later to catch this earlier during the list creation I think.
-						$code .= 'if ( ( true === $result ) && ( @is_file( $header[\'filename\'] ) || @is_dir( $header[\'filename\'] ) ) ) { ';
-						$code .= '    $result = true; ';
-						$code .= '} else { ';
-//						$code .= '    error_log( "Neither a file nor a directory (ignoring): \'" . $header[\'filename\'] . "\'" ); ';
-						$code .= '    $result = false; ';
-						$code .= '} ';
-
-					}
-
-					// Add the code block for ignoring unreadable files
-					if ( true ) {
-
-						$code .= 'if ( ( true === $result ) && ( @is_readable( $header[\'filename\'] ) ) ) { ';
-						$code .= '    $result = true; ';
-						$code .= '} else { ';
-//						$code .= '    error_log( "File not readable: \'" . $header[\'filename\'] . "\'" ); ';
-						$code .= '    $result = false; ';
-						$code .= '} ';
-
-					}
-
-					// Return true (to include file) if file passes conditions otherwise false (to skip file) if not
-					$code .= 'return ( ( true === $result ) ? 1 : 0 ); ';
-
-					$pre_add_func = create_function( $args, $code );
-
-				}
-
-				// If we had cause to create a pre add function then add it to the argument list here
-				if ( !empty( $pre_add_func ) ) {
-
-					array_push( $arguments, PCLZIP_CB_PRE_ADD, $pre_add_func );
-
-				}
+				array_push( $arguments, PCLZIP_CB_PRE_ADD, 'backupbuddy_xpclzip_pre_add' );
 
 				// Add a post-add function for progress monitoring, usage data monitoring,
 				// burst handling and server tickling - using the zip helper object
@@ -3051,7 +2890,7 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 // 					$code .= '$result = $zm->event_handler( $event, $header );';
 // 					$code .= 'return $result;';
 //
-// 					$post_add_func = create_function( $args, $code );
+// 					$post_add_func = create_ function( $args, $code );
 //
 // 				}
 
@@ -3304,12 +3143,17 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 					// First implode any embedded array in the argument list and truncate the result if too long
 					// Assume no arrays embedded in arrays - currently no reason for that
 					// Make sure that there are no non-printable characters (such as in pre- or post-add function
-					// names created by create_function()) by replacing with "*" using preg_replace()
+					// names created by imploder_func) by replacing with "*" using preg_replace()
 					// TODO: Make the summary length configurable so that can see more if required
 					// TODO: Consider mapping pclzip argument identifiers to string representations for clarity
-					$args = '$item';
-					$code = 'if ( is_array( $item ) ) { $string_item = implode( ",", $item); return ( ( strlen( $string_item ) <= 50 ) ? preg_replace( "/[^[:print:]]/", "*", $string_item ) : "List: " . preg_replace( "/[^[:print:]]/", "*", substr( $string_item, 0, 50 ) ) . "..." ); } else { return preg_replace( "/[^[:print:]]/", "*", $item ); }; ';
-					$imploder_func = create_function( $args, $code );
+					$imploder_func = function( $item ) {
+						if ( is_array( $item ) ) {
+							$string_item = implode( ",", $item );
+							return ( ( strlen( $string_item ) <= 50 ) ? preg_replace( "/[^[:print:]]/", "*", $string_item ) : "List: " . preg_replace( "/[^[:print:]]/", "*", substr( $string_item, 0, 50 ) ) . "..." );
+						} else {
+							return preg_replace( "/[^[:print:]]/", "*", $item );
+						}
+					};
 					$imploded_arguments = array_map( $imploder_func, $arguments );
 
 					$this->log( 'details', sprintf( __( 'Zip process reported: Burst requests %1$s (directories + files) items with %2$s bytes of content to be added to backup zip archive', 'it-l10n-backupbuddy' ), $zm->get_burst_content_count(), $zm->get_burst_content_size() ) );
@@ -4201,8 +4045,6 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 
 				}
 
-				$za->close();
-
 			}
 
 		  	if ( null != $za ) { unset( $za ); }
@@ -4551,5 +4393,100 @@ if ( !class_exists( "pluginbuddy_zbzippclzip" ) ) {
 
 	} // end pluginbuddy_zbzippclzip class.
 
+
+        /*      backupbuddy_xpclzip_pre_add()
+         *
+         *      This function serves as a sort of callback for PCLZip to filter files before adding them to the zip.
+         *      BUB removes unreadable files and possibly symlinks depending on the settings.
+         *      Prior to PHP8, this functioni was an anonymous function created with create _function() and able to be stored in an array
+         *      for PCLZip to process. PHP8 compatible closures and class methods could not be stored within PCLZip's array and called correctly.
+         *
+         *      This gets called from: wp-admin/includes/class-pclzip.php within the privAddFile() method under the 'Look for pre-add callback' section:
+         *            // ----- Call the callback
+         *            // Here I do not use call_user_func() because I need to send a reference to the
+         *            // header.
+         *      --->  $v_result = $p_options[PCLZIP_CB_PRE_ADD](PCLZIP_CB_PRE_ADD, $v_local_header); <---
+         *            if ($v_result == 0) {
+         *              // ----- Change the file status
+         *              $p_header['status'] = "skipped";
+         *              $v_result = 1;
+         *            }
+         *
+         *
+         *      @param          string          $event                  The identification for this event (pre_add) from PCLZip
+         *      @param          array           &$header                File information
+         *      @return         bool                                    True to include the file in the zip. False to skip it.
+         *
+         */
+        function backupbuddy_xpclzip_pre_add( $event, &$header ) {
+
+		// static $symlinks = array();
+		$result = true;
+
+		// Handle symlinks - keep the two cases of ignoring/not-ignoring separate for now to make logic more
+		// apparent - but could be merged with different conditional handling
+		// For a valid symlink: is_link() -> true; is_file()/is_dir() -> true; file_exists() -> true
+		// For a broken symlink: is_link() -> true; is_file()/is_dir() -> false; file_exists() -> false
+		// Note: pclzip first tests every file using file_exists() before ever trying to add the file so
+		// for a broken symlink it will _always_ error out immediately it discovers a broken symlink so
+		// we never have a chance to filter these out at this stage.
+		// Note: now that we are generating the file list and not following symlinks at that stage we
+		// never have the situation where we need to remember a symdir prefix to filter out dirs/files
+		// under that symdir (once you have passed "through" a dir symlink the dirs/files under that
+		// do not register as symlinks because they themselves are not so previously when pclzip was
+		// generating the list internally we had to make sure we skipped such dirs/files based on
+		// there being a dir symlink as a prefix to the dir/file path).
+		if ( true === $zip_ignoring_symlinks ) {
+
+			// If it's a symlink or it's neither a file nor a directory then ignore it. A broken symlink
+			// will never get this far because pclzip will have choked on it
+			if ( ( true === $result ) && !( @is_link( $header['filename'] ) ) ) {
+				if ( @is_file( $header['filename'] ) || @is_dir( $header['filename'] ) ) {
+					$result = true;
+					/*
+					foreach ( $symlinks as $prefix ) {
+						if ( !( false === strpos( $header['filename'], $prefix ) ) ) {
+							$result = false;
+							break;
+						}
+					}
+					*/
+				} else {
+					// error_log( "Neither a file nor a directory (ignoring): '" . $header['filename'] . "'" );
+					$result = false;
+				}
+			} else {
+				// error_log( "File is a symlink (ignoring): '" . $header['filename'] . "'" );
+				// $symlinks[] = $header['filename'];
+				// error_log( "Symlinks Array: '" . print_r( $symlinks, true ) . "'" );
+				$result = false;
+			}
+
+		} else {
+
+			// If it's neither a file nor directory then ignore it - a valid symlink will register as a file
+			// or directory dependent on what it is pointing at. A broken symlink will never get this far.
+			// because pclzip will have barfed on its file_exists() check before calling the pre-add. We may
+			// choose later to catch this earlier during the list creation I think.
+			if ( ( true === $result ) && ( @is_file( $header['filename'] ) || @is_dir( $header['filename'] ) ) ) {
+				$result = true;
+			} else {
+				// error_log( "Neither a file nor a directory (ignoring): '" . $header['filename'] . "'" );
+				$result = false;
+			}
+
+		}
+
+		// Add the code block for ignoring unreadable files
+		if ( ( true === $result ) && ( @is_readable( $header['filename'] ) ) ) {
+			$result = true;
+		} else {
+			// error_log( "File not readable: '" . $header['filename'] . "'" );
+			$result = false;
+		}
+
+		// Return true (to include file) if file passes conditions otherwise false (to skip file) if not
+		return ( ( true === $result ) ? 1 : 0 );
+	}
 }
 ?>

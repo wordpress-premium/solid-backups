@@ -15,20 +15,20 @@ $backup_file    = '';
 if ( 'importbuddy.php' != pb_backupbuddy::_POST( 'file' ) ) {
 	$backup_file = backupbuddy_core::getBackupDirectory() . pb_backupbuddy::_POST( 'file' );
 	if ( ! file_exists( $backup_file ) ) { // Error if file to send did not exist!
-		$error_message = 'Unable to find file `' . $backup_file . '` to send. File does not appear to exist. You can try again in a moment or turn on full error logging and try again to log for support.';
+		$error_message = 'Unable to find file `' . esc_html( $backup_file ) . '` to send. File does not appear to exist. You can try again in a moment or turn on full error logging and try again to log for support.';
 		pb_backupbuddy::status( 'error', $error_message );
 		echo $error_message;
 		die();
 	}
 	if ( is_dir( $backup_file ) ) { // Error if a directory is trying to be sent.
-		$error_message = 'You are attempting to send a directory, `' . $backup_file . '`. Try again and verify there were no javascript errors.';
+		$error_message = 'You are attempting to send a directory, `' . esc_html( $backup_file ) . '`. Try again and verify there were no javascript errors.';
 		pb_backupbuddy::status( 'error', $error_message );
 		echo $error_message;
 		die();
 	}
 }
 
-// Send ImportBuddy along-side?
+// Send Importer along-side?
 if ( '1' == pb_backupbuddy::_POST( 'send_importbuddy' ) ) {
 	$send_importbuddy = true;
 	pb_backupbuddy::status( 'details', 'Cron send to be scheduled with importbuddy sending.' );
@@ -51,19 +51,17 @@ if ( ! isset( pb_backupbuddy::$options['remote_destinations'][ $destination_id ]
 }
 
 pb_backupbuddy::status( 'details', 'Scheduling cron to send to this remote destination...' );
-$schedule_result = backupbuddy_core::schedule_single_event( time(), 'remote_send', array( $destination_id, $backup_file, pb_backupbuddy::_POST( 'trigger' ), $send_importbuddy, $delete_after ) );
+$schedule_result = backupbuddy_core::trigger_async_event( 'remote_send', array( $destination_id, $backup_file, pb_backupbuddy::_POST( 'trigger' ), $send_importbuddy, $delete_after ) );
 
 if ( false === $schedule_result ) {
-	$err = 'Error scheduling file transfer. Please check your BackupBuddy error log for details. A plugin may have prevented scheduling or the database rejected it.';
+	$err = 'Error scheduling file transfer. Please check your Solid Backups error log for details. A plugin may have prevented scheduling or the database rejected it.';
 	pb_backupbuddy::status( 'error', $err );
 	echo $err;
 } else {
 	pb_backupbuddy::status( 'details', 'Cron to send to remote destination scheduled.' );
 }
-if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-	update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-	spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-}
+
+backupbuddy_core::maybe_spawn_cron();
 
 // SEE cron.php remote_send() for sending function that we pass to via the cron above.
 if ( false === $success_output ) {

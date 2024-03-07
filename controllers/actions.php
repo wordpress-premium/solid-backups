@@ -8,7 +8,7 @@
  */
 
 /**
- * Backup Buddy Actions Class
+ * Solid Backups Actions Class
  */
 class pb_backupbuddy_actions extends pb_backupbuddy_actionscore {
 
@@ -48,7 +48,7 @@ class pb_backupbuddy_actions extends pb_backupbuddy_actionscore {
 	public function wp_update_backup_reminder_dump( $text = '' ) {
 		return str_replace(
 			'<h2>WordPress Updates</h2>',
-			'<h2>' . __( 'WordPress Updates', 'it-l10n-backupbuddy' ) . '</h2><div id="message" class="updated fade"><p><img src="' . pb_backupbuddy::plugin_url() . '/images/pluginbuddy.png" style="vertical-align: -3px;" /> <a href="admin.php?page=pb_backupbuddy_backup" target="_blank" style="text-decoration: none;">' . __( 'Remember to back up your site with BackupBuddy before upgrading!', 'it-l10n-backupbuddy' ) . '</a></p></div>',
+			'<h2>' . __( 'WordPress Updates', 'it-l10n-backupbuddy' ) . '</h2><div id="message" class="updated fade"><p><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/pluginbuddy.png" style="vertical-align: -3px;" /> <a href="admin.php?page=pb_backupbuddy_backup" target="_blank" style="text-decoration: none;">' . __( 'Remember to back up your site with Solid Backups before upgrading!', 'it-l10n-backupbuddy' ) . '</a></p></div>',
 			$text
 		);
 	}
@@ -113,7 +113,7 @@ class pb_backupbuddy_actions extends pb_backupbuddy_actionscore {
 	}
 
 	/**
-	 * Increments BackupBuddy option `edits_since_last` by 1 on save_post.
+	 * Increments Solid Backups option `edits_since_last` by 1 on save_post.
 	 *
 	 * @param int    $post_id  The Post ID.
 	 * @param object $post     The Post Object.
@@ -139,7 +139,7 @@ class pb_backupbuddy_actions extends pb_backupbuddy_actionscore {
 	}
 
 	/**
-	 * Increments BackupBuddy option `edits_since_last` by 1 on post_updated.
+	 * Increments Solid Backups option `edits_since_last` by 1 on post_updated.
 	 *
 	 * @param int    $post_id      The Post ID.
 	 * @param object $post_after   The Post Object.
@@ -164,7 +164,7 @@ class pb_backupbuddy_actions extends pb_backupbuddy_actionscore {
 	}
 
 	/**
-	 * Increments BackupBuddy option `edits_since_last` by 1 on wp_insert_post.
+	 * Increments Solid Backups option `edits_since_last` by 1 on wp_insert_post.
 	 *
 	 * @param int    $post_id  The Post ID.
 	 * @param object $post     The Post Object.
@@ -180,7 +180,7 @@ class pb_backupbuddy_actions extends pb_backupbuddy_actionscore {
 	}
 
 	/**
-	 * Increments BackupBuddy option `edits_since_last` by 1 on wp_trash_post.
+	 * Increments Solid Backups option `edits_since_last` by 1 on wp_trash_post.
 	 *
 	 * @param int $post_id  The Post ID.
 	 */
@@ -280,7 +280,7 @@ class pb_backupbuddy_actions extends pb_backupbuddy_actionscore {
 			'auto_updater.lock',
 			'stats_cache',
 
-			// BUB & iThemes.
+			// BUB & SolidWP.
 			'pb_backupbuddy',
 			'pb_backupbuddy_notifications',
 			'ithemes-updater-cache',
@@ -327,7 +327,7 @@ class pb_backupbuddy_actions extends pb_backupbuddy_actionscore {
 	}
 
 	/**
-	 * Increments BackupBuddy option `edits_since_last` by 1 on update_option.
+	 * Increments Solid Backups option `edits_since_last` by 1 on update_option.
 	 *
 	 * @param string $option     Option name.
 	 * @param mixed  $old_value  Old option value.
@@ -348,7 +348,7 @@ class pb_backupbuddy_actions extends pb_backupbuddy_actionscore {
 	}
 
 	/**
-	 * Increments BackupBuddy option `edits_since_last` by 1 on delete_option.
+	 * Increments Solid Backups option `edits_since_last` by 1 on delete_option.
 	 *
 	 * @param string $option     Option name.
 	 */
@@ -468,16 +468,16 @@ class pb_backupbuddy_actions extends pb_backupbuddy_actionscore {
 	}
 
 	/**
-	 * If BackupBuddy is detected to be running on Multisite but not Network Activated this warning is displayed as a reminder.
+	 * If Solid Backups is detected to be running on Multisite but not Network Activated this warning is displayed as a reminder.
 	 *
-	 * @todo Only show this on BackupBuddy pages AND plugins.php?
+	 * @todo Only show this on Solid Backups pages AND plugins.php?
 	 */
 	public function multisite_network_warning() {
 
-		$message = 'BackupBuddy Multisite support is experimental beta software and is not officially supported in a Multisite setting.';
+		$message = 'Solid Backups Multisite support is experimental beta software and is not officially supported in a Multisite setting.';
 
 		if ( ! backupbuddy_core::is_network_activated() ) {
-			$message .= ' You must <a href="' . esc_url( admin_url( 'network/plugins.php' ) ) . '">Network Activate</a> BackupBuddy to use it with Multisite (not activate within subsites nor the main site).';
+			$message .= ' You must <a href="' . esc_url( admin_url( 'network/plugins.php' ) ) . '">Network Activate</a> Solid Backups to use it with Multisite (not activate within subsites nor the main site).';
 		}
 
 		if ( ! defined( 'PB_BACKUPBUDDY_MULTISITE_EXPERIMENT' ) || true != PB_BACKUPBUDDY_MULTISITE_EXPERIMENT ) {

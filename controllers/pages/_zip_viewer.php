@@ -11,10 +11,8 @@ if ( ! current_user_can( pb_backupbuddy::$options['role_access'] ) ) {
 	die( 'Access Denied. Error 445543454754.' );
 }
 
-pb_backupbuddy::load_script( 'jquery.leanModal.min.js' );
-
 pb_backupbuddy::load_script( 'filetree.js' );
-pb_backupbuddy::load_style( 'filetree.css' );
+pb_backupbuddy::load_script( 'vendor-scripts/jquery.leanModal.min.js' );
 
 if ( '' == pb_backupbuddy::_GET( 'value' ) ) {
 	$file = pb_backupbuddy::_GET( 'zip_viewer' );
@@ -122,13 +120,13 @@ $serial = backupbuddy_core::get_serial_from_file( $file );
 	pb_backupbuddy::$ui->title( 'View Backup Contents' );
 	?>
 
-	<a class="button secondary-button pb_backupbuddy_restore">Restore Selected</a>
+	<a class="button button-secondary secondary-button pb_backupbuddy_restore">Restore Selected</a>
 	<div style="width: 100%; height: 100%;">
 		<div class="jQueryOuterTree" id="pb_backupbuddy_file_browser" style="position: relative; height: 90%; margin-top: 7px; margin-bottom: 7px;">
 			<ul class="jqueryFileTree"></ul>
 		</div>
 		<span style="float: right;" class="description">Select directories to expand or text-based files to view contents.</span>
-		<a class="button secondary-button pb_backupbuddy_restore">Restore Selected</a>
+		<a class="button button-secondary secondary-button pb_backupbuddy_restore">Restore Selected</a>
 
 		<br><br><br><br style="clear: both; height: 0; overflow: hidden;">
 		<?php echo pb_backupbuddy::$ui->button( pb_backupbuddy::page_url(), '&larr; back to backups' ); ?>
@@ -168,18 +166,8 @@ $serial = backupbuddy_core::get_serial_from_file( $file );
 			font-size: 13px;
 		}
 
-		.pb_backupbuddy_fileinfo {
-			font-size: 10px;
-		}
-
-		.pb_backupbuddy_fileinfo .description {
-			font-size: 10px;
-		}
-
 		ul.jqueryFileTree a {
 			box-sizing:border-box;
-			-moz-box-sizing:border-box;
-			-webkit-box-sizing:border-box
 			position: relative;
 			display: inline-block;
 			width: 100%;

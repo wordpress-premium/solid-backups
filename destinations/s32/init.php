@@ -43,6 +43,8 @@ class pb_backupbuddy_destination_s32 {
 	 * @var array
 	 */
 	public static $destination_info = array(
+		// Hide this destination from being added by user. Deprecated May 2023.
+		'deprecated'  => true,
 		'name'        => 'Amazon S3 (v2)',
 		'description' => 'Amazon S3 is a well known cloud storage provider. This destination is known to be reliable and works well with BackupBuddy. Supports both bursting and chunking. <a href="http://aws.amazon.com/s3/" target="_blank">Learn more here.</a>',
 		'category'    => 'normal', // best, normal, or legacy.
@@ -82,45 +84,47 @@ class pb_backupbuddy_destination_s32 {
 	 * @var array
 	 */
 	public static $default_settings = array(
-		'type'                          => 's32',      // MUST MATCH your destination slug. Required destination field.
-		'title'                         => '',         // Required destination field.
+		// Hide this destination from being added by user. Deprecated May 2023.
+		'deprecated'                    => true,
+		'type'                          => 's32', // MUST MATCH your destination slug. Required destination field.
+		'title'                         => '', // Required destination field.
 
-		'accesskey'                     => '',         // Amazon access key.
-		'secretkey'                     => '',         // Amazon secret key.
-		'bucket'                        => '',         // Amazon bucket to put into.
+		'accesskey'                     => '', // Amazon access key.
+		'secretkey'                     => '', // Amazon secret key.
+		'bucket'                        => '', // Amazon bucket to put into.
 
-		'directory'                     => '',         // Subdirectory to put into in addition to the site url directory.
-		'ssl'                           => '1',        // Whether or not to use SSL encryption for connecting.
-		'server_encryption'             => 'AES256',   // Encryption (if any) to have the destination enact. Empty string for none.
-		'max_time'                      => '',         // Default max time in seconds to allow a send to run for. Set to 0 for no time limit. Aka no chunking.
-		'max_burst'                     => '10',       // Max size in mb of each burst within the same page load.
-		'db_archive_limit'              => '10',       // Maximum number of db backups for this site in this directory for this account. No limit if zero 0.
-		'full_archive_limit'            => '4',        // Maximum number of full backups for this site in this directory for this account. No limit if zero 0.
-		'files_archive_limit'           => '4',        // Maximum number of files only backups for this site in this directory for this account. No limit if zero 0.
-		'manage_all_files'              => '1',        // Allow user to manage all files in S3? If enabled then user can view all files after entering their password. If disabled the link to view all is hidden.
+		'directory'                     => '', // Subdirectory to put into in addition to the site url directory.
+		'ssl'                           => '1', // Whether or not to use SSL encryption for connecting.
+		'server_encryption'             => 'AES256', // Encryption (if any) to have the destination enact. Empty string for none.
+		'max_time'                      => '', // Default max time in seconds to allow a send to run for. Set to 0 for no time limit. Aka no chunking.
+		'max_burst'                     => '10', // Max size in mb of each burst within the same page load.
+		'db_archive_limit'              => '10', // Maximum number of db backups for this site in this directory for this account. No limit if zero 0.
+		'full_archive_limit'            => '4', // Maximum number of full backups for this site in this directory for this account. No limit if zero 0.
+		'files_archive_limit'           => '4', // Maximum number of files only backups for this site in this directory for this account. No limit if zero 0.
+		'manage_all_files'              => '1', // Allow user to manage all files in S3? If enabled then user can view all files after entering their password. If disabled the link to view all is hidden.
 		'region'                        => 's3.amazonaws.com', // Endpoint. Incorrectly named region here.
 		'storage'                       => 'STANDARD', // Whether to use standard or reduced redundancy storage. Allowed values: STANDARD, REDUCED_REDUNDANCY.
-		'use_server_cert'               => '0',        // When 1, do not use the packaged cacert.pem file included with the AWS SDK and instead just use curl default.
-		'disable_file_management'       => '0',        // When 1, _manage.php will not load which renders remote file management DISABLED.
-		// 'skip_bucket_prepare'     =>      '0',        // when 1, we will skip creating the bucket and making sure it exists before trying to place files.
-		'max_filelist_keys'             => '250',      // Maximum number of files to list from server via listObjects calls.
-		'disabled'                      => '0',        // When 1, disable this destination.
-		'stash_mode'                    => '0',        // When 1, this destination is wrapped with Stash.
-		'live_mode'                     => '0',        // When 1, this destination is wrapped in Live.
-		'max_filelist_keys'             => '250',      // Maximum number of files to list from server via listObjects calls.
-		'disable_hostpeer_verficiation' => '0',        // Disables SSL host/peer verification.
+		'use_server_cert'               => '0', // When 1, do not use the packaged cacert.pem file included with the AWS SDK and instead just use curl default.
+		'disable_file_management'       => '0', // When 1, _manage.php will not load which renders remote file management DISABLED.
+		// 'skip_bucket_prepare'        => '0', // when 1, we will skip creating the bucket and making sure it exists before trying to place files.
+		'max_filelist_keys'             => '250', // Maximum number of files to list from server via listObjects calls.
+		'disabled'                      => '0', // When 1, disable this destination.
+		'stash_mode'                    => '0', // When 1, this destination is wrapped with Stash.
+		'live_mode'                     => '0', // When 1, this destination is wrapped in Live.
+		'max_filelist_keys'             => '250', // Maximum number of files to list from server via listObjects calls.
+		'disable_hostpeer_verficiation' => '0', // Disables SSL host/peer verification.
 
 		// Do not store these for destination settings. Only used to pass to functions in this file.
-		'_multipart_id'                 => '',         // Instance var. Internal use only for continuing a chunked upload.
-		'_multipart_partnumber'         => 0,          // Instance var. Part number to upload next.
-		'_multipart_etag_parts'         => array(),    // Instance var. Etags for sent parts.
-		'_multipart_file'               => '',         // Instance var. Internal use only to store the file that is currently set to be multipart chunked.
-		'_multipart_remotefile'         => '',         // Instance var. Internal use only to store the remote filepath & file.
-		'_multipart_counts'             => array(),    // Instance var. Multipart chunks to send. Generated by S3's get_multipart_counts().
-		'_multipart_transferspeeds'     => array(),    // Instance var.
-		'_multipart_backup_type'        => '',         // Instance var. Type: full, db, files.
-		'_multipart_backup_size'        => '',         // Instance var. Total file size in bytes.
-		'_retry_stash_confirm'          => false,      // Whether or not we need to retry confirming the file has made it to Stash.
+		'_multipart_id'                 => '', // Instance var. Internal use only for continuing a chunked upload.
+		'_multipart_partnumber'         => 0, // Instance var. Part number to upload next.
+		'_multipart_etag_parts'         => array(), // Instance var. Etags for sent parts.
+		'_multipart_file'               => '', // Instance var. Internal use only to store the file that is currently set to be multipart chunked.
+		'_multipart_remotefile'         => '', // Instance var. Internal use only to store the remote filepath & file.
+		'_multipart_counts'             => array(), // Instance var. Multipart chunks to send. Generated by S3's get_multipart_counts().
+		'_multipart_transferspeeds'     => array(), // Instance var.
+		'_multipart_backup_type'        => '', // Instance var. Type: full, db, files.
+		'_multipart_backup_size'        => '', // Instance var. Total file size in bytes.
+		'_retry_stash_confirm'          => false, // Whether or not we need to retry confirming the file has made it to Stash.
 	);
 
 	/**
@@ -136,18 +140,18 @@ class pb_backupbuddy_destination_s32 {
 		// pb_backupbuddy::status( 'details', 'SDK loaded.' );
 		$settings = self::_formatSettings( $settings ); // Format all settings.
 
-		// If not connected with these exact settings (by comparisong signatue of $settings ) then connect & prepare bucket.
+		// If not connected with these exact settings (by comparing signatue of $settings ) then connect & prepare bucket.
 		// if ( ! isset( self::$_client ) ) {
 		$newSignature = md5( serialize( $settings ) );
 		if ( $newSignature != self::$_client_signature ) {
 			self::$_client_signature = md5( serialize( $settings ) );
 
 			// Base credentials.
-			$s3Config = self::getCredentials( $settings );
+			$s3config = self::getCredentials( $settings );
 
 			// SSL option.
 			if ( '0' == $settings['ssl'] ) {
-				$s3Config['scheme'] = 'http';
+				$s3config['scheme'] = 'http';
 				pb_backupbuddy::status( 'details', 'SSL disabled.' );
 			}
 
@@ -167,19 +171,19 @@ class pb_backupbuddy_destination_s32 {
 				}
 			}
 
-			$s3Config['signature'] = 'v4';
-			$s3Config['region']    = str_replace( array( 'amazon.com.cn', '.amazonaws.com', 's3-' ), '', $settings['region'] );
-			if ( 's3' == $s3Config['region'] ) {
-				$s3Config['region'] = 'us-east-1';
+			$s3config['signature'] = 'v4';
+			$s3config['region']    = str_replace( array( 'amazon.com.cn', '.amazonaws.com', 's3-' ), '', $settings['region'] );
+			if ( 's3' == $s3config['region'] ) {
+				$s3config['region'] = 'us-east-1';
 			}
-			$s3Config['version'] = '2006-03-01'; // Some regions now requiring this.
+			$s3config['version'] = '2006-03-01'; // Some regions now requiring this.
 
 			// Cannot use this since we STILL need to know the correct region so that v4 signature signing can occur. Catch-22.
-			// $s3Config['endpoint'] = 'https://' . $settings['bucket'] . '.s3.amazonaws.com';
-			// pb_backupbuddy::status( 'details', 'Using specified region results in endpoint: `' . $s3Config['endpoint'] . '` to connect to.' );
+			// $s3config['endpoint'] = 'https://' . $settings['bucket'] . '.s3.amazonaws.com';
+			// pb_backupbuddy::status( 'details', 'Using specified region results in endpoint: `' . $s3config['endpoint'] . '` to connect to.' );
 			if ( ! empty( $settings['client_settings'] ) ) {
 				foreach ( $settings['client_settings'] as $setting => $value ) {
-					$s3Config[ $setting ] = $value;
+					$s3config[ $setting ] = $value;
 				}
 			}
 			if ( ! empty( $settings['settings_override'] ) ) {
@@ -188,26 +192,13 @@ class pb_backupbuddy_destination_s32 {
 				}
 			}
 
-			if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
-				// error_log( '$s3config: ' . print_r( $s3Config, true ) );
+			if ( pb_backupbuddy::full_logging() ) {
+				// error_log( '$s3config: ' . print_r( $s3config, true ) );
 			}
 
-			self::$_client = S3Client::factory( $s3Config );
-			self::$_client->getConfig()->set( 'curl.options', array( 'body_as_string' => true ) ); // Work around "[curl] 65: necessary data rewind wasn't possible" issue. See https://github.com/aws/aws-sdk-php/issues/284
-
-			// if ( '1' == $settings['use_packaged_cert'] ) {
-				// pb_backupbuddy::status( 'details', 'Setting s3config packaged cacert.pem file to bundle.' );
-				// self::$_client->getConfig()->set( 'ssl.certificate_authority', pb_backupbuddy::plugin_path() . '/destinations/_s3lib2/Guzzle/Http/Resources/cacert.pem' );
-			// }
-			// Verify bucket exists; create if not. Also set region to the region bucket exists in.
-			/*
-			$prepareBucket = false;
-			if ( ( true === $prepareBucket ) && ( false === self::_prepareBucketAndRegion( $settings ) ) ) {
-				return self::_error( 'Error #983483437: Could not prepare bucket `' . $settings['bucket'] . '` in region `' . $settings['region'] . '`.' );
-			} else {
-				pb_backupbuddy::status( 'details', 'Skipping bucket prepare.' );
-			}
-			*/
+			self::$_client = S3Client::factory( $s3config );
+			// Work around "[curl] 65: necessary data rewind wasn't possible" issue. See https://github.com/aws/aws-sdk-php/issues/284
+			self::$_client->getConfig()->set( 'curl.options', array( 'body_as_string' => true ) );
 
 		}
 
@@ -266,7 +257,7 @@ class pb_backupbuddy_destination_s32 {
 		$chunkSizeBytes   = $settings['max_burst'] * 1024 * 1024; // Send X mb at a time to limit memory usage.
 		self::$_timeStart = microtime( true );
 
-		if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+		if ( pb_backupbuddy::full_logging() ) {
 			pb_backupbuddy::status( 'details', 'Settings due to log level: `' . print_r( $settings, true ) . '`.' );
 		}
 
@@ -296,7 +287,7 @@ class pb_backupbuddy_destination_s32 {
 			try {
 				$response = self::$_client->createMultipartUpload( $thisCall );
 			} catch ( Exception $e ) {
-				if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+				if ( pb_backupbuddy::full_logging() ) {
 					pb_backupbuddy::status( 'details', 'Call details due to logging level: `' . print_r( $thisCall, true ) . '`.' );
 				}
 				$message = $e->getMessage();
@@ -409,7 +400,7 @@ class pb_backupbuddy_destination_s32 {
 					'ETag'       => $response['ETag'],
 				);
 
-				if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+				if ( pb_backupbuddy::full_logging() ) {
 					pb_backupbuddy::status( 'details', 'Success sending chunk. Upload details due to log level: `' . print_r( $response, true ) . '`.' );
 				} else {
 					pb_backupbuddy::status( 'details', 'Success sending chunk. Enable full logging for upload result details.' );
@@ -564,10 +555,7 @@ class pb_backupbuddy_destination_s32 {
 							pb_backupbuddy::status( 'error', 'Next S3 chunk step cron event FAILED to be scheduled.' );
 						}
 
-						if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-							update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-							spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-						}
+						backupbuddy_core::maybe_spawn_cron();
 
 						@fclose( $f );
 						unset( $fileoptions );
@@ -1218,7 +1206,7 @@ class pb_backupbuddy_destination_s32 {
 			return self::_error( 'Error #84397849347: Unable to list existing multipart uploads. Details: `' . $e . '`' );
 		}
 
-		if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+		if ( pb_backupbuddy::full_logging() ) {
 			pb_backupbuddy::status( 'details', 'Multipart upload check retrieved. Found `' . count( $response['Uploads'] ) . '` multipart uploads in progress / stalled. Full logging mode details: `' . print_r( $response, true ) . '`' );
 		} else {
 			pb_backupbuddy::status( 'details', 'Multipart upload check retrieved. Found `' . count( $response['Uploads'] ) . '` multipart uploads in progress / stalled. Old BackupBuddy parts will be cleaned up (if any found) ...' );
@@ -1226,12 +1214,12 @@ class pb_backupbuddy_destination_s32 {
 
 		// Loop through each incomplete multipart upload.
 		foreach ( (array) $response['Uploads'] as $upload ) {
-			if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+			if ( pb_backupbuddy::full_logging() ) {
 				pb_backupbuddy::status( 'details', 'Checking upload (full logging mode): ' . print_r( $upload, true ) );
 			}
 			// if ( FALSE !== stristr( $upload['Key'], $backupDetectPrefix ) ) { // BackupBuddy backup file.
 			$initiated = strtotime( $upload['Initiated'] );
-			if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+			if ( pb_backupbuddy::full_logging() ) {
 				pb_backupbuddy::status( 'details', 'Multipart Chunked Upload(s) detected in progress. Full logging age: `' . pb_backupbuddy::$format->time_ago( $initiated ) . '`.' );
 			}
 
@@ -1251,7 +1239,7 @@ class pb_backupbuddy_destination_s32 {
 					pb_backupbuddy::status( 'error', 'Stalled Multipart Chunked abort of file `' . $upload['Key'] . '` with ID `' . $upload['UploadId'] . '` FAILED. Manually abort it. Details: `' . $e . '`.' );
 				}
 			} else {
-				if ( pb_backupbuddy::$options['log_level'] != '3' ) { // Full logging NOT enabled.
+				if ( ! pb_backupbuddy::full_logging() ) {
 					pb_backupbuddy::status( 'details', 'Multipart Chunked Uploads not aborted as not too old.' );
 				}
 			}
@@ -1302,7 +1290,7 @@ class pb_backupbuddy_destination_s32 {
 			$detectedRegion      = '';
 			$maybe_create_bucket = true;
 			$message             = 'Exception retrieving information for bucket `' . $settings['bucket'] . '`. Assuming region in $settings correct. If using IAM security, verify this resource ALLOWs the action "s3:GetBucketLocation". Details: `' . $e . '`. Full result: `' . print_r( $result, true ) . '`.';
-			if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+			if ( pb_backupbuddy::full_logging() ) {
 				pb_backupbuddy::status( 'details', 'Settings used due to log level: `' . print_r( $settings, true ) . '`.' );
 			}
 			echo $message;
@@ -1360,7 +1348,7 @@ class pb_backupbuddy_destination_s32 {
 			$i++;
 		}
 
-		if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+		if ( pb_backupbuddy::full_logging() ) {
 			pb_backupbuddy::status( 'details', 'Multipart counts due to log level: `' . print_r( $values, true ) . '`.' );
 		}
 		return $values;

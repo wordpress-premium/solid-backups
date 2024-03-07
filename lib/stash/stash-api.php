@@ -29,14 +29,19 @@ final class BackupBuddy_Stash_API {
 		}
 
 		$request_settings = array(
-			'username' => $settings['_username'],
+			'username' => $settings['username'],
 			'token'    => $settings['token'],
 		);
 
+
+		// Cacluate/validate memory usage.
+		$memory_usage = memory_get_peak_usage( true ) - $settings['_start_memory'];
+		$memory = $memory_usage > 0 ? intval( $memory_usage ) : 0;
+
 		$params = array(
 			'id'     => $settings['_stash_upload_id'],
-			'time'   => microtime( true ) - $settings['_start_time'],
-			'memory' => memory_get_peak_usage( true ) - $settings['_start_memory'],
+			'time'   => floatval( microtime( true ) - $settings['_start_time'] ),
+			'memory' => $memory,
 			'error'  => $error,
 		);
 
@@ -68,6 +73,9 @@ final class BackupBuddy_Stash_API {
 		}
 
 		$credentials['client_settings']['bucket'] = $credentials['bucket'];
+		if ( empty( $credentials['credentials'] ) && ! empty( $credentials['client_settings']['credentials'] ) ) {
+			$credentials['credentials'] = $credentials['client_settings']['credentials'];
+		}
 
 		$response = array(
 			'client_settings'   => $credentials['client_settings'],
@@ -78,8 +86,8 @@ final class BackupBuddy_Stash_API {
 			'bucket'            => $credentials['bucket'],
 			'_stash_object'     => $credentials['path'],
 			'_stash_upload_id'  => $credentials['id'],
-			'_username'         => $username,
-			'_token'            => $token,
+			'username'          => $username,
+			'token'             => $token,
 			'_start_time'       => microtime( true ),
 			'_start_memory'     => memory_get_peak_usage( true ),
 		);

@@ -39,18 +39,17 @@ class Ithemes_Updater_Information {
 
 		if ( is_wp_error( $changelog ) ) {
 			/* translators: 1. Error message, 2. Error code */
-			$changelog = sprintf( __( '<p>Unable to get changelog data at this time.</p><p>%1$s (%2$s)</p>', 'it-l10n-backupbuddy' ), $response->get_error_message(), $response->get_error_code() );
+			$changelog = sprintf( __( '<p>Unable to get changelog data at this time.</p><p>%1$s (%2$s)</p>', 'it-l10n-backupbuddy' ), esc_html( $changelog->get_error_message() ), esc_html( $changelog->get_error_code() ) );
 		}
 
 
 		$info = array(
-			'name'          => Ithemes_Updater_Functions::get_package_name( $package['package'] ),
+			'name'          => esc_html( Ithemes_Updater_Functions::get_package_name( $package['package'] ) ),
 			'slug'          => dirname( $path ),
-			'version'       => $package['available'],
-			'author'        => '<a href="http://ithemes.com/">iThemes</a>',
-			'download_link' => $package['package-url'],
-
-			'sections' => array(
+			'version'       => isset( $package['available'] ) ? $package['available'] : '',
+			'author'        => '<a href="https://solidwp.com/">SolidWP</a>',
+			'download_link' => isset( $package['package-url'] ) ? $package['package-url'] : '',
+			'sections'      => array(
 				'changelog'    => $changelog,
 			),
 		);

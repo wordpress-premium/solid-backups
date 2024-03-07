@@ -6,7 +6,7 @@
  */
 
 backupbuddy_core::verifyAjaxAccess();
-pb_backupbuddy::$ui->ajax_header( true, true );
+pb_backupbuddy::$ui->ajax_header( true, true, 'backupbuddy-admin-iframe-white backupbuddy-admin-iframe-stash-live' );
 
 require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
 require_once pb_backupbuddy::plugin_path() . '/destinations/live/live.php';
@@ -15,7 +15,7 @@ require_once pb_backupbuddy::plugin_path() . '/destinations/live/live_periodic.p
 $destination_id       = backupbuddy_live::getLiveID();
 $destination_settings = backupbuddy_live_periodic::get_destination_settings();
 
-echo '<h2>' . esc_html__( 'BackupBuddy Stash Live Settings', 'it-l10n-backupbuddy' ) . '</h2>';
+echo '<h2>' . esc_html__( 'Solid Backups Stash Live Settings', 'it-l10n-backupbuddy' ) . '</h2>';
 
 // Settings form setup.
 $settings_form = pb_backupbuddy_destinations::configure( $destination_settings, 'edit', $destination_id, pb_backupbuddy::ajax_url( 'live_settings' ) );
@@ -28,7 +28,7 @@ if ( '' != pb_backupbuddy::_POST( 'pb_backupbuddy_' ) ) {
 		if ( count( $save_result['errors'] ) === 0 ) { // NO ERRORS SO SAVE.
 			pb_backupbuddy::$options['remote_destinations'][ $destination_id ] = array_merge( pb_backupbuddy::$options['remote_destinations'][ $destination_id ], $save_result['data'] );
 			pb_backupbuddy::save();
-			pb_backupbuddy::alert( __( 'Settings saved. Restarting Live process so they take immediate effect. If you disabled file managementrefresh the page to see the effect.', 'it-l10n-backupbuddy' ) );
+			pb_backupbuddy::alert( __( 'Settings saved. Restarting Live process so they take immediate effect. If you disabled file management, refresh the page to see the effect.', 'it-l10n-backupbuddy' ) );
 			set_transient( 'backupbuddy_live_jump', array( 'daily_init', array() ), 60 * 60 * 48 ); // Tells Live process to restart from the beginning (if mid-process) so new settigns apply.
 
 			// Add final entry to log if disabled.
@@ -53,7 +53,7 @@ if ( '' != pb_backupbuddy::_POST( 'pb_backupbuddy_' ) ) {
 echo $settings_form->display_settings(
 	'Save Settings', // title.
 	'', // before.
-	' <img class="pb_backupbuddy_destpicker_saveload" src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" title="Saving... This may take a few seconds..." style="display: none;">', // after.
+	' <span class="pb_backupbuddy_destpicker_saveload hidden">&nbsp;</span>', // after.
 	'pb_backupbuddy_destpicker_save' // class.
 );
 

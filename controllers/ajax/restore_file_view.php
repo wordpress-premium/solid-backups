@@ -35,7 +35,7 @@ if ( false !== stristr( $temp_dir, ABSPATH ) ) { // Temp dir is within webroot.
 }
 unset( $temp_dir );
 
-$message = 'Extracting "' . $file . '" from archive "' . $archive_file . '" into temporary file "' . $destination . '". ';
+$message = 'Extracting "' . esc_html( $file ) . '" from archive "' . esc_html( $archive_file ) . '" into temporary file "' . esc_html( $destination ) . '". ';
 echo '<!-- ';
 pb_backupbuddy::status( 'details', $message );
 echo $message;

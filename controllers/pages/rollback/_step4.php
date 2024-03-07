@@ -25,7 +25,7 @@ if ( false === $status ) {
 ?>
 
 
-<b>Thank you for choosing BackupBuddy!</b>
+<b>Thank you for choosing Solid Backups!</b>
 
 
 <script>

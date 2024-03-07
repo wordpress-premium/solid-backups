@@ -17,7 +17,7 @@ class Ithemes_Sync_Verb_Backupbuddy_Get_Importbuddy extends Ithemes_Sync_Verb {
 				return array(
 					'api' => '0',
 					'status' => 'error',
-					'message' => 'No ImportBuddy password was entered and no default has been set on the Settings page.'
+					'message' => 'No Importer password was entered and no default has been set on the Settings page.'
 				);
 			} else { // Use default.
 				$importbuddy_pass_hash = pb_backupbuddy::$options['importbuddy_pass_hash'];
@@ -34,7 +34,7 @@ class Ithemes_Sync_Verb_Backupbuddy_Get_Importbuddy extends Ithemes_Sync_Verb {
 		return array(
 			'api' => '5',
 			'status' => 'ok',
-			'message' => 'ImportBuddy retrieved.',
+			'message' => 'Importer retrieved.',
 			'importbuddy_hash' => $ibhash,
 			'importbuddy' => base64_encode( $ibscript ),
 		);

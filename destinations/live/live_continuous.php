@@ -1,5 +1,5 @@
 <?php
-/* BackupBuddy Stash Live Continuous (live activity watching) Class
+/* Solid Backups Stash Live Continuous (live activity watching) Class
  *
  * @author Dustin Bolton
  * @since 7.0
@@ -19,7 +19,6 @@ class backupbuddy_live_continuous {
 		'vaultpress',
 		'/_transient_/',
 		'/^_vp_/',
-
 		'wdp_un_local_themes',
 		'wdp_un_farm133_themes',
 		'sbp_page_time',
@@ -199,7 +198,7 @@ class backupbuddy_live_continuous {
 
 
 
-	// Load BackupBuddy first.
+	// Load Solid Backups first.
 	public static function load_bb_first( $load ) {
 		$load = array_unique( $load ); // Remove dupes.
 		return array_merge(
@@ -491,17 +490,17 @@ class backupbuddy_live_continuous {
 	public static function _send_dbqueue() {
 		$settings = pb_backupbuddy::$options['remote_destinations'][ backupbuddy_live::getLiveID() ];
 		if ( ! isset( $settings['destination_version'] ) ) {
-			$settings['destination_version'] = '2';
+			$settings['destination_version'] = '3';
 		}
 
-		require_once( pb_backupbuddy::plugin_path() . '/destinations/stash' . $settings['destination_version'] . '/init.php' );
-		$response = call_user_func_array( array( 'pb_backupbuddy_destination_stash' . $settings['destination_version'], 'stashAPI' ), array( $settings, 'live-put', array( 'files' => self::$_dbqueue_rendered ) ) );
+		require_once( pb_backupbuddy::plugin_path() . '/destinations/stash3/init.php' );
+		$response = call_user_func_array( array( 'pb_backupbuddy_destination_stash3', 'stashAPI' ), array( $settings, 'live-put', array( 'files' => self::$_dbqueue_rendered ) ) );
 		//error_log( 'Live db send response:' );
 		//error_log( print_r( $response, true ) );
 
 		$errors = array();
 		if ( ! is_array( $response ) ) { // Error message.
-			$errors[] = 'Error #3279237: Unexpected server response. Check your BackupBuddy Stash Live login and try again. Detailed response: `' . print_r( $response, true ) .'`.';
+			$errors[] = 'Error #3279237: Unexpected server response. Check your Solid Backups Stash Live login and try again. Detailed response: `' . print_r( $response, true ) .'`.';
 		} else { // Errors.
 			if ( isset( $response['error'] ) ) {
 				$errors[] = $response['error']['message'];
@@ -520,7 +519,7 @@ class backupbuddy_live_continuous {
 		} else {
 			// Update last activity time.
 			backupbuddy_live::update_db_live_activity_time();
-			if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+			if ( pb_backupbuddy::full_logging() ) {
 				pb_backupbuddy::status( 'details', 'Success sending live continuous data to server.' );
 			}
 		}

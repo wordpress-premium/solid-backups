@@ -1,7 +1,7 @@
 <?php
 class Ithemes_Sync_Verb_Backupbuddy_Set_LiveStatus extends Ithemes_Sync_Verb {
 	public static $name = 'backupbuddy-set-liveStatus';
-	public static $description = 'Pause/Resume BackupBuddy Stash Live status for continuous database and/or periodic scans (files).';
+	public static $description = 'Pause/Resume Solid Backups Stash Live status for continuous database and/or periodic scans (files).';
 	
 	private $default_arguments = array(
 		'pause_continuous' => '',

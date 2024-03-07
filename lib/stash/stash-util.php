@@ -33,11 +33,8 @@ final class BackupBuddy_Stash_Util {
 				register_shutdown_function( 'backupbuddy_stash_util_handle_shutdown' );
 			}
 
-			if ( 'aws2' === $credentials['method'] ) {
-				$result = self::send_file_with_v2( $file, $credentials );
-			} else if ( 'aws3' === $credentials['method'] ) {
-				$result = self::send_file_with_v3( $file, $credentials );
-			}
+			$result = self::send_file_with_v3( $file, $credentials );
+
 		} catch ( Throwable $e ) {
 			$error = self::get_error_string_from_exception( $e );
 			$result = false;
@@ -46,8 +43,9 @@ final class BackupBuddy_Stash_Util {
 			$result = false;
 		}
 
-		$time = microtime( true ) - self::$start_time;
+		$time   = floatval( microtime( true ) - self::$start_time );
 		$memory = memory_get_peak_usage( true ) - self::$start_memory;
+		$memory = $memory > 0 ? intval( $memory ) : 0;
 
 		self::$upload_id = 0;
 
@@ -109,7 +107,7 @@ final class BackupBuddy_Stash_Util {
 		);
 
 
-		if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+		if ( pb_backupbuddy::full_logging() ) {
 			pb_backupbuddy::status( 'details', 'Trim params based on settings: `' . print_r( $params, true ) . '`.' );
 		}
 
@@ -117,13 +115,9 @@ final class BackupBuddy_Stash_Util {
 		$response = self::request( 'trim', $settings, $params );
 
 		if ( is_string( $response ) ) {
-			if ( 'stash2' === $source ) {
-				$error = 'Error #83279768543973: Unable to trim Stash (v2) upload. Details: `' . print_r( $response, true ) . '`.';
-			} else {
-				$error = 'Error #8329545445573: Unable to trim Stash (v3) upload. Details: `' . print_r( $response, true ) . '`.';
-			}
-
-			self::record_error( $error );
+			self::record_error(
+				'Error #8329545445573: Unable to trim Stash (v3) upload. Details: `' . print_r( $response, true ) . '`.'
+			);
 		} else {
 			pb_backupbuddy::status( 'details', 'Trimmed remote archives. Results: `' . print_r( $response, true ) . '`.' );
 		}
@@ -136,37 +130,10 @@ final class BackupBuddy_Stash_Util {
 		self::request( 'send-upload-results', $settings, $params, false );
 	}
 
-	private static function send_file_with_v2( $file, $credentials ) {
-		require_once( dirname( dirname( dirname( __FILE__ ) ) ) . '/destinations/_s3lib2/aws-autoloader.php' );
-
-		$s3 = \Aws\S3\S3Client::factory( $credentials['client_settings'] );
-
-		$uploader = \Aws\S3\Model\MultipartUpload\UploadBuilder::newInstance();
-		$uploader->setClient( $s3 );
-		$uploader->setSource( $file );
-		$uploader->setBucket( $credentials['bucket'] );
-		$uploader->setKey( $credentials['path'] );
-
-		if ( ! empty( $credentials['upload_builder_options'] ) ) {
-			if ( ! empty( $credentials['upload_builder_options']['concurrency'] ) ) {
-				$uploader->setConcurrency( $credentials['upload_builder_options']['concurrency'] );
-			}
-		}
-
-		$result = $uploader->build()->upload();
-
-		if ( $result ) {
-			return true;
-		}
-
-		return false;
-	}
-
 	private static function send_file_with_v3( $file, $credentials ) {
-		require_once( dirname( dirname( dirname( __FILE__ ) ) ) . '/destinations/_s3lib3/aws-autoloader.php' );
 
-		$credentials['client_settings']['credentials'] = new Aws\Credentials\Credentials( $credentials['credentials']['key'], $credentials['credentials']['secret'] );
-		$s3 = \Aws\S3\S3Client::factory( $credentials['client_settings'] );
+		$credentials['client_settings']['credentials'] = new Solid_Backups\Strauss\Aws\Credentials\Credentials( $credentials['credentials']['key'], $credentials['credentials']['secret'] );
+		$s3 = new Solid_Backups\Strauss\Aws\S3\S3Client( $credentials['client_settings'] );
 
 		$fh = fopen( $file, 'rb' );
 		$options = array();
@@ -175,14 +142,14 @@ final class BackupBuddy_Stash_Util {
 			$options = $credentials['object_uploader_options'];
 		}
 
-		$uploader = new \Aws\S3\ObjectUploader( $s3, $credentials['bucket'], $credentials['path'], $fh, 'private', $options );
+		$uploader = new Solid_Backups\Strauss\Aws\S3\ObjectUploader( $s3, $credentials['bucket'], $credentials['path'], $fh, 'private', $options );
 
 		do {
 			try {
 				$result = $uploader->upload();
-			} catch ( \Aws\Common\Exception\MultipartUploadException $e ) {
+			} catch ( Solid_Backups\Strauss\Aws\Exception\MultipartUploadException $e ) {
 				rewind( $fh );
-				$uploader = new \Aws\S3\MultipartUploader( $s3, $fh, array(
+				$uploader = new Solid_Backups\Strauss\Aws\S3\MultipartUploader( $s3, $fh, array(
 					'state' => $e->getState(),
 				) );
 			}
@@ -214,7 +181,7 @@ final class BackupBuddy_Stash_Util {
 
 		$params = array(
 			'service'         => $service,
-			'aws_api_version' => $aws_api_version,
+			'aws_api_version' => '3', // Force s33.
 			'php_version'     => phpversion(),
 			'wp_version'      => self::get_wordpress_version(),
 			'source'          => $source,
@@ -239,6 +206,8 @@ final class BackupBuddy_Stash_Util {
 
 		if ( is_array( $frames ) ) {
 			foreach ( $frames as $frame ) {
+
+				// @todo remove stash2 at a later date, as its support is being removed. Added Feb 6, 2024 (v 9.1.8).
 				if ( isset( $frame['file'] ) && preg_match( '{destinations[/\\\\](stash2|stash3|live)[/\\\\]}', $frame['file'], $matches ) ) {
 					return $matches[1];
 				}

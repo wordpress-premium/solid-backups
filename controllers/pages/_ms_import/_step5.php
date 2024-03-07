@@ -8,7 +8,7 @@ if ( $blog_id == '' ) {
 $new_db_prefix = $wpdb->get_blog_prefix( $blog_id );
 
 echo $this->status_box( 'Importing database content & data . . .' );
-echo '<div id="pb_importbuddy_working" style="width: 100px;"><center><img src="' . pb_backupbuddy::plugin_url() . '/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
+echo '<div id="pb_importbuddy_working" style="width: 100px;"><center><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
 pb_backupbuddy::flush();
 
 
@@ -59,14 +59,14 @@ if ( isset( $this->advanced_options['skip_database_import'] ) && ( $this->advanc
 	$this->status( 'message', 'Skipping database import based on advanced settings.' );
 	$import_result = true;
 } else {
-	
+
 	// Calculate continuation.
 	if ( isset( $_GET['continue'] ) && ( $_GET['continue'] != '' ) ) {
 		$db_continue = (int)$_GET['continue'];
 	} else {
 		$db_continue = 0;
 	}
-	
+
 	// Calculate ignoring SQL errors.
 	/*
 	if ( isset( $this->advanced_options['ignore_sql_errors'] ) && ( $this->advanced_options['ignore_sql_errors'] == 'true' ) ) {
@@ -75,19 +75,19 @@ if ( isset( $this->advanced_options['skip_database_import'] ) && ( $this->advanc
 		$ignore_sql_errors = false;
 	}
 	*/
-	
+
 	pb_backupbuddy::$options['max_execution_time'] = $options['max_execution_time']; // Used by mysqlbuddy.
-	
+
 	pb_backupbuddy::status( 'details', 'About to flush.' );
 	pb_backupbuddy::flush();
 	pb_backupbuddy::status( 'details', 'Flushed.' );
-	
+
 	pb_backupbuddy::status( 'details', 'Loading mysqlbuddy.' );
 	global $wpdb;
 	require_once( pb_backupbuddy::plugin_path() . '/lib/mysqlbuddy/mysqlbuddy.php' );
 	pb_backupbuddy::$classes['mysqlbuddy'] = new pb_backupbuddy_mysqlbuddy( DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, $options['db_prefix'] );
 	pb_backupbuddy::flush();
-	
+
 	$db_files = glob( $options['database_directory'] . '*.sql' );
 	if ( ! is_array( $db_files ) ) {
 		$db_files = array();
@@ -132,11 +132,11 @@ if ( $import_result === false ) {
 	echo '<p>' . __( 'Database import failed.', 'it-l10n-backupbuddy' ) . '</p>';
 } else {
 	global $current_site;
-		$errors = false;	
+		$errors = false;
 		$blog = $domain = $path = '';
-		
+
 	?>
-	
+
 	<form method="post" action="<?php echo esc_url( $form_url ); ?>">
 	<?php wp_nonce_field( 'bbms-migration', 'pb_bbms_migrate' ); ?>
 	<input type='hidden' name='backup_file' value='<?php echo esc_attr( $_POST[ 'backup_file' ] ); ?>' />

@@ -5,9 +5,6 @@
  * @package BackupBuddy
  */
 
-pb_backupbuddy::load_style( 'backupProcess.css' );
-pb_backupbuddy::load_style( 'backupProcess2.css' );
-
 wp_enqueue_script( 'thickbox' );
 wp_print_scripts( 'thickbox' );
 wp_print_styles( 'thickbox' );
@@ -103,23 +100,6 @@ if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
 $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanitize_text_field( wp_unslash( $_GET['callback_data'] ) );
 
 ?>
-<style>
-	#backupbuddy_messages {
-		background: #fff;
-	}
-	.backupbuddy_log_error {
-		color: red;
-		font-weight: bold;
-	}
-	.backupbuddy_log_warning {
-		color: orange;
-		font-weight: bold;
-	}
-	.backupbuddy_log_notice {
-		color: blue;
-		font-weight: bold;
-	}
-</style>
 <script type="text/javascript">
 	window.onerror = function( errorMsg, url, lineNumber, colNumber, error ){
 		alert( "Error #82389: <?php _e( 'A javascript error occurred which may prevent the backup from continuing. Check your browser error console for details. This is most often caused by another plugin or theme containing broken javascript. See details below for clues or try temporarily disabling all other plugins.', 'it-l10n-backupbuddy' ); ?>\n\nDetails: `" + errorMsg + "`.\n\nURL: `" + url + "`.\n\nLine: `" + lineNumber + "`." );
@@ -134,7 +114,7 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 		statusBoxLimit = false,  // False for no limit.  Integer for limiting to latest X lines. Number of lines set in backupbuddy_constants::BACKUP_STATUS_BOX_LIMIT_OPTION_LINES.
 
 		stale_archive_time_trigger = 30, // If this time ellapses without archive size increasing warn user that something may have gone wrong.
-		stale_sql_time_trigger = 30, // If this time ellapses without archive size increasing warn user that something may have gone wrong.
+		stale_sql_time_trigger = 60, // If this time ellapses without archive size increasing warn user that something may have gone wrong.
 		stale_archive_time_trigger_increment = 1, // Number of times the popup has been shown.
 		stale_sql_time_trigger_increment = 1, // Number of times the popup has been shown.
 		backupbuddy_errors_encountered = 0, // number of errors sent via log.
@@ -164,7 +144,7 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 		statusURL = '<?php echo pb_backupbuddy::ajax_url( 'backup_status' ); ?>', // AJAX status check URL. Gets log from server for this backup / process.
 		loadingIndicator = ''; // jQuery('.pb_backupbuddy_loading') for speed.
 
-	// Tells BackupBuddy to stop the running backup.
+	// Tells Solid Backups to stop the running backup.
 	function backupbuddy_ajax_call_stop( callback ) {
 		jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'stop_backup' ); ?>', { serial: '<?php echo esc_html( $serial_override ); ?>' },
 			function(data) {
@@ -232,7 +212,7 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 				return false;
 			}
 
-			tb_show( 'BackupBuddy', '<?php echo pb_backupbuddy::ajax_url( 'destination_picker' ); ?>&add=' + jQuery(this).attr('rel') + '&filter=' + jQuery(this).attr('rel') + '&callback_data=' + jQuery('#pb_backupbuddy_archive_send').attr('rel') + '&sending=1&TB_iframe=1&width=640&height=455', null );
+			tb_show( 'Solid Backups', '<?php echo pb_backupbuddy::ajax_url( 'destination_picker' ); ?>&add=' + jQuery(this).attr('rel') + '&filter=' + jQuery(this).attr('rel') + '&callback_data=' + jQuery('#pb_backupbuddy_archive_send').attr('rel') + '&sending=1&TB_iframe=1&width=640&height=455', null );
 		});
 
 		jQuery( '#pb_backupbuddy_stop' ).click( function(e) {
@@ -252,7 +232,8 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 			jQuery( '.bb_progress-step-unfinished').addClass( 'bb_progress-step-completed' );
 			jQuery( '.bb_progress-step-unfinished').addClass( 'bb_progress-step-error' );
 			jQuery( '.bb_progress-step-unfinished').find( '.bb_progress-step-title').text( '<?php _e( 'Cancelled', 'it-l10n-backupbuddy' ); ?>' );
-			jQuery( '.bb_progress-error-bar' ).text( '<?php _e( 'You cancelled the backup process.', 'it-l10n-backupbuddy' ); ?>').show();
+			jQuery( '.bb_progress-step-unfinished').find( '.bb_progress-step-icon').html( '<?php pb_backupbuddy::$ui->render_icon( 'close' ); ?>' );
+			jQuery( '.bb_progress-error-bar' ).html( '<p><?php _e( 'You cancelled the backup process.', 'it-l10n-backupbuddy' ); ?></p>').show();
 			jQuery( '.bb_actions').hide();
 			jQuery( '.pb_actions_cancelled').show();
 			jQuery( '.bb_progress-step-unfinished').removeClass( 'bb_progress-step-unfinished' );
@@ -359,7 +340,8 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 				$admin_url = network_admin_url( 'admin.php' );
 			}
 			?>
-			window.location.href = '<?php echo $admin_url; ?>?page=pb_backupbuddy_backup&custom=remoteclient&destination_id=' + destination_id;
+
+			window.location.href = '<?php echo esc_url( $admin_url ); ?>?page=pb_backupbuddy_backup&custom=remoteclient&destination_id=' + parseInt( destination_id );
 		}
 	}
 
@@ -384,7 +366,7 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 
 	/***** BACKUP STATUS *****/
 	/**
-	 * Note: Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php, & maybe more.
+	 * Note: Used in Solid Backups _backup-perform.php and Importer _header.php, & maybe more.
 	 *
 	 * @param {object} json       json of status to log OR plaintext string.
 	 * @param {string} classType  Applies a specific class for coloring message.
@@ -500,7 +482,7 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 		if ( 0 != loadingIndicator.length ) {
 			loadingIndicator.show();
 		}
-		backupbuddy_log( 'Ping? Waiting for server . . .' );
+		backupbuddy_log( 'Ping? Waiting for server ...' );
 		if ( 'cronPass' == backupbuddy_currentAction ) { // In cronPass action...
 			if ( ( unix_timestamp() - backupbuddy_currentActionStart ) > seconds_before_verifying_cron_schedule ) {
 				backupbuddy_log( 'It has been ' + ( unix_timestamp() - backupbuddy_currentActionStart ) + ' seconds since the next step was scheduled. Checking cron schedule.' );
@@ -536,14 +518,14 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 						} else if ( data[i].indexOf( 'Warning' ) > -1 ) {
 							backupbuddy_log( 'Warning (direct): ' + data[i], 'warning' );
 						} else {
-							<?php if ( '3' == pb_backupbuddy::$options['log_level'] ) { ?>
-								console.log( 'BackupBuddy non-json:' + data[i] );
+							<?php if ( pb_backupbuddy::full_logging() ) { ?>
+								console.log( 'Solid Backups non-json:' + data[i] );
 							<?php } ?>
 						}
 						isJSON = false;
 					}
 
-					// Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php
+					// Used in Solid Backups _backup-perform.php and Importer _header.php
 					if ( ( true === isJSON ) && ( 'object' === typeof json ) && ( null !== json ) ) { // non-empty json
 						json.date = new Date();
 						json.date = new Date(  ( json.time * 1000 ) + json.date.getTimezoneOffset() * 60000 );
@@ -660,12 +642,12 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 
 
 			if ( 'cronPass' == backupbuddy_currentAction ) {
-				if ( ( actionRunTime > 20 ) && ( sinceLastWarn > 45 ) ) { // sinceLastWarn is large number (timestamp) until set first time. so triggers off actionRunTime solely first.
+				if ( ( actionRunTime > 70 ) && ( sinceLastWarn > 125 ) ) { // sinceLastWarn is large number (timestamp) until set first time. so triggers off actionRunTime solely first.
 					backupbuddy_currentActionLastWarn = unix_timestamp();
 					thisSuggestion = {
-						description: 'BackupBuddy uses WordPress\' scheduling system (cron) for running each backup step. Sometimes something interferes with this scheduling preventing the next step from running.',
+						description: 'Solid Backups uses WordPress\' scheduling system (cron) for running each backup step. Sometimes something interferes with this scheduling preventing the next step from running.',
 						quickFix: 'If there are delays but the backup proceeds anyway then you can ignore this. If not, you will need to narrow down the problem first.',
-						solution: 'Narrow down the problem: Check "Diagnostics --> wp-cron.php Loopbacks" for more info. Run BackupBuddy in classic mode which bypasses the cron. Navigate to Settings: Advanced Settings / Troubleshooting tab: Change "Default global backup method" to Classic Mode (v1.x). If either of these fixes it, another plugin is most likely the cause is a malfunctioning plugin or a server problem. Disable all other plugins to see if this solves the problem. If it does then it is a problem plugin. Enable one by one until the problem returns to determine the culprit.'
+						solution: 'Narrow down the problem: Check "Diagnostics --> wp-cron.php Loopbacks" for more info. Run Solid Backups in classic mode which bypasses the cron. Navigate to Settings: Advanced Settings tab: Change "Default global backup method" to Classic Mode (v1.x). If either of these fixes it, another plugin is most likely the cause is a malfunctioning plugin or a server problem. Disable all other plugins to see if this solves the problem. If it does then it is a problem plugin. Enable one by one until the problem returns to determine the culprit.'
 					};
 					suggestions['cronPass'] = thisSuggestion;
 					backupbuddy_showSuggestions( [thisSuggestion] );
@@ -677,8 +659,8 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 				if ( ( actionRunTime > 10 ) && ( sinceLastWarn > 30 ) ) { // sinceLastWarn is large number (timestamp) until set first time. so triggers off actionRunTime solely first.
 					backupbuddy_currentActionLastWarn = unix_timestamp();
 					thisSuggestion = {
-						description: 'BackupBuddy by default includes a copy of the restore tool, importbuddy.php, inside the backup ZIP file for retrieval if needed in the future.',
-						quickFix: 'Turn off inclusion of ImportBuddy. Navigate to Settings: Advanced Settings / Troubleshooting tab: Uncheck "Include ImportBuddy in full backup archive".',
+						description: 'Solid Backups by default includes a copy of the restore tool, importbuddy.php, inside the backup ZIP file for retrieval if needed in the future.',
+						quickFix: 'Turn off inclusion of ImportBuddy. Navigate to Settings: Advanced Settings tab: Uncheck "Include the Importer in full backup archive".',
 						solution: 'Increase available PHP memory.'
 					};
 					suggestions['importbuddyCreation'] = thisSuggestion;
@@ -692,7 +674,7 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 					backupbuddy_currentActionLastWarn = unix_timestamp();
 					thisSuggestion = {
 						description: 'Some servers have trouble adding in a zip comment to files after they are created. Disabling this option skips this step. This meta data is not required so disabling it is not a problem.',
-						quickFix: 'Turn off zip saving meta data in comments. Navigate to Settings: Advanced Settings / Troubleshooting tab: Uncheck "Save meta data in comment" to disable saving it.',
+						quickFix: 'Turn off zip saving meta data in comments. Navigate to Settings: Advanced Settings tab: Uncheck "Save meta data in comment" to disable saving it.',
 						solution: 'Increasing overall resources may help if you wish to keep this enabled.'
 					};
 					suggestions['zipCommentMeta'] = thisSuggestion;
@@ -714,7 +696,7 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 
 	// Trigger an error to be logged, displayed, etc.
 	// Returns updated message with trouble URL, etc.
-	// Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php
+	// Used in Solid Backups _backup-perform.php and Importer _header.php
 	function backupbuddyError( message, title ) {
 
 		// Get start of any error numbers.
@@ -732,7 +714,7 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 			}
 			error_number = message.slice( error_number_begin, error_number_end );
 			rawMessage = message.slice( error_number_end + 2 );
-			troubleURL = 'https://ithemeshelp.zendesk.com/hc/en-us/articles/211132377-Error-Codes-#4001' + error_number;
+			troubleURL = 'https://go.solidwp.com/error-codes-4001' + error_number;
 			if ( 'undefined' === typeof title ) {
 				title = 'Error #' + error_number;
 			}
@@ -765,7 +747,7 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 		return message; // Return updated error message with trouble URL.
 	} // end backupbuddyError().
 
-	// Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php
+	// Used in Solid Backups _backup-perform.php and Importer _header.php
 	function backupbuddyWarning( message ) {
 		return 'Warning: ' + message;
 	} // end backupbuddyWarning().
@@ -776,13 +758,17 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 			return; // Already been shown on page.
 		}
 		shownErrorHelps.push( title ); // Add to list of shown errors so it will not be shown multiple times.
-		errorHTML = '<div class="backup-step-error-message backup-step-error-message_' + bb_hashCode( title ) + '"><h3>' + title + '</h3>' + message + '</div>';
+		errorHTML = '<div class="flex-break"></div><div class="backup-step-error-message backup-step-error-message_' + bb_hashCode( title ) + '"><h3>' + title + '</h3><span class="description">' + message + '</span></div>';
 
 		if ( jQuery('.backup-step-active').length > 0 ) { // Target active function if currently is one, else target one after last to finish.
 			targetObj = jQuery('.backup-step-active');
 		} else {
 			targetObj = jQuery('.bb_overview .backup-step-finished:last').next('.backup-step');
 		}
+
+		// Add error icon to status.
+		jQuery( '.backup-step-status', targetObj ).html( '<span class="backup-step-status"><span class="backup-step-status-error"><?php pb_backupbuddy::$ui->render_icon( 'closesmall' ); ?></span></span>' );
+
 		jQuery(targetObj).append( errorHTML ).addClass('backup-step-error');
 
 		// Make Status tab red.
@@ -804,39 +790,42 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 </script>
 
 <?php if ( 'deploy' != pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) { ?>
-	<div class="bb_progress-bar clearfix">
-		<div class="bb_progress-step bb_progress-step-settings bb_progress-step-active">
-			<div class="bb_progress-step-icon"></div>
+	<div class="bb_progress-bar">
+		<div class="bb_progress-step bb_progress-step-settings">
+			<div class="bb_progress-step-icon"><?php pb_backupbuddy::$ui->render_icon( 'settings' ); ?></div>
 			<div class="bb_progress-step-title"><?php _e( 'Settings', 'it-l10n-backupbuddy' ); ?></div>
 			<span class="bb_progress-loading"></span>
+			<span class="bb_progress-complete"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span>
 		</div>
 		<?php if ( 'files' !== $profile_array['type'] ) { ?>
 		<div class="bb_progress-step bb_progress-step-database">
-			<div class="bb_progress-step-icon"></div>
+			<div class="bb_progress-step-icon"><?php pb_backupbuddy::$ui->render_icon( 'table' ); ?></div>
 			<div class="bb_progress-step-title"><?php _e( 'Database', 'it-l10n-backupbuddy' ); ?></div>
 			<span class="bb_progress-loading"></span>
+			<span class="bb_progress-complete"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span>
 		</div>
 		<?php } ?>
 		<div class="bb_progress-step bb_progress-step-files">
-			<div class="bb_progress-step-icon"></div>
+			<div class="bb_progress-step-icon"><?php pb_backupbuddy::$ui->render_icon( 'file' ); ?></div>
 			<div class="bb_progress-step-title"><?php _e( 'Files', 'it-l10n-backupbuddy' ); ?></div>
 			<span class="bb_progress-loading"></span>
+			<span class="bb_progress-complete"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span>
 		</div>
 		<div class="bb_progress-step bb_progress-step-unfinished">
-			<div class="bb_progress-step-icon"></div>
+			<div class="bb_progress-step-icon"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></div>
 			<div class="bb_progress-step-title"><?php _e( 'Finished!', 'it-l10n-backupbuddy' ); ?></div>
 			<span class="bb_progress-loading"></span>
 		</div>
 	</div>
 <?php } else { ?>
-	<div class="bb_progress-bar clearfix">
+	<div class="bb_progress-bar">
 		<div class="bb_progress-step bb_progress-step-deploySnapshot bb_progress-step-active">
-			<div class="bb_progress-step-icon"></div>
+			<div class="bb_progress-step-icon"><?php pb_backupbuddy::$ui->render_icon( 'capturephoto' ); ?></div>
 			<div class="bb_progress-step-title"><?php _e( 'Creating Snapshot', 'it-l10n-backupbuddy' ); ?></div>
 			<span class="bb_progress-loading"></span>
 		</div>
 		<div class="bb_progress-step bb_progress-step-deployTransfer">
-			<div class="bb_progress-step-icon"></div>
+			<div class="bb_progress-step-icon"><?php pb_backupbuddy::$ui->render_icon( 'redo' ); ?></div>
 			<div class="bb_progress-step-title">
 			<?php
 			if ( 'push' == $direction ) {
@@ -851,74 +840,75 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 			<span class="bb_progress-loading"></span>
 		</div>
 		<div class="bb_progress-step bb_progress-step-deployRestore">
-			<div class="bb_progress-step-icon"></div>
+			<div class="bb_progress-step-icon"><?php pb_backupbuddy::$ui->render_icon( 'undo' ); ?></div>
 			<div class="bb_progress-step-title"><?php _e( 'Deploying Data', 'it-l10n-backupbuddy' ); ?></div>
 			<span class="bb_progress-loading"></span>
 		</div>
 		<div class="bb_progress-step bb_progress-step-unfinished">
-			<div class="bb_progress-step-icon"></div>
+			<div class="bb_progress-step-icon"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></div>
 			<div class="bb_progress-step-title"><?php _e( 'Finished!', 'it-l10n-backupbuddy' ); ?></div>
 			<span class="bb_progress-loading"></span>
 		</div>
 	</div>
 <?php } ?>
-
-<div class="bb_progress-error-bar" style="display: none;"></div>
-
-<div style="clear: both;"></div>
+<div class="bb_progress-error-bar pb_backupbuddy_alert error" style="display: none;"></div>
 
 <div class="bb_actions bb_actions_during">
-	<a class="btn btn-with-icon btn-white btn-cancel" href="javascript:void(0);" id="pb_backupbuddy_stop"><span class="btn-icon"></span> Cancel Backup</a>
+	<a class="button button-secondary button-flex btn-with-icon btn-cancel" href="javascript:void(0);" id="pb_backupbuddy_stop"><span class="btn-icon"><?php pb_backupbuddy::$ui->render_icon( 'closesmall' ); ?></span> Cancel Backup</a>
 	<?php if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) { ?>
-		<a class="btn btn-with-icon btn-white btn-cancel pb_backupbuddy_deployUndo" href="" target="_blank" style="display: none;"><span class="btn-icon"></span> Undo Destination Database Changes</a>
+		<a class="button button-secondary button-flex btn-with-icon btn-cancel pb_backupbuddy_deployUndo" href="" target="_blank" style="display: none;"><span class="btn-icon"><?php pb_backupbuddy::$ui->render_icon( 'backup' ); ?></span> Undo Destination Database Changes</a>
 	<?php } ?>
 </div>
 
 <?php if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) { ?>
 	<div class="bb_actions bb_actions_after-deploy slidedown" style="display: none;">
-		<a class="btn btn-with-icon btn-white btn-back" href="<?php echo pb_backupbuddy::page_url(); ?>">Back to backups<span class="btn-icon"></span></a>
-		<a class="btn btn-with-icon btn-white btn-cancel pb_backupbuddy_deployUndo" href="" target="_blank" style="display: none;"><span class="btn-icon"></span> Undo Destination Database Changes</a>
+		<a class="button button-secondary button-flex btn-with-icon btn-back" href="<?php echo esc_attr( pb_backupbuddy::page_url() ); ?>">Back to backups<span class="btn-icon"><?php pb_backupbuddy::$ui->render_icon( 'chevronleft' ); ?></span></a>
+		<a class="button button-secondary button-flex btn-with-icon btn-cancel pb_backupbuddy_deployUndo" href="" target="_blank" style="display: none;"><span class="btn-icon"><?php pb_backupbuddy::$ui->render_icon( 'backup' ); ?></span> Undo Destination Database Changes</a>
 		<?php
 		if ( 'push' == $direction ) {
 			$destination_url = $deploy_data['destination']['siteurl'];
 		} elseif ( 'pull' == $direction ) {
-			$destination_url = site_url(); // $deploy_data['remoteInfo']['siteurl'];
+			$destination_url = site_url();
 		} else {
 			$destination_url = '#UNKNOWN_DESTINATION_TYPE';
 		}
 		?>
-		<a class="btn btn-with-icon btn-visit" href="<?php echo esc_url( $destination_url ); ?>" target="_blank"><span class="btn-icon"></span> Visit Deployed Site</a>
-		<a class="btn btn-with-icon btn-confirm btn-confirm-deploy" href="javascript:void(0);" target="_blank"><span class="btn-icon" style="font-size: 1.5em; top: 24%; color: #8CFF9B;"></span>Confirm Changes</a>
+		<a class="button button-secondary button-flex btn-with-icon btn-visit" href="<?php echo esc_url( $destination_url ); ?>" target="_blank"><span class="btn-icon"></span> Visit Deployed Site</a>
+		<a class="button button-secondary button-flex btn-with-icon btn-confirm btn-confirm-deploy" href="javascript:void(0);" target="_blank"><span class="btn-icon" style="font-size: 1.5em; top: 24%; color: #8CFF9B;"></span>Confirm Changes</a>
 	</div>
 <?php } ?>
 
 <div class="bb_actions slidedown pb_actions_cancelled" style="display: none;">
-	<a href="<?php echo esc_url( pb_backupbuddy::page_url() ); ?>" class="btn btn-with-icon btn-white btn-back"><span class="btn-icon"></span> Back to backups</a>
+	<a href="<?php echo esc_attr( pb_backupbuddy::page_url() ); ?>" class="button button-secondary button-flex btn-with-icon btn-back"><span class="btn-icon"><?php pb_backupbuddy::$ui->render_icon( 'chevronleft' ); ?></span> Back to backups</a>
 	<?php if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) { ?>
-		<a class="btn btn-with-icon btn-white btn-cancel pb_backupbuddy_deployUndo" href="" target="_blank" style="display: none;"><span class="btn-icon"></span> Undo Destination Database Changes</a>
+		<a class="button button-secondary button-flex btn-with-icon btn-cancel pb_backupbuddy_deployUndo" href="" target="_blank" style="display: none;"><span class="btn-icon"><?php pb_backupbuddy::$ui->render_icon( 'backup' ); ?></span> Undo Destination Database Changes</a>
 	<?php } ?>
 	<?php if ( 'deploy' != pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) { ?>
-		<a href="admin.php?<?php echo $_SERVER['QUERY_STRING']; ?>" class="btn btn-with-icon btn-tryagain">Try Again <span class="btn-icon"></span></a>
+		<a href="admin.php?<?php echo sanitize_text_field( $_SERVER['QUERY_STRING'] )  ?>" class="button button-secondary button-flex btn-with-icon btn-tryagain">Try Again <span class="btn-icon"><?php pb_backupbuddy::$ui->render_icon( 'update' ); ?></span></a>
 	<?php } ?>
-	<a href="http://ithemes.com/support/" target="_blank" class="btn btn-with-icon btn-support">Contact iThemes Support for help <span class="btn-icon"></span></a>
+	<a href="https://go.solidwp.com/support" target="_blank" class="button button-secondary button-flex btn-with-icon btn-support">Contact Solid Support for help <span class="btn-icon"><?php pb_backupbuddy::$ui->render_icon( 'chat' ); ?></span></a>
 </div>
 
 <div>
 	<div class="bb_actions bb_actions_after slidedown" style="display: none;">
-		<a class="btn btn-with-icon btn-white btn-back" href="<?php echo esc_url( pb_backupbuddy::page_url() ); ?>">Back to backups<span class="btn-icon"></span></a>
-		<a class="btn btn-with-icon btn-download" href="#" id="pb_backupbuddy_archive_url">Download backup file <span class="btn-file-size backupbuddy_archive_size">?MB</span> <span class="btn-icon"></span></a>
-		<a class="btn btn-with-icon btn-send" href="#" id="pb_backupbuddy_archive_send" rel="">Send to an offsite destination <span class="btn-icon"></span></a>
-
+		<a class="button button-secondary button-flex btn-with-icon btn-back" href="<?php echo esc_attr( pb_backupbuddy::page_url() ); ?>">Back to backups<span class="btn-icon"><?php pb_backupbuddy::$ui->render_icon( 'chevronleft' ); ?></span></a>
+		<a class="button button-primary button-flex btn-with-icon btn-download" href="#" id="pb_backupbuddy_archive_url">Download backup file <span class="btn-file-size backupbuddy_archive_size">?MB</span> <span class="btn-icon"><?php pb_backupbuddy::$ui->render_icon( 'arrowdown' ); ?></span></a>
+		<a class="button button-primary button-flex btn-with-icon btn-send" href="#" id="pb_backupbuddy_archive_send" rel="">Send to an offsite destination <span class="btn-icon"><?php pb_backupbuddy::$ui->render_icon( 'redo' ); ?></span></a>
+		<div class="flex-break"></div>
 		<?php require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php'; ?>
-		<div class="bb_destinations">
+		<div class="bb_destinations" style="display: none;">
 			<div class="bb_destinations-group bb_destinations-existing">
-				<h3>Send to one of your existing destinations?</h3>
+				<h3 class="solid-title-medium"><?php esc_html_e( 'Send to one of your existing destinations?', 'it-l10n-backupbuddy' ); ?></h3>
 				<?php if ( ! $is_importbuddy ) : ?>
-					<label><input type="checkbox" name="delete_after" id="pb_backupbuddy_remote_delete" value="1">Delete local backup after successful delivery?</label>
+					<label><input type="checkbox" name="delete_after" id="pb_backupbuddy_remote_delete" value="1"><?php esc_html_e( 'Delete local backup after successful delivery?', 'it-l10n-backupbuddy' ); ?></label>
 				<?php endif; ?>
-				<ul>
+				<ul class="bb_destination-list">
 					<?php
 					foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => $destination ) {
+						if ( ! empty( $destination['deprecated'] ) ) {
+							continue;
+						}
+
 						// Never show Deployment ("site") destination here.
 						if ( ( 'site' == $destination['type'] ) || ( 'live' == $destination['type'] ) ) {
 							continue;
@@ -929,27 +919,25 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 							$disabled_class = 'bb_destination-item-disabled';
 						}
 
-						echo '<li class="bb_destination-item bb_destination-' . $destination['type'] . ' ' . $disabled_class . '"><a href="javascript:void(0)" title="' . $destination['title'] . '" rel="' . $destination_id . '">' . $destination['title'] . '</a></li>';
+						echo '<li class="bb_destination-item bb_destination-' . esc_attr( $destination['type'] ) . ' ' . $disabled_class . '"><a href="javascript:void(0)" title="' . esc_attr( $destination['title'] ) . '" rel="' . $destination_id . '">' . esc_html( $destination['title'] ) . '</a></li>';
 					}
 					?>
-					<br><br>
-					<a href="javascript:void(0)" class="btn btn-small btn-white btn-cancel-send" onClick="jQuery('.bb_destinations').hide();">Nevermind</a>
-					<?php if ( false === apply_filters( 'itbub_disable_add_destination_tab', false ) ) : ?>
-						<a href="javascript:void(0)" class="btn btn-small btn-addnew" onClick="jQuery('.bb_destinations-existing').hide(); jQuery('.bb_destinations-new').show();">Add New Destination +</a>
-					<?php endif; ?>
 				</ul>
+				<a href="javascript:void(0)" class="button button-secondary btn-small btn-cancel-send" onClick="jQuery('.bb_destinations').hide();">Nevermind</a>
+				<?php if ( false === apply_filters( 'itbub_disable_add_destination_tab', false ) ) : ?>
+					<a href="javascript:void(0)" class="button button-primary btn-small btn-addnew" onClick="jQuery('.bb_destinations-existing').hide(); jQuery('.bb_destinations-new').show();">Add New Destination +</a>
+				<?php endif; ?>
 			</div>
-			<div class="bb_destinations-group bb_destinations-new bb_destinations-new" style="display: none;">
-				<h2>What kind of destination do you want to add?</h2><br>
-				<ul>
+			<div class="bb_destinations-group bb_destinations-new" style="display: none;">
+				<h2><?php esc_html_e( 'What kind of destination do you want to add?', 'it-l10n-backupbuddy' ); ?></h2><br>
+				<ul class="bb_destination-list">
 					<?php
-					$best_count   = 0;
-					$normal_count = 0;
-					$legacy_count = 0;
-					$best         = '';
-					$normal       = '';
-					$legacy       = '';
+					$list = '';
+					$lower_priority_list = '';
 					foreach ( pb_backupbuddy_destinations::get_destinations_list( true ) as $destination_name => $destination ) {
+						if ( ! empty( $destination['deprecated'] ) ) {
+							continue;
+						}
 						$disable_class = '';
 						if ( true !== $destination['compatible'] ) {
 							$disable_class = 'bb_destination-item-disabled';
@@ -964,48 +952,28 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 						}
 
 						$this_dest  = '';
-						$this_dest .= '<li class="bb_destination-item bb_destination-' . $destination_name . ' bb_destination-new-item ' . $disable_class . '">';
-						if ( 'stash3' == $destination_name ) {
-							$this_dest .= '<div class="bb-ribbon"><span>New</span></div>';
-						}
-						$this_dest .= '<a href="javascript:void(0)" rel="' . $destination_name . '">';
-						$this_dest .= $destination['name'];
+						$this_dest .= '<li class="bb_destination-item bb_destination-' . esc_attr( $destination_name ) . ' bb_destination-new-item ' . $disable_class . '">';
+						$this_dest .= '<a href="javascript:void(0)" rel="' . esc_attr( $destination_name ) . '">';
+						$this_dest .= esc_html( $destination['name'] );
 						if ( true !== $destination['compatible'] ) {
 							$this_dest .= ' [Unavailable; ' . $destination['compatibility'] . ']';
 						}
 						$this_dest .= '</a></li>';
 
-						if ( isset( $destination['category'] ) && 'best' == $destination['category'] ) {
-							$best .= $this_dest;
-							$best_count++;
-							if ( $best_count > 4 ) {
-								$best      .= '<span class="bb_destination-break"></span>';
-								$best_count = 0;
-							}
-						} elseif ( isset( $destination['category'] ) && 'legacy' == $destination['category'] ) {
-							$legacy .= $this_dest;
-							$legacy_count++;
-							if ( $legacy_count > 4 ) {
-								$legacy      .= '<span class="bb_destination-break"></span>';
-								$legacy_count = 0;
-							}
+						$category = isset( $destination['category'] ) ? $destination['category'] : false;
+
+						if ( 'best' === $category ) {
+							$list .= $this_dest;
 						} else {
-							$normal .= $this_dest;
-							$normal_count++;
-							if ( $normal_count > 4 ) {
-								$normal      .= '<span class="bb_destination-break"></span>';
-								$normal_count = 0;
-							}
+							$lower_priority_list .= $this_dest;
 						}
+
 					}
 
-					echo '<h3>' . __( 'Preferred', 'it-l10n-backupbuddy' ) . '</h3>' . $best;
-					echo '<br><br><hr style="max-width: 1200px;"><br>';
-					echo '<h3>' . __( 'Normal', 'it-l10n-backupbuddy' ) . '</h3>' . $normal;
-					echo '<br><br><hr style="max-width: 1200px;"><br>';
-					echo '<h3>' . __( 'Legacy', 'it-l10n-backupbuddy' ) . '</h3>' . $legacy;
+					echo $list . $lower_priority_list;
 					?>
 				</ul>
+				<a href="javascript:void(0)" class="button button-secondary btn-back btn-back-add" onclick="jQuery('.bb_destinations-new').hide(); jQuery('.bb_destinations-existing').show();"><span class="btn-icon"></span>Back to existing destinations</a>
 			</div>
 		</div>
 	</div>
@@ -1013,7 +981,7 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 
 <div class="bb_actions bb_actions_remotesent"></div>
 
-<div>
+<div class="bb_results">
 	<span style="float: right; margin-top: 18px;">
 		<b><?php _e( 'Archive size', 'it-l10n-backupbuddy' ); ?></b>:&nbsp; <span class="backupbuddy_archive_size">-- MB</span>
 	</span>
@@ -1044,14 +1012,17 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 	<div class="bb_overview">
 		<div class="backup-step backup-step-active" id="backup-function-pre_backup">
 			<span class="backup-step-title">
+			<?php pb_backupbuddy::$ui->render_icon( 'tool' ); ?>
 			<?php
 			if ( 'deploy' != pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
 				_e( 'Getting ready to backup', 'it-l10n-backupbuddy' );
 			} else {
-				_e( 'Getting ready to deploy', 'it-l10n-backupbuddy' ); }
+				_e( 'Getting ready to deploy', 'it-l10n-backupbuddy' );
+			}
 			?>
+				<div style="font-weight: normal; font-size: 11px;">&nbsp;&nbsp;<?php esc_html_e( '(This may take a minute or two)', 'it-l10n-backupbuddy' ); ?></div>
 			</span>
-			<span class="backup-step-status"></span>
+			<span class="backup-step-status"><span class="backup-step-status-line"><?php pb_backupbuddy::$ui->render_icon( 'linesolid' ); ?></span><span class="backup-step-status-check"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span></span>
 		</div>
 		<?php if ( 'deploy' != pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) { ?>
 			<div class="backup-step backup-step-secondary" id="backup-secondary-function-pre_backup" style="display: none;">
@@ -1059,85 +1030,96 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 		<?php } ?>
 		<div class="backup-step" id="backup-function-backup_create_database_dump">
 			<span class="backup-step-title">
-			<?php
-			if ( 'deploy' != pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
-				_e( 'Backing up database', 'it-l10n-backupbuddy' );
-			} else {
-				if ( 'push' == $direction ) {
-					_e( 'Snapshotting this database', 'it-l10n-backupbuddy' );
-				} elseif ( 'pull' == $direction ) {
-					_e( 'Snapshotting remote database', 'it-l10n-backupbuddy' );
+				<?php pb_backupbuddy::$ui->render_icon( 'table' ); ?>
+				<?php
+				if ( 'deploy' != pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
+					_e( 'Backing up database', 'it-l10n-backupbuddy' );
 				} else {
-					echo '{Error#44339723a:Unknown direction.}';
+					if ( 'push' == $direction ) {
+						_e( 'Snapshotting this database', 'it-l10n-backupbuddy' );
+					} elseif ( 'pull' == $direction ) {
+						_e( 'Snapshotting remote database', 'it-l10n-backupbuddy' );
+					} else {
+						echo '{Error#44339723a:Unknown direction.}';
+					}
 				}
-			}
-			?>
-			<span id="backup-function-current-table"></span></span>
+				?>
+				<span id="backup-function-current-table"></span>
+			</span>
 			<span class="backup-step-zip-size backupbuddy_sql_size"></span>
-			<span class="backup-step-status"></span>
+			<span class="backup-step-status"><span class="backup-step-status-line"><?php pb_backupbuddy::$ui->render_icon( 'linesolid' ); ?></span><span class="backup-step-status-check"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span></span>
 		</div>
 		<div class="backup-step" id="backup-function-backup_zip_files">
 			<span class="backup-step-title">
-			<?php
-			if ( 'deploy' != pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
-				_e( 'Zipping files', 'it-l10n-backupbuddy' );
-			} else {
-				if ( 'push' == $direction ) {
-					_e( 'Zipping local files', 'it-l10n-backupbuddy' );
-				} elseif ( 'pull' == $direction ) {
-					_e( 'Zipping remote files', 'it-l10n-backupbuddy' );
+				<?php pb_backupbuddy::$ui->render_icon( 'file' ); ?>
+				<?php
+				if ( 'deploy' != pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
+					_e( 'Zipping files', 'it-l10n-backupbuddy' );
 				} else {
-					echo '{Error#44339723b:Unknown direction.}';
+					if ( 'push' == $direction ) {
+						_e( 'Zipping local files', 'it-l10n-backupbuddy' );
+					} elseif ( 'pull' == $direction ) {
+						_e( 'Zipping remote files', 'it-l10n-backupbuddy' );
+					} else {
+						echo '{Error#44339723b:Unknown direction.}';
+					}
 				}
-			}
-			?>
+				?>
 			</span>
 			<span class="backup-step-zip-size backupbuddy_archive_size"></span>
-			<span class="backup-step-status"></span>
+			<span class="backup-step-status"><span class="backup-step-status-line"><?php pb_backupbuddy::$ui->render_icon( 'linesolid' ); ?></span><span class="backup-step-status-check"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span></span>
 		</div>
 		<?php if ( 'deploy' != pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) { ?>
 			<div class="backup-step" id="backup-function-integrity_check">
-				<span class="backup-step-title"><?php _e( 'Verifying backup file integrity', 'it-l10n-backupbuddy' ); ?></span>
-				<span class="backup-step-status"></span>
+				<span class="backup-step-title">
+					<?php pb_backupbuddy::$ui->render_icon( 'backup' ); ?>
+						<?php _e( 'Verifying backup file integrity', 'it-l10n-backupbuddy' ); ?>
+					</span>
+				<span class="backup-step-status"><span class="backup-step-status-line"><?php pb_backupbuddy::$ui->render_icon( 'linesolid' ); ?></span><span class="backup-step-status-check"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span></span>
 			</div>
 			<div class="backup-step" id="backup-function-post_backup">
-				<span class="backup-step-title"><?php _e( 'Cleaning up', 'it-l10n-backupbuddy' ); ?></span>
-				<span class="backup-step-status"></span>
+				<span class="backup-step-title">
+					<?php pb_backupbuddy::$ui->render_icon( 'trash' ); ?>
+					<?php _e( 'Cleaning up', 'it-l10n-backupbuddy' ); ?>
+				</span>
+				<span class="backup-step-status"><span class="backup-step-status-line"><?php pb_backupbuddy::$ui->render_icon( 'linesolid' ); ?></span><span class="backup-step-status-check"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span></span>
 			</div>
 		<?php } else { ?>
 			<div class="backup-step" id="backup-function-deploy_sendContent">
 				<span class="backup-step-title">
-				<?php
-				if ( 'push' == $direction ) {
-					_e( 'Pushing data & files', 'it-l10n-backupbuddy' );
-				} elseif ( 'pull' == $direction ) {
-					_e( 'Pulling data & files', 'it-l10n-backupbuddy' );
-				} else {
-					echo '{Error#44339723c:Unknown direction.}';
-				}
-				?>
+					<?php pb_backupbuddy::$ui->render_icon( 'redo' ); ?>
+					<?php
+					if ( 'push' == $direction ) {
+						_e( 'Pushing data & files', 'it-l10n-backupbuddy' );
+					} elseif ( 'pull' == $direction ) {
+						_e( 'Pulling data & files', 'it-l10n-backupbuddy' );
+					} else {
+						echo '{Error#44339723c:Unknown direction.}';
+					}
+					?>
 				</span>
 				<span class="backup-step-zip-size">
 					<span class="backupbuddy_sendContent_progress"></span>
 					<span class="backupbuddy_sendContent_sent" id="backupbuddy_sendContent_sent" data-count="0"></span>
 				</span>
-				<span class="backup-step-status"></span>
+				<span class="backup-step-status"><span class="backup-step-status-line"><?php pb_backupbuddy::$ui->render_icon( 'linesolid' ); ?></span><span class="backup-step-status-check"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span></span>
 			</div>
 		<?php } ?>
 		<?php if ( 'deploy' == pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) { ?>
 			<div class="backup-step" id="backup-function-deploy_runningImportBuddy">
 				<span class="backup-step-title">
-				<?php
-				if ( 'push' == $direction ) {
-					_e( 'Deploying pushed data on destination site', 'it-l10n-backupbuddy' );
-				} elseif ( 'pull' == $direction ) {
-					_e( 'Deploying pulled data to this site', 'it-l10n-backupbuddy' );
-				} else {
-					echo '{Error#33736332:Unknown direction.}';
-				}
-				?>
+				<?php pb_backupbuddy::$ui->render_icon( 'globe' ); ?>
+					<?php
+					if ( 'push' == $direction ) {
+						_e( 'Deploying pushed data on destination site', 'it-l10n-backupbuddy' );
+					} elseif ( 'pull' == $direction ) {
+						_e( 'Deploying pulled data to this site', 'it-l10n-backupbuddy' );
+					} else {
+						echo '{Error#33736332:Unknown direction.}';
+					}
+					?>
 				</span>
-				<span class="backup-step-status"></span>
+				<span class="backup-step-status"><span class="backup-step-status-line"><?php pb_backupbuddy::$ui->render_icon( 'linesolid' ); ?></span><span class="backup-step-status-check"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span></span>
 			</div>
 			<div class="backup-step backup-step-secondary" style="display: none;" id="backup-function-deploy_runningImportBuddy-secondary">
 				<iframe id="backupbuddy_deploy_runningImportBuddy" src="" width="100%" height="30" frameBorder="0">Error #4584594579. Browser not compatible with iframes.</iframe>
@@ -1153,20 +1135,22 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 		?>
 		<div class="backup-step" id="<?php echo esc_attr( $step_id ); ?>">
 			<span class="backup-step-title">
-			<?php
-			if ( 'deploy' != pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
-				_e( 'Backup completed successfully', 'it-l10n-backupbuddy' );
-			} else {
-				_e( 'Deployment completed successfully. Click the "Confirm Changes" button once satisfied.', 'it-l10n-backupbuddy' );
-			}
-			?>
+				<?php pb_backupbuddy::$ui->render_icon( 'check' ); ?>
+				<?php
+				if ( 'deploy' != pb_backupbuddy::_GET( 'backupbuddy_backup' ) ) {
+					_e( 'Backup completed successfully', 'it-l10n-backupbuddy' );
+				} else {
+					_e( 'Deployment completed successfully. Click the "Confirm Changes" button once satisfied.', 'it-l10n-backupbuddy' );
+				}
+				?>
 			</span>
-			<span class="backup-step-status"></span>
+			<span class="backup-step-status"><span class="backup-step-status-line"><?php pb_backupbuddy::$ui->render_icon( 'linesolid' ); ?></span><span class="backup-step-status-check"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span></span>
+			<div class="flex-break"></div>
 			<div class="backup-step-error-message" style="display: none;" id="backupbuddy_errors_notice">
 				<h3>Possible errors or warnings may have been encountered</h3>
-				See the Status Log in the tab above for details on detected errors.
-				<b>Not all errors are fatal and are sometimes normal.</b> Look up error codes & troubleshooting details in the <a href="https://ithemeshelp.zendesk.com/hc/en-us/sections/202110027-Troubleshooting" target="_blank"><b>Knowledge Base</b></a>.
-				<b><i>Provide a copy of the Status Log if seeking support.</i></b>
+				<span class="description">See the Status Log in the tab above for details on detected errors.
+				<b>Not all errors are fatal and are sometimes normal.</b> Look up error codes & troubleshooting details in the <a href="https://go.solidwp.com/solid-backups-troubleshooting" target="_blank"><b>Knowledge Base</b></a>.
+				<b><i>Provide a copy of the Status Log if seeking support.</i></b></span>
 			</div>
 		</div>
 	</div>
@@ -1178,22 +1162,22 @@ $is_importbuddy = isset( $_GET['callback_data'] ) && 'importbuddy.php' === sanit
 	pb_backupbuddy::$ui->end_tab();
 	pb_backupbuddy::$ui->start_tab( 'advanced' );
 	?>
-	<pre wrap="off" id="backupbuddy_messages" style="width: 100%; font-family: Andale Mono, monospace; tab-size: 3; -moz-tab-size: 3; -o-tab-size: 3;">Time				Elapsed	Memory	Message</pre>
-	<div style="float: right; margin-left: 20px;">
-		<label>
-			<input type="checkbox" id="backupbuddy-status-limit"> <span class="description">Limit to last <?php echo backupbuddy_constants::BACKUP_STATUS_BOX_LIMIT_OPTION_LINES; ?> lines</span>
-		</label>
+	<pre wrap="off" id="backupbuddy_messages">Time				Elapsed	Memory	Message</pre>
+	<div class="backupbuddy_messages-checkboxes">
+		<div class="backupbuddy_messages-checkboxes-left">
+			<label>
+				<input type="checkbox" id="backupbuddy-status-limit"> <span class="description">Limit to last <?php echo backupbuddy_constants::BACKUP_STATUS_BOX_LIMIT_OPTION_LINES; ?> lines</span>
+			</label>
+		</div>
+		<div>
+			<label>
+				<input type="checkbox" checked="checked" id="backupbuddy-status-autoscroll"> <span class="description">Auto scroll to bottom</span>
+			</label>
+		</div>
 	</div>
-	<div style="float: right;">
-		<label>
-			<input type="checkbox" checked="checked" id="backupbuddy-status-autoscroll"> <span class="description">Auto scroll to bottom</span>
-		</label>
-	</div>
-	<br style="clear: both;">
 	<div style="text-align: center;">
-		<button class="button button-primary" onClick="backupbuddy_saveLogAsFile();">Download Status Log (.txt)</button>
+		<button class="button button-secondary" onClick="backupbuddy_saveLogAsFile();">Download Status Log (.txt)</button>
 	</div>
-	<br><br>
 	<?php
 	pb_backupbuddy::$ui->end_tab();
 	?>
@@ -1370,8 +1354,7 @@ if ( isset( $deploy_data['destination'] ) ) {
 	$deploy_destination = $deploy_data['destination'];
 }
 
-pb_backupbuddy::load_script( 'backupEvents.js' );
-pb_backupbuddy::load_script( 'backupPerform.js' );
+pb_backupbuddy::load_script( 'backups.js' );
 
 // Run the backup!
 pb_backupbuddy::flush(); // Flush any buffer to screen just before the backup begins.

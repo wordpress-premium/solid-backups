@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: ImportBuddy
- * Plugin URI: http://ithemes.com/
- * Description: BackupBuddy Importer
+ * Plugin URI: http://solidwp.com/
+ * Description: Solid Backups Importer
  *
  * @since 1.0.2
  * @author Dustin Bolton

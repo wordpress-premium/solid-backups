@@ -11,7 +11,7 @@ global $wpdb, $table_prefix;
 if ( $wpdb->prefix == $wpdb->base_prefix ) {
 	printf( '<h3>%s</h3>', esc_html__( 'Export Unavailable for Main Site', 'it-l10n-backupbuddy' ) );
 	esc_html_e( 'The main Network site (base: `' . $wpdb->base_prefix . '`; this site prefix: `' . $wpdb->prefix . '`; table prefix: `' . $table_prefix . '`) cannot be exported as it is tied to the Network. It can only be backed up from the main Network Admin. All other subsites can be exported for importing into the same Network (aka Duplicate), another Network, or as a standalone site.', 'it-l10n-backupbuddy' );
-	echo ' See the <a href="https://ithemeshelp.zendesk.com/hc/en-us/articles/115004532967-Backup-Restore-and-Migrate-with-BackupBuddy-Multisite-Experimental-">BackupBuddy Multisite Knowledge Base</a> for additional information.';
+	echo ' See the <a href="https://go.solidwp.com/solid-backups-backup-restore-migrate-multisite">Solid Backups Multisite Knowledge Base</a> for additional information.';
 	echo '<br><br><br>';
 	return;
 }
@@ -21,12 +21,12 @@ if ( $wpdb->prefix == $wpdb->base_prefix ) {
 	jQuery(function() {
 
 		jQuery( '.pb_backupbuddy_hoveraction_send' ).click( function(e) {
-			tb_show( 'BackupBuddy', '<?php echo pb_backupbuddy::ajax_url( 'destination_picker' ); ?>&callback_data=' + jQuery(this).attr('rel') + '&sending=1&TB_iframe=1&width=640&height=455', null );
+			tb_show( 'Solid Backups', '<?php echo pb_backupbuddy::ajax_url( 'destination_picker' ); ?>&callback_data=' + jQuery(this).attr('rel') + '&sending=1&TB_iframe=1&width=640&height=455', null );
 			return false;
 		});
 
 		jQuery( '.pb_backupbuddy_hoveraction_hash' ).click( function(e) {
-			tb_show( 'BackupBuddy', '<?php echo pb_backupbuddy::ajax_url( 'hash' ); ?>&callback_data=' + jQuery(this).attr('rel') + '&TB_iframe=1&width=640&height=455', null );
+			tb_show( 'Solid Backups', '<?php echo pb_backupbuddy::ajax_url( 'hash' ); ?>&callback_data=' + jQuery(this).attr('rel') + '&TB_iframe=1&width=640&height=455', null );
 			return false;
 		});
 
@@ -71,24 +71,24 @@ if ( $wpdb->prefix == $wpdb->base_prefix ) {
 			);
 
 			/* Try to ping server to nudge cron along since sometimes it doesnt trigger as expected. */
-			jQuery.post( '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+			jQuery.post( '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 				function(data) {
 				}
 			);
 
 		} else {
 			<?php $admin_url = is_network_admin() ? network_admin_url( 'admin.php' ) : admin_url( 'admin.php' ); ?>
-			window.location.href = '<?php echo $admin_url; ?>?page=pb_backupbuddy_backup&custom=remoteclient&destination_id=' + destination_id;
+			window.location.href = '<?php echo esc_url( $admin_url ); ?>?page=pb_backupbuddy_backup&custom=remoteclient&destination_id=' + parseInt( destination_id );
 		}
 	}
 </script>
 
-<p>For BackupBuddy Multisite documentation, please visit the <a href='https://ithemeshelp.zendesk.com/hc/en-us/articles/115004532967-Backup-Restore-and-Migrate-with-BackupBuddy-Multisite-Experimental-'>BackupBuddy Multisite Codex</a>.</p>
+<p>For Solid Backups Multisite documentation, please visit the <a href='https://go.solidwp.com/backup-restore-migrate'>Solid Backups Multisite Codex</a>.</p>
 <br>
 
 <h3>Select plugins to include in Export</h3>
 
-<form method="post" action="<?php echo pb_backupbuddy::page_url(); ?>&backupbuddy_backup=export">
+<form method="post" action="<?php echo esc_attr( pb_backupbuddy::page_url() ); ?>&backupbuddy_backup=export">
 
 	<div id='plugin-list'>
 		<table class="widefat">

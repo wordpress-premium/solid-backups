@@ -67,6 +67,9 @@ class pb_backupbuddy_destinations {
 			return false;
 		}
 
+		// Bypass deprecated s3 destination types.
+		$destination_settings = self::enforce_s3_type( $destination_settings );
+
 		if ( true !== self::_typePhpSupport( $destination_settings['type'] ) ) {
 			pb_backupbuddy::status( 'error', 'Your server does not support this destination. You may need to upgrade to a newer PHP version.' );
 			return false;
@@ -153,7 +156,7 @@ class pb_backupbuddy_destinations {
 		// Initialize destination.
 		$destination = self::_init_destination( $settings );
 		if ( false === $destination ) {
-			pb_backupbuddy::status( 'warning', 'Unable to load destination `' . $destination_type . '` Some destinations require a newer PHP version.' );
+			pb_backupbuddy::status( 'warning', 'Unable to load destination `' . $destination['name'] . '` Some destinations require a newer PHP version.' );
 			return false;
 		}
 
@@ -211,9 +214,11 @@ class pb_backupbuddy_destinations {
 
 		$config_file = pb_backupbuddy::plugin_path() . '/destinations/' . $destination_settings['type'] . '/_configure.php';
 		pb_backupbuddy::status( 'details', 'Loading destination configure file `' . $config_file . '`.' );
+
 		if ( file_exists( $config_file ) ) {
 			require $config_file;
 		} else {
+
 			$error = '{Error #54556543. Missing destination config file `' . $config_file . '`.}';
 			pb_backupbuddy::status( 'error', $error );
 			echo $error;
@@ -241,22 +246,41 @@ class pb_backupbuddy_destinations {
 			return false;
 		}
 
+		// Don't allow management of S32 or Stash2  destinations if using PHP 8 or higher
+		if ( version_compare( phpversion(), '8', '>=' ) && in_array( $destination_settings['type'], array( 'stash2', 's32' ) ) ) {
+			echo '<div class="notice notice-error"><p>This destination does not work with PHP 8+. Please delete it and add the updated version of the destination.</p></div>';
+			return false;
+		}
+
+
 		$destination_settings = array_merge( self::$_destination_info_defaults, $destination['settings'] ); // Noramlize defaults.
 		$destination_info     = $destination['info'];
 
 		if ( '0' != $destination_settings['disable_file_management'] ) {
-			esc_html_e( 'Remote file management has been disabled for this destination. Its files cannot be viewed or managed from within BackupBuddy. To re-enable you must create a new destination.', 'it-l10n-backupbuddy' );
+			esc_html_e( 'Remote file management has been disabled for this destination. Its files cannot be viewed or managed from within Solid Backups. To re-enable you must create a new destination.', 'it-l10n-backupbuddy' );
 			return false;
 		}
 
 		$manage_file = pb_backupbuddy::plugin_path() . '/destinations/' . $destination_settings['type'] . '/_manage.php';
 		if ( file_exists( $manage_file ) ) {
 			$destination = &$destination_settings;
-			require $manage_file; // Incoming variables available to manage file: $destination.
-			pb_backupbuddy::load_script( 'common' ); // Needed for table 'select all' feature.
+			?>
+			<div class="backupbuddy-destination-container">
+				<?php
+				require $manage_file; // Incoming variables available to manage file: $destination.
+				pb_backupbuddy::load_script( 'common' ); // Needed for table 'select all' feature.
+				?>
+			</div>
+			<?php
 			return true;
 		} else {
-			esc_html_e( 'Files stored at this destination cannot be viewed within BackupBuddy.', 'it-l10n-backupbuddy' );
+			?>
+			<div class="backupbuddy-destination-container">
+			<?php
+			esc_html_e( 'Files stored at this destination cannot be viewed within Solid Backups.', 'it-l10n-backupbuddy' );
+			?>
+			</div>
+			<?php
 			return false;
 		}
 
@@ -306,6 +330,12 @@ class pb_backupbuddy_destinations {
 	 * @return bool|string  If successful or not, or error on error.
 	 */
 	public static function download_dat_files( $destination_settings, $return = false ) {
+		if ( backupbuddy_data_file()::creation_is_disabled() ) {
+			pb_backupbuddy::status( 'details', 'Not downloading .dat files as `disable .dat file creation` is set to `true` in Advanced Settings.' );
+			// Since this is not an error, return true.
+			return true;
+		}
+
 		$destination = self::_init_destination( $destination_settings );
 		if ( false === $destination ) {
 			$error = '{Error #546893498c. Destination configuration file missing.}';
@@ -349,7 +379,7 @@ class pb_backupbuddy_destinations {
 		$destination_class    = $destination['class'];
 
 		if ( false === method_exists( $destination_class, 'get_dat_orphans' ) ) {
-			pb_backupbuddy::status( 'error', esc_html__( 'get_dat_orphans destination function called on destination not supporting it.', 'it-l10n-backupbuddy' ) );
+			pb_backupbuddy::status( 'warning', esc_html__( 'get_dat_orphans destination function called on destination not supporting it.', 'it-l10n-backupbuddy' ) );
 			return false;
 		}
 
@@ -542,7 +572,7 @@ class pb_backupbuddy_destinations {
 		if ( '' != $send_id ) {
 			$do_delete_after = $delete_after ? 'Yes' : 'No';
 			pb_backupbuddy::add_status_serial( 'remote_send-' . $send_id );
-			pb_backupbuddy::status( 'details', '----- Initiating master send function for BackupBuddy v' . pb_backupbuddy::settings( 'version' ) . '.' );
+			pb_backupbuddy::status( 'details', '----- Initiating master send function for Solid Backups v' . pb_backupbuddy::settings( 'version' ) . '.' );
 			if ( is_array( $file ) ) {
 				pb_backupbuddy::status( 'details', 'Sending multiple files (' . count( $file ) . ') in this single send. Post-send deletion: ' . $do_delete_after );
 			} else {
@@ -598,7 +628,7 @@ class pb_backupbuddy_destinations {
 			}
 
 			if ( true === $is_retry ) {
-				$fileoptions['retries']++;
+				empty( $fileoptions['retries'] ) ? $fileoptions['retries'] = 0 : $fileoptions['retries']++;
 				pb_backupbuddy::status( 'details', '~~~ This is RETRY attempt #' . $fileoptions['retries'] . ' of a previous failed send step potentially due to timeout. ~~~' );
 				if ( $fileoptions['retries'] > ( 10 ) ) { // Backup safety beyond the normal retry attempt limiting system. Hardcoded to prevent runaway attempts.
 					pb_backupbuddy::status( 'error', 'Error #398333: A remote send retry exceeded the maximum hard limit number of retry attempts.  Cancelling send to prevent runaway situation.' );
@@ -678,7 +708,10 @@ class pb_backupbuddy_destinations {
 		 * @var bool|array
 		 */
 		if ( false === $result ) {
-			$error_details = count( $pb_backupbuddy_destination_errors ) > 0 ? esc_html__( ' `Details: ', 'it-l10n-backupbuddy' ) . print_r( $pb_backupbuddy_destination_errors, true ) . '`' : '';
+			$error_details = '';
+			if ( is_array( $pb_backupbuddy_destination_errors ) && count( $pb_backupbuddy_destination_errors ) > 0 ) {
+				$error_details = esc_html__( ' `Details: ', 'it-l10n-backupbuddy' ) . print_r( $pb_backupbuddy_destination_errors, true ) . '`';
+			}
 			pb_backupbuddy::status( 'error', 'Error #8239823: One or more errors were encountered attempting to send. See log above for more information such as specific error numbers or the following details.' . print_r( $error_details, true ) );
 
 			$log_directory = backupbuddy_core::getLogDirectory();
@@ -796,7 +829,7 @@ class pb_backupbuddy_destinations {
 					}
 					if ( file_exists( $file ) ) { // File still exists.
 						pb_backupbuddy::status( 'details', __( 'Error. Unable to delete local file `' . $file . '` after send as set in settings.', 'it-l10n-backupbuddy' ) );
-						backupbuddy_core::mail_error( 'BackupBuddy was unable to delete local file `' . $file . '` after successful remove transfer though post-remote send deletion is enabled. You may want to delete it manually. This can be caused by permission problems or improper server configuration.' );
+						backupbuddy_core::mail_error( 'Solid Backups was unable to delete local file `' . $file . '` after successful remove transfer though post-remote send deletion is enabled. You may want to delete it manually. This can be caused by permission problems or improper server configuration.' );
 					} else { // Deleted.
 						pb_backupbuddy::status( 'details', __( 'Deleted local file after successful remote destination send based on settings.', 'it-l10n-backupbuddy' ) );
 						pb_backupbuddy::status( 'archiveDeleted', '' );
@@ -853,7 +886,6 @@ class pb_backupbuddy_destinations {
 	 * @return bool|string  Return true on success, else error message.
 	 */
 	public static function test( $destination_settings ) {
-
 		$destination = self::_init_destination( $destination_settings );
 		if ( false === $destination ) {
 			echo '{Error #546893498ab. Destination configuration file missing.}';
@@ -991,8 +1023,22 @@ class pb_backupbuddy_destinations {
 			if ( substr( $destination_dir, 0, 1 ) == '_' ) { // Skip destinations beginning in underscore as they are not an actual destination.
 				continue;
 			}
+			//
+			// Remove Stash2 and S32 if PHP version is greater than 8.
+			if ( version_compare( phpversion(), '8', '>=' ) && in_array( $destination_dir, array( 'stash2', 's32' ) ) ) {
+				continue;
+			}
 
 			$phpmin = self::_typePhpSupport( $destination_dir );
+
+			$destination = self::get_info( $destination_dir );
+			if ( false === $destination ) {
+				continue;
+			}
+
+			if ( ! empty( $destination['deprecated'] ) ) {
+				continue;
+			}
 
 			// Hotfix to fix s32 destination breaking due to namespaces in init.php.  Need to re-work so init.php doesn't break things.
 			if ( true !== $phpmin ) {
@@ -1000,8 +1046,6 @@ class pb_backupbuddy_destinations {
 				$destination['name']          = $destination_dir;
 				$destination['compatibility'] = __( 'Requires PHP v', 'it-l10n-backupbuddy' ) . $phpmin;
 			} else {
-
-				$destination               = self::get_info( $destination_dir );
 				$destination['compatible'] = true;
 				$destination['type']       = $destination_dir;
 			}
@@ -1046,13 +1090,7 @@ class pb_backupbuddy_destinations {
 			unset( $destination_list['s32'] );
 		}
 
-		$s3_destination = array();
-		if ( isset( $destination_list['s3'] ) ) {
-			$s3_destination = array( 's3' => $destination_list['s3'] );
-			unset( $destination_list['s3'] );
-		}
-
-		$destination_list = array_merge( $stash3_destination, $stash2_destination, $stash_destination, $deploy_destination, $s33_destination, $s32_destination, $s3_destination, $destination_list );
+		$destination_list = array_merge( $stash3_destination, $stash2_destination, $stash_destination, $deploy_destination, $s33_destination, $s32_destination, $destination_list );
 		$destination_list = apply_filters( 'backupbuddy_destinations', $destination_list );
 
 		return $destination_list;
@@ -1110,5 +1148,55 @@ class pb_backupbuddy_destinations {
 		return true;
 
 	} // End delete_destination().
+
+	/**
+	 * Filters the destination settings to force S3 (v3) for all S3-related destinations.
+	 *
+	 * This is used because we may not have the Destination ID available for saving the settings.
+	 *
+	 * Because s32/s33 and stash2/stash3 have identical settings we can just change the type.
+	 *
+	 * Note that there is a similar function in housekeeping.php that saves the settings.
+	 *
+	 * @todo this can be removed in a future version.
+	 *
+	 * @since 9.1.8
+	 *
+	 * @param array $destination Destination settings.
+	 *
+	 * @return array The destination settings.
+	 */
+	private static function enforce_s3_type( $destination ) {
+		if ( 's32' === $destination['type'] ) {
+			$destination['type'] = 's33';
+		} else if ( 'stash2' === $destination['type'] ) {
+			$destination['type'] = 'stash3';
+		} elseif ( 'live' === $destination['type']
+			&& ( ! isset( $destination['destination_version'] ) || $destination['destination_version'] !== '3' )
+		) {
+			$destination['destination_version'] = '3';
+		}
+		return $destination;
+	}
+
+	/**
+	 * Check if a destination type is in use.
+	 *
+	 * "In use" means that a destination of this type is configured in the settings.
+	 *
+	 * @param string $check_type  Destination type.
+	 *
+	 * @return bool  True if in use, else false.
+	 */
+	public static function is_using_destination_type( $check_type ) {
+		$all_destinations = pb_backupbuddy::$options['remote_destinations'];
+		foreach( $all_destinations as $destination ) {
+			if ( $destination['type'] === $check_type ) {
+				return true;
+			}
+		}
+		return false;
+
+	}
 
 } // End class.

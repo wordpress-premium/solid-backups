@@ -36,7 +36,7 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 			if ( true === pb_backupbuddy_destinations::delete( $settings, $item ) ) {
 				$deleted_files++;
 			} else {
-				pb_backupbuddy::alert( 'Error: Unable to delete `' . $item . '`. Verify permissions or try again.' );
+				pb_backupbuddy::alert( 'Error: Unable to delete `' . esc_attr( $item ) . '`. Verify permissions or try again.' );
 			}
 		}
 
@@ -56,10 +56,7 @@ if ( '' !== pb_backupbuddy::_GET( 'cpy' ) ) {
 	pb_backupbuddy::status( 'details', 'Scheduling Cron for Dropbox file copy to local.' );
 	backupbuddy_core::schedule_single_event( time(), 'process_destination_copy', array( $settings, $copy ) );
 
-	if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-		update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-		spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-	}
+	backupbuddy_core::maybe_spawn_cron();
 }
 
 $quota = pb_backupbuddy_destination_dropbox3::get_quota();

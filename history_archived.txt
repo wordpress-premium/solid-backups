@@ -169,7 +169,7 @@ Pre-release version 1.1.4e - 2010-03-22 - Dustin Bolton
 	Changed error message when falling back to compatibility to be less alarming.
 1.1.21 - 2010-05-03 - Dustin Bolton
 	Corrected native zip function detection bug caused by previous version.
-1.1.22 - 2010-05-03 - Dustin Bolton	
+1.1.22 - 2010-05-03 - Dustin Bolton
 	Added site url to ZIP backup file name.
 	Added option to delete file after scheduled sending via ftp and/or email.
 1.1.25 - 2010-05-04 - Dustin Bolton
@@ -276,7 +276,7 @@ Pre-release version 1.1.4e - 2010-03-22 - Dustin Bolton
 	Fixed not initializing some variables.
 	Added WordPress and PHP version checking to BackupBuddy to better warn of incompatibility issues.
 	Added additional SQL logging to importbuddy.php to help find ninjas better.
-1.3.4 - 2010-10-06 - Dustin Bolton	
+1.3.4 - 2010-10-06 - Dustin Bolton
 	Added additional warnings if trying to import to a database and existing WP is found with that prefix.
 	Now blocking database merges in importbuddy.php to prevent data loss or corruption.
 	Added URL migration of both www and non-www domain prefixes to importbuddy.php.
@@ -465,7 +465,7 @@ Pre-2.0 - Dustin Bolton
 	Fixed warning on Server Info page.
 	Added note to email remote destination warning about potential size limitations.
 2.2.10 - 2011-07-27 - Josh Benham
-	Removed debugging text(moose) 
+	Removed debugging text(moose)
 2.2.11 - 2011-08-22 - Dustin Bolton
 	Fixed HTML glitch on Malware Scan page for Firefox on Mac.
 	Improved .htaccess AddHandler parsing. Now ignores commented out lines and reports the AddHandler line if found. Issue #56.
@@ -571,7 +571,7 @@ Pre-2.0 - Dustin Bolton
 	Added initial demo mode capabilities.
 	Removed serial logging even when in optional 'log everything' mode for added security.
 	Added randomized serial for debugging log file for added security.
-	Fixed Working.. issue. Re-surfacing of Issue #98 due to repo reversion. 
+	Fixed Working.. issue. Re-surfacing of Issue #98 due to repo reversion.
 	Fixed unzip.exe path including an extra slash / in the zipbuddy library. Issue #112.
 	Made RepairBuddy more visible for more extensive beta testing.
 2.2.29 - 2011-10-26 - Daniel Harzheim, Dustin Bolton
@@ -742,12 +742,12 @@ Pre-2.0 - Dustin Bolton
 	Cleanup of remaining $this->_parent references.
 	Cleanup of remaining $this->alert() references.
 	Framework status() method now writes to main log file by calling framework log() method if applicable based on logging level setting.
-	
+
 3.0.0.5a - 2012-04-11 - Dustin Bolton
 	Fixed Malwware `Rescan Now` button.
 	Fixed manual remote sending PHP error.
 	Fixed high security backup directory mode getting stuck enabled.
-	
+
 3.0.0.6a - 2012-04-13 - Dustin Bolton
 	Cleanup of remaining $this->_pluginPath references.
 	Moved experimental zip - > alternative_zip option.
@@ -879,8 +879,8 @@ Pre-2.0 - Dustin Bolton
 	Properly fixed backup ordering to be based on last modified date. Accidently used size value previously. - re: Chris
 	Changed function names in hover integrity popup to pretty versions instead of function names. - re: Chris
 	All textareas used for displaying information are now set readonly in the plugin ( readonly="readonly" ). - re: Chris
-	Updated all instances of  'it-l10n-backupbuddy' to 'LION' to correct for other modifying BackupBuddy using downloaded versions. - Dustin
-	Mass replace 'LION') to 'LION' ) for consistency. - Dustin
+	Updated all instances of  'it-l10n-backupbuddy' to 'it-l10n-backupbuddy' to correct for other modifying BackupBuddy using downloaded versions. - Dustin
+	Mass replace 'it-l10n-backupbuddy') to 'it-l10n-backupbuddy' ) for consistency. - Dustin
 	Removed DIV wrapper around Dropbox authentication buttons to fix wide-button issue. - re: Chris
 	Remote destination test buttons are now normal anchor buttons instead of submit buttons. No longer interferes with keyboard form submission. - re: Chris
 	Backup list on migration page now only shows full backups. - re: Chris
@@ -908,7 +908,7 @@ Pre-2.0 - Dustin Bolton
 				1958   // ----- Return
 				1959   //--(MAGIC-PclTrace)--//PclTraceFctEnd(__FILE__, __LINE__, PclZip::errorCode(), PclZip::errorInfo());
 				1960   return PclZip::errorCode();
-				1961 } 
+				1961 }
 		After adding a destination, it appears that the only thing that happens is that the inputs empty. I have to scroll to the top of the dialog to see that something has actually happened. The same thing happens when modifying an existing destination except that the inputs do not clear out after submission. If the submission is to be handled by Javascript and not a fresh page load, then the page should be automatically scrolled to the top so that it is clear that the action did something.
 			Unable to replicate. Forms submit without javascript and the action goes back to the same page with an anchor to the same tab so it should be going to the top.
 		When selecting an existing remote destination, what if I want to use a different path? An option should allow for customizing the path without requiring modification of the remote destination (if the destination is used for backups and the user forgets to change it back after the migration, then their new site will start to fill with backups). The feature should support supplying new FTP information without creating a new destination.
@@ -1045,7 +1045,7 @@ MINOR ISSUES NOT YET IMPLEMENTED:
 	Now setting character set to utf8 for command line import (commandline: `--default_character_set utf8`) to match existing PHP import (query: `SET NAMES 'utf8'`) setting. - re: David
 	All instances of database queries using LIKE now properly escape underscores so they are understood as literals. - re: Bolton discovery.
 	ImportBuddy wipe database option changed to wipe database tables that match prefix. Greater resolution and less risk of accidents. - re: Gilbert
-3.0.0.10 - 2012-06-04 - Dustin Bolton	
+3.0.0.10 - 2012-06-04 - Dustin Bolton
 	Ignore existing WordPress table option in ImportBuddy allows appending to existing database tables. - re: Gilbert
 3.0.0.13 - 2012-06-05 - Dustin Bolton
 	Preliminary addition of managewp support. - re: http://ithemes.com/forum/topic/22799-backupbuddy-doesnt-show-as-updatable-in-managewp/
@@ -1127,7 +1127,7 @@ MINOR ISSUES NOT YET IMPLEMENTED:
 	Multisite: Users missing capabilities cannot be imported. Avoids user count mismatch in subsite user list.
 	Multisite: All usermeta is now copied over on import, such as bio info and first & last name.
 	Multisite: Dashboard widget no longer shown in subsites and now displayed in the network admin dashboard.
-	Dashboard widget URLs fixed.	
+	Dashboard widget URLs fixed.
 3.0.35 - 2012-06-20 - Dustin Bolton
 	Fixed problem with some plugins enqueng their javascript on our pages causing conflicts in the Remote Destination popup. - re: Gary
 	Multisite: Users with no capabilities will still be imported into network but not assigned to a blog.
@@ -1257,7 +1257,7 @@ MINOR ISSUES NOT YET IMPLEMENTED:
 		Works great combined with the Note feature.
 	Added additional explanatory text noting to use the `Alternative zip system` when falling into compatibility mode which fixes exclusions not working in that case.
 	FEATURE: Individual files can now be excluded from backups (no longer just directories!). Now listing files in exclusions navigator for easier exclusion of individual files.
-		A few giant files clogging up your backups? Not only can you exclude entire directories but now you can also exclude individual files! 
+		A few giant files clogging up your backups? Not only can you exclude entire directories but now you can also exclude individual files!
 	ImportBuddy: When wp-config.php is unwritable ImportBuddy will notify user & give the content the user may paste into the file. This was only displaying "Array" rather than the config content.
 	mysqlbuddy updated to provide error message when mysql_query() returns false.
 	Upgraded Amazon S3 library to 0.5.0.
@@ -1372,7 +1372,7 @@ MINOR ISSUES NOT YET IMPLEMENTED:
 	ENHANCEMENT: Preflight check now scans for any backup files leftover in the site root (ie from a recent restore) and warns.
 	ENHANCEMENT: ImportBuddy now checks for existing index.htm/html file before restore to warn of it potentially blocking WordPress from loading.
 		Sometimes you may have an index.htm/html file in the directory you restored to.  On some servers this can prevent the loading of WordPress. Now you will receive a warning as one additional layer of checks we perform to help make imports as smooth as possible.
-	Maximum PHP runtime no longer overriden if it is equal to 0 (unlimited) or greater than the number we would be changing it to (currently 7200 seconds).
+	Maximum PHP runtime no longer overridden if it is equal to 0 (unlimited) or greater than the number we would be changing it to (currently 7200 seconds).
 	Incomplete or in-process backups could show the finished time as being far in the past. Fixed to properly denote the backup as unfinished.
 	Status log now displayed again in textarea so copy/pasting to support will not lose newlines.
 	ENHANCEMENT: A one-time user password can be entered upon ImportBuddy download. You also no longer have to enter passwords to start using BackupBuddy as it can be set on the script download.
@@ -1577,7 +1577,7 @@ MINOR ISSUES NOT YET IMPLEMENTED:
 		Easily cancel an unwanted backup and halt the backup procedure. Status information is stopped updating and cleanup step is scheduled in the background as the next scheduled step to run to clean up any temporary files or backup zip archive that may have been created.
 	Updated German translations. Thanks to Dietmar Herian for providing these.
 	Fixed error when manually deleting files on FTP via manage page.
-	Fixed changing db settings after testing in ImportBuddy not re-disabling Next button.	
+	Fixed changing db settings after testing in ImportBuddy not re-disabling Next button.
 	Fixed file size of recent remote transfers listing as 49kb. Bug introduced 3.1.8.10.
 	ImportBuddy status updating efficiency improved.
 	FEATURE: PHP errors now caught, written to log, and displayed in status area for improved troubleshooting.
@@ -1661,7 +1661,7 @@ MINOR ISSUES NOT YET IMPLEMENTED:
 	Zip Method Strategy added replacing forcing compatibility mode for greater flexibility and clarity. - Jeremy
 	Setting added for ignoring / not following symbolic links. Enabled by default. - Jeremy
 	set_greedy_script_limits() improvements. - Jeremy
-	Removed Delete button from Automated migration backup list. Backups may be deleted from the main backup page.	
+	Removed Delete button from Automated migration backup list. Backups may be deleted from the main backup page.
 	Quick setup wizard updates.
 	UI tweaks.
 	Current data structure version incremented to version 5 to force data upgrade of fileoptions data.
@@ -4348,7 +4348,7 @@ MINOR ISSUES NOT YET IMPLEMENTED:
 		Deployment: Selection listings for database tables and plugins to transfer are now larger and resizable.
 	ENHANCEMENT:
 		Deployment: Selection of plugins to push/pull now only lists plugins that either do not exist on the destination or differ in version.
-	
+
 	Updated warning about possibly conflicting plugin being detected not being caching-plugin-only specific.
 
 

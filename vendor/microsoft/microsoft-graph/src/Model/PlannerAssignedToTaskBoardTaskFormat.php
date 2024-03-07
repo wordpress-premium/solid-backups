@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,42 +18,12 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class PlannerAssignedToTaskBoardTaskFormat extends Entity
 {
-    /**
-    * Gets the unassignedOrderHint
-    * Hint value used to order the task on the AssignedTo view of the Task Board when the task is not assigned to anyone, or if the orderHintsByAssignee dictionary does not provide an order hint for the user the task is assigned to. The format is defined as outlined here.
-    *
-    * @return string The unassignedOrderHint
-    */
-    public function getUnassignedOrderHint()
-    {
-        if (array_key_exists("unassignedOrderHint", $this->_propDict)) {
-            return $this->_propDict["unassignedOrderHint"];
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-    * Sets the unassignedOrderHint
-    * Hint value used to order the task on the AssignedTo view of the Task Board when the task is not assigned to anyone, or if the orderHintsByAssignee dictionary does not provide an order hint for the user the task is assigned to. The format is defined as outlined here.
-    *
-    * @param string $val The unassignedOrderHint
-    *
-    * @return PlannerAssignedToTaskBoardTaskFormat
-    */
-    public function setUnassignedOrderHint($val)
-    {
-        $this->_propDict["unassignedOrderHint"] = $val;
-        return $this;
-    }
-    
     /**
     * Gets the orderHintsByAssignee
     * Dictionary of hints used to order tasks on the AssignedTo view of the Task Board. The key of each entry is one of the users the task is assigned to and the value is the order hint. The format of each value is defined as outlined here.
@@ -85,6 +54,35 @@ class PlannerAssignedToTaskBoardTaskFormat extends Entity
     public function setOrderHintsByAssignee($val)
     {
         $this->_propDict["orderHintsByAssignee"] = $val;
+        return $this;
+    }
+    
+    /**
+    * Gets the unassignedOrderHint
+    * Hint value used to order the task on the AssignedTo view of the Task Board when the task is not assigned to anyone, or if the orderHintsByAssignee dictionary does not provide an order hint for the user the task is assigned to. The format is defined as outlined here.
+    *
+    * @return string The unassignedOrderHint
+    */
+    public function getUnassignedOrderHint()
+    {
+        if (array_key_exists("unassignedOrderHint", $this->_propDict)) {
+            return $this->_propDict["unassignedOrderHint"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the unassignedOrderHint
+    * Hint value used to order the task on the AssignedTo view of the Task Board when the task is not assigned to anyone, or if the orderHintsByAssignee dictionary does not provide an order hint for the user the task is assigned to. The format is defined as outlined here.
+    *
+    * @param string $val The unassignedOrderHint
+    *
+    * @return PlannerAssignedToTaskBoardTaskFormat
+    */
+    public function setUnassignedOrderHint($val)
+    {
+        $this->_propDict["unassignedOrderHint"] = $val;
         return $this;
     }
     

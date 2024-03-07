@@ -22,7 +22,7 @@
 		$i = 0;
 		foreach( $pushRows as $pushTitle => $pushRow ) { ?>
 			<tr class="entry-row alternate">
-				<td class="tdhead" style="white-space: nowrap;"><?php echo $pushTitle; ?></td>
+				<td class="deploy-tdhead" style="white-space: nowrap;"><?php echo $pushTitle; ?></td>
 				<td><?php echo $pushRow[0]; ?></td>
 				<td>&nbsp;</td>
 				<td><?php echo $pushRow[1]?></td>
@@ -45,7 +45,7 @@ $backup_url .= '?page=pb_backupbuddy_backup';
 <br>
 
 <!-- <form id="pb_backupbuddy_deploy_form" method="post" action="<?php echo pb_backupbuddy::ajax_url( 'deploy' ); ?>?action=pb_backupbuddy_backupbuddy&function=deploy&step=run"> -->
-<form target="_top" id="pb_backupbuddy_deploy_form" method="post" action="<?php echo $backup_url; ?>&backupbuddy_backup=deploy&direction=<?php echo $deployDirection; ?>">
+	<form target="_top" id="pb_backupbuddy_deploy_form" class="solid-backups-form" method="post" action="<?php echo $backup_url; ?>&backupbuddy_backup=deploy&direction=<?php echo $deployDirection; ?>">
 	<input type="hidden" name="destination_id" value="<?php echo $destination_id; ?>">
 
 	<style>
@@ -78,19 +78,19 @@ $backup_url .= '?page=pb_backupbuddy_backup';
 			cursor: pointer;
 		}
 	</style>
-	
-	
+
+
 	<h3>Database Find & Replace</h3>
 	The site URL (www and domain) and paths will be updated. Serialized data will be accounted for.<br>
 	<input type="text" value="<?php echo $localInfo['siteurl']; ?>" disabled> &rarr; <input type="text" value="<?php echo $deployData['remoteInfo']['siteurl']; ?>" disabled><br>
 	<input type="text" value="<?php echo $localInfo['abspath']; ?>" disabled> &rarr; <input type="text" value="<?php echo $deployData['remoteInfo']['abspath']; ?>" disabled><br>
 	<!-- <input type="text"> -&gt; <input type="text"> - +<br> -->
-	
-	<h3><?php _e( 'Directory Exclusions', 'LIONS' ); ?></h3>
+
+	<h3><?php _e( 'Directory Exclusions', 'it-l10n-backupbuddy' ); ?></h3>
 	<textarea readonly="readonly" style="resize: auto; height: 75px; width: 400px;"><?php print_r( $deployData['destinationSettings']['excludes'] ); ?></textarea>
 	<br>
-	
-	<h3><?php _e( 'Additional Inclusions', 'LIONS' ); ?></h3>
+
+	<h3><?php _e( 'Additional Inclusions', 'it-l10n-backupbuddy' ); ?></h3>
 	<textarea readonly="readonly" style="resize: auto; height: 75px; width: 400px;"><?php print_r( $deployData['destinationSettings']['extras'] ); ?></textarea>
 	<br><br>
 
@@ -123,19 +123,19 @@ $backup_url .= '?page=pb_backupbuddy_backup';
 		(<span class="database_contents_select_count"></span> tables selected)
 	</span>
 	<br><br>
-	
-	<h3><?php 
+
+	<h3><?php
 		if ( 'pull' == $deployDirection ) {
 			_e( 'Pull', 'it-l10n-backupbuddy' );
 		} else { // push
 			_e( 'Push', 'it-l10n-backupbuddy' );
 		}
 		echo ' ';
-		_e( 'Differing Active Plugins', 'LIONS' );
+		_e( 'Differing Active Plugins', 'it-l10n-backupbuddy' );
 	?></h3>
-	
-	
-	
+
+
+
 	<div class="plugins_shortcuts">
 		<a class="plugins_shortcuts-all" title="Select all database tables.">Select All</a> | <a class="plugins_shortcuts-none" title="Unselect all database tables.">Unselect All</a>
 	</div>
@@ -161,11 +161,11 @@ $backup_url .= '?page=pb_backupbuddy_backup';
 	<span class="description">
 		(<span class="plugins_select_count"></span> plugins selected)
 	</span>
-	
-	
-	
+
+
+
 	<br><br>
-	
+
 	<h3><?php
 		if ( 'pull' == $deployDirection ) {
 			_e( 'Pull', 'it-l10n-backupbuddy' );
@@ -173,7 +173,7 @@ $backup_url .= '?page=pb_backupbuddy_backup';
 			_e( 'Push', 'it-l10n-backupbuddy' );
 		}
 		echo ' ';
-		_e( 'Files (media, theme, additional)', 'LIONS' ); ?></h3>
+		_e( 'Files (media, theme, additional)', 'it-l10n-backupbuddy' ); ?></h3>
 	<?php
 	// Main theme
 	if ( $deployData['remoteInfo']['activeTheme'] == $localInfo['activeTheme'] ) {
@@ -181,7 +181,7 @@ $backup_url .= '?page=pb_backupbuddy_backup';
 	} else {
 		echo '<span class="description">' . __( 'Active theme differs so theme deployment is disabled.', 'it-l10n-backupbuddy' ) . '</span>';
 	}
-	
+
 	// Child theme.
 	if ( isset( $deployData['remoteInfo']['activeChildTheme'] ) ) {
 		if ( $deployData['remoteInfo']['activeChildTheme'] == $localInfo['activeChildTheme'] ) { // Remote and local child theme are the same.
@@ -194,14 +194,14 @@ $backup_url .= '?page=pb_backupbuddy_backup';
 			echo ' <span class="description">' . __( 'Active child theme differs so theme deployment is disabled.', 'it-l10n-backupbuddy' ) . '</span>';
 		}
 	} else {
-		echo ' <span class="description">' . __( 'Remote site does not support deploying child theme. Update remote BackupBuddy.', 'it-l10n-backupbuddy' ) . '</span>';
+		echo ' <span class="description">' . __( 'Remote site does not support deploying child theme. Update remote Solid Backups.', 'it-l10n-backupbuddy' ) . '</span>';
 	}
 	echo '</label>';
-	echo '<br><label><input type="checkbox" name="sendMedia" value="true"> Update <b>MEDIA files</b> with newer or missing files to match.</label>';
-	echo '<br><label><input type="checkbox" name="sendExtras" value="true"> Update <b>ADDITIONAL files</b> as defined in destination settings with newer or missing files to match.</label>';
+	echo '<br><br><label><input type="checkbox" name="sendMedia" value="true"> Update <b>MEDIA files</b> with newer or missing files to match.</label>';
+	echo '<br><br><label><input type="checkbox" name="sendExtras" value="true"> Update <b>ADDITIONAL files</b> as defined in destination settings with newer or missing files to match.</label>';
 	?>
 	<br><br>
-	
+
 	<h3>Site Search Engine Visibility</h3>
 	<div style="display: inline-block; text-align: left;">
 		<?php if ( '' == pb_backupbuddy::$options['remote_destinations'][$destination_id]['set_blog_public'] ) { pb_backupbuddy::$options['remote_destinations'][$destination_id]['set_blog_public'] = ''; } // DEFAULT. ?>
@@ -210,17 +210,17 @@ $backup_url .= '?page=pb_backupbuddy_backup';
 		<label for="set_blog_public-private" style="font-size: 12px;"><input type="radio" name="setBlogPublic" id="set_blog_public-private" value="0" <?php if ( '0' == pb_backupbuddy::$options['remote_destinations'][$destination_id]['set_blog_public'] ) { echo 'checked="checked"'; } ?>><?php _e(' Private - Discourage search engines from indexing this site', 'it-l10n-backupbuddy' ); ?></label><br>
 	</div>
 	<br><br>
-	
-	
-	
-	
-	
+
+
+
+
+
 	<br>
 	<?php pb_backupbuddy::nonce(); ?>
 	<input type="hidden" name="destination" value="<?php echo $destination_id; ?>">
 	<input type="hidden" name="deployData" value="<?php echo base64_encode( json_encode( $deployData ) ); ?>">
-	
-	
+
+
 	<a class="button button-secondary" onclick="jQuery('.pb_backupbuddy_advanced').slideToggle();">Advanced Options</a>
 	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 	<div class="pb_backupbuddy_advanced" style="display: none; margin-bottom: 15px; clear: both; background: rgb(229, 229, 229); padding: 15px; margin-top: 15px; border-radius: 10px;">
@@ -231,7 +231,7 @@ $backup_url .= '?page=pb_backupbuddy_backup';
 		<label><input type="checkbox" name="doImportCleanup" value="true" checked="checked"> Cleanup importbuddy & log at end of Deployment</label>
 		<br>
 	</div>
-	
+
 	<input type="submit" name="submitForm" class="button button-primary" value="<?php
 	if ( 'pull' == $deployDirection ) {
 		_e('Begin Pull');
@@ -241,6 +241,6 @@ $backup_url .= '?page=pb_backupbuddy_backup';
 		echo '{Err3849374:UnknownDirection}';
 	}
 	?> &raquo;">
-	
+
 </form>
 

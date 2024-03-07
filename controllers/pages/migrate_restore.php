@@ -17,7 +17,6 @@ if ( '' != pb_backupbuddy::_GET( 'dat_viewer' ) ) {
 	require_once '_dat_viewer.php';
 	return;
 }
-
 wp_enqueue_script( 'thickbox' );
 wp_print_scripts( 'thickbox' );
 wp_print_styles( 'thickbox' );
@@ -25,14 +24,14 @@ wp_print_styles( 'thickbox' );
 // Handle remote sending ImportBuddy.
 if ( 'importbuddy.php' == pb_backupbuddy::_GET( 'callback_data' ) ) {
 
-	pb_backupbuddy::alert( '<span id="pb_backupbuddy_ib_sent">Sending ImportBuddy file. This may take several seconds. Please wait ...</span>' );
+	pb_backupbuddy::alert( '<span id="pb_backupbuddy_ib_sent">Sending Importer file. This may take several seconds. Please wait ...</span>' );
 	pb_backupbuddy::flush();
 
 	pb_backupbuddy::anti_directory_browsing( backupbuddy_core::getTempDirectory(), false );
 
 	$importbuddy_file = backupbuddy_core::getTempDirectory() . 'importbuddy.php';
 
-	// Render ImportBuddy to temp location.
+	// Render Importer to temp location.
 	backupbuddy_core::importbuddy( $importbuddy_file );
 	if ( file_exists( $importbuddy_file ) ) {
 		$response = backupbuddy_core::send_remote_destination( $_GET['destination'], $importbuddy_file, 'manual' );
@@ -43,12 +42,12 @@ if ( 'importbuddy.php' == pb_backupbuddy::_GET( 'callback_data' ) ) {
 
 
 	if ( file_exists( $importbuddy_file ) ) {
-		if ( false === unlink( $importbuddy_file ) ) { // Delete temporary ImportBuddy file.
+		if ( false === unlink( $importbuddy_file ) ) { // Delete temporary Importer file.
 			pb_backupbuddy::alert( 'Unable to delete file. For security please manually delete it: `' . $importbuddy_file . '`.' );
 		}
 	}
 
-	$ib_text = true === $response ? __( 'ImportBuddy file successfully sent.', 'it-l10n-backupbuddy' ) : __( 'ImportBuddy file send failure. Verify your destination settings & check logs for details.', 'it-l10n-backupbuddy' );
+	$ib_text = true === $response ? __( 'Importer file successfully sent.', 'it-l10n-backupbuddy' ) : __( 'Importer file send failure. Verify your destination settings & check logs for details.', 'it-l10n-backupbuddy' );
 	?>
 	<script type="text/javascript">
 		jQuery( '#pb_backupbuddy_ib_sent' ).html( '<?php echo esc_html( $ib_text ); ?>' );
@@ -61,7 +60,7 @@ pb_backupbuddy::$ui->title( __( 'Restore / Migrate', 'it-l10n-backupbuddy' ) );
 echo '<br>';
 
 if ( '' == pb_backupbuddy::$options['importbuddy_pass_hash'] ) { // NO HASH SET.
-	$import_alert = '<span class="pb_label pb_label">Important</span> <b>Set an ImportBuddy password on the <a href="';
+	$import_alert = '<span class="pb_label pb_label">Important</span> <b>Set an Importer password on the <a href="';
 	if ( is_network_admin() ) {
 		$import_alert .= network_admin_url( 'admin.php' );
 	} else {

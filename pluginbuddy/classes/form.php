@@ -299,7 +299,7 @@ class pb_backupbuddy_form {
 			}
 		}
 
-		$return  = '<form method="post" action="' . $action_url . '" class="pb_form pb_form ' . $this->_prefix . $this->_form_name . '_form" id="' . $this->_prefix . $this->_form_name . '_form">';
+		$return  = '<form method="post" action="' . $action_url . '" class="solid-backups-form pb_form ' . $this->_prefix . $this->_form_name . '_form" id="' . $this->_prefix . $this->_form_name . '_form">';
 		$return .= '<input type="hidden" name="' . $this->_prefix . '" value="' . $this->_form_name . '">';
 		return $return;
 	} // End start().
@@ -382,8 +382,8 @@ class pb_backupbuddy_form {
 
 				// TODO: this actually should only run once per PAGE load. add a function is_script and is_style into framework to see if loaded into framework yet or not.
 				if ( false === $this->_loaded_color ) { // Only load the javascript, CSS, etc once per instance.
-					pb_backupbuddy::load_script( 'jquery.miniColors.min.js', true );
-					pb_backupbuddy::load_style( 'jquery.miniColors.css', true );
+					pb_backupbuddy::load_script( 'pluginbuddy.js' );
+					pb_backupbuddy::load_style( 'pluginbuddy.css' );
 					echo '<script type="text/javascript">
 						jQuery(document).ready( function() {
 						jQuery( ".pb_colorpicker" ).miniColors({ letterCase: "uppercase" });
@@ -492,7 +492,7 @@ class pb_backupbuddy_form {
 			} elseif ( 'submit' == $input['type'] ) {
 
 				$submit_id = $id . '_' . sanitize_title( $input['value'] );
-				$return .= '<input class="button-primary ' . $classes . '" type="submit" name="' . esc_attr( $prefix . $name ) . '" value="' . esc_attr( $input['value'] ) . '" id="' . esc_attr( $submit_id ) . '"' . $css . '>';
+				$return .= '<input class="button button-primary ' . $classes . '" type="submit" name="' . esc_attr( $prefix . $name ) . '" value="' . esc_attr( $input['value'] ) . '" id="' . esc_attr( $submit_id ) . '"' . $css . '>';
 
 			} else {
 

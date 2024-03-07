@@ -22,12 +22,12 @@ if ( '1' == pb_backupbuddy::_POST( 'regenerate_api_key' ) ) {
 }
 ?>
 
-<b>Note:</b> wp-config.php files as well as BackupBuddy settings will NOT be transferred in either direction. Your current BackupBuddy settings, destinations, API keys etc. will remain as they are on both sites.<br><br>
+<b>Note:</b> wp-config.php files as well as Solid Backups settings will NOT be transferred in either direction. Your current Solid Backups settings, destinations, API keys etc. will remain as they are on both sites.<br><br>
 
 <form method="post">
 	<?php pb_backupbuddy::nonce(); ?>
 	<input type="hidden" name="regenerate_api_key" value="1">
-	<button class="button secondary-button" onClick="jQuery('.backupbuddy_api_key-hide').toggle(); return false;">Show API Key</button><span class="backupbuddy_api_key-hide" style="display: none;">&nbsp;&nbsp;<input type="submit" name="submit" value="Generate New API Key" class="button button-primary"></span>
+	<button class="button button-secondary secondary-button" onClick="jQuery('.backupbuddy_api_key-hide').toggle(); return false;">Show API Key</button><span class="backupbuddy_api_key-hide" style="display: none;">&nbsp;&nbsp;<input type="submit" name="submit" value="Generate New API Key" class="button button-primary"></span>
 	<br>
 	<br>
 	<div class="backupbuddy_api_key-hide" style="display: none;">
@@ -66,7 +66,7 @@ function pb_status_undourl( undo_url ) {
 </div>
 <?php
 global $wp_version;
-pb_backupbuddy::status( 'details', 'BackupBuddy v' . pb_backupbuddy::settings( 'version' ) . ' using WordPress v' . $wp_version . ' on ' . PHP_OS . '.' );
+pb_backupbuddy::status( 'details', 'Solid Backups v' . pb_backupbuddy::settings( 'version' ) . ' using WordPress v' . $wp_version . ' on ' . PHP_OS . '.' );
 ?>
 
 <script type="text/javascript">

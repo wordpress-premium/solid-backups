@@ -53,20 +53,20 @@ if ( 'pull' == $direction ) { // Local so clean up here.
 	$response     = backupbuddy_remote_api::remoteCall( $api_settings, 'confirmDeployment', array( 'serial' => $serial ), 30, array(), true );
 
 	if ( false === $response ) {
-		$message = 'Error #2378378324. Unable to confirm remote deployment with serial `' . $serial . '` via remote API. This is a non-fatal warning. BackupBuddy will automatically clean up temporary data later.';
+		$message = 'Error #2378378324. Unable to confirm remote deployment with serial `' . $serial . '` via remote API. This is a non-fatal warning. Solid Backups will automatically clean up temporary data later.';
 		pb_backupbuddy::status( 'error', $message );
 		die( $message );
 	} else {
 		$response_decoded = @unserialize( $response );
 		if ( false === $response_decoded ) {
-			$message = 'Error #239872373. Unable to decode remote deployment response with serial `' . $serial . '` via remote API. This is a non-fatal warning. BackupBuddy will automatically clean up temporary data later. Remote server response: `' . print_r( $response_decoded, true ) . '`.';
+			$message = 'Error #239872373. Unable to decode remote deployment response with serial `' . $serial . '` via remote API. This is a non-fatal warning. Solid Backups will automatically clean up temporary data later. Remote server response: `' . print_r( $response_decoded, true ) . '`.';
 			pb_backupbuddy::status( 'error', $message );
 			die( $message );
 		}
 		if ( isset( $response_decoded['success'] ) && true === $response_decoded['success'] ) {
 			die( '1' );
 		}
-		$message = 'Error #839743. Unable to confirm remote deployment with serial `' . $serial . '` via remote API. This is a non-fatal warning. BackupBuddy will automatically clean up temporary data later. Remote server response: `' . print_r( $response, true ) . '`.';
+		$message = 'Error #839743. Unable to confirm remote deployment with serial `' . $serial . '` via remote API. This is a non-fatal warning. Solid Backups will automatically clean up temporary data later. Remote server response: `' . print_r( $response, true ) . '`.';
 		pb_backupbuddy::status( 'error', $message );
 		die( $message );
 	}

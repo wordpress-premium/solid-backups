@@ -44,3 +44,45 @@
 	Enhancement: Added ability to manage licensing from WP-CLI.
 1.5.1 - 2018-05-03 - Chris Jean
 	Bug Fix: Fixed fatal error that could occur when clicking the "View details" link for an available plugin update.
+1.5.2 - 2018-05-25 - Chris Jean
+	Bug Fix: Fixed error in error handler for cases where requests for changelog updates fail.
+1.6.0 - 2020-08-06 - Chris Jean
+	Enhancement: Added the ability for the user to manage the licensed site URL.
+1.6.1 - 2020-08-06 - Chris Jean
+	Bug Fix: Fixed bug that can cause licensed site URL management from working properly on some sites on https connections.
+1.6.2 - 2020-08-07 - Chris Jean
+	Bug Fix: Fixed fatal error that can happen when upgrading to the 1.6.1 version of this code:
+	Ithemes_Updater_Settings::get_licensed_site_url() in server.php:199".
+1.6.4 - 2020-08-11 - Chris Jean
+	Enhancement: Added support for the auto-update feature introduced in WordPress 5.5.
+1.6.5 - 2020-09-01 - Chris Jean
+	Bug Fix: Fixed source of this warning:
+		PHP Notice:  Undefined index: status in lib/updater/settings-page.php
+1.6.6 - 2020-10-06 - Chris Jean
+	Enhancement: Added support for migrating WPComplete license keys.
+1.6.7 - 2020-12-16 - Chris Jean
+	Security Improvement: To improve server compatibility, requests to the iThemes servers would automatically downgrade from https to http when https connections failed. This update removes the automatic downgrade. If your server cannot make outbound https connections, you can re-enable the downgrade capability by adding the following define in your site's wp-config.php file:
+		define( 'ITHEMES_ALLOW_HTTP_FALLBACK', true );
+1.6.8 - 2020-01-19 - Chris Jean
+	Enhancement: Added support for migrating Skillful Plugins license keys.
+	Enhancement: Improved auto-naming of some plugins in the iThemes Licensing page.
+1.7.0 - 2021-04-13 - Chris Jean
+	Bug Fix: Fixed scenario where the cache is flushed on every admin page load.
+	Enhancement: Flush the cache on every "wp-cli ithemes-licensing" command since the normal cache flushing mechanism does not work with such requests.
+	Enhancement: The tested WordPress version and required minimum PHP version can now be supplied to WordPress for each product.
+1.7.1 - 2022-06-21 - Chris Jean
+	Enhancement: Improved support for updates to indicate required PHP and WordPress versions.
+1.7.2 - 2023-02-24 - John Regan
+	Enhancement: PHP8 Updates
+	Enhancement: Limit retries when API server is unavailable
+1.8.0 - 2023-10-10 - Timothy Jacobs, Jared Hill, Lisa Canini
+	Enhancement: Rebrand for SolidWP.
+	Enhancement: Add support for managing Patchstack licenses.
+1.8.1 - 2023-10-30 - Timothy Jacobs, Lisa Canini
+	Enhancement: Add a `wp ithemes-licensing set-licensed-url` WP-CLI command.
+	Bug Fix: Fix fatal error when there is an error retrieving Patchstack license information.
+	Bug Fix: Styling issues on WordPress 6.4.
+1.8.2 - 2023-11-07 - Timothy Jacobs
+	Security: Harden against XSS attacks. Thanks to Robin Wood (digi.ninja) for disclosing this issue.
+1.8.3 - 2023-11-14 - Timothy Jacobs, Lisa Canini
+	Enhancement: Add banner when running sunset products.

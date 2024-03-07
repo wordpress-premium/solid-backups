@@ -2,7 +2,7 @@
 /**
  * Database Settings View
  *
- * IMPORTANT INCOMING VARIABLES (expected to be se t before this file is loaded):
+ * IMPORTANT INCOMING VARIABLES (expected to be set before this file is loaded):
  *
  *   $profile  Index number of profile.
  *
@@ -46,7 +46,7 @@ if ( 'defaults' == $profile_array['type'] ) {
 		'2' => __( 'None (use with caution)', 'it-l10n-backupbuddy' ),
 	);
 } else {
-	$title   = 'Base database tables to backup for profile';
+	$title   = __( 'Base database tables to<br>backup for profile', 'it-l10n-backupbuddy' );
 	$options = array(
 		'-1' => __( 'Use global default', 'it-l10n-backupbuddy' ),
 		'0'  => 'WordPress tables (prefix ' . $wpdb->prefix . ')',
@@ -76,8 +76,11 @@ if ( 'defaults' != $profile_array['type'] ) {
 				'unchecked' => '0',
 				'checked'   => '1',
 			),
-			'title'   => 'Use global defaults for tables to backup?',
-			'after'   => ' Use global defaults...<br><span class="description" style="padding-left: 25px;">Uncheck to customize tables.</span>',
+			'title'   => __( 'Use global defaults for tables to backup?', 'it-l10n-backupbuddy' ),
+			'after'   => sprintf(
+							__( 'Use global defaults<br><p class="description">%1$s</p>', 'it-l10n-backupbuddy' ),
+							__( 'Uncheck to customize tables.', 'it-l10n-backupbuddy' )
+			),
 			'css'     => '',
 		)
 	);
@@ -121,10 +124,10 @@ function pb_additional_tables( $profile_array, $display_size = false ) {
 
 		} // end if display size enabled.
 
-		$return .= '<li class="file ext_sql collapsed">';
+		$return .= '<li class="file-settings ext_sql collapsed">';
 		$return .= '<a rel="/" alt="' . esc_attr( $result['table_name'] ) . '">' . esc_html( $result['table_name'] ) . $size_string;
 		$return .= '<div class="pb_backupbuddy_treeselect_control">';
-		$return .= '<img src="' . pb_backupbuddy::plugin_url() . '/images/redminus.png" style="vertical-align: -3px;" title="Add to exclusions..." class="pb_backupbuddy_table_addexclude"> <img src="' . pb_backupbuddy::plugin_url() . '/images/greenplus.png" style="vertical-align: -3px;" title="Add to inclusions..." class="pb_backupbuddy_table_addinclude">';
+		$return .= '<img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/redminus.png" style="vertical-align: -3px;" title="Add to exclusions..." class="pb_backupbuddy_table_addexclude"> <img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/greenplus.png" style="vertical-align: -3px;" title="Add to inclusions..." class="pb_backupbuddy_table_addinclude">';
 		$return .= '</div>';
 		$return .= '</a>';
 		$return .= '</li>';
@@ -136,26 +139,68 @@ function pb_additional_tables( $profile_array, $display_size = false ) {
 
 global $wpdb;
 $prefix = $wpdb->prefix;
-$settings_form->add_setting(
-	array(
-		'type'    => 'textarea',
-		'name'    => 'profiles#' . $profile_id . '#mysqldump_additional_includes',
-		'title'   => 'Hover & select <img src="' . pb_backupbuddy::plugin_url() . '/images/greenplus.png" style="vertical-align: -3px;"> to include, <img src="' . pb_backupbuddy::plugin_url() . '/images/redminus.png" style="vertical-align: -3px;"> to exclude. ' . pb_additional_tables( $profile_array ),
-		'before'  => sprintf( '<strong>%s</strong> ', __( 'Inclusions', 'it-l10n-backupbuddy' ) ) . __( 'beyond base', 'it-l10n-backupbuddy' ) . '*:' .
-			pb_backupbuddy::tip( __( 'Additional databases tables to include OR exclude IN ADDITION to the DEFAULTS determined by the previous option. You may override defaults with exclusions. Excluding tables may result in an incomplete or broken backup so exercise caution.', 'it-l10n-backupbuddy' ), '', false ),
-		'rules'   => 'th-rowspan-2',
-		'css'     => 'width: 100%;',
+ob_start();
+echo wp_kses_post(
+	sprintf(
+		__('Hover & select <img src="%1$s/assets/dist/images/greenplus.png" style="vertical-align: -3px;"> to include, <img src="%2$s/assets/dist/images/redminus.png" style="vertical-align: -3px;"> to exclude.', 'it-l10n-backupbuddy' ),
+		pb_backupbuddy::plugin_url(),
+		pb_backupbuddy::plugin_url()
 	)
 );
+
+// Need to escape this somehow. Might just be the 'rel' attributes.
+echo pb_additional_tables( $profile_array );
+?>
+<p>
+	<?php
+echo wp_kses (
+		sprintf(
+			__( '<strong>Inclusions</strong> beyond base*: %1$s', 'it-l10n-backupbuddy' ),
+			pb_backupbuddy::tip( __( 'Additional databases tables to include OR exclude IN ADDITION to the DEFAULTS determined by the previous option. You may override defaults with exclusions. Excluding tables may result in an incomplete or broken backup so exercise caution.', 'it-l10n-backupbuddy' ), '', false )
+		),
+		pb_backupbuddy::$ui->kses_post_with_svg()
+	);
+?>
+</p>
+<?php
+$database_tables_include = ob_get_clean();
+
 $settings_form->add_setting(
 	array(
-		'type'   => 'textarea',
-		'name'   => 'profiles#' . $profile_id . '#mysqldump_additional_excludes',
-		'title'  => '&nbsp;',
-		'before' => sprintf( '<strong>%s</strong> ', __( 'Exclusions', 'it-l10n-backupbuddy' ) ) . __( 'beyond base', 'it-l10n-backupbuddy' ) . '*:' .
-			pb_backupbuddy::tip( __( 'Additional databases tables to EXCLUDE from the backup. Exclusions are exempted after calculating defaults and additional table includes first. These may include non-WordPress and WordPress tables. WARNING: Excluding WordPress tables results in an incomplete backup and could result in failure in the ability to restore or data loss. Use with caution.', 'it-l10n-backupbuddy' ), '', false ),
-		'after'  => '<br><br><span class="description">* ' . __( 'One table per line. {prefix} may be used for the WordPress database prefix (currently: ', 'it-l10n-backupbuddy' ) . $prefix . ')</span>',
-		'rules'  => 'no-th',
-		'css'    => 'width: 100%;',
+		'type'      => 'textarea',
+		'name'      => 'profiles#' . $profile_id . '#mysqldump_additional_includes',
+		'title'     => __( 'Inclusions/Exclusions', 'it-l10n-backupbuddy' ),
+		'before'    => $database_tables_include,
+		'rules'     => 'th-rowspan-2',
+		'css'       => 'width: 100%;',
+		'row_class' => 'database-row-include',
+	)
+);
+ob_start();
+?>
+<p>
+	<?php
+echo wp_kses(
+	sprintf(
+		__('<strong>Exclusions</strong> beyond base*: %1$s', 'it-l10n-backupbuddy' ),
+		pb_backupbuddy::tip( __( 'Additional databases tables to EXCLUDE from the backup. Exclusions are exempted after calculating defaults and additional table includes first. These may include non-WordPress and WordPress tables. WARNING: Excluding WordPress tables results in an incomplete backup and could result in failure in the ability to restore or data loss. Use with caution.', 'it-l10n-backupbuddy' ), '', false )
+	),
+	pb_backupbuddy::$ui->kses_post_with_svg()
+);
+?>
+</p>
+<?php
+
+$database_tables_exclude = ob_get_clean();
+$settings_form->add_setting(
+	array(
+		'type'      => 'textarea',
+		'name'      => 'profiles#' . $profile_id . '#mysqldump_additional_excludes',
+		'title'     => '<div style="height: 0;">&nbsp;</div>',
+		'before'    => $database_tables_exclude,
+		'after'     => '<p class="description">* ' . __( 'One table per line. {prefix} may be used for the WordPress database prefix (currently: ', 'it-l10n-backupbuddy' ) . $prefix . ')</p>',
+		'rules'     => 'th-rowspan-2',
+		'css'       => 'width: 100%;',
+		'row_class' => 'database-row-exclude',
 	)
 );

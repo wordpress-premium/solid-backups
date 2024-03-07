@@ -51,7 +51,8 @@ if ( empty( $modes ) ) {
 	exit();
 }
 
-$supported = array( 'local', 's33', 's32', 'stash3', 'stash2', 'sftp', 'ftp', 'dropbox3', 'gdrive2', 'onedrive' );
+// Remove s32 as a supported type in a later version.  Note added Feb 6, 2024 (v 9.1.8)
+$supported = array( 'local', 's33', 's32', 'stash3', 'stash2', 'sftp', 'ftp', 'dropbox2', 'dropbox3', 'gdrive2', 'onedrive' );
 
 $destination_settings = pb_backupbuddy::$options['remote_destinations'][ $destination_id ];
 

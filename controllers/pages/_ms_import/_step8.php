@@ -1,6 +1,6 @@
 <?php
 echo $this->status_box( 'Cleaning up . . .' );
-echo '<div id="pb_importbuddy_working" style="width: 100px;"><center><img src="' . pb_backupbuddy::plugin_url() . '/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
+echo '<div id="pb_importbuddy_working" style="width: 100px;"><center><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
 pb_backupbuddy::flush();
 
 $this->load_backup_dat(); // Set up backup data from the backupbuddy_dat.php.
@@ -40,4 +40,4 @@ Your site has been succesfully imported into the Multisite Network.
 <br><br>
 
 <b>Site</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<a href="<?php echo $url; ?>"><?php echo $url; ?></a>
+<a href="<?php echo esc_url( $url ); ?>"><?php echo esc_url( $url ); ?></a>

@@ -32,7 +32,7 @@ global $wpdb;
 $rows = $wpdb->get_results( "SHOW TABLE STATUS", ARRAY_A );
 foreach( $rows as $row ) {
 	
-	// Hide BackupBuddy temp tables.
+	// Hide Solid Backups temp tables.
 	if ( 'bbold-' == substr( $row['Name'], 0, 6 ) ) {
 		continue;
 	}
@@ -95,10 +95,10 @@ function backupbuddy_dbMediaSince( $includeThumbs = true ) {
 } // End backupbuddy_dbMediaSince().
 
 
-// Get list of active plugins and remove BackupBuddy from it so we don't update any BackupBuddy files when deploying. Could cause issues with the API replacing files mid-deploy.
+// Get list of active plugins and remove Solid Backups from it so we don't update any Solid Backups files when deploying. Could cause issues with the API replacing files mid-deploy.
 $activePlugins = backupbuddy_api::getActivePlugins();
 foreach( $activePlugins as $activePluginIndex => $activePlugin ) {
-	if ( false !== strpos( $activePlugin['name'], 'BackupBuddy' ) ) {
+	if ( false !== strpos( $activePlugin['name'], 'Solid Backups' ) ) {
 		unset( $activePlugins[ $activePluginIndex ] );
 	}
 }
@@ -108,7 +108,7 @@ foreach( $activePlugins as $activePluginDir => $activePlugin ) {
 }
 $allPluginDirs = glob( WP_PLUGIN_DIR . '/*', GLOB_ONLYDIR );
 $inactivePluginDirs = array_diff( $allPluginDirs, $activePluginDirs ); // Remove active plugins from directories of all plugins to get directories of inactive plugins to exclude later.
-$inactivePluginDirs[] = pb_backupbuddy::plugin_path(); // Also exclude BackupBuddy directory.
+$inactivePluginDirs[] = pb_backupbuddy::plugin_path(); // Also exclude Solid Backups directory.
 $pluginsExcludes = array_merge( $inactivePluginDirs, pb_backupbuddy_destination_site::get_exclusions( $destinationSettings, 'plugins' ) );
 $pluginsExcludes = array_filter( $pluginsExcludes );
 

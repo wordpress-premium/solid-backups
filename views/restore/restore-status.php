@@ -5,6 +5,7 @@
  * @package BackupBuddy
  */
 
+wp_print_scripts('backupbuddy-core');
 $restores_url = admin_url( 'admin.php?page=pb_backupbuddy_diagnostics&tab=recent' ) . '#backupbuddy-restore-history';
 $dismiss_url  = admin_url( 'admin.php?page=pb_backupbuddy_backup&tab=restore-backup&bub_rand=' . rand( 100, 999 ) ) . '#restore-backup';
 $site_url     = site_url();
@@ -17,13 +18,8 @@ if ( isset( $restore_in_progress ) && false !== $restore_in_progress ) {
 <div id="backupbuddy-restore-status"<?php echo $status_attr; ?>>
 	<div class="restore-status-container">
 		<div class="restore-active">
-			<h2><?php esc_html_e( 'Backup Restore in progress', 'it-l10n-backupbuddy' ); ?></h2>
-			<p>
-				Restoring may take a few minutes.<br>
-				Feel free to close or navigate away from this screen.
-			</p>
-			<!--<p class="em">We will email you when restoration is complete.</p>-->
-
+			<h2><?php esc_html_e( 'Backup Restore in Progress', 'it-l10n-backupbuddy' ); ?></h2>
+			<p><?php esc_html_e('Restoring may take a few minutes.', 'it-l10n-backupbuddy'); ?></p>
 			<div class="restore-progress">
 				<ul class="progress-dots">
 					<li class="started" title="<?php echo esc_attr( __( 'Start', 'it-l10n-backupbuddy' ) ); ?>"></li>
@@ -34,11 +30,11 @@ if ( isset( $restore_in_progress ) && false !== $restore_in_progress ) {
 					<li class="complete" title="<?php echo esc_attr( __( 'Finish', 'it-l10n-backupbuddy' ) ); ?>"></li>
 				</ul>
 			</div>
-			<div class="restore-current-step">Getting Status...</div>
+			<div class="restore-current-step"><?php esc_html_e('Getting Status...', 'it-l10n-backupbuddy'); ?></div>
 			<p><a href="#abort-restore" class="abort-link"><?php esc_html_e( 'Abort' ); ?></a></p>
 		</div>
 		<div class="restore-done" style="display: none;">
-			<h2 class="status-complete"><?php esc_html_e( 'Site Restored', 'it-l10n-backupbuddy' ); ?></h2>
+			<h2 class="status-complete"><?php esc_html_e( 'Backup Restored', 'it-l10n-backupbuddy' ); ?></h2>
 			<h2 class="status-aborted" style="display:none;"><?php esc_html_e( 'Restore Aborted', 'it-l10n-backupbuddy' ); ?></h2>
 			<h2 class="status-failed" style="display:none;"><?php esc_html_e( 'Restore Failed', 'it-l10n-backupbuddy' ); ?></h2>
 

@@ -55,8 +55,8 @@ if ( 'add' == $mode ) { // ADD mode.
 			return false;
 		}
 
-		echo '<form method="post" action="' . pb_backupbuddy::ajax_url( 'destination_picker' ) . '&add=dropbox2&callback_data=' . pb_backupbuddy::_GET( 'callback_data' ) . '">';
-		echo '&nbsp;<a href="https://www.dropbox.com/basic" target="_top">Don\'t have a Dropbox account? Click here!</a><br><br>';
+		echo '<form method="post" action="' . pb_backupbuddy::ajax_url( 'destination_picker' ) . '&add=dropbox2&callback_data=' . esc_attr( pb_backupbuddy::_GET( 'callback_data' ) ) . '">';
+		echo '&nbsp;<a href="https://go.solidwp.com/dropbox-basic" target="_top">Don\'t have a Dropbox account? Click here!</a><br><br>';
 		echo '<br><b>Setup Instructions</b><ol>';
 		echo '<li> <a href="' . $authorizeUrl . '" class="button-primary pb_dropbox_authorize" target="_blank">' . __('Connect to Dropbox.com & Authorize (opens new window)', 'it-l10n-backupbuddy' ) . '</a></li>';
 		echo '<li>Click <b>Allow</b> in the new window (you may need to login to Dropbox.com first).</li>';
@@ -118,7 +118,7 @@ if ( true === $show_config_form ) {
 	$default_name = NULL;
 	// Settings.
 	if ( 'add' == $mode ) {
-		$default_name = 'My Dropbox (v2)';
+		$default_name = 'My Dropbox v2';
 		$settings_form->add_setting( array(
 			'type'		=>		'hidden',
 			'name'		=>		'access_token',

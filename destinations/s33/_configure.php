@@ -49,7 +49,7 @@ $settings_form->add_setting(
 		'title' => __( 'AWS access key', 'it-l10n-backupbuddy' ),
 		'tip'   => __( '[Example: BSEGHGSDEUOXSQOPGSBE] - Log in to your Amazon S3 AWS Account and navigate to Account: Access Credentials: Security Credentials.', 'it-l10n-backupbuddy' ),
 		'rules' => 'required|string[1-45]',
-		'after' => ' <a target="_new" href="https://ithemeshelp.zendesk.com/hc/en-us/articles/211129517-Amazon-S3">Help setting up S3</a>',
+		'after' => ' <a target="_new" href="https://go.solidwp.com/help-center-amazon-s3">Help setting up S3</a>',
 		'css'   => 'width: 250px;',
 	)
 );
@@ -120,7 +120,7 @@ $settings_form->add_setting(
 			's3-website-us-gov-west-1.amazonaws.com'    => 'US GovCloud (website)',
 			*/
 		),
-		'tip'     => __( '[Default: US East 1 aka US Standard] - Determines the region where your S3 bucket exists. This must be correct for BackupBuddy to access your bucket. Select the S3 Transfer Acceleration option to potentially significantly increase speeds, especially when sending to a bucket outside your geographical location. You must enable this option per-bucket in your AWS Console. Amazon may charge for use of this feature.', 'it-l10n-backupbuddy' ),
+		'tip'     => __( '[Default: US East 1 aka US Standard] - Determines the region where your S3 bucket exists. This must be correct for Solid Backups to access your bucket. Select the S3 Transfer Acceleration option to potentially significantly increase speeds, especially when sending to a bucket outside your geographical location. You must enable this option per-bucket in your AWS Console. Amazon may charge for use of this feature.', 'it-l10n-backupbuddy' ),
 		'rules'   => 'required',
 	)
 );
@@ -181,7 +181,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 $settings_form->add_setting(
@@ -192,7 +192,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 $settings_form->add_setting(
@@ -203,7 +203,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 $settings_form->add_setting(
@@ -214,7 +214,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 $settings_form->add_setting(
@@ -236,7 +236,7 @@ $settings_form->add_setting(
 	array(
 		'type'      => 'title',
 		'name'      => 'advanced_begin',
-		'title'     => '<span class="dashicons dashicons-arrow-right"></span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
+		'title'     => '<span class="advanced-toggle-title-icon">' . pb_backupbuddy::$ui->get_icon( 'chevronleft' ) . '</span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
 		'row_class' => 'advanced-toggle-title',
 	)
 );
@@ -252,7 +252,7 @@ $settings_form->add_setting(
 		),
 		'tip'       => __( '[Default: Standard Storage] - Determines the type of storage to use when placing this file on Amazon S3. Reduced redundancy offers less protection against loss but costs less. See Amazon for for details.', 'it-l10n-backupbuddy' ),
 		'rules'     => 'required',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 $settings_form->add_setting(
@@ -264,7 +264,7 @@ $settings_form->add_setting(
 		'rules'     => 'required|int[5-9999999]',
 		'css'       => 'width: 50px;',
 		'after'     => ' MB',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 $settings_form->add_setting(
@@ -276,7 +276,7 @@ $settings_form->add_setting(
 		'rules'     => '',
 		'css'       => 'width: 50px;',
 		'after'     => ' secs. <span class="description">' . __( 'Blank for detected default:', 'it-l10n-backupbuddy' ) . ' ' . backupbuddy_core::detectMaxExecutionTime() . ' sec</span>',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 $settings_form->add_setting(
@@ -290,9 +290,9 @@ $settings_form->add_setting(
 		'title'     => __( 'Encrypt connection', 'it-l10n-backupbuddy' ) . '*',
 		'tip'       => __( '[Default: enabled] - When enabled, all transfers will be encrypted with SSL encryption. Disabling this may aid in connection troubles but results in lessened security. Note: Once your files arrive on our server they are encrypted using AES256 encryption. They are automatically decrypted upon download as needed.', 'it-l10n-backupbuddy' ),
 		'css'       => '',
-		'after'     => '<span class="description"> ' . __( 'Enable connecting over SSL.', 'it-l10n-backupbuddy' ) . '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Files are always encrypted with AES256 upon arrival at S3.</span>',
+		'after'     => '<span class="description"> ' . __( 'Enable connecting over SSL.', 'it-l10n-backupbuddy' ) . '<br>* Files are always encrypted with AES256 upon arrival at S3.</span>',
 		'rules'     => '',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 $settings_form->add_setting(
@@ -304,11 +304,11 @@ $settings_form->add_setting(
 			'checked'   => '1',
 		),
 		'title'     => __( 'Use system CA bundle', 'it-l10n-backupbuddy' ),
-		'tip'       => __( '[Default: disabled] - When enabled, BackupBuddy will use your web server\'s certificate bundle for connecting to the server instead of BackupBuddy bundle. Use this if SSL fails due to SSL certificate issues.', 'it-l10n-backupbuddy' ),
+		'tip'       => __( '[Default: disabled] - When enabled, Solid Backups will use your web server\'s certificate bundle for connecting to the server instead of Solid Backups bundle. Use this if SSL fails due to SSL certificate issues.', 'it-l10n-backupbuddy' ),
 		'css'       => '',
-		'after'     => '<span class="description"> ' . __( 'Use webserver certificate bundle instead of BackupBuddy\'s.', 'it-l10n-backupbuddy' ) . '</span>',
+		'after'     => '<span class="description"> ' . __( 'Use webserver certificate bundle instead of Solid Backups\'.', 'it-l10n-backupbuddy' ) . '</span>',
 		'rules'     => '',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 $settings_form->add_setting(
@@ -324,7 +324,7 @@ $settings_form->add_setting(
 		'css'       => '',
 		'after'     => '<span class="description"> ' . __( 'Check only if directed by support. Use with caution.', 'it-l10n-backupbuddy' ) . '</span>',
 		'rules'     => '',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 $settings_form->add_setting(
@@ -340,7 +340,7 @@ $settings_form->add_setting(
 		'css'       => '',
 		'after'     => '<span class="description"> ' . __( 'Check if directed by support.', 'it-l10n-backupbuddy' ) . '</span>',
 		'rules'     => '',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 $settings_form->add_setting(
@@ -352,7 +352,7 @@ $settings_form->add_setting(
 		'rules'     => 'required|int[0-9999999]',
 		'css'       => 'width: 50px;',
 		'after'     => ' files',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 
@@ -366,11 +366,11 @@ if ( 'edit' !== $mode || '0' == $destination_settings['disable_file_management']
 				'checked'   => '1',
 			),
 			'title'     => __( 'Disable file management', 'it-l10n-backupbuddy' ),
-			'tip'       => __( '[[Default: unchecked] - When checked, selecting this destination disables browsing or accessing files stored at this destination from within BackupBuddy. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination.', 'it-l10n-backupbuddy' ),
+			'tip'       => __( '[[Default: unchecked] - When checked, selecting this destination disables browsing or accessing files stored at this destination from within Solid Backups. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination.', 'it-l10n-backupbuddy' ),
 			'css'       => '',
 			'rules'     => '',
 			'after'     => __( 'Once disabled you must recreate the destination to re-enable.', 'it-l10n-backupbuddy' ),
-			'row_class' => 'advanced-toggle',
+			'row_class' => 'advanced-toggle advanced-toggle-hidden',
 		)
 	);
 }
@@ -387,6 +387,6 @@ $settings_form->add_setting(
 		'css'       => '',
 		'after'     => '<span class="description"> ' . __( 'Check to disable this destination until re-enabled.', 'it-l10n-backupbuddy' ) . '</span>',
 		'rules'     => '',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );

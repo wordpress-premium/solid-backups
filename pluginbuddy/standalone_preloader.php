@@ -176,7 +176,7 @@ function esc_attr( $text ) {
  * @param string $text    Text to escape.
  * @param string $domain  Text domain.
  */
-function esc_attr_e( $text, $domain ) { // @codingStandardsIgnoreLine: Replacement function declaration.
+function esc_attr_e( $text, $domain = '' ) { // @codingStandardsIgnoreLine: Replacement function declaration.
 	echo esc_attr( $text );
 }
 
@@ -200,8 +200,11 @@ function wp_style_is( $name ) {
  * @param array  $deps  Dependencies.
  * @param string $ver   Version.
  */
-function wp_enqueue_style( $name, $file, $deps = array(), $ver = '' ) {
+function wp_enqueue_style( $name, $file = '', $deps = array(), $ver = '' ) {
 	global $pb_styles;
+	if ( empty( $file ) ) {
+		return;
+	}
 	$pb_styles[ $name ]['file']    = $file;
 	$pb_styles[ $name ]['version'] = $ver;
 	$pb_styles[ $name ]['printed'] = false;
@@ -509,7 +512,15 @@ function maybe_unserialize( $original ) {
 	return $original;
 }
 
-
+/**
+ * Basic replication of wpautop().
+ *
+ * @param string $string The input string.
+ * @return string The formatted string.
+ */
+function wpautop( $string ) {
+	return '<p>' . $string . '</p>';
+}
 
 // NOT IMPLEMENTED BUT NON-BLOCKING.
 /**

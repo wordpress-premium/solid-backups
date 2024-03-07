@@ -1,6 +1,6 @@
 <?php
 /**
- * ImportBuddy AJAX Controller
+ * Importer AJAX Controller
  *
  * @package BackupBuddy
  */

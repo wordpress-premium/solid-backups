@@ -16,7 +16,7 @@ $response = array(
 
 $parent_id   = pb_backupbuddy::_POST( 'parentID' ); // Gdrive folder parent ID to list within. Use ROOT for looking in root of account.
 $parent_id   = str_replace( array( '\\', '/', "'", '"' ), '', $parent_id );
-$folder_name = pb_backupbuddy::_POST( 'folderName' ); // BackupBuddy destination ID number for remote destinations array.
+$folder_name = pb_backupbuddy::_POST( 'folderName' ); // Solid Backups destination ID number for remote destinations array.
 $version     = (int) pb_backupbuddy::_POST( 'gdrive_version' );
 if ( ! $version ) {
 	$version = '';

@@ -69,26 +69,15 @@ pb_backupbuddy::$options['profiles'][ $profile ] = array_merge( pb_backupbuddy::
 
 </script>
 
-<style>
-	table {
-		font-size: 12px;
-		line-height: 1.6em;
-	}
-	tr {
-		margin: 0 !important;
-		padding: 0 !important;
-	}
-</style>
-
 <?php
 
 $settings_form = new pb_backupbuddy_settings( 'profile_settings', '', 'action=pb_backupbuddy_backupbuddy&function=profile_settings&profile=' . $profile, 320 );
-
 $settings_form->add_setting(
 	array(
 		'type'  => 'title',
-		'name'  => 'title_type',
-		'title' => backupbuddy_core::pretty_backup_type( pb_backupbuddy::$options['profiles'][ $profile ]['type'] ) . ' Profile',
+		'name'  => 'title_profile_settings',
+		'title' => __( 'Backup Profile Settings', 'it-l10n-backupbuddy' ),
+		'class' => 'solid-backups-form-heading__profile',
 	)
 );
 
@@ -170,15 +159,13 @@ if ( 0 === $process_errors && isset( $process_result['data'] ) && count( (array)
 	}
 }
 
-$settings_form->display_settings( 'Save Profile Settings' );
-
-
+$delete_button = '';
 if ( $profile > 2 ) {
+	$delete_button = '<a class="button button-secondary secondary-button button-right" title="Delete this Profile" href="admin.php?page=pb_backupbuddy_backup&delete_profile=' . esc_attr( $profile ) . '" target="_top" onclick="return confirm( \'Are you sure you want to delete this profile?\' );">Delete Profile</a>';
+}
+$settings_form->display_settings( __( 'Save Profile Settings', 'it-l10n-backupbuddy' ), '<div class="solid-backups-form-buttons">', $delete_button . '</div>' );
+
 ?>
-	<a style="float: right; margin-top: -35px; margin-right: 10px;" class="button secondary-button" title="Delete this Profile" href="admin.php?page=pb_backupbuddy_backup&delete_profile=<?php echo esc_attr( $profile ); ?>" target="_top" onclick="return confirm( 'Are you sure you want to delete this profile?' );">Delete Profile</a>
-<?php } ?>
-
-
 <script type="text/javascript">
 	<?php
 	if ( '1' == pb_backupbuddy::$options['profiles'][ $profile ]['profile_globaltables'] ) {

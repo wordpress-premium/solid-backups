@@ -68,7 +68,7 @@ class backupbuddy_live_troubleshooting {
 		'recent_sync_notifications' => array(),					// Sync Notification errors (live_error).
 
 		'php_notices' => array(),							// Any PHP errors, warnings, notices found in any of the log searched.
-		'bb_notices' => array(),								// Any BackupBuddy errors or warnings logged.
+		'bb_notices' => array(),								// Any Solid Backups errors or warnings logged.
 
 		'live_status_log_tail' => '',							// Recent Stash Live Status Log.
 		'live_stats' => array(),
@@ -460,7 +460,7 @@ class backupbuddy_live_troubleshooting {
 
 	/* _find_notices()
 	 *
-	 * Finds any PHP errors, warnings, notices + BackupBuddy errors and warnings in a log file.
+	 * Finds any PHP errors, warnings, notices + Solid Backups errors and warnings in a log file.
 	 *
 	 * @param	string	$log	Newline-deliminated log file.
 	 *
@@ -506,11 +506,11 @@ class backupbuddy_live_troubleshooting {
 					}
 				}
 
-			// BackupBuddy Error #
+			// Solid Backups Error #
 			} elseif ( false !== stripos( $line, 'Error #' ) ) {
 				$bb_notices[] = $line;
 
-			// BackupBuddy Warning #
+			// Solid Backups Warning #
 			} elseif ( false !== stripos( $line, 'Warning #' ) ) {
 				$bb_notices[] = $line;
 
@@ -537,7 +537,7 @@ class backupbuddy_live_troubleshooting {
 
 
 		if ( ( count( $php_notices ) > 0 ) || ( count( $bb_notices ) > 0 ) ) {
-			self::$_results['highlights'][] = 'Detected `' . count( $php_notices ) . '` possible PHP notices and `' . count( $bb_notices ) . '` possible BackupBuddy notices in log `' . $log_file . '`. See php_notices or bb_notices section for details.';
+			self::$_results['highlights'][] = 'Detected `' . count( $php_notices ) . '` possible PHP notices and `' . count( $bb_notices ) . '` possible Solid Backups notices in log `' . $log_file . '`. See php_notices or bb_notices section for details.';
 		}
 
 		self::$_results['php_notices'] = array_merge( self::$_results['php_notices'], $php_notices );

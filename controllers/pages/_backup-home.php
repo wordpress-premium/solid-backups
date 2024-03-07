@@ -14,7 +14,7 @@ if ( pb_backupbuddy::_GET( 'zip_viewer' ) != '' ) {
 $latestVersion = backupbuddy_core::determineLatestVersion();
 if ( false !== $latestVersion ) {
 	if ( version_compare( pb_backupbuddy::settings( 'version' ), $latestVersion[1], '<' ) ) {
-		$message = 'A new BackupBuddy version is available, v' . $latestVersion[0] . '. You are currently running v' . pb_backupbuddy::settings( 'version' ) . '. Update on the <a href="plugins.php">WordPress Plugins page</a>.';
+		$message = 'A new Solid Backups version is available, v' . $latestVersion[0] . '. You are currently running v' . pb_backupbuddy::settings( 'version' ) . '. Update on the <a href="plugins.php">WordPress Plugins page</a>.';
 		$hash    = md5( $message );
 		pb_backupbuddy::disalert( $hash, $message );
 	}

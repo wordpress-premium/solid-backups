@@ -10,7 +10,7 @@ class GraphRequestTest extends TestCase
     protected $defaultHeaders;
     protected $client;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->requests = array(
             new GraphRequest("GET", "/endpoint", "token", "baseUrl", "/version"),
@@ -123,6 +123,11 @@ class GraphRequestTest extends TestCase
     {
         $this->requests[0]->setTimeout('200');
         $this->assertAttributeEquals('200', 'timeout', $this->requests[0]);
+    }
+
+    public function testDefaultTimeout()
+    {
+        $this->assertAttributeEquals('100', 'timeout', $this->requests[0]);
     }
 
     public function testCreateGuzzleClient()

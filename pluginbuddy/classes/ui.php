@@ -73,20 +73,20 @@ class pb_backupbuddy_ui {
 	 * @param string $title       Title to display.
 	 * @param bool   $echo        Whether or not to echo the string or return.
 	 * @param bool   $br          Disables the line break after h1.
-	 * @param string $icon_class  Customize the icon class.
+	 * @param string $icon_class  DEPRECATED. Customize the icon class.
 	 *
 	 * @return null|string  Returns null if $echo is true; else returns string with HTML.
 	 */
-	public function title( $title, $echo = true, $br = true, $icon_class = 'backupbuddy-icon-drive' ) {
-		$return = sprintf( '<h1 style="zoom: 1.05;"><span class="%s"></span> %s</h1>', esc_attr( $icon_class ), $title );
+	public function title( $title, $echo = true, $br = true, $icon_class = false ) {
+		$return = '<h1 class="solid-title-medium">' . $title . '</h1>';
 		if ( true === $br ) {
 			$return .= '<br />';
 		}
 		if ( true !== $echo ) {
 			return $return;
 		}
-		echo $return;
-	} // End title().
+		echo wp_kses_post( $return );
+	}
 
 
 	/*	pluginbuddy_ui->button()
@@ -103,7 +103,7 @@ class pb_backupbuddy_ui {
 	 */
 	public function button( $url, $text, $title = '', $primary = false, $additional_class = '', $id = '' ) {
 		if ( $primary === false ) {
-			return '<a class="button secondary-button ' . $additional_class . '" style="margin-top: 3px;" id="' . $id . '" title="' . $title . '" href="' . $url . '">' . $text . '</a>';
+			return '<a class="button button-secondary secondary-button' . $additional_class . '" style="margin-top: 3px;" id="' . $id . '" title="' . $title . '" href="' . $url . '">' . $text . '</a>';
 		} else {
 			return '<a class="button button-primary ' . $additional_class . '" style="margin-top: 3px;" id="' . $id . '" title="' . $title . '" href="' . $url . '">' . $text . '</a>';
 		}
@@ -120,7 +120,7 @@ class pb_backupbuddy_ui {
 	 *	@return		null/string				Returns null if $echo is true; else returns string with HTML.
 	 */
 	public static function note( $text, $echo = true ) {
-		$return = '<span class="description ui-note"><i>' . $text . '</i></span>';
+		$return = '<span class="description ui-note">' . $text . '</span>';
 		if ( true !== $echo ) {
 			return $return;
 		}
@@ -135,7 +135,7 @@ class pb_backupbuddy_ui {
 	 *                         Ex: array( array( 'blue', 'red' ), array( 'brown', 'green' ) ).
 	 *                         If the value for an item is an array then the first value will be assigned to the rel tag of any hover actions. If not
 	 *                         an array then the value itself will be put in the rel tag.  If an array the second value will be the one displayed in the column.
-	 *                         BackupBuddy needed the displayed item in the column to be a link (for downloading backups) but the backup file as the rel.
+	 *                         Solid Backups needed the displayed item in the column to be a link (for downloading backups) but the backup file as the rel.
 	 * @param array $settings  Array of all the various settings. Merged with defaults prior to usage. Typically set in view.
 	 *                         See $default_settings at beginning of function for available settings.
 	 *                         Ex: $settings = array(
@@ -177,7 +177,7 @@ class pb_backupbuddy_ui {
 			 * Bulk Actions function if it doesn't already exist.
 			 *
 			 * @param array  $settings    Settings array.
-			 * @param bool   $hover_note  Display Hover note.
+			 * @param bool   $hover_note  DEPRECATED. Display Hover note.
 			 * @param string $class       Wrapper class name.
 			 * @param bool   $echo        Echo output or return.
 			 *
@@ -188,13 +188,12 @@ class pb_backupbuddy_ui {
 					return;
 				}
 
-				$hover_note = $hover_note && count( $settings['hover_actions'] ) > 0;
 				$class      = $class ? sprintf( ' class="%s"', esc_attr( $class ) ) : '';
 				$output     = '<div' . $class . '>';
 				if ( count( $settings['bulk_actions'] ) == 1 ) {
 					foreach ( $settings['bulk_actions'] as $action_slug => $action_title ) {
 						$output .= '<input type="hidden" name="bulk_action" value="' . $action_slug . '">';
-						$output .= '<input type="submit" name="do_bulk_action" value="' . $action_title . '" class="button secondary-button backupbuddy-do_bulk_action">';
+						$output .= '<input type="submit" name="do_bulk_action" value="' . $action_title . '" class="button button-secondary secondary-button backupbuddy-do_bulk_action">';
 					}
 				} else {
 					$output .= '<select name="bulk_action" class="actions">';
@@ -204,19 +203,16 @@ class pb_backupbuddy_ui {
 					}
 					$output .= '</select> &nbsp;';
 					//$output .= self::button( '#', 'Apply' );
-					$output .= '<input type="submit" name="do_bulk_action" value="Apply" class="button secondary-button backupbuddy-do_bulk_action">';
+					$output .= '<input type="submit" name="do_bulk_action" value="Apply" class="button button-secondary secondary-button backupbuddy-do_bulk_action">';
 				}
 				$output .= '&nbsp;&nbsp;';
 				$output .= $settings['after_bulk'];
 
-				$output .= '<div class="alignright actions">';
-				if ( true === $hover_note && count( $settings['hover_actions'] ) ) {
-					$output .= pb_backupbuddy::$ui->note( 'Hover over items above for additional options.', false );
-				}
 				if ( '' != $settings['reorder'] ) {
+					$output .= '<div class="alignright actions">';
 					$output .= '<input type="submit" name="save_order" id="save_order" value="Save Order" class="button-secondary" />';
+					$output .= '</div><!-- .actions -->';
 				}
-				$output .= '</div><!-- .actions -->';
 
 				$output .= '</div><!-- wrapper -->';
 
@@ -535,10 +531,10 @@ class pb_backupbuddy_ui {
 				$action_url = ! empty( $settings['action'] ) ? $settings['action'] : pb_backupbuddy::page_url();
 				$hover_link = $action_url . '&' . $action_slug . '=' . $item_id;
 				if ( $hover_action_column_value ) {
-					$hover_link .= '&value=' . $hover_action_column_value;
+					$hover_link .= '&value=' . strip_tags( $hover_action_column_value );
 				}
 			} else { // URL hover action slug so just append value to URL.
-				$hover_link = $action_slug . $hover_action_column_value;
+				$hover_link = $action_slug . strip_tags( $hover_action_column_value );
 			}
 
 			// Some hosts don't allow get params that end in .zip.
@@ -546,7 +542,7 @@ class pb_backupbuddy_ui {
 				$hover_link .= '&bub_rand=' . rand( 100, 999 );
 			}
 
-			$output .= '<a href="' . $hover_link . '" class="pb_' . pb_backupbuddy::settings( 'slug' ) . '_hoveraction_' . $action_slug . '" rel="' . $hover_action_column_value . '">' . $action_title . '</a>';
+			$output .= '<a href="' . $hover_link . '" class="pb_' . pb_backupbuddy::settings( 'slug' ) . '_hoveraction_' . $action_slug . '" rel="' . strip_tags( $hover_action_column_value ) . '">' . $action_title . '</a>';
 			if ( $i < count( $settings['hover_actions'] ) ) {
 				$output .= ' | ';
 			}
@@ -628,16 +624,18 @@ class pb_backupbuddy_ui {
 	 *	Displays a message to the user when they hover over the question mark. Gracefully falls back to normal tooltip.
 	 *	HTML is supposed within tooltips.
 	 *
-	 *	@param		string		$message		Actual message to show to user.
-	 *	@param		string		$title			Title of message to show to user. This is displayed at top of tip in bigger letters. Default is blank. (optional)
-	 *	@param		boolean		$echo_tip		Whether to echo the tip (default; true), or return the tip (false). (optional)
-	 *	@return		string/null					If not echoing tip then the string will be returned. When echoing there is no return.
+	 *	@param  string   $message   Actual message to show to user.
+	 *	@param  string   $title	    Title of message to show to user. This is displayed at top of tip in bigger letters. Default is blank. (optional)
+	 *	@param  boolean  $echo_tip  Whether to echo the tip (default; true), or return the tip (false). (optional)
+	 *  @param  string   $classes   Additional classes to add to the tip. (optional)
+	 *
+	 *	@return string/null If not echoing tip then the string will be returned. When echoing there is no return.
 	 */
-	public function tip( $message, $title = '', $echo_tip = true ) {
+	public function tip( $message, $title = '', $echo_tip = true, $classes = '' ) {
 		if ( '' != $title ) {
 			$message = $title . ' - ' . $message;
 		}
-		$tip = ' <a class="pluginbuddy_tip" title="' . $message . '"><img src="' . pb_backupbuddy::plugin_url() . '/pluginbuddy/images/pluginbuddy_tip.png" alt="(?)" /></a>';
+		$tip = ' <a class="pluginbuddy_tip ' . esc_attr( $classes ) . '" title="' . $message . '"><span class="screen-reader-text">' . esc_html__( 'Hover to open tooltip', 'it-l10n-backupbuddy' ) . '</span>' . pb_backupbuddy::$ui->get_icon( 'help' ) . '</a>';
 		if ( $echo_tip === true ) {
 			echo $tip;
 		} else {
@@ -648,45 +646,61 @@ class pb_backupbuddy_ui {
 	/**
 	 * Displays a message to the user at the top of the page when in the dashboard.
 	 *
-	 * @param string $message     Message you want to display to the user.
-	 * @param bool   $error       OPTIONAL! true indicates this alert is an error and displays as red. Default: false.
-	 * @param string $error_code  OPTIONAL! Error code number to use in linking in the wiki for easy reference.
-	 * @param string $rel_tag     Rel attribute value.
-	 * @param string $more_css    Additional inline styles.
-	 * @param array  $args        Array of additional arguments.
+	 * Note that the $type param was originally called $error and was a basic true/false value
+	 * used to determine the CSS class to use. This was changed to allow for more flexibility
+	 * in the CSS class used.
+	 *
+	 * @param string       $message     Message you want to display to the user.
+	 * @param bool|string  $type        Optional. String is preferred for future dev. True indicates an error. False is default, or a string indicates what css class to use.
+	 * @param string       $error_code  Optional. Error code number to use in linking in the wiki for easy reference.
+	 * @param string       $rel_tag     Rel attribute value.
+	 * @param string       $more_css    Additional inline styles.
+	 * @param array        $args        Array of additional arguments.
 	 */
-	public function alert( $message, $error = false, $error_code = '', $rel_tag = '', $more_css = '', $args = array() ) {
+	public function alert( $message, $type = false, $error_code = '', $rel_tag = '', $more_css = '', $args = array() ) {
 		$log_error = false;
 		$id        = 'message';
 		$style     = '';
 		$rel       = '';
-		$classes   = 'pb_backupbuddy_alert';
+		$classes   = 'pb_backupbuddy_alert notice notice-';
 
 		if ( ! empty( $args['id'] ) ) {
 			$id = sprintf( ' id="%s"', esc_attr( $args['id'] ) );
 		}
+
 		if ( $rel_tag || ! empty( $args['rel'] ) ) {
 			$rel_tag = ! empty( $args['rel'] ) ? $args['rel'] : $rel_tag;
 			$rel     = sprintf( ' rel="%s"', esc_attr( $rel_tag ) );
 		}
+
 		if ( $more_css || ! empty( $args['css'] ) ) {
 			$more_css = ! empty( $args['css'] ) ? $args['css'] : $more_css;
 			$style    = sprintf( ' style="%s"', esc_attr( $more_css ) );
 		}
+
 		if ( ! empty( $args['class'] ) ) {
 			$classes .= ' ' . $args['class'];
 		}
-		if ( false === $error ) {
-			$classes .= ' updated fade';
-		} else {
-			$classes  .= ' error';
+
+		if ( true === $type ) {
+			$classes  .= 'error';
 			$log_error = true;
+		} elseif ( false === $type ) {
+			$classes .= 'default fade';
+		} elseif ( is_string( $type ) ) {
+			$classes .= '-' . $type . ' fade';
 		}
 
-		$alert = sprintf( '<div class="%s"%s%s%s>%%s</div>', esc_attr( $classes ), $id, $style, $rel );
+		$alert = sprintf(
+			'<div class="%1$s"%2$s%3$s%4$s>%%s</div>',
+			esc_attr( $classes ),
+			$id,
+			$style,
+			$rel
+		);
 
-		if ( '' != $error_code ) {
-			$message  .= sprintf( ' <a href="https://ithemeshelp.zendesk.com/hc/en-us/articles/211132377-Error-Codes-#%s" target="_blank"><i>%s Error Code %s - Click for more details.</i></a>', esc_attr( $error_code ), esc_html( pb_backupbuddy::settings( 'name' ) ), esc_html( $error_code ) );
+		if ( ! empty( $error_code ) ) {
+			$message  .= sprintf( ' <a href="https://go.solidwp.com/error-codes-#%s" target="_blank"><i>%s Error Code %s - Click for more details.</i></a>', esc_attr( $error_code ), esc_html( pb_backupbuddy::settings( 'name' ) ), esc_html( $error_code ) );
 			$log_error = true;
 		}
 
@@ -694,22 +708,29 @@ class pb_backupbuddy_ui {
 			pb_backupbuddy::log( $message . sprintf( ' Error Code: %s', esc_html( $error_code ) ), 'error' );
 		}
 
-		echo sprintf( $alert, $message );
+		echo sprintf( $alert, wpautop( $message ) );
 	} // End alert().
 
 	/**
 	 * Displays a DISMISSABLE message to the user at the top of the page when in the dashboard.
 	 *
-	 * @param string $unique_id  Unique Message ID.
-	 * @param string $message    Message you want to display to the user.
-	 * @param bool   $error      OPTIONAL! true indicates this alert is an error and displays as red. Default: false.
-	 * @param string $more_css   OPTIONAL! Error code number to use in linking in the wiki for easy reference.
-	 * @param array  $args       Array of additional args to pass.
+	 * @param string        $unique_id  Unique Message ID.
+	 * @param string        $message    Message you want to display to the user.
+	 * @param bool}string   $type       Optional. true indicates this alert is an error and displays as red. Default: false.
+	 * @param string        $more_css   Optional. Error code number to use in linking in the wiki for easy reference.
+	 * @param array         $args       Array of additional args to pass.
 	 */
-	public function disalert( $unique_id, $message, $error = false, $more_css = '', $args = array() ) {
-		if ( '' == $unique_id || ! isset( pb_backupbuddy::$options['disalerts'][ $unique_id ] ) ) {
-			$message = '<a style="float: right;" class="pb_backupbuddy_disalert" href="javascript:void(0);" title="' . __( 'Dismiss this alert. Unhide dismissed alerts on the Diagnostics page under Logs/Other.', 'it-l10n-backupbuddy' ) . '" alt="' . pb_backupbuddy::ajax_url( 'disalert' ) . '"><b>' . __( 'Dismiss', 'it-l10n-backupbuddy' ) . '</b></a><div style="margin-right: 120px;">' . $message . '</div>';
-			$this->alert( $message, $error, '', $unique_id, $more_css, $args );
+	public function disalert( $unique_id, $message, $type = false, $more_css = '', $args = array() ) {
+		if ( empty( $unique_id ) || ! isset( pb_backupbuddy::$options['disalerts'][ $unique_id ] ) ) {
+			$link = sprintf(
+				'<a class="pb_backupbuddy_disalert" href="javascript:void(0);" title="%1$s" alt="%2$s">%3$s</a>',
+				__( 'Dismiss this alert. Unhide dismissed alerts on the Diagnostics page under Logs/Other.', 'it-l10n-backupbuddy' ),
+				pb_backupbuddy::ajax_url( 'disalert' ),
+				__( 'Dismiss', 'it-l10n-backupbuddy' )
+			);
+
+			$message = wpautop( $message ) . $link;
+			$this->alert( $message, $type, '', $unique_id, $more_css, $args );
 		} else {
 			echo '<!-- Previously Dismissed Alert: `' . htmlentities( $message ) . '` -->';
 		}
@@ -747,7 +768,103 @@ class pb_backupbuddy_ui {
 		}
 	} // End video().
 
+	/**
+	 * Get the icon from the plugin's icons directory.
+	 * If the icon does not exist, it will render the default icon.
+	 *
+	 * @param string $name The name of the icon to render.
+	 *
+	 * @return string The icon's SVG markup.
+	 */
+	public function get_icon( $name = 'blockdefault' ) {
+		$file = pb_backupbuddy::plugin_path() . '/assets/dist/icons/' . $name . '.svg';
+		if ( file_exists( $file ) ) {
+			$string = file_get_contents( $file );
 
+			if ( false === $string ) {
+				return '';
+			}
+
+			return trim( $string );
+		}
+	}
+
+	/**
+	 * Renders ('echoes') an icon from the plugin's icons directory.
+	 *
+	 * @param string $name The name of the icon to render.
+	 *
+	 * @return string An empty string.
+	 */
+	public function render_icon( $name = 'blockdefault' ) {
+		$icon = $this->get_icon( $name );
+		if ( empty( $icon ) ) {
+			return '';
+		}
+		echo wp_kses( $icon, $this->kses_post_with_svg() );
+	}
+
+	/**
+	 * Get the icon name by profile type.
+	 *
+	 * @param string $type The profile type.
+	 *
+	 * @return string The icon name.
+	 */
+	public static function get_icon_name_by_profile_type( $type ) {
+		$icon = '';
+		switch ( $type ) :
+			case 'db':
+				$icon = 'table';
+				break;
+			case 'files':
+				$icon = 'file';
+				break;
+			case 'themes':
+				$icon = 'brush';
+				break;
+			case 'plugins':
+				$icon = 'plugins';
+				break;
+			case 'media':
+				$icon = 'media';
+				break;
+			default:
+				$icon = 'archive';
+				break;
+		endswitch;
+		return $icon;
+	}
+
+	/**
+	 * Get the icon by profile type.
+	 *
+	 * @uses pb_backupbuddy::get_icon_name_by_profile_type()
+	 * @uses pb_backupbuddy::get_icon()
+	 *
+	 * @param string $type The profile type.
+	 *
+	 * @return string The icon's SVG markup.
+	 */
+	public function get_icon_by_profile_type( $type ) {
+		$icon_name = self::get_icon_name_by_profile_type( $type );
+		return $this->get_icon( $icon_name );
+	}
+
+	/**
+	 * Renders ('echoes') an icon by profile type.
+	 *
+	 * @uses pb_backupbuddy::get_icon_by_profile_type()
+	 * @uses pb_backupbuddy::render_icon()
+	 *
+	 * @param string $type The profile type.
+	 *
+	 * @return void
+	 */
+	public function render_icon_by_profile_type( $type ) {
+		$icon_name = $this->get_icon_name_by_profile_type( $type );
+		$this->render_icon( $icon_name );
+	}
 
 	/**
 	 * pb_backupbuddy::enqueue_thickbox()
@@ -788,7 +905,7 @@ class pb_backupbuddy_ui {
 	public function start_tabs( $interface_tag, $tabs, $css = '', $echo = true, $active_tab_index = 0 ) {
 		$this->_tab_interface_tag = $interface_tag;
 
-		pb_backupbuddy::load_script( 'pb_tabs.js', true );
+		pb_backupbuddy::load_script( 'pluginbuddy.js', true );
 
 		$prefix = 'pb_' . pb_backupbuddy::settings( 'slug' ) . '_'; // pb_PLUGINSLUG_
 		$return = '';
@@ -942,6 +1059,7 @@ class pb_backupbuddy_ui {
 		// Make sure styles and scripts we may need are registered.
 		backupbuddy_global_admin_scripts();
 
+		echo '<!DOCTYPE html>';
 		echo '<html>';
 		echo '<head>';
 		echo '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />';
@@ -956,20 +1074,15 @@ class pb_backupbuddy_ui {
 			wp_enqueue_script( 'jquery' );
 			wp_print_scripts( 'jquery' );
 		}
-
-		pb_backupbuddy::load_style( 'wp-admin.css' );
-		pb_backupbuddy::load_style( 'thickboxed.css' );
-
 		pb_backupbuddy::load_script( 'backupbuddy_global_admin_scripts', false );
-		pb_backupbuddy::load_script( 'admin.js', true );
+		pb_backupbuddy::load_script( 'pluginbuddy.js', true );
 		pb_backupbuddy::load_script( 'backupbuddy-min', false, backupbuddy_js_vars() );
-		pb_backupbuddy::load_style( 'admin.css' );
+		pb_backupbuddy::load_style( 'backupbuddy-core' );
 		pb_backupbuddy::load_script( 'jquery-ui-tooltip', false );
-		pb_backupbuddy::load_style( 'jQuery-ui-1.11.2.css', true );
 
-		printf( '<body class="wp-core-ui %s" style="background: inherit;">', esc_attr( $body_class ) );
+		printf( '<body class="wp-core-ui %s">', esc_attr( $body_class ) );
 		if ( true === $padding ) {
-			echo '<div class="bb-iframe-divpadding-noscroll" style="padding: 12px; padding-left: 20px; padding-right: 20px; overflow: scroll;">';
+			echo '<div class="backupbuddy-admin-iframe bb-iframe-divpadding-noscroll">';
 		} else {
 			echo '<div>';
 		}
@@ -993,5 +1106,111 @@ class pb_backupbuddy_ui {
 		echo '</html>';
 	} // End ajax_footer().
 
-} // End class pluginbuddy_ui.
+	/**
+	 * Output for wp_kses_allowed_html() to allow SVGs.
+	 *
+	 * Usage: echo wp_kses( $content, pb_backupbuddy::$ui->kses_post_svg() );
+	 *
+	 * @return array wp_kses_allowed_html( 'post' ) with SVG rules added.
+	 */
+	public function kses_post_with_svg() {
+		return array_merge(
+			wp_kses_allowed_html( 'post' ),
+			array(
+				'svg'   => array(
+					'class'           => true,
+					'aria-hidden'     => true,
+					'aria-labelledby' => true,
+					'role'            => true,
+					'xmlns'           => true,
+					'width'           => true,
+					'height'          => true,
+					'viewbox'         => true, // <= Must be lower case!
+					'focusable'       => true,
+				),
+				'g'     => array( 'fill' => true ),
+				'title' => array( 'title' => true ),
+				'circle' => array(
+					'cx'   => true,
+					'cy'   => true,
+					'r'    => true,
+					'fill' => true,
+				),
+				'path'  => array(
+					'd'            => true,
+					'fill'         => true,
+					'fill-rule'    => true,
+					'clip-rule'    => true,
+					'stroke'       => true,
+					'stroke-width' => true,
+				),
+			)
+		);
+	}
 
+	/**
+	 * Output banner code.
+	 *
+	 * This is used for the 2023 Black Friday/Cyber Monday promotion.
+	 *
+	 * Remove after Dec 3, 2023.
+	 */
+	public function banner() {
+		if ( ! empty( pb_backupbuddy::$options['disalerts']['2023-bfcm-banner'] ) ) {
+			return;
+		}
+
+		$start_date = wp_date( 'U', strtotime( '2023-11-20' ) );
+		$end_date   = wp_date( 'U', strtotime( '2023-12-03' ) );
+		$now        = wp_date( 'U' );
+
+		if ( $now < $start_date || $now > $end_date ) {
+			return;
+		}
+
+		$url = pb_backupbuddy::ajax_url( 'disalert' );
+		?>
+		<aside class="backupbuddy-sale-banner pb_backupbuddy_alert" rel="2023-bfcm-banner">
+			<div class="backupbuddy-sale-banner--text-container">
+				<h3 class="backupbuddy-sale-banner--heading"><?php esc_html_e( 'Save 40% on SolidWP', 'it-l10n-backupbuddy' ); ?></h3>
+				<span class="backupbuddy-sale-banner--text"><?php esc_html_e( 'Purchase new products during the Black Friday Sale.', 'it-l10n-backupbuddy' ); ?></span>
+				<a href="https://go.solidwp.com/bfcm23-backups-get-solid-suite" class="backupbuddy-sale-banner--button"><?php esc_html_e( 'Get Solid Suite', 'it-l10n-backupbuddy' ); ?></a>
+			</div>
+
+			<button type="button" class="backupbuddy-sale-banner--dismiss pb_backupbuddy_disalert" aria-label="Dismiss" alt="<?php echo esc_url( $url ); ?>">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+					<path d="M13 11.8l6.1-6.3-1-1-6.1 6.2-6.1-6.2-1 1 6.1 6.3-6.5 6.7 1 1 6.5-6.6 6.5 6.6 1-1z"></path>
+				</svg>
+			</button>
+
+			<svg width="245" height="190" viewBox="0 0 245 190" fill="none" class="backupbuddy-sale-banner--cropped-logo">
+				<circle cx="122.5" cy="122.5" r="122.5" fill="#F9FAF9"></circle>
+				<g filter="url(#filter0_ii_24_406)">
+					<path d="M89.5425 112.919C89.5425 111.405 90.7696 110.178 92.2833 110.178H135.07C146.675 110.178 156.082 119.586 156.082 131.191H107.814C97.723 131.191 89.5425 123.01 89.5425 112.919Z" fill="#CCCCCC"></path>
+				</g>
+				<path d="M87.6886 129.797H154.929C155.561 129.797 156.074 130.31 156.074 130.943C156.074 151.973 139.026 169.021 117.996 169.021H50.7556C50.1231 169.021 49.6104 168.508 49.6104 167.876C49.6104 146.846 66.6586 129.797 87.6886 129.797Z" fill="#8533FF"></path>
+				<path d="M127.621 76.5625H194.861C195.493 76.5625 196.006 77.0752 196.006 77.7077C196.006 98.7377 178.958 115.786 157.928 115.786H90.6877C90.0552 115.786 89.5425 115.273 89.5425 114.641C89.5425 93.6107 106.591 76.5625 127.621 76.5625Z" fill="#8533FF"></path>
+				<defs>
+					<filter id="filter0_ii_24_406" x="89.5425" y="107.116" width="66.5396" height="30.2001" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+						<feFlood flood-opacity="0" result="BackgroundImageFix"></feFlood>
+						<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"></feBlend>
+						<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"></feColorMatrix>
+						<feOffset dy="-3.0625"></feOffset>
+						<feGaussianBlur stdDeviation="3.0625"></feGaussianBlur>
+						<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"></feComposite>
+						<feColorMatrix type="matrix" values="0 0 0 0 0.113725 0 0 0 0 0.0117647 0 0 0 0 0.235294 0 0 0 0.12 0"></feColorMatrix>
+						<feBlend mode="normal" in2="shape" result="effect1_innerShadow_24_406"></feBlend>
+						<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"></feColorMatrix>
+						<feOffset dy="6.125"></feOffset>
+						<feGaussianBlur stdDeviation="3.0625"></feGaussianBlur>
+						<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"></feComposite>
+						<feColorMatrix type="matrix" values="0 0 0 0 0.113725 0 0 0 0 0.0117647 0 0 0 0 0.235294 0 0 0 0.12 0"></feColorMatrix>
+						<feBlend mode="normal" in2="effect1_innerShadow_24_406" result="effect2_innerShadow_24_406"></feBlend>
+					</filter>
+				</defs>
+			</svg>
+		</aside>
+		<?php
+	}
+
+} // End class pluginbuddy_ui.

@@ -3,7 +3,7 @@
 /*
 Provides a reliable way of retrieving which projects have updates.
 Written by Chris Jean for iThemes.com
-Version 1.0.2
+Version 1.0.3
 
 Version History
 	1.0.0 - 2013-04-11 - Chris Jean
@@ -13,12 +13,57 @@ Version History
 		Updated requires to no longer use dirname().
 	1.0.2 - 2014-10-23 - Chris Jean
 		Updated to meet WordPress coding standards.
+	1.0.3 - 2020-03-24 - Timothy Jacobs
+		Updated to add function for retrieving packages to display in the UI.
 */
 
 
 class Ithemes_Updater_Packages {
 	public static function flush() {
 		unset( $GLOBALS['ithemes-updater-packages-all'] );
+	}
+
+	/**
+	 * Retrieves a list of packages that should be included in the UI.
+	 *
+	 * By default all packages are included, but can be omitted by using a filter.
+	 *
+	 * @param string $details Pass 'full' to get the full details of a package. Otherwise, only local details will be returned.
+	 *
+	 * @return array
+	 */
+	public static function get_packages_to_include_in_ui( $details = 'local' ) {
+		if ( $details === 'full' ) {
+			$response = self::get_full_details();
+			$packages = $response['packages'];
+		} else {
+			$packages = self::get_local_details();
+		}
+
+		$show_ui = array();
+
+		if ( ! $packages ) {
+			return $show_ui;
+		}
+
+		foreach ( $packages as $file => $package ) {
+			if ( self::show_ui_for_package( $package['package'] ) ) {
+				$show_ui[ $file ] = $package;
+			}
+		}
+
+		return $show_ui;
+	}
+
+	/**
+	 * Whether a package should have management UI displayed for it.
+	 *
+	 * @param string $package The package name. For example 'backupbuddy'.
+	 *
+	 * @return bool
+	 */
+	public static function show_ui_for_package( $package ) {
+		return apply_filters( 'ithemes_updater_show_ui_for_package', true, $package );
 	}
 
 	public static function get_full_details( $response = false ) {
@@ -65,14 +110,15 @@ class Ithemes_Updater_Packages {
 
 
 				$key_map = array(
-					'status'     => 'status',
-					'link'       => 'package-url',
-					'ver'        => 'available',
-					'used'       => 'used',
-					'total'      => 'total',
-					'user'       => 'user',
-					'sub_expire' => 'expiration',
-					'upgrade'    => 'upgrade',
+					'status'         => 'status',
+					'link'           => 'package-url',
+					'ver'            => 'available',
+					'used'           => 'used',
+					'total'          => 'total',
+					'user'           => 'user',
+					'sub_expire'     => 'expiration',
+					'upgrade'        => 'upgrade',
+					'wp_update_data' => 'wp_update_data',
 				);
 
 				foreach ( $key_map as $old => $new ) {
@@ -81,6 +127,16 @@ class Ithemes_Updater_Packages {
 					} else {
 						$packages[$path][$new] = null;
 					}
+				}
+
+				if ( isset( $package['autoupdate'] ) ) {
+					$packages[$path]['autoupdate'] = $package['autoupdate'];
+				}
+				if ( isset( $package['disable_autoupdate'] ) ) {
+					$packages[$path]['disable_autoupdate'] = $package['disable_autoupdate'];
+				}
+				if ( isset( $package['upgrade_notice'] ) ) {
+					$packages[$path]['upgrade_notice'] = $package['upgrade_notice'];
 				}
 
 				if ( isset( $package['link_expire'] ) ) {

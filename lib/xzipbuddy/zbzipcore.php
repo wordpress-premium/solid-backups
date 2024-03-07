@@ -1744,7 +1744,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 		 */
 		protected function delete_directory_recursive( $directory ) {
 			if ( '' == $directory ) {
-				error_log( 'BackupBuddy Error #473843a: Halted empty directory deletion.' );
+				error_log( 'Solid Backups Error #473843a: Halted empty directory deletion.' );
 				return false;
 			}
 
@@ -1814,7 +1814,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 			// Array for cleaned up exclusions list
 			$sanitized_exclusions = array();
 
-			$this->log( 'details', 'Creating backup exclusions file `' . $file . '`.' );
+			$this->log( 'details', 'Creating backup exclusions file `' . esc_html( $file ) . '`.' );
 			//$exclusions = backupbuddy_core::get_directory_exclusions();
 
 			// Test each exclusion for validity (presence) and drop those not actually present
@@ -1826,7 +1826,7 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 				// DIRECTORY.
 				if ( is_dir( $root . ltrim( $exclusion, DIRECTORY_SEPARATOR ) ) ) {
 
-					$this->log( 'details', 'Excluding directory `' . $exclusion . '`.' );
+					$this->log( 'details', 'Excluding directory `' . esc_html( $exclusion ) . '`.' );
 
 					// Need to add the wildcard so that zip will exclude the directory and content
 					$exclusion = rtrim( $exclusion, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR . '*';
@@ -1834,17 +1834,17 @@ if ( !class_exists( "pluginbuddy_zbzipcore" ) ) {
 				// FILE.
 				} elseif ( is_file( $root . ltrim( $exclusion, DIRECTORY_SEPARATOR ) ) ) {
 
-					$this->log( 'details', 'Excluding file `' . $exclusion . '`.' );
+					$this->log( 'details', 'Excluding file `' . esc_html( $exclusion ) . '`.' );
 
 				// SYMBOLIC LINK.
 				} elseif ( is_link( $root . ltrim( $exclusion, DIRECTORY_SEPARATOR ) ) ) {
 
-					$this->log( 'details', 'Excluding symbolic link `' . $exclusion . '`.' );
+					$this->log( 'details', 'Excluding symbolic link `' . esc_html( $exclusion ) . '`.' );
 
 				// DOES NOT EXIST.
 				} else {
 
-					$this->log( 'details', 'Omitting exclusion as file/directory does not currently exist: `' . $exclusion . '`.' );
+					$this->log( 'details', 'Omitting exclusion as file/directory does not currently exist: `' . esc_html( $exclusion ) . '`.' );
 
 					// Skip to next exclusion
 					continue;

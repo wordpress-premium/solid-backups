@@ -1,6 +1,6 @@
 <?php
 /**
- * BackupBuddy MySQLBuddy class
+ * Solid Backups MySQLBuddy class
  *
  * Helps backup and restore database tables.
  * Dumps a mysql database (all tables, tables with a certain prefix, or none) with additional inclusions/exclusions of tables possible.
@@ -236,7 +236,7 @@ class pb_backupbuddy_mysqlbuddy {
 	private $_max_9010s_allowed = 9;
 
 	/**
-	 * When enabled, BackupBuddy will dump individual tables to their own database file (eg wp_options.sql, wp_posts.sql, etc) when possible based on other criteria such as the dump method and whether breaking out big tables is enabled.
+	 * When enabled, Solid Backups will dump individual tables to their own database file (eg wp_options.sql, wp_posts.sql, etc) when possible based on other criteria such as the dump method and whether breaking out big tables is enabled.
 	 *
 	 * @var bool
 	 */
@@ -250,7 +250,7 @@ class pb_backupbuddy_mysqlbuddy {
 	private $_current_sql_file = '';
 
 	/**
-	 * Default rows per select is determined by default private var above if none passed. Overriden by pb_backupbuddy::$options['phpmysqldump_maxrows'] if not blank and is numeric and overriden by passed parameter if defined.
+	 * Default rows per select is determined by default private var above if none passed. Overriden by pb_backupbuddy::$options['phpmysqldump_maxrows'] if not blank and is numeric and overridden by passed parameter if defined.
 	 *
 	 * @param string $database_host        Host / server of database to pull from. May be in the format: `localhost` for normal; `localhost:/path/to/mysql.sock` for sockets. If sockets then parased and internal class variables set appropriately.
 	 * @param string $database_name        Name of database to pull from.
@@ -370,7 +370,7 @@ class pb_backupbuddy_mysqlbuddy {
 	} // End set_incoming_sql_version().
 
 	/**
-	 * When enabled by passing true, BackupBuddy will dump individual tables to their own database file (eg wp_options.sql, wp_posts.sql, etc) when possible based on other criteria such as the dump method and whether breaking out big tables is enabled.
+	 * When enabled by passing true, Solid Backups will dump individual tables to their own database file (eg wp_options.sql, wp_posts.sql, etc) when possible based on other criteria such as the dump method and whether breaking out big tables is enabled.
 	 *
 	 * @param bool $force  Whether or not to force to single file. Defaults to TRUE if this function is called.
 	 */
@@ -477,7 +477,7 @@ class pb_backupbuddy_mysqlbuddy {
 		$output_directory = rtrim( $output_directory, '/' ) . '/'; // Make sure we have trailing slash.
 		pb_backupbuddy::status( 'milestone', 'start_database' );
 		pb_backupbuddy::status( 'message', 'Starting database dump procedure.' );
-		pb_backupbuddy::status( 'details', "mysqlbuddy: Output directory: `{$output_directory}`." );
+		pb_backupbuddy::status( 'details', 'mysqlbuddy: Output directory: `{' . htmlspecialchars( $output_directory ) . '}`.' );
 		if ( count( $tables ) == 1 ) {
 			pb_backupbuddy::status( 'details', 'Dumping single table `' . $tables[0] . '`.' );
 		} else {
@@ -540,7 +540,7 @@ class pb_backupbuddy_mysqlbuddy {
 		} else { // Multiple tables so use generaic db_1.sql file to dump into.
 			$output_file = $output_directory . 'db_1.sql';
 		}
-		pb_backupbuddy::status( 'sqlFile', basename( $output_file ) ); // Tells status checker which file to request size data for when polling server.
+		pb_backupbuddy::status( 'sqlFile', basename( htmlspecialchars( $output_file ) ) ); // Tells status checker which file to request size data for when polling server.
 
 		pb_backupbuddy::status( 'details', 'mysqlbuddy: Preparing to run command line mysqldump via exec().' );
 		$exclude_command = '';
@@ -609,7 +609,7 @@ class pb_backupbuddy_mysqlbuddy {
 							pb_backupbuddy::status( 'details', 'mysqlbuddy: This system\'s maximum command line length of `' . $exec_output[0] . '` is shorter than command length of `' . $command_length . '`. However, the option to ignore command line length check is enabled based on settings so continuing anyways.' );
 						} else {
 							if ( $exec_output[0] < 0 ) {
-								pb_backupbuddy::status( 'warning', 'mysqlbuddy: This system reported a negative number for the maximum command line length. This means that BackupBuddy cannot safely detect this system\'s limit.  This check can be overridden by enabling the "Skip command line length check" advanced option on the Settings page in BackupBuddy as a workaround. get_conf ARG_MAX likely failed.' );
+								pb_backupbuddy::status( 'warning', 'mysqlbuddy: This system reported a negative number for the maximum command line length. This means that Solid Backups cannot safely detect this system\'s limit.  This check can be overridden by enabling the "Skip command line length check" advanced option on the Settings page in Solid Backups as a workaround. get_conf ARG_MAX likely failed.' );
 							}
 							pb_backupbuddy::status( 'details', 'mysqlbuddy: This system\'s maximum command line length of `' . $exec_output[0] . '` is shorter than command length of `' . $command_length . '`. Falling back into compatibility mode to insure database dump integrity.' );
 							return false;
@@ -662,12 +662,12 @@ class pb_backupbuddy_mysqlbuddy {
 
 				// Display final SQL file size.
 				$sql_filesize = pb_backupbuddy::$format->file_size( filesize( $output_file ) );
-				pb_backupbuddy::status( 'details', 'Final SQL database dump file size of `' . basename( $output_file ) . '`: ' . $sql_filesize . '.' );
+				pb_backupbuddy::status( 'details', 'Final SQL database dump file size of `' . basename( htmlspecialchars( $output_file ) ) . '`: ' . $sql_filesize . '.' );
 				pb_backupbuddy::status( 'finishTableDump', '' );
 
 				return true;
 			} else { // SQL file MISSING. FAILURE!
-				pb_backupbuddy::status( 'error', 'mysqlbuddy: Though command reported success database dump SQL file is missing: `' . $output_file . '`.' );
+				pb_backupbuddy::status( 'error', 'mysqlbuddy: Though command reported success database dump SQL file is missing: `' . htmlspecialchars( $output_file ) . '`.' );
 				return false;
 			}
 		} else {
@@ -715,7 +715,7 @@ class pb_backupbuddy_mysqlbuddy {
 		global $wpdb;
 		if ( ! is_object( $wpdb ) ) {
 			pb_backupbuddy::status( 'error', 'WordPress database object $wpdb did not exist. This should not happen.' );
-			error_log( 'WordPress database object $wpdb did not exist. This should not happen. BackupBuddy Error #8945587973.' );
+			error_log( 'WordPress database object $wpdb did not exist. This should not happen. Solid Backups Error #8945587973.' );
 			return false;
 		}
 
@@ -755,18 +755,18 @@ class pb_backupbuddy_mysqlbuddy {
 				pb_backupbuddy::status( 'details', 'Advanced option to force to single .sql file enabled.' );
 				$output_file = $output_directory . 'db_1.sql';
 			}
-			pb_backupbuddy::status( 'details', 'SQL dump file `' . $output_file . '`.' );
+			pb_backupbuddy::status( 'details', 'SQL dump file `' . htmlspecialchars( $output_file ) . '`.' );
 			if ( '-1' == $this->_maxExecutionTime ) {
 				pb_backupbuddy::status( 'details', 'Database max execution time chunking disabled based on -1 passed.' );
 			} else {
 				pb_backupbuddy::status( 'details', 'mysqlbuddy: PHP-based database dump with max execution time for this run: ' . $this->_maxExecutionTime . ' seconds.' );
 			}
 			if ( false === ( $file_handle = fopen( $output_file, 'a' ) ) ) {
-				pb_backupbuddy::status( 'error', 'Error #9018: Database file is not creatable/writable. Check your permissions for file `' . $output_file . '` in directory `' . $output_directory . '`.' );
+				pb_backupbuddy::status( 'error', 'Error #9018: Database file is not creatable/writable. Check your permissions for file `' . htmlspecialchars( $output_file ) . '` in directory `' . htmlspecialchars( $output_directory ) . '`.' );
 				return false;
 			}
 
-			pb_backupbuddy::status( 'sqlFile', basename( $output_file ) ); // Tells status checker which file to request size data for when polling server.
+			pb_backupbuddy::status( 'sqlFile', basename( htmlspecialchars( $output_file ) ) ); // Tells status checker which file to request size data for when polling server.
 
 			if ( 0 == $rows_start ) {
 
@@ -848,7 +848,7 @@ class pb_backupbuddy_mysqlbuddy {
 					if ( ( microtime( true ) - $last_file_size_output ) > $output_file_size_every_max ) { // It's been long enough to get the current file size of SQL file.
 						// Display final SQL file size.
 						$sql_filesize = pb_backupbuddy::$format->file_size( filesize( $output_file ) );
-						pb_backupbuddy::status( 'details', 'Current database dump file `' . basename( $output_file ) . '` size: ' . $sql_filesize . '.' );
+						pb_backupbuddy::status( 'details', 'Current database dump file `' . basename( htmlspecialchars( $output_file ) ) . '` size: ' . $sql_filesize . '.' );
 						$last_file_size_output = microtime( true );
 					}
 
@@ -897,7 +897,7 @@ class pb_backupbuddy_mysqlbuddy {
 			pb_backupbuddy::status( 'finishTableDump', $table );
 			if ( isset( $output_file ) ) {
 				$stats = stat( $output_file );
-				pb_backupbuddy::status( 'details', 'Database SQL dump file (' . basename( $output_file ) . ') size: ' . pb_backupbuddy::$format->file_size( $stats['size'] ) );
+				pb_backupbuddy::status( 'details', 'Database SQL dump file (' . basename( htmlspecialchars( $output_file ) ) . ') size: ' . pb_backupbuddy::$format->file_size( $stats['size'] ) );
 				pb_backupbuddy::status( 'sqlSize', $stats['size'] );
 			}
 			pb_backupbuddy::status( 'details', 'About to flush...' );
@@ -1085,7 +1085,7 @@ class pb_backupbuddy_mysqlbuddy {
 
 	/**
 	 * Import from .SQL file into database via PHP by reading in file line by line.
-	 * Using codebase from BackupBuddy / importbuddy 2.x.
+	 * Using codebase from Solid Backups / importbuddy 2.x.
 	 *
 	 * @see import()
 	 * @since 2.0.0
@@ -1123,11 +1123,7 @@ class pb_backupbuddy_mysqlbuddy {
 		// Turn off foreign key checks.
 		$results = $wpdb->query( 'SET FOREIGN_KEY_CHECKS=0;' );
 		if ( false === $results ) {
-			if ( empty( $wpdb->use_mysqli ) ) {
-				pb_backupbuddy::status( 'warning', 'Warning #8493844: ' . @mysql_error( $wpdb->dbh ) );
-			} else {
-				pb_backupbuddy::status( 'warning', 'Warning #8493844: ' . @mysqli_error() );
-			}
+			pb_backupbuddy::status( 'warning', 'Warning #8493844: ' . @mysqli_error( $wpdb->dbh ) );
 		}
 
 		// Loop through file line-by-line, executing the SQL as we go. Prefix will be changed line by line as needed.
@@ -1176,11 +1172,7 @@ class pb_backupbuddy_mysqlbuddy {
 					// Turn back on foreign key checks.
 					$results = $wpdb->query( 'SET FOREIGN_KEY_CHECKS=1;' );
 					if ( false === $results ) {
-						if ( empty( $wpdb->use_mysqli ) ) {
-							pb_backupbuddy::status( 'warning', 'Warning #39379792434: ' . @mysql_error( $wpdb->dbh ) );
-						} else {
-							pb_backupbuddy::status( 'warning', 'Warning #894774478549: ' . @mysqli_error() );
-						}
+						pb_backupbuddy::status( 'warning', 'Warning #39379792434: ' . @mysqli_error( $wpdb->dbh ) );
 					}
 
 					return array( $fs_pointer, $query_count, $failed_queries, ( microtime( true ) - $this->time_start ) ); // filepointer location, number of queries done this pass, number of sql queries that failed, elapsed time during the import.
@@ -1197,11 +1189,7 @@ class pb_backupbuddy_mysqlbuddy {
 		// Turn back on foreign key checks.
 		$results = $wpdb->query( 'SET FOREIGN_KEY_CHECKS=1;' );
 		if ( false === $results ) {
-			if ( empty( $wpdb->use_mysqli ) ) {
-				pb_backupbuddy::status( 'warning', 'Warning #3434334: ' . @mysql_error( $wpdb->dbh ) );
-			} else {
-				pb_backupbuddy::status( 'warning', 'Warning #858558549: ' . @mysqli_error() );
-			}
+			pb_backupbuddy::status( 'warning', 'Warning #858558549: ' . @mysqli_error( $wpdb->dbh ) );
 		}
 
 		pb_backupbuddy::status( 'message', 'Import of SQL data in PHP mode complete.' );
@@ -1254,21 +1242,13 @@ class pb_backupbuddy_mysqlbuddy {
 		if ( false === $results ) {
 			if ( true !== $ignore_existing ) {
 
-				if ( empty( $wpdb->use_mysqli ) ) {
-					$mysql_error = @mysql_error( $wpdb->dbh );
-				} else {
-					$mysql_error = @mysqli_error();
-				}
+				$mysql_error = @mysqli_error( $wpdb->dbh );
 
 				if ( '' == $mysql_error ) {
 					$mysql_error = $wpdb->last_error;
 				}
 
-				if ( empty( $wpdb->use_mysqli ) ) {
-					$mysql_errno = @mysql_errno( $wpdb->dbh );
-				} else {
-					$mysql_errno = @mysqli_errno( $wpdb->dbh );
-				}
+				$mysql_errno = @mysqli_errno( $wpdb->dbh );
 
 				$mysql_9010_log = ABSPATH . 'importbuddy/mysql_9010_log-' . pb_backupbuddy::$options['log_serial'] . '.txt';
 				if ( 0 == $this->_9010s_encountered ) { // Place a header at the top of this log with some debugging info.
@@ -1292,10 +1272,10 @@ class pb_backupbuddy_mysqlbuddy {
 						pb_backupbuddy::status( 'error', 'Additional 9010 errors were encountered but have not been displayed to avoid flooding the screen. All 9010 errors are logged to `' . $mysql_9010_log . '` if possible.' );
 					}
 				} else { // Show error.
-					pb_backupbuddy::status( 'error', 'Error #9010: Unable to import SQL query. Error: `' . $mysql_error . '` Errno: `' . $mysql_errno . '`.' );
+					pb_backupbuddy::status( 'error', 'Error #9010: Unable to import SQL query. Error: `' . htmlspecialchars( $mysql_error ) . '` Errno: `' . $mysql_errno . '`.' );
 					if ( false !== stristr( $mysql_error, 'server has gone away' ) ) { // if string denotes that mysql server has gone away bail since it will likely just flood user with errors...
 						pb_backupbuddy::status( 'error', 'Error #9010b: Halting backup process as mysql server has gone away and database data could not be imported. Typically the restore cannot continue so the process has been halted. This is usually caused by a problematic mysql server at your hosting provider, low mysql timeouts, etc. Contact your hosting company for support.' );
-						pb_backupbuddy::status( 'details', 'Last query attempted: `' . $query . '`.' );
+						pb_backupbuddy::status( 'details', 'Last query attempted: `' . htmlspecialchars( $query ) . '`.' );
 						die( 'Error #948343: FATAL ERROR - IMPORT HALTED' );
 					}
 				}

@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,42 +18,12 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class DeviceComplianceUserStatus extends Entity
 {
-    /**
-    * Gets the userDisplayName
-    * User name of the DevicePolicyStatus.
-    *
-    * @return string The userDisplayName
-    */
-    public function getUserDisplayName()
-    {
-        if (array_key_exists("userDisplayName", $this->_propDict)) {
-            return $this->_propDict["userDisplayName"];
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-    * Sets the userDisplayName
-    * User name of the DevicePolicyStatus.
-    *
-    * @param string $val The userDisplayName
-    *
-    * @return DeviceComplianceUserStatus
-    */
-    public function setUserDisplayName($val)
-    {
-        $this->_propDict["userDisplayName"] = $val;
-        return $this;
-    }
-    
     /**
     * Gets the devicesCount
     * Devices count for that user.
@@ -81,6 +50,39 @@ class DeviceComplianceUserStatus extends Entity
     public function setDevicesCount($val)
     {
         $this->_propDict["devicesCount"] = intval($val);
+        return $this;
+    }
+    
+    /**
+    * Gets the lastReportedDateTime
+    * Last modified date time of the policy report.
+    *
+    * @return \DateTime The lastReportedDateTime
+    */
+    public function getLastReportedDateTime()
+    {
+        if (array_key_exists("lastReportedDateTime", $this->_propDict)) {
+            if (is_a($this->_propDict["lastReportedDateTime"], "\DateTime")) {
+                return $this->_propDict["lastReportedDateTime"];
+            } else {
+                $this->_propDict["lastReportedDateTime"] = new \DateTime($this->_propDict["lastReportedDateTime"]);
+                return $this->_propDict["lastReportedDateTime"];
+            }
+        }
+        return null;
+    }
+    
+    /**
+    * Sets the lastReportedDateTime
+    * Last modified date time of the policy report.
+    *
+    * @param \DateTime $val The lastReportedDateTime
+    *
+    * @return DeviceComplianceUserStatus
+    */
+    public function setLastReportedDateTime($val)
+    {
+        $this->_propDict["lastReportedDateTime"] = $val;
         return $this;
     }
     
@@ -118,35 +120,31 @@ class DeviceComplianceUserStatus extends Entity
     }
     
     /**
-    * Gets the lastReportedDateTime
-    * Last modified date time of the policy report.
+    * Gets the userDisplayName
+    * User name of the DevicePolicyStatus.
     *
-    * @return \DateTime The lastReportedDateTime
+    * @return string The userDisplayName
     */
-    public function getLastReportedDateTime()
+    public function getUserDisplayName()
     {
-        if (array_key_exists("lastReportedDateTime", $this->_propDict)) {
-            if (is_a($this->_propDict["lastReportedDateTime"], "\DateTime")) {
-                return $this->_propDict["lastReportedDateTime"];
-            } else {
-                $this->_propDict["lastReportedDateTime"] = new \DateTime($this->_propDict["lastReportedDateTime"]);
-                return $this->_propDict["lastReportedDateTime"];
-            }
+        if (array_key_exists("userDisplayName", $this->_propDict)) {
+            return $this->_propDict["userDisplayName"];
+        } else {
+            return null;
         }
-        return null;
     }
     
     /**
-    * Sets the lastReportedDateTime
-    * Last modified date time of the policy report.
+    * Sets the userDisplayName
+    * User name of the DevicePolicyStatus.
     *
-    * @param \DateTime $val The lastReportedDateTime
+    * @param string $val The userDisplayName
     *
     * @return DeviceComplianceUserStatus
     */
-    public function setLastReportedDateTime($val)
+    public function setUserDisplayName($val)
     {
-        $this->_propDict["lastReportedDateTime"] = $val;
+        $this->_propDict["userDisplayName"] = $val;
         return $this;
     }
     

@@ -2,7 +2,7 @@
 //$this->_parent->set_greedy_script_limits();
 
 echo $this->status_box( 'Extracting files . . .' );
-echo '<div id="pb_importbuddy_working" style="width: 100px;"><center><img src="' . pb_backupbuddy::plugin_url() . '/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
+echo '<div id="pb_importbuddy_working" style="width: 100px;"><center><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
 pb_backupbuddy::flush();
 
 $backup_archive = $this->import_options['file']; // Full path to file.
@@ -21,7 +21,7 @@ if ( isset( $this->advanced_options['skip_files'] ) && ( $this->advanced_options
 	} elseif ( isset( $this->advanced_options['force_compatibility_slow'] ) && ( $this->advanced_options['force_compatibility_slow'] == "true" ) ) {
 		$compatibility_mode = 'pclzip';
 	}
-	
+
 	// Zip & Unzip library setup.
 	require_once( pb_backupbuddy::plugin_path() . '/lib/zipbuddy/zipbuddy.php' );
 	if ( !isset( pb_backupbuddy::$classes['zipbuddy'] ) ) {
@@ -40,7 +40,7 @@ if ( true !== $result ) {
 } else { // Reported success; verify extraction.
 	/* Breaks MS import if wp-config was in a parent directory.
 	if ( ! file_exists( $destination_directory . 'wp-config.php' ) ) {
-		$this->status( 'error', 'Error #9004: Key files missing. The unzip process reported success but `' . $destination_directory . 'wp-config.php' . '` was not found in the extracted files. Verify that this is a FULL backup. If so then the unzip process either failed or the zip file is not a proper BackupBuddy backup.' );
+		$this->status( 'error', 'Error #9004: Key files missing. The unzip process reported success but `' . $destination_directory . 'wp-config.php' . '` was not found in the extracted files. Verify that this is a FULL backup. If so then the unzip process either failed or the zip file is not a proper Solid Backups backup.' );
 		return false;
 	}
 	*/
@@ -50,13 +50,13 @@ if ( true !== $result ) {
 
 if ( true === $result ) {
 	global $current_site;
-	$errors = false;	
+	$errors = false;
 	$blog = $domain = $path = '';
 	$form_url = add_query_arg( array(
 		'step' => '4',
 		'action' => 'step4'
 	) , pb_backupbuddy::page_url() );
-	
+
 	?>
 	<form method="post" action="<?php echo esc_url( $form_url ); ?>">
 	<?php wp_nonce_field( 'bbms-migration', 'pb_bbms_migrate' ); ?>

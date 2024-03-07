@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,10 +18,9 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class TargetedManagedAppConfiguration extends ManagedAppConfiguration
 {
@@ -114,6 +112,36 @@ class TargetedManagedAppConfiguration extends ManagedAppConfiguration
         return $this;
     }
     
+
+     /** 
+     * Gets the assignments
+    * Navigation property to list of inclusion and exclusion groups to which the policy is deployed.
+     *
+     * @return array The assignments
+     */
+    public function getAssignments()
+    {
+        if (array_key_exists("assignments", $this->_propDict)) {
+           return $this->_propDict["assignments"];
+        } else {
+            return null;
+        }
+    }
+    
+    /** 
+    * Sets the assignments
+    * Navigation property to list of inclusion and exclusion groups to which the policy is deployed.
+    *
+    * @param TargetedManagedAppPolicyAssignment $val The assignments
+    *
+    * @return TargetedManagedAppConfiguration
+    */
+    public function setAssignments($val)
+    {
+		$this->_propDict["assignments"] = $val;
+        return $this;
+    }
+    
     /**
     * Gets the deploymentSummary
     * Navigation property to deployment summary of the configuration.
@@ -144,36 +172,6 @@ class TargetedManagedAppConfiguration extends ManagedAppConfiguration
     public function setDeploymentSummary($val)
     {
         $this->_propDict["deploymentSummary"] = $val;
-        return $this;
-    }
-    
-
-     /** 
-     * Gets the assignments
-    * Navigation property to list of inclusion and exclusion groups to which the policy is deployed.
-     *
-     * @return array The assignments
-     */
-    public function getAssignments()
-    {
-        if (array_key_exists("assignments", $this->_propDict)) {
-           return $this->_propDict["assignments"];
-        } else {
-            return null;
-        }
-    }
-    
-    /** 
-    * Sets the assignments
-    * Navigation property to list of inclusion and exclusion groups to which the policy is deployed.
-    *
-    * @param TargetedManagedAppPolicyAssignment $val The assignments
-    *
-    * @return TargetedManagedAppConfiguration
-    */
-    public function setAssignments($val)
-    {
-		$this->_propDict["assignments"] = $val;
         return $this;
     }
     

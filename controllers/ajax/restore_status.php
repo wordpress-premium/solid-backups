@@ -41,6 +41,13 @@ if ( $response['is_done'] && empty( $restore['viewed'] ) ) {
 } elseif ( BackupBuddy_Restore::STATUS_NOT_STARTED === $restore['status'] ) {
 	// Sometimes restore needs a kick start.
 	backupbuddy_restore()->schedule_cron();
+} elseif ( time() % 2 === 0 ) {
+	/*
+	* Keep restore moving by checking every 2 seconds.
+	* If it is already running, this will do nothing.
+	*/
+	backupbuddy_restore()->process( $restore_id );
+
 }
 
 wp_send_json( $response );

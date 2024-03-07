@@ -31,7 +31,7 @@ foreach ( $profile as $profile_item_name => &$profile_item ) { // replace non-ov
 }
 ?>
 <div style="margin-bottom: 4px;"><?php esc_html_e( 'Backup profile for calculating exclusions', 'it-l10n-backupbuddy' ); ?>:
-	<select id="pb_backupbuddy_databaseprofile" onChange="window.location.href = '<?php echo pb_backupbuddy::page_url(); ?>&tab=database&profile=' + jQuery(this).val();">
+	<select id="pb_backupbuddy_databaseprofile" onChange="window.location.href = '<?php echo esc_attr( pb_backupbuddy::page_url() ); ?>&tab=database&profile=' + jQuery(this).val();">
 	<?php foreach ( pb_backupbuddy::$options['profiles'] as $this_profile_id => $this_profile ) { ?>
 		<option value="<?php echo esc_attr( $this_profile_id ); ?>"
 			<?php

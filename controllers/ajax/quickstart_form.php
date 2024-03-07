@@ -20,15 +20,13 @@ if ( '' != $form['email'] && false !== stristr( $form['email'], '@' ) ) {
 	$errors[] = esc_html__( 'Invalid email address.', 'it-l10n-backupbuddy' );
 }
 
-if ( $form['password'] ) {
+if ( ! empty( $form['password'] ) ) {
 	if ( $form['password'] !== $form['password_confirm'] ) {
 		$errors[] = esc_html__( 'Passwords do not match.', 'it-l10n-backupbuddy' );
 	} else {
 		pb_backupbuddy::$options['importbuddy_pass_hash']   = md5( $form['password'] );
 		pb_backupbuddy::$options['importbuddy_pass_length'] = strlen( $form['password'] );
 	}
-} elseif ( ! pb_backupbuddy::$options['importbuddy_pass_hash'] ) {
-	$errors[] = esc_html__( 'Please enter a password for restoring / migrating.', 'it-l10n-backupbuddy' );
 }
 
 
@@ -37,7 +35,7 @@ if ( $form['password'] ) {
 // Note: If existing Stash2 exists with this username then use that instead of making a new stash2 destination.
 if ( 'stash2' == pb_backupbuddy::_POST( 'destination' ) ) {
 	if ( ( '' == pb_backupbuddy::_POST( 'stash_username' ) ) || ( '' == pb_backupbuddy::_POST( 'stash_password' ) ) ) { // A field is blank.
-		$errors[] = 'You must enter your iThemes username & password to log in to the remote destination BackupBuddy Stash (v2).';
+		$errors[] = __( 'You must enter your SolidWP username & password to log in to the remote destination Solid Backups Stash (v2).', 'it-l10n-backupbuddy' );
 	} else { // Username and password provided.
 
 		require_once pb_backupbuddy::plugin_path() . '/destinations/stash2/class.itx_helper2.php';
@@ -96,7 +94,7 @@ if ( 'stash2' == pb_backupbuddy::_POST( 'destination' ) ) {
 	} // end if user and pass set.
 } elseif ( 'stash3' == pb_backupbuddy::_POST( 'destination' ) ) {
 	if ( ( '' == pb_backupbuddy::_POST( 'stash_username' ) ) || ( '' == pb_backupbuddy::_POST( 'stash_password' ) ) ) { // A field is blank.
-		$errors[] = 'You must enter your iThemes username & password to log in to the remote destination BackupBuddy Stash (v3).';
+		$errors[] = __( 'You must enter your SolidWP username & password to log in to the remote destination Solid Backups Stash (v3).', 'it-l10n-backupbuddy' );
 	} else { // Username and password provided.
 
 		require_once pb_backupbuddy::plugin_path() . '/destinations/stash2/class.itx_helper2.php';
@@ -254,6 +252,7 @@ if ( '' != $form['schedule'] ) {
 
 
 if ( 0 == count( $errors ) ) {
+	pb_backupbuddy::$options['skip_quicksetup'] = '1';
 	pb_backupbuddy::save();
 	die( 'Success.' );
 }

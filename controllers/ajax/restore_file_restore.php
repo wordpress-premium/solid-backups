@@ -38,7 +38,7 @@ pb_backupbuddy::$ui->ajax_header( true, false ); // js, no padding.
 			return;
 		}
 
-		// Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php
+		// Used in Solid Backups _backup-perform.php and Importer _header.php
 		json.date = new Date();
 		json.date = new Date(  ( json.time * 1000 ) + json.date.getTimezoneOffset() * 60000 );
 		var seconds = json.date.getSeconds();
@@ -64,7 +64,7 @@ pb_backupbuddy::$ui->ajax_header( true, false ); // js, no padding.
 	} // End function pb_status_append().
 
 
-	// Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php and _rollback.php
+	// Used in Solid Backups _backup-perform.php and Importer _header.php and _rollback.php
 	function backupbuddy_log( json ) {
 		message = '';
 
@@ -91,11 +91,11 @@ $success = false;
 global $pb_backupbuddy_js_status;
 $pb_backupbuddy_js_status = true;
 echo pb_backupbuddy::status_box( 'Restoring . . .' );
-echo '<div id="pb_backupbuddy_working" style="width: 100px;"><br><center><img src="' . pb_backupbuddy::plugin_url() . '/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
+echo '<div id="pb_backupbuddy_working" style="width: 100px;"><br><center><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
 
 pb_backupbuddy::set_status_serial( 'restore' );
 global $wp_version;
-pb_backupbuddy::status( 'details', 'BackupBuddy v' . pb_backupbuddy::settings( 'version' ) . ' using WordPress v' . $wp_version . ' on ' . PHP_OS . '.' );
+pb_backupbuddy::status( 'details', 'Solid Backups v' . pb_backupbuddy::settings( 'version' ) . ' using WordPress v' . $wp_version . ' on ' . PHP_OS . '.' );
 
 
 $archive_file = pb_backupbuddy::_GET( 'archive' ); // archive to extract from.

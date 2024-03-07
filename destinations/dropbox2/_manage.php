@@ -21,12 +21,9 @@ if ( '' != pb_backupbuddy::_GET( 'cpy' ) ) {
 	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
 	echo '<br>';
 	pb_backupbuddy::status( 'details', 'Scheduling Cron for creating Dropbox copy.' );
-	backupbuddy_core::schedule_single_event( time(), 'process_destination_copy', array( $destination, pb_backupbuddy::_GET( 'cpy' ) ) );
+	backupbuddy_core::trigger_async_event( 'process_destination_copy', array( $destination, pb_backupbuddy::_GET( 'cpy' ) ) );
 
-	if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-		update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-		spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-	}
+	backupbuddy_core::maybe_spawn_cron();
 }
 
 // Delete selected dropbox backup(s) from form submission.
@@ -122,7 +119,7 @@ if ( 0 === count( $backup_files ) ) {
 			'action'                  => $urlPrefix,
 			'columns'                 => array(
 				'Backup File',
-				'Uploaded <img src="' . pb_backupbuddy::plugin_url() . '/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent first">',
+				'Uploaded <img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent first">',
 				'File Size',
 				'Type',
 			),

@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 /**
@@ -18,39 +17,12 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class OnenotePagePreview extends Entity
 {
-    /**
-    * Gets the previewText
-    *
-    * @return string The previewText
-    */
-    public function getPreviewText()
-    {
-        if (array_key_exists("previewText", $this->_propDict)) {
-            return $this->_propDict["previewText"];
-        } else {
-            return null;
-        }
-    }
-
-    /**
-    * Sets the previewText
-    *
-    * @param string $val The value of the previewText
-    *
-    * @return OnenotePagePreview
-    */
-    public function setPreviewText($val)
-    {
-        $this->_propDict["previewText"] = $val;
-        return $this;
-    }
 
     /**
     * Gets the links
@@ -81,5 +53,31 @@ class OnenotePagePreview extends Entity
     {
         $this->_propDict["links"] = $val;
          return $this;
+    }
+    /**
+    * Gets the previewText
+    *
+    * @return string The previewText
+    */
+    public function getPreviewText()
+    {
+        if (array_key_exists("previewText", $this->_propDict)) {
+            return $this->_propDict["previewText"];
+        } else {
+            return null;
+        }
+    }
+
+    /**
+    * Sets the previewText
+    *
+    * @param string $val The value of the previewText
+    *
+    * @return OnenotePagePreview
+    */
+    public function setPreviewText($val)
+    {
+        $this->_propDict["previewText"] = $val;
+        return $this;
     }
 }

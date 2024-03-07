@@ -1,6 +1,6 @@
 <?php
 /**
- * BackupBuddy ImportBuddy class for testing DB permissions
+ * Solid Backups Importer class for testing DB permissions
  *
  * @package BackupBuddy
  * @subpackage ImportBuddy
@@ -120,16 +120,12 @@ class importbuddy_test_db{
 	 *
 	 * @return void
 	 */
-	 function test_connect() {
+	function test_connect() {
 		require_once( ABSPATH . 'importbuddy/classes/wp-db.php' );
 		global $wpdb;
 		$this->wpdb = new wpdb( $this->creds['username'], $this->creds['password'], $this->creds['database'], $this->creds['server'] );
 		if ( ( false === $this->wpdb->dbh ) || ( null === $this->wpdb->dbh ) ){
-			if ( empty( $this->wpdb->use_mysqli ) ) {
-				$mysql_error = @mysql_error( $this->wpdb->dbh );
-			} else {
-				$mysql_error = @mysqli_error( $this->wpdb->dbh );
-			}
+			$mysql_error = @mysqli_error( $this->wpdb->dbh );
 			$this->tests['connect_error'] = 'Unable to connect to database server and/or select the database. Details: `' . $mysql_error . '`.';
 			die( json_encode( $this->tests ) );
 		}
@@ -151,17 +147,16 @@ class importbuddy_test_db{
 		}
 
 		// Escape prefix manually since we can't use $wpdb->prefix and $wpdb->prepare adds single quotes
-		if ( empty( $this->wpdb->use_mysqli ) ) {
-			$prefix = mysql_real_escape_string( $this->creds['prefix'] );
-		} else {
-			$prefix = mysqli_real_escape_string( $this->wpdb->dbh, $this->creds['prefix'] );
-		}
+		$prefix = mysqli_real_escape_string( $this->wpdb->dbh, $this->creds['prefix'] );
+		$dbname = mysqli_real_escape_string( $this->wpdb->dbh, $this->creds['database'] );
 
 		// Try to drop test table in event previous attempt failed. Not a part of the test. NOTE: This throws an error to the PHP error log if wpdb logging enabled unless errors are suppressed.
-		$this->wpdb->suppress_errors( true ); // Hide errors if this test fails since we have logging on by default.
 		$drop_test_table = 'DROP TABLE ' . $prefix . 'buddy_test';
-		$this->wpdb->query( $drop_test_table );
-		$this->wpdb->suppress_errors( false );
+
+		// If a table alread exists from previous attempts, delete it first
+		if ( $prefix . 'buddy_test' == $this->wpdb->get_var( "SELECT table_name FROM information_schema.tables WHERE table_schema='" . $dbname . "' AND table_name='" . $prefix . "buddy_test';" ) ) {
+			$this->wpdb->query( $drop_test_table );
+		}
 
 		// Attempt to create the test table
 		$create_test_table = 'CREATE TABLE ' . $prefix . 'buddy_test (id INT NOT NULL AUTO_INCREMENT PRIMARY KEY);';
@@ -170,11 +165,7 @@ class importbuddy_test_db{
 			if ( FALSE !== $this->wpdb->query( $drop_test_table ) ) {
 				$this->tests['createdroptable'] = true;
 			} else { // drop failed.
-				if ( empty( $this->wpdb->use_mysqli ) ) {
-					$mysql_errno = mysql_errno( $this->wpdb->dbh );
-				} else {
-					$mysql_errno = mysqli_errno( $this->wpdb->dbh );
-				}
+				$mysql_errno = mysqli_errno( $this->wpdb->dbh );
 				$this->tests['createdroptable_error'] = 'Unable to delete temporary table. ' . $this->wpdb->last_error . ' - ErrorNo: `' . $mysql_errno . '`.';
 			}
 		}

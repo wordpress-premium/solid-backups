@@ -31,6 +31,7 @@ $tabs = new BackupBuddy_Tabs(
 			'id'       => 'server',
 			'label'    => esc_html__( 'Server', 'it-l10n-backupbuddy' ),
 			'callback' => function() {
+
 				require_once pb_backupbuddy::plugin_path() . '/controllers/pages/server_info/server.php';
 				require_once pb_backupbuddy::plugin_path() . '/controllers/pages/server_info/permissions.php';
 
@@ -63,9 +64,9 @@ $tabs = new BackupBuddy_Tabs(
 					$wp_settings[] = array( 'Network Home URL', network_home_url(), 'network_home_url()' );
 				}
 
-				$wp_settings[] = array( 'BackupBuddy local storage', backupbuddy_core::getBackupDirectory(), 'BackupBuddy Settings' );
-				$wp_settings[] = array( 'BackupBuddy temporary files', backupbuddy_core::getTempDirectory(), 'ABSPATH + Hardcoded location' );
-				$wp_settings[] = array( 'BackupBuddy logs', backupbuddy_core::getLogDirectory(), 'Upload Base + BackupBuddy' );
+				$wp_settings[] = array( 'Solid Backups local storage', esc_html( backupbuddy_core::getBackupDirectory() ), 'Solid Backups Settings' );
+				$wp_settings[] = array( 'Solid Backups temporary files', backupbuddy_core::getTempDirectory(), 'ABSPATH + Hardcoded location' );
+				$wp_settings[] = array( 'Solid Backups logs', backupbuddy_core::getLogDirectory(), 'Upload Base + Solid Backups' );
 
 				$wp_settings[] = array( 'Themes root', backupbuddy_core::get_themes_root(), 'backupbuddy_core::get_themes_root()' );
 				$wp_settings[] = array( 'Plugins root', backupbuddy_core::get_plugins_root(), 'backupbuddy_core::get_plugins_root()' );
@@ -132,15 +133,8 @@ $tabs = new BackupBuddy_Tabs(
 			},
 		),
 		array(
-			'id'       => 'malware-scan',
-			'label'    => esc_html__( 'Malware Scan', 'it-l10n-backupbuddy' ),
-			'callback' => function() {
-				require_once pb_backupbuddy::plugin_path() . '/controllers/pages/malware_scan.php';
-			},
-		),
-		array(
 			'id'       => 'other',
-			'label'    => esc_html__( 'Logs/Other', 'it-l10n-backupbuddy' ),
+			'label'    => esc_html__( 'Troubleshooting', 'it-l10n-backupbuddy' ),
 			'callback' => function() {
 				pb_backupbuddy::flush(); // Flush before we start loading in the log.
 				require_once pb_backupbuddy::plugin_path() . '/views/diagnostics/_other.php';

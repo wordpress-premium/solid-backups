@@ -10,12 +10,12 @@ $striped       = false;
 $displayed     = array();
 ?>
 <div id="backupbuddy-restore-history">
-	<h3>Recent Restores</h3>
+	<h3><?php esc_html_e( 'Recent Restores', 'it-l10n-backupbuddy' ); ?></h3>
 
 	<?php if ( ! count( $restore_queue ) ) : ?>
-		<p>No recent restores to display.</p>
+		<p><?php esc_html_e( 'No recent restores to display.', 'it-l10n-backupbuddy' ); ?></p>
 	<?php else : ?>
-		<table class="widefat backupbuddy-restore-queue">
+		<table class="widefat striped backupbuddy-restore-queue">
 			<thead>
 				<tr>
 					<th><?php esc_html_e( 'Restored Date', 'it-l10n-backupbuddy' ); ?></th>
@@ -36,7 +36,10 @@ $displayed     = array();
 						if ( $restore['completed'] ) {
 							$restore_date = pb_backupbuddy::$format->date( $restore['completed'], 'l, F j, Y g:ia' );
 						} else {
-							$restore_date = sprintf( 'N/A (Init: %s)', pb_backupbuddy::$format->date( $restore['initialized'], 'l, F j, Y g:ia' ) );
+							$restore_date = sprintf(
+								__( 'N/A (Init: %s)', 'it-l10n-backupbuddy' ),
+								pb_backupbuddy::$format->date( $restore['initialized'], 'l, F j, Y g:ia' )
+							);
 						}
 						?>
 						<tr class="<?php echo esc_attr( trim( $striped ) ); ?>" data-restore-id="<?php echo esc_attr( $restore['id'] ); ?>">
@@ -80,9 +83,16 @@ $displayed     = array();
 	<?php $restore_archive = backupbuddy_restore()->get_archive( $displayed ); ?>
 
 	<?php if ( $restore_archive ) : ?>
-		<h4>Restore Archive <a href="#restore-archive" class="toggle-restore-archive">Show</a></h4>
+		<h4>
+		<?php echo wp_kses_post(
+				sprintf(
+					__( 'Restore Archive <a href="%s" class="toggle-restore-archive">Show</a>', 'it-l10n-backupbuddy' ),
+					'#restore-archive'
+				)
+			); ?>
+		</h4>
 
-		<table class="widefat backupbuddy-restore-archive hidden">
+		<table class="widefat striped backupbuddy-restore-archive hidden">
 			<thead>
 				<tr>
 					<th><?php esc_html_e( 'Restored Date', 'it-l10n-backupbuddy' ); ?></th>
@@ -102,7 +112,10 @@ $displayed     = array();
 						if ( $restore['completed'] ) {
 							$restore_date = pb_backupbuddy::$format->date( $restore['completed'], 'l, F j, Y g:ia' );
 						} else {
-							$restore_date = sprintf( 'N/A (Init: %s)', pb_backupbuddy::$format->date( $restore['initialized'], 'l, F j, Y g:ia' ) );
+							$restore_date = sprintf(
+								__( 'N/A (Init: %s)', 'it-l10n-backupbuddy' ),
+								pb_backupbuddy::$format->date( $restore['initialized'], 'l, F j, Y g:ia' )
+							);
 						}
 						?>
 						<tr class="<?php echo esc_attr( trim( $striped ) ); ?>" data-restore-id="<?php echo esc_attr( $restore['id'] ); ?>">

@@ -74,9 +74,9 @@ if ( is_array( $backup_integrity ) ) { // Data intact... put it all together.
 	} else {
 		if ( isset( $backup_options->options['profile'] ) ) {
 			$profile_title = isset( $backup_options->options['profile']['title'] ) ? htmlentities( $backup_options->options['profile']['title'] ) : '';
-			$detected_type = '<span class="profile_type-' . $backup_integrity['detected_type'] . '" style="float: left;" title="' . backupbuddy_core::pretty_backup_type( $detected_type ) . '"></span>
-				<span style="display: inline-block; float: left; height: 15px; border-right: 1px solid #EBEBEB; margin-left: 6px; margin-right: 6px;"></span>
-				' . $profile_title;
+			$detected_type = '<span class="backup-stats-profile-type-icon profile_type-' . $backup_integrity['detected_type'] . '" title="' . backupbuddy_core::pretty_backup_type( $detected_type ) . '">' . pb_backupbuddy::$ui->get_icon_by_profile_type( $backup_integrity['detected_type'] ) . '</span>' . $profile_title;
+		} else {
+			$detected_type = '<span class="backup-stats-profile-type-icon profile_type-' . $detected_type . '" title="' . backupbuddy_core::pretty_backup_type( $detected_type ) . '">' . pb_backupbuddy::$ui->get_icon_by_profile_type( $detected_type ) . '</span>' . ucwords( $detected_type );
 		}
 	}
 
@@ -174,7 +174,7 @@ $file_size = pb_backupbuddy::$format->file_size( $zip_size );
 			<?php if ( $data ) : ?>
 				<?php if ( ! empty( $data['plugin_data']['backupbuddy/backupbuddy.php'] ) ) : ?>
 					<tr>
-						<th>BackupBuddy Version</th>
+						<th>Solid Backups Version</th>
 						<td><?php echo esc_html( $data['plugin_data']['backupbuddy/backupbuddy.php']['Version'] ); ?></td>
 					</tr>
 				<?php endif; ?>
@@ -231,11 +231,20 @@ $file_size = pb_backupbuddy::$format->file_size( $zip_size );
 		</tbody>
 	</table>
 </div>
-<?php
-$sum_log_file = backupbuddy_core::getLogDirectory() . 'status-' . $backup_serial . '_' . pb_backupbuddy::$options['log_serial'] . '.txt';
-if ( file_exists( $sum_log_file ) ) :
-	?>
-	<div class="download-status-log">
-		<a href="<?php echo esc_attr( pb_backupbuddy::ajax_url( 'view_log' ) . '&serial=' . $backup_serial . '&#038;TB_iframe=1&#038;width=640&#038;height=600' ); ?>" title="<?php echo esc_attr( __( 'View Backup Log', 'it-l10n-backupbuddy' ) ); ?>" class="thickbox">Download Backup Status Log</a>
-	</div>
-<?php endif; ?>
+<div class="download-backup-actions-wrap">
+	<?php if ( file_exists( backupbuddy_core::getBackupDirectory() . $zip_file ) ) :
+		$download_url  = pb_backupbuddy::ajax_url( 'download_archive' ) . '&backupbuddy_backup=' . basename( $zip_file );
+		?>
+		<div class="download-backup-file">
+			<a class="button button-primary" href="<?php esc_attr_e( $download_url ); ?>" title="<?php echo esc_attr( __( 'Download Backup', 'it-l10n-backupbuddy' ) ); ?>" class="thickbox"><?php esc_html_e('Download Backup', 'it-l10n-backupbuddy'); ?></a>
+		</div>
+	<?php endif; ?>
+	<?php
+	$sum_log_file = backupbuddy_core::getLogDirectory() . 'status-' . $backup_serial . '_' . pb_backupbuddy::$options['log_serial'] . '.txt';
+	if ( file_exists( $sum_log_file ) ) :
+		?>
+		<div class="download-status-log">
+			<a class="button button-secondary thickbox" href="<?php esc_attr_e( pb_backupbuddy::ajax_url( 'view_log' ) . '&serial=' . $backup_serial . '&#038;TB_iframe=1&#038;width=640&#038;height=600' ); ?>" title="<?php echo esc_attr( __( 'View Backup Log', 'it-l10n-backupbuddy' ) ); ?>"><?php esc_html_e('Download Status Log', 'it-l10n-backupbuddy'); ?></a>
+		</div>
+	<?php endif; ?>
+</div>

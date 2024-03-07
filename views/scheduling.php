@@ -11,7 +11,7 @@ wp_print_styles( 'thickbox' );
 ?>
 <script type="text/javascript">
 	function pb_backupbuddy_selectdestination( destination_id, destination_title, callback_data, delete_after, mode ) {
-		jQuery( '#pb_backupbuddy_remotedestinations_list' ).append( '<li id="pb_remotedestination_' + destination_id + '">' + destination_title + ' <img class="pb_remotedestionation_delete" src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/redminus.png" style="vertical-align: -3px; cursor: pointer;" title="<?php esc_html_e( 'Remove remote destination from this schedule.', 'it-l10n-backupbuddy' ); ?>" /></li>' + "\n" );
+		jQuery( '#pb_backupbuddy_remotedestinations_list' ).append( '<li id="pb_remotedestination_' + parseInt( destination_id ) + '">' + destination_title + ' <a class="pb_remotedestination_delete" href="#"><?php esc_html_e( 'Remove', 'it-l10n-backupbuddy' ); ?></a></li>' + "\n" );
 		jQuery( '#pb_backupbuddy_deleteafter' ).slideDown();
 	}
 
@@ -27,11 +27,12 @@ wp_print_styles( 'thickbox' );
 
 
 		/* Allow deleting of remote destinations from the list. */
-		jQuery(document).on( 'click', '.pb_remotedestionation_delete', function(e) {
+		jQuery(document).on( 'click', '.pb_remotedestination_delete', function(e) {
 			jQuery( '#pb_remotedestination_' + jQuery(this).parent( 'li' ).attr( 'id' ).substr( 21 ) ).remove();
 		});
 
 
+		/* This might be dead code. */
 		jQuery('.pluginbuddy_pop').click(function(e) {
 			showpopup('#'+jQuery(this).attr('href'),'',e);
 			return false;
@@ -80,7 +81,7 @@ if ( pb_backupbuddy::_GET( 'edit' ) ) {
 	);
 }
 
-$tabs = new BackupBuddy_Tabs( $tabs );
+$tabs = new BackupBuddy_Tabs( $tabs, array( 'class' => 'large' ) );
 $tabs->render();
 
 // Handles thickbox auto-resizing. Keep at bottom of page to avoid issues.

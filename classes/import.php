@@ -1,12 +1,6 @@
 <?php
 class pb_backupbuddy_import {
-	
-	
-	
-	
-	
-	
-	
+
 	/**
 	 *	wipePrefix()
 	 *
@@ -18,16 +12,16 @@ class pb_backupbuddy_import {
 		if ( $confirm !== true ) {
 			die( 'Error #5466566b: Parameter 2 to wipePrefix() must be boolean true to proceed.' );
 		}
-		
+
 		if ( $prefix == '' ) {
 			pb_backupbuddy::status( 'warning', 'No database prefix specified to wipe.' );
 			return false;
 		}
 		pb_backupbuddy::status( 'message', 'Beginning wipe of database tables matching prefix `' . $prefix . '`...' );
-		
+
 		// Connect to database.
 		//$this->connect_database();
-		
+
 		global $wpdb;
 		$rows = $wpdb->get_results( "SELECT table_name AS `table_name` FROM information_schema.tables WHERE table_name LIKE '" . backupbuddy_core::dbEscape( str_replace( '_', '\_', $prefix ) ) . "%' AND table_schema = DATABASE()", ARRAY_A );
 		$table_wipe_count = count( $rows );
@@ -37,12 +31,10 @@ class pb_backupbuddy_import {
 		}
 		unset( $rows );
 		pb_backupbuddy::status( 'message', 'Wiped database of ' . $table_wipe_count . ' tables.' );
-		
+
 		return true;
 	} // End wipePrefix().
-	
-	
-	
+
 	/**
 	 *	wipeDatabase()
 	 *
@@ -54,12 +46,12 @@ class pb_backupbuddy_import {
 		if ( $confirm !== true ) {
 			die( 'Error #5466566a: Parameter 1 to wipeDdatabase() must be boolean true to proceed.' );
 		}
-		
+
 		pb_backupbuddy::status( 'message', 'Beginning wipe of ALL database tables...' );
-		
+
 		// Connect to database.
 		//$this->connect_database();
-		
+
 		global $wpdb;
 		$rows = $wpdb->get_results( "SELECT table_name AS `table_name` FROM information_schema.tables WHERE table_schema = DATABASE()", ARRAY_A );
 		$table_wipe_count = count( $rows );
@@ -69,17 +61,15 @@ class pb_backupbuddy_import {
 		}
 		unset( $rows );
 		pb_backupbuddy::status( 'message', 'Wiped database of ' . $table_wipe_count . ' tables.' );
-		
+
 		return true;
 	} // End wipeDatabase().
-	
-	
-	
+
 	/*	preg_escape_back()
-	 *	
+	 *
 	 *	Escape backreferences from string for use with regex. Used by migrate_wp_config().
 	 *	@see migrate_wp_config()
-	 *	
+	 *
 	 *	@param		string		$string		String to escape.
 	 *	@return		string					Escaped string.
 	 */
@@ -88,13 +78,7 @@ class pb_backupbuddy_import {
 		$string = preg_replace('#(?<!\\\\)(\\$|\\\\)#', '\\\\$1', $string);
 		return $string;
 	} // End preg_escape_back().
-	
-	
-	
-	
-	
-	
-	
+
 	// TODO: switch to using pb_backupbuddy::status_box() instead.
 	/**
 	 *	status_box()
@@ -107,23 +91,17 @@ class pb_backupbuddy_import {
 	 */
 	function status_box( $default_text = '', $hidden = false ) {
 		define( 'PB_STATUS', true ); // Tells framework status() function to output future logging info into status box via javascript.
-		$return = '<div id="pb_backupbuddy_status_wrap" style="padding: 0;"><pre readonly="readonly" id="backupbuddy_messages" wrap="off"';
+		$return = '<div id="pb_backupbuddy_status_wrap"><pre readonly="readonly" id="backupbuddy_messages" wrap="off"';
 		if ( $hidden === true ) {
 			$return .= ' style="display: none; "';
 		}
 		$return .= '>' . $default_text . '</pre>';
 		$return .= '<div style="text-align: center;">
-			<button class="button button-primary" onClick="backupbuddy_saveLogAsFile();" style="margin-left: auto; margin-right: auto; display: inherit; font-size: 0.9em;">Download Status Log (.txt)</button>
+			<button class="button" onClick="backupbuddy_saveLogAsFile();">Download Status Log (.txt)</button>
 		</div>';
 		$return .= '</div>';
-		
+
 		return $return;
 	}
-	
-	
-	
-	
-	
-	
 } // End class.
 ?>

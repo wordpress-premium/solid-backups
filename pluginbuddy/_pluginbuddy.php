@@ -1,6 +1,6 @@
 <?php
 /**
- * Framework for handling all plugin functioality, architecture, etc.
+ * Framework for handling all plugin functionality, architecture, etc.
  * $settings variable is expected to be in the same scope of this file and previously populated with all plugin settings.
  *
  * @author Dustin Bolton
@@ -199,8 +199,8 @@ class pb_backupbuddy {
 	private static $_self_link;
 
 	/**
-	 * DISABLED. Using create_function() to bypass need for this. Currently only holding callback for the admin menu.
-	 * Note: Try not to use create_function().
+	 * DISABLED. Using create _function() to bypass need for this. Currently only holding callback for the admin menu.
+	 * Note: Try not to use create _function().
 	 *
 	 * @see pluginbuddy_callbacks class
 	 *
@@ -241,7 +241,7 @@ class pb_backupbuddy {
 		self::$start_time = microtime( true );
 		self::$_settings  = array_merge( (array) self::$_settings, (array) $pluginbuddy_settings ); // Merge settings over framework defaults.
 
-		if ( function_exists( 'plugin_dir_url' ) ) { // URL and path functions available (not in ImportBuddy but inside WordPress).
+		if ( function_exists( 'plugin_dir_url' ) ) { // URL and path functions available (not in Importerbut inside WordPress).
 			self::$_plugin_path = rtrim( plugin_dir_path( dirname( __FILE__ ) ), '/\\' );
 			self::$_plugin_url  = rtrim( plugin_dir_url( dirname( __FILE__ ) ), '/\\' );
 		} else { // Generate URL and paths old way (old WordPress versions or inside ImportBuddy).
@@ -292,7 +292,7 @@ class pb_backupbuddy {
 	 * Loads Activation Controller
 	 */
 	public static function load_activation_controller() {
-		// Replace a path starting with \\ to be \\\\ so that when create_function parses the backslash it will return back to \\.
+		// Replace a path starting with \\ to be \\\\ so that when create _function parses the backslash it will return back to \\.
 		$escaped_plugin_path = preg_replace( '#^\\\\\\\\#', '\\\\\\\\\\\\\\\\', self::$_plugin_path );
 		require_once $escaped_plugin_path . '/controllers/activation.php';
 	}
@@ -331,12 +331,38 @@ class pb_backupbuddy {
 	 *
 	 * @todo provide non-admin-side functionality?
 	 *
-	 * @param string $tag  Tag / slug of AJAX.
+	 * @param string $tag  Tag/slug of a file name found in `controllers/ajax/`.
 	 *
 	 * @return string  URL for AJAX.
 	 */
 	public static function ajax_url( $tag ) {
-		return admin_url( 'admin-ajax.php?action=pb_' . self::settings( 'slug' ) . '_backupbuddy&function=' . $tag );
+		if ( empty( $tag ) ) {
+			// This is used for js vars.
+			return admin_url( 'admin-ajax.php?action=pb_' . self::settings( 'slug' ) . '_backupbuddy&function=' );
+		}
+
+		$url = admin_url( 'admin-ajax.php?action=pb_' . self::settings( 'slug' ) . '_backupbuddy' );
+
+		$function_whitelist = array(
+			'backup_profile_settings',
+		);
+
+		$tag = urlencode( $tag );
+
+		// Allow certain functions to be called without a file existing.
+		if ( in_array( $tag, $function_whitelist ) ) {
+			// Bail early, before running file_exists().
+			return add_query_arg( 'function', $tag, $url );
+		}
+
+		// Validate the desired file exists in controllers/ajax/.
+		$file_name = self::plugin_path() . '/controllers/ajax/' . $tag . '.php';
+		if ( file_exists( $file_name ) ) {
+			return add_query_arg( 'function', $tag, $url );
+		}
+
+		return $url;
+
 	} // End ajax_url().
 
 	/**
@@ -402,7 +428,7 @@ class pb_backupbuddy {
 	 */
 	public static function _POST( $value = null ) {
 		if ( '' == $value || null == $value ) { // Requesting $_POST variable.
-			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
+			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in Importermode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
 				return $_POST;
 			}
 			return stripslashes_deep( $_POST );
@@ -411,7 +437,7 @@ class pb_backupbuddy {
 			if ( isset( $_POST[ $value ] ) ) {
 				$post_value = $_POST[ $value ];
 			}
-			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
+			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in Importer mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
 				return $post_value;
 			} else {
 				return stripslashes_deep( $post_value ); // Remove WordPress' magic-quotes-style escaping of data.
@@ -430,7 +456,7 @@ class pb_backupbuddy {
 	 */
 	public static function _GET( $value = '' ) {
 		if ( '' == $value || null == $value ) { // Requesting $_GET variable.
-			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
+			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in Importer mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
 				return $_GET;
 			}
 			return stripslashes_deep( $_GET );
@@ -439,7 +465,7 @@ class pb_backupbuddy {
 			if ( isset( $_GET[ $value ] ) ) {
 				$get_value = $_GET[ $value ];
 			}
-			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in ImportBuddy mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
+			if ( pb_is_standalone() && ( function_exists( 'get_magic_quotes_gpc' ) && ! get_magic_quotes_gpc() ) ) { // If in Importer mode AND magic quotes is not on, dont strip. WP escapes for us if magic quotes are off.
 				return $get_value;
 			} else {
 				return stripslashes_deep( $get_value ); // Remove WordPress' magic-quotes-style escaping of data.
@@ -486,8 +512,8 @@ class pb_backupbuddy {
 	 * @return mixed  $settings or false.
 	 */
 	public static function load_from_backup() {
-		$restore_fail_message    = 'Error #84938943: Your BackupBuddy Settings were detected as missing or corrupt. BackupBuddy has attempted to load BackupBuddy settings from its settings backup file but failed. Verify your BackupBuddy settings are still intact and valid. This could have been caused by a database error or corruption.';
-		$restore_success_message = 'Warning #894384: Your BackupBuddy Settings were detected as missing or corrupt. BackupBuddy has restored your previous BackupBuddy settings from its settings backup file. Please verify your restored BackupBuddy settings look okay. This could have been caused by a database error or corruption.';
+		$restore_fail_message    = 'Error #84938943: Your Solid Backups Settings were detected as missing or corrupt. Solid Backups has attempted to load Solid Backups settings from its settings backup file but failed. Verify your Solid Backups settings are still intact and valid. This could have been caused by a database error or corruption.';
+		$restore_success_message = 'Warning #894384: Your Solid Backups Settings were detected as missing or corrupt. Solid Backups has restored your previous Solid Backups settings from its settings backup file. Please verify your restored Solid Backups settings look okay. This could have been caused by a database error or corruption.';
 
 		require_once pb_backupbuddy::plugin_path() . '/classes/core.php';
 		$backup_dir       = backupbuddy_core::getLogDirectory();
@@ -513,7 +539,7 @@ class pb_backupbuddy {
 		if ( is_array( $settings ) && ( isset( $settings['data_version'] ) ) ) { // Good restore.
 			return $settings;
 		} else { // Restore failed. Bad data!
-			error_log( 'BackupBuddy settings failed restore.' );
+			error_log( 'Solid Backups settings failed restore.' );
 			return false;
 		}
 
@@ -643,15 +669,13 @@ class pb_backupbuddy {
 		if ( pb_is_standalone() || backupbuddy_is_restoring() ) {
 			$options_content = base64_encode( json_encode( pb_backupbuddy::$options ) );
 			$result          = file_put_contents( ABSPATH . 'importbuddy/_settings_dat.php', "<?php die('<!-- // Silence is golden. -->'); ?>\n" . $options_content );
-			// FIXME: Could we just return $result?
 			if ( false === $result ) {
 				return false;
-			} else {
-				return true;
 			}
+			return true;
 		}
 
-		add_site_option( 'pb_' . self::settings( 'slug' ), self::$options, '', 'no' ); // 'No' prevents autoload if we wont always need the data loaded.
+		add_site_option( 'pb_' . self::settings( 'slug' ), self::$options );
 		return self::_update_option( 'pb_' . self::settings( 'slug' ), self::$options );
 	} // End save().
 
@@ -662,11 +686,11 @@ class pb_backupbuddy {
 	 * @see self::save()
 	 *
 	 * @param string $option    Option name.
-	 * @param mixed  $newvalue  New value to save into option.
+	 * @param mixed  $new_value  New value to save into option.
 	 *
 	 * @return bool  True on success; false otherwise.
 	 */
-	private static function _update_option( $option, $newvalue ) {
+	private static function _update_option( $option, $new_value ) {
 		global $wpdb;
 
 		$option = trim( $option );
@@ -674,15 +698,32 @@ class pb_backupbuddy {
 			return false;
 		}
 
-		$oldvalue = get_option( $option );
-		if ( false === $oldvalue ) {
-			return add_option( $option, $newvalue );
+		$old_value = get_option( $option );
+		if ( false === $old_value ) {
+			return add_option( $option, $new_value );
 		} else {
-			$newvalue = sanitize_option( $option, $newvalue );
-			$newvalue = maybe_serialize( $newvalue );
-			$result   = $wpdb->update(
+
+			/**
+			 * Save our option to the database.
+			 *
+			 * This is useful to check if an option (or plugin setting)
+			 * is being updated.
+			 *
+			 * Note that the $new_value equals the existing self::$options value,
+			 * so it is also the current state of pb_backupbuddy::$options.
+			 *
+			 * @since 9.1.9
+			 *
+			 * @param mixed $old_value The old option value pulled from the db.
+			 * @param mixed $new_value The new option value to be saved.
+			 */
+			do_action( 'solid_backups_option_update', $old_value, $new_value );
+
+			$new_value = sanitize_option( $option, $new_value );
+			$new_value = maybe_serialize( $new_value );
+			$result    = $wpdb->update(
 				$wpdb->options, array(
-					'option_value' => $newvalue,
+					'option_value' => $new_value,
 				), array(
 					'option_name' => $option,
 				)
@@ -714,7 +755,7 @@ class pb_backupbuddy {
 			$mode    = apply_filters( 'itbub-default-file-mode', 0755 );
 			$recurse = true;
 			if ( self::$filesystem->mkdir( $directory, $mode, $recurse ) === false ) {
-				$error = 'Error #9002: BackupBuddy unable to create directory `' . $directory . '`. Please verify write permissions for the parent directory `' . dirname( $directory ) . '` or manually create the specified directory & set permissions.';
+				$error = 'Error #9002: Solid Backups unable to create directory `' . $directory . '`. Please verify write permissions for the parent directory `' . dirname( $directory ) . '` or manually create the specified directory & set permissions.';
 				if ( true !== $suppress_alert ) {
 					self::alert( $error, true, '9002' );
 					pb_backupbuddy::status( 'error', $error );
@@ -728,7 +769,7 @@ class pb_backupbuddy {
 
 		// Check writable.
 		if ( ! is_writable( $directory ) ) {
-			$error = 'Error #9002d: BackupBuddy directory `' . $directory . '` is indicated as NOT being writable. Please verify write permissions for it and parent directories as applicable.';
+			$error = 'Error #9002d: Solid Backups directory `' . $directory . '` is indicated as NOT being writable. Please verify write permissions for it and parent directories as applicable.';
 			if ( true !== $suppress_alert ) {
 				self::alert( $error, true, '9002' );
 				pb_backupbuddy::status( 'error', $error );
@@ -873,7 +914,6 @@ class pb_backupbuddy {
 	 * @param bool   $echo_not_write  Echo output instead of write to file.
 	 */
 	public static function status( $type, $message, $serials = '', $js_mode = false, $echo_not_write = false ) {
-
 		if ( ! class_exists( 'backupbuddy_core' ) ) {
 			require_once pb_backupbuddy::plugin_path() . '/classes/core.php';
 		}
@@ -922,7 +962,7 @@ class pb_backupbuddy {
 
 		foreach ( $serials as $serial ) {
 
-			// ImportBuddy always write to main status log.
+			// Importer always write to main status log.
 			if ( defined( 'PB_IMPORTBUDDY' ) && ( PB_IMPORTBUDDY === true ) ) { // IMPORTBUDDY.
 
 				$write_serial = false;
@@ -933,9 +973,9 @@ class pb_backupbuddy {
 
 				// Determine whether writing to main extraneous log file.
 				$write_main = false;
-				if ( 0 == self::$options['log_level'] ) { // No logging.
+				if ( self::no_logging() ) {
 						$write_main = false;
-				} elseif ( 1 == self::$options['log_level'] ) { // Errors only.
+				} elseif ( self::error_only_logging() ) {
 					if ( 'error' === $type ) {
 						$write_main = true;
 						self::log( '[' . $serial . '] ' . $message, 'error' );
@@ -1090,7 +1130,7 @@ class pb_backupbuddy {
 	 */
 	public static function status_box( $default_text = '', $hidden = false ) {
 		define( 'PB_STATUS', true ); // Tells framework status() function to output future logging info into status box via javascript.
-		$return = '<textarea readonly="readonly" id="pb_backupbuddy_status" wrap="off"';
+		$return = '<textarea class="solid-textarea" readonly="readonly" id="pb_backupbuddy_status" wrap="off"';
 		if ( true === $hidden ) {
 			$return .= ' style="display: none; "';
 		}
@@ -1211,16 +1251,17 @@ class pb_backupbuddy {
 	 * @return [type] [description]
 	 */
 	public static function log( $text, $log_type = 'all' ) {
-		if ( defined( 'PB_DEMO_MODE' ) || ! isset( self::$options['log_level'] ) || 0 == self::$options['log_level'] ) { // No logging in this plugin or disabled.
+		// No logging in this plugin or disabled.
+		if ( defined( 'PB_DEMO_MODE' ) ||self::no_logging() ) {
 			return;
 		}
 
 		$write = false;
-		if ( 1 == self::$options['log_level'] ) { // Errors only.
-			if ( 'error' === $log_type ) {
-				$write = true;
-			}
-		} else { // All logging (debug mode).
+		// Errors only.
+		if ( self::error_only_logging() && 'error' === $log_type ) {
+			$write = true;
+		} else {
+			// All logging (debug mode).
 			$write = true;
 		}
 
@@ -1241,6 +1282,56 @@ class pb_backupbuddy {
 			}
 		}
 	} // End log().
+
+	/**
+	 * Determine if logging is not enabled.
+	 *
+	 * The log_level option is set as either a string or an integer
+	 * in the code.
+	 *
+	 * @return bool True if logging is not enabled.
+	 */
+	public static function no_logging() {
+		if ( ! isset( self::$options['log_level'] ) ) {
+			return true;
+		}
+		return empty( intval( self::$options['log_level'] ) );
+	}
+
+	/**
+	 * Determine if error-only logging is enabled.
+	 *
+	 * This is a step below full "everything" logging.
+	 *
+	 * The log_level option is set as either a string or an integer
+	 * in the code.
+	 *
+	 * @return bool True if error-only logging is enabled.
+	 */
+	public static function error_only_logging() {
+		if ( ! isset( self::$options['log_level'] ) ) {
+			return false;
+		}
+
+		return 1 === intval( self::$options['log_level'] );
+	}
+
+	/**
+	 * Determine if full logging is enabled.
+	 *
+	 * This allows logging everything.
+	 *
+	 * The log_level option is set as either a string or an integer
+	 * in the code.
+	 *
+	 * @return bool True if full logging is enabled.
+	 */
+	public static function full_logging() {
+		if ( ! isset( self::$options['log_level'] ) ) {
+			return false;
+		}
+		return 3 === intval( self::$options['log_level'] );
+	}
 
 	/**
 	 * Generate a random string of characters.
@@ -1314,6 +1405,11 @@ class pb_backupbuddy {
 	 * @param array  $args       Additional args to be passed.
 	 */
 	public static function disalert( $unique_id, $message, $error = false, $more_css = '', $args = array() ) {
+		if ( empty( $args ) || ! is_array( $args ) ) {
+			$args = array();
+		}
+		$classes = ! empty( $args['class'] ) ? $args['class'] : '';
+		$args['class'] = $classes . ' backupbuddy_disalert ';
 		self::init_class_controller( 'ui' ); // $ui class required pages controller and may not be set up if not in our own pages.
 		self::$ui->disalert( $unique_id, $message, $error, $more_css, $args );
 	} // End disalert().
@@ -1325,12 +1421,13 @@ class pb_backupbuddy {
 	 * @param string $message   Actual message to show to user.
 	 * @param string $title     Title of message to show to user. This is displayed at top of tip in bigger letters. (optional) Default is blank.
 	 * @param bool   $echo_tip  (Optional) Whether to echo the tip (default; true), or return the tip (false).
+	 * @param string $classes   (Optional) Additional classes to add to the tip.
 	 *
 	 * @return mixed  If not echoing tip then the string will be returned. When echoing there is no return.
 	 */
-	public static function tip( $message, $title = '', $echo_tip = true ) {
+	public static function tip( $message, $title = '', $echo_tip = true, $classes = '' ) {
 		self::init_class_controller( 'ui' ); // $ui class required pages controller and may not be set up if not in our own pages.
-		return self::$ui->tip( $message, $title, $echo_tip );
+		return self::$ui->tip( $message, $title, $echo_tip, $classes );
 	} // End tip().
 
 	/**
@@ -1344,7 +1441,7 @@ class pb_backupbuddy {
 	 * @param string $capability   Capability required to access page. Default: activate_plugins.
 	 * @param string $icon         Menu icon graphic. Automatically prefixes this value with the full URL to plugin's images directory. Default: icon_16x16.png.
 	 * @param string $slug_prefix  Prefix to use with this menu. Override if needing to add menu under another plugin or core menus. Default: DEFAULT.
-	 * @param int    $position     Priority on where in the menu to add this. By default it is added to the bottom of the menu. It's possible to overwrite another menu item if this number matches. Use caution. Default: null.
+	 * @param int    $position     Priority on where in the menu to add this. By default, it is added to the bottom of the menu. It's possible to overwrite another menu item if this number matches. Use caution. Default: null.
 	 */
 	public static function add_page( $parent_slug, $page_slug, $page_title, $capability = 'activate_plugins', $icon = 'icon_menu_16x16.png', $slug_prefix = 'DEFAULT', $position = null ) {
 		if ( 'DEFAULT' == $slug_prefix ) {
@@ -1397,7 +1494,7 @@ class pb_backupbuddy {
 				}
 			}
 			if ( false === $found_series ) { // Series root menu does not exist; create it.
-				add_menu_page( self::$_settings['series'] . ' Getting Started', self::$_settings['series'], 'activate_plugins', $series_slug, array( &self::$_pages, 'getting_started' ), self::plugin_url() . '/images/series_icon_16x16.png' ); // , $page['position']
+				add_menu_page( self::$_settings['series'] . ' Getting Started', self::$_settings['series'], 'activate_plugins', $series_slug, array( &self::$_pages, 'getting_started' ), self::plugin_url() . '/assets/dist/images/series_icon_16x16.png' ); // , $page['position']
 				add_submenu_page( $series_slug, self::$_settings['series'] . ' Getting Started', 'Getting Started', 'activate_plugins', $series_slug, array( &self::$_pages, 'getting_started' ) );
 			}
 
@@ -1652,7 +1749,7 @@ class pb_backupbuddy {
 	 */
 	public static function nonce( $echo = true ) {
 		$name        = '_wpnonce';
-		$nonce_field = wp_nonce_field( 'pb_' . self::settings( 'name' ) . '-nonce', $name, true, false );
+		$nonce_field = wp_nonce_field( 'pb_' . self::settings( 'slug' ) . '-nonce', $name, true, false );
 		$nonce_id    = $name . '_' . uniqid();
 		$nonce_field = str_replace( array( ' id="' . $name, ' id=\'' . $name ), array( ' id="' . $nonce_id, ' id=\'' . $nonce_id ), $nonce_field );
 		if ( false === $echo ) {
@@ -1669,7 +1766,7 @@ class pb_backupbuddy {
 	 * @return string wp_nonce_url()
 	 */
 	public static function nonce_url( $bare_url ) {
-		return wp_nonce_url( $bare_url, 'pb_' . self::settings( 'name' ) . '-nonce' );
+		return wp_nonce_url( $bare_url, 'pb_' . self::settings( 'slug' ) . '-nonce' );
 	}
 
 	/**
@@ -1677,7 +1774,7 @@ class pb_backupbuddy {
 	 * Script die()'s on failure
 	 */
 	public static function verify_nonce() {
-		check_admin_referer( 'pb_' . self::settings( 'name' ) . '-nonce' );
+		check_admin_referer( 'pb_' . self::settings( 'slug' ) . '-nonce' );
 	} // End verify_nonce().
 
 	/**
@@ -1690,24 +1787,13 @@ class pb_backupbuddy {
 	 * @param array  $vars         Localized variables.
 	 */
 	public static function load_script( $script, $core_script = false, $vars = array() ) {
+
 		if ( strstr( $script, '.js' ) ) { // Loading a file specifically.
-			if ( true === $core_script ) {
-				if ( pb_is_standalone() ) {
-					$url_path = 'importbuddy/pluginbuddy/js/';
-				} else {
-					$url_path = self::$_plugin_url . '/pluginbuddy/js/';
-				}
-				$local_path  = self::$_plugin_path . '/pluginbuddy/js/';
-				$script_name = 'pb_' . self::settings( 'slug' ) . '_core_' . $script;
-			} else {
-				if ( pb_is_standalone() ) {
-					$url_path = 'importbuddy/js/';
-				} else {
-					$url_path = self::$_plugin_url . '/js/';
-				}
-				$local_path  = self::$_plugin_path . '/js/';
-				$script_name = 'pb_' . self::settings( 'slug' ) . '_' . $script;
-			}
+			$dir_path   = '/assets/dist/js/';
+			$local_path = self::$_plugin_path . $dir_path;
+			$url_path   = self::$_plugin_url . $dir_path;
+			$core_type = $core_script ? 'core' : 'noncore';
+			$script_name = 'pb_' . self::settings( 'slug' ) . '_' .  $core_type . '_' . $script;
 
 			if ( ! wp_script_is( $script_name ) ) { // Only load script once.
 				if ( file_exists( $local_path . $script ) ) { // Load our local script if file exists.
@@ -1738,24 +1824,12 @@ class pb_backupbuddy {
 	 */
 	public static function load_style( $style, $core_style = false ) {
 		if ( strstr( $style, '.css' ) ) { // Loading a file specifically.
-			if ( true === $core_style ) {
-				if ( pb_is_standalone() ) {
-					$url_path = 'importbuddy/pluginbuddy/css/';
-				} else {
-					$url_path = self::$_plugin_url . '/pluginbuddy/css/';
-				}
-				$local_path = self::$_plugin_path . '/pluginbuddy/css/';
-				$core_type  = 'core';
-			} else {
-				if ( pb_is_standalone() ) {
-					$url_path = 'importbuddy/css/';
-				} else {
-					$url_path = self::$_plugin_url . '/css/';
-				}
-				$local_path = self::$_plugin_path . '/css/';
-				$core_type  = 'noncore';
-			}
+			$dir_path   = '/assets/dist/css/';
+			$local_path = self::$_plugin_path . $dir_path;
+			$url_path   = self::$_plugin_url . $dir_path;
+			$core_type  = $core_style ? 'core' : 'noncore';
 			$style_name = 'pb_' . self::settings( 'slug' ) . '_' . $core_type . '_' . $style;
+
 			if ( ! wp_style_is( $style_name ) ) { // Only load style once.
 				if ( file_exists( $local_path . $style ) ) { // Load our local style if file exists.
 					wp_enqueue_style( $style_name, $url_path . $style, array(), pb_backupbuddy::settings( 'version' ) );
@@ -1847,7 +1921,7 @@ class pb_backupbuddy {
 	/**
 	 * Attempt to strongarm a flush to actually work.
 	 * Prevent flushing by adding this to wp-config.php:
-	 *     define( 'BACKUPBUDDY_NOFLUSH', true );
+	 *      define( 'BACKUPBUDDY_NOFLUSH', true );
 	 * OR
 	 *     set advanced option to prevent flush
 	 *
@@ -1875,6 +1949,7 @@ class pb_backupbuddy {
 			}
 			self::$_has_flushed = true;
 		}
+
 		flush();
 	} // End flush().
 

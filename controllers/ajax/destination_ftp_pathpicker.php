@@ -90,7 +90,7 @@ if ( count( $ftp_list ) ) {
 	foreach ( $ftp_list as $file_name => $file ) {
 		echo '<li class="directory collapsed">';
 		$return  = '<div class="pb_backupbuddy_treeselect_control">';
-		$return .= '<img src="' . pb_backupbuddy::plugin_url() . '/images/greenplus.png" style="vertical-align: -3px;" title="Select this path..." class="pb_backupbuddy_filetree_select">';
+		$return .= '<img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/greenplus.png" style="vertical-align: -3px;" title="Select this path..." class="pb_backupbuddy_filetree_select">';
 		$return .= '</div>';
 		echo '<a href="#" rel="' . esc_attr( $ftp_root . $file_name ) . '/" title="Toggle expand...">' . esc_html( $file_name ) . $return . '</a>';
 		echo '</li>';

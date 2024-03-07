@@ -83,12 +83,9 @@ if ( pb_backupbuddy::_GET( 'cpy' ) ) {
 	pb_backupbuddy::status( 'details', 'Scheduling Cron for creating Stash copy.' );
 
 	$file = pb_backupbuddy::_GET( 'cpy' );
-	backupbuddy_core::schedule_single_event( time(), 'process_remote_copy', array( 'stash2', $file, $destination ) );
+	backupbuddy_core::trigger_async_event( 'process_remote_copy', array( 'stash2', $file, $destination ) );
 
-	if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-		update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-		spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-	}
+	backupbuddy_core::maybe_spawn_cron();
 } // end copying to local.
 
 backupbuddy_backups()->set_destination_id( $destination_id );
@@ -109,13 +106,11 @@ $backup_count = count( $backups );
 $no_backups   = '';
 
 if ( 0 === $backup_count ) {
-	$no_backups = '<br><center><b>';
 	if ( 'live' === $destination['type'] ) {
 		$no_backups .= esc_html__( 'Your remote BackupBuddy Stash storage does not contain any Snapshot zip files yet. It may take several minutes after a Snapshot for them to display.', 'it-l10n-backupbuddy' );
 	} else {
 		$no_backups .= esc_html__( 'Your remote BackupBuddy Stash storage does not contain any traditional backup zip files yet.', 'it-l10n-backupbuddy' );
 	}
-	$no_backups .= '</b></center>';
 }
 
 // Render table listing files.

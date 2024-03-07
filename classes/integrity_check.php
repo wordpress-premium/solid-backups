@@ -552,7 +552,7 @@ class backupbuddy_integrity_check {
 
 		// Return pass/fail array.
 		return array(
-			'test' => 'BackupBuddy data file',
+			'test' => 'Solid Backups data file',
 			'pass' => $pass,
 		);
 	}
@@ -633,7 +633,7 @@ class backupbuddy_integrity_check {
 			'test' => 'Database SQL file',
 			'pass' => true,
 		);
-		pb_backupbuddy::status( 'details', 'BackupBuddy v5.0+ format database detected.' );
+		pb_backupbuddy::status( 'details', 'Solid Backups v5.0+ format database detected.' );
 
 		// Lets make sure we have a couple flags set.
 		if ( ! isset( $this->backup_options->options['force_single_db_file'] ) ) {

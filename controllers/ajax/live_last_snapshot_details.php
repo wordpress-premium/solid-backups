@@ -9,7 +9,7 @@ backupbuddy_core::verifyAjaxAccess();
 pb_backupbuddy::$ui->ajax_header();
 ?>
 <span class="pb_backupbuddy_live_last_snapshot_loading">
-	<h3>Loading... <img src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/loading.gif" title="Loading... This may take a few seconds..."></h3>
+	<h3>Loading... <img src="<?php echo pb_backupbuddy::plugin_url(); ?>/assets/dist/images/loading.gif" title="Loading... This may take a few seconds..."></h3>
 </span>
 <?php
 pb_backupbuddy::flush( true );

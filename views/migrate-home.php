@@ -6,7 +6,7 @@
  */
 
 if ( '' == pb_backupbuddy::$options['importbuddy_pass_hash'] ) { // NO HASH SET.
-	$import_alert = '<span class="pb_label pb_label">Important</span> <b>Set an ImportBuddy password on the <a href="';
+	$import_alert = '<span class="pb_label pb_label">Important</span> <b>Set an Importer password on the <a href="';
 	if ( is_network_admin() ) {
 		$import_alert .= network_admin_url( 'admin.php' );
 	} else {

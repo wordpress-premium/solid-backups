@@ -20,7 +20,7 @@ if (strlen((string) PHP_INT_MAX) < 19) {
     // Looks like we're running on a 32-bit build of PHP.  This could cause problems because some of the numbers
     // we use (file sizes, quota, etc) can be larger than 32-bit ints can handle.
     //throw new \Exception("The Dropbox SDK uses 64-bit integers, but it looks like we're running on a version of PHP that doesn't support 64-bit integers (PHP_INT_MAX=" . ((string) PHP_INT_MAX) . ").  Library: \"" . __FILE__ . "\"");
-    \pb_backupbuddy::status( 'warnings', 'Using the Dropbox (v2) destination on a non-64-bit system. Large files will not be supported. PHP_INT_MAX=`' . PHP_INT_MAX . '`.' );
+    \pb_backupbuddy::status( 'warnings', 'Using the Dropbox v2 destination on a non-64-bit system. Large files will not be supported. PHP_INT_MAX=`' . PHP_INT_MAX . '`.' );
 }
 
 /**
@@ -161,10 +161,10 @@ final class RequestUtil
         $url = self::buildUri($host, $path);
         $curl = self::mkCurlWithOAuth($clientIdentifier, $url, $accessToken);
         \pb_backupbuddy::status( 'details', 'URL: `' . $url . '`. Access token: `' . $accessToken . '`.' );
-        
+
         $curl->set(CURLOPT_RETURNTRANSFER, true);
         $curl->set(CURLOPT_POST, true);
-        
+
         if ( null === $headerAPI ) {
         	\pb_backupbuddy::status( 'details', 'Putting params in post field.' );
         	$curl->set(CURLOPT_POSTFIELDS, json_encode($params));
@@ -173,7 +173,7 @@ final class RequestUtil
         	$curl->addHeader( 'Content-Length: 0' ); // DUSTIN IMPORTANT: Workaround for some servers defaulting to a length of -1 if the body is empty BUT Dropbox BLOCKS this as a 400 Bad Request of the Content-Length is -1. A length of 0 works okay.
         	$curl->addHeader( $headerAPI );
         }
-        
+
         \pb_backupbuddy::status( 'details', 'Content type: `' . $contentType . '`.' );
         return $curl->exec( $contentType );
     }
@@ -204,7 +204,7 @@ final class RequestUtil
         $body = self::buildPostBody($params);
         //error_log( print_r( $body, true ) );
         $curl->set(CURLOPT_POSTFIELDS, $body);
-        
+
         $curl->addHeader("Content-Type: application/x-www-form-urlencoded;charset=UTF-8");
 
         $curl->set(CURLOPT_RETURNTRANSFER, true);

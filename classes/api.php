@@ -1,6 +1,6 @@
 <?php
 /**
- * BackupBuddy API Class
+ * Solid Backups API Class
  *
  * TIP: Check if a function is callable before running if using these methods from a 3rd party software.
  * Eg. if ( is_callable( array( 'backupbuddy_api', 'runBackup' ) ) ) { ...
@@ -9,7 +9,7 @@
  */
 
 /**
- * Main BackupBuddy API Class
+ * Main Solid Backups API Class
  */
 class backupbuddy_api {
 
@@ -63,7 +63,7 @@ class backupbuddy_api {
 
 	/* setLiveStatus()
 	 *
-	 * Pause/Resume BackupBuddy Stash Live status for continuous database and/or periodic scans (files).
+	 * Pause/Resume Solid Backups Stash Live status for continuous database and/or periodic scans (files).
 	 *
 	 * @param bool|string	$continuous_enabled		Continuous activity (Live DB updating). bool to pause (true) / resume (false) OR empty string '' to leave the same.
 	 * @param bool|string	$periodic_enabled		Periodic activity (file scan, db dump, cleanups, etc). bool to pause (true) / resume (false) OR empty string '' to leave the same.

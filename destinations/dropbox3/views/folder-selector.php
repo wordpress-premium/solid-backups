@@ -247,7 +247,7 @@ if ( true !== $backupbuddy_dropbox_folder_selector_printed ) {
 					$destination_wrap.find( '.backupbuddy-dropbox-folder-list' ).append( '<span class="description">No folders found at this location in your Dropbox.</span>' );
 				} else {
 					$.each( data.folders, function( index, folder ) {
-						var folder_row = '<span data-path="' + folder.path + '" data-id="' + folder.id + '" class="backupbuddy-dropbox-folder-list-folder"><span class="backupbuddy-dropbox-folder-list-selected pb_label pb_label-info" title="Select this folder to use.">Select</span> <span class="backupbuddy-dropbox-folder-list-open dashicons dashicons-plus" title="Expand folder & view folders within"></span> <span class="backupbuddy-dropbox-folder-list-name backupbuddy-dropbox-folder-list-open">' + folder.name + '</span>';
+						var folder_row = '<span data-path="' + folder.path + '" data-id="' + folder.id + '" class="backupbuddy-dropbox-folder-list-folder"><span class="backupbuddy-dropbox-folder-list-selected pb_label pb_label-info" title="Select this folder to use.">Select</span> <span class="backupbuddy-dropbox-folder-list-open" title="Expand folder & view folders within"><?php pb_backupbuddy::$ui->render_icon('plus'); ?></span> <span class="backupbuddy-dropbox-folder-list-name backupbuddy-dropbox-folder-list-open">' + folder.name + '</span>';
 
 						if ( 'undefined' !== typeof folder.created && 'undefined' !== typeof folder.created_ago) {
 							folder_row += '<span class="backupbuddy-dropbox-folder-list-created-wrap"><span class="backupbuddy-dropbox-folder-list-created">' + folder.created + '</span>&nbsp;&nbsp;Last Updated <span class="backupbuddy-dropbox-folder-list-created-ago">' + folder.created_ago + ' ago</span></span>';
@@ -359,8 +359,8 @@ if ( true !== $backupbuddy_dropbox_folder_selector_printed ) {
 	?>
 	<span class="backupbuddy-dropbox-breadcrumbs">/</span>
 	<div class="backupbuddy-dropbox-folder-list"></div>
-	<button class="backupbuddy-dropbox-back thickbox button secondary-button">&larr; <?php esc_html_e( 'Back', 'it-l10n-backupbuddy' ); ?></button>&nbsp;&nbsp;
-	<button class="backupbuddy-dropbox-create-folder thickbox button secondary-button"><?php esc_html_e( 'Create Folder', 'it-l10n-backupbuddy' ); ?></button>
-	&nbsp;<span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px; vertical-align: -5px;"><img src="<?php echo esc_attr( pb_backupbuddy::plugin_url() ); ?>/images/loading.gif" alt="<?php echo esc_attr( __( 'Loading...', 'it-l10n-backupbuddy' ) ); ?>" title="<?php echo esc_attr( __( 'Loading...', 'it-l10n-backupbuddy' ) ); ?>" width="16" height="16" style="vertical-align: -3px;" /></span>
+	<button class="backupbuddy-dropbox-back thickbox button button-secondary secondary-button">&larr; <?php esc_html_e( 'Back', 'it-l10n-backupbuddy' ); ?></button>&nbsp;&nbsp;
+	<button class="backupbuddy-dropbox-create-folder thickbox button button-secondary secondary-button"><?php esc_html_e( 'Create Folder', 'it-l10n-backupbuddy' ); ?></button>
+	&nbsp;<span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px; vertical-align: -5px;"></span>
 	&nbsp;<span class="backupbuddy-dropbox-status-text" style="vertical-align: -5px; font-style: italic;"></span>
 </div>

@@ -1,6 +1,6 @@
 <% if ( potentialProblems.length > 0 ) { %>
 	<div class="main_box_head warning_alert_box">
-		<span class="error_warning_title">One or more potential problems may have been found:</span>
+		<span class="error_warning_title">One or more potential problems may have been found</span>
 		<ul class="backupbuddy_warning_list">
 			<% jQuery.each( potentialProblems, function( key, potentialProblem ){ %>
 			<li><%=potentialProblem%></li>
@@ -70,29 +70,33 @@ jQuery( '.expander' ).click( function(){
 
 		<h3>Site Search Engine Visibility</h3>
 		<div style="display: inline-block; text-align: left;">
-			<label for="set_blog_public-keep" style="font-size: 12px;"><input type="radio" name="set_blog_public" id="set_blog_public-keep" value="" checked="checked">No change (default): <%=sourceSitePublicStatusText%></label><br>
-			<label for="set_blog_public-public" style="font-size: 12px;"><input type="radio" name="set_blog_public" id="set_blog_public-public" value="1">Public - Do not discourage search engines from indexing this site</label><br>
-			<label for="set_blog_public-private" style="font-size: 12px;"><input type="radio" name="set_blog_public" id="set_blog_public-private" value="0">Private - Discourage search engines from indexing this site</label><br>
+			<label for="set_blog_public-keep"><input type="radio" name="set_blog_public" id="set_blog_public-keep" value="" checked="checked">No change (default): <%=sourceSitePublicStatusText%></label><br>
+			<label for="set_blog_public-public"><input type="radio" name="set_blog_public" id="set_blog_public-public" value="1">Public - Do not discourage search engines from indexing this site</label><br>
+			<label for="set_blog_public-private"><input type="radio" name="set_blog_public" id="set_blog_public-private" value="0">Private - Discourage search engines from indexing this site</label><br>
 		</div>
 
 		<br><br>
 
-		<h3>ImportBuddy Cleanup:</h3>
-		<table style="margin-left: auto; margin-right: auto; text-align: left;"><tr><td>
-			<label for="delete_backup" style="width: auto; font-size: 12px;"><input type="checkbox" name="delete_backup" id="delete_backup" value="1" checked> Delete backup zip archive</label>
-			<br>
-			<label for="delete_temp" style="width: auto; font-size: 12px;"><input type="checkbox" name="delete_temp" id="delete_temp" value="1" checked> Delete temporary import files</label>
-		</td><td>
-			<label for="delete_importbuddy" style="width: auto; font-size: 12px;"><input type="checkbox" name="delete_importbuddy" id="delete_importbuddy" value="1" checked> Delete ImportBuddy tool files</label>
-			<br>
-			<label for="delete_importbuddy_directory" style="width: auto; font-size: 12px;"><input type="checkbox" name="delete_importbuddy_directory" id="delete_importbuddy_directory" value="1" checked> Delete ImportBuddy directory</label>
-			<br>
-			<label for="delete_importbuddylog" style="width: auto; font-size: 12px;"><input type="checkbox" name="delete_importbuddylog" id="delete_importbuddylog" value="1" checked> Delete importbuddy.txt log file</label>
-		</td></tr></table>
+		<h3>Importer Cleanup</h3>
+		<table style="margin-left: auto; margin-right: auto; text-align: left;">
+			<tr>
+				<td>
+					<label for="delete_backup"><input type="checkbox" name="delete_backup" id="delete_backup" value="1" checked> Delete backup zip archive</label>
+					<br>
+					<label for="delete_temp"><input type="checkbox" name="delete_temp" id="delete_temp" value="1" checked> Delete temporary import files</label>
+					<br>
+					<label for="delete_importbuddy"><input type="checkbox" name="delete_importbuddy" id="delete_importbuddy" value="1" checked> Delete the Importer tool files</label>
+					<br>
+					<label for="delete_importbuddy_directory"><input type="checkbox" name="delete_importbuddy_directory" id="delete_importbuddy_directory" value="1" checked> Delete the Importer directory</label>
+					<br>
+					<label for="delete_importbuddylog"><input type="checkbox" name="delete_importbuddylog" id="delete_importbuddylog" value="1" checked> Delete importbuddy.txt log file</label>
+				</td>
+			</tr>
+		</table>
 
 		<br>
 		<center>
-			<input type="submit" name="nextStep" value="Finish Cleanup" class="it-button pb_database_next_test">
+			<input type="submit" name="nextStep" value="Finish Cleanup" class="button button-primary pb_database_next_test">
 		</center>
 
 	</div>

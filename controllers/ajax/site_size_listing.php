@@ -158,11 +158,11 @@ if ( pb_backupbuddy::_GET( 'text' ) == 'true' ) {
 
 	echo '<br>';
 	echo 'Exclusions (' . count( $exclusions ) . ')';
-	pb_backupbuddy::tip( 'List of directories that will be excluded in an actual backup. This includes user-defined directories and BackupBuddy directories such as the archive directory and temporary directories.' );
+	pb_backupbuddy::tip( 'List of directories that will be excluded in an actual backup. This includes user-defined directories and Solid Backups directories such as the archive directory and temporary directories.' );
 	echo '<div id="pb_backupbuddy_serverinfo_exclusions" style="background-color: #EEEEEE; padding: 4px; float: right; white-space: nowrap; height: 90px; width: 70%; min-width: 400px; overflow: auto;"><i>' . implode( '<br>', $exclusions ) . '</i></div>';
 	echo '<br style="clear: both;">';
 	echo '<br><br><center>';
-	echo '<a href="' . pb_backupbuddy::ajax_url( 'site_size_listing' ) . '&text=true&#038;TB_iframe=1&#038;width=640&#038;height=600" class="thickbox button secondary-button">' . esc_html__( 'Display Directory Size Listing in Text Format', 'it-l10n-backupbuddy' ) . '</a>';
+	echo '<a href="' . pb_backupbuddy::ajax_url( 'site_size_listing' ) . '&text=true&#038;TB_iframe=1&#038;width=640&#038;height=600" class="thickbox button button-secondary secondary-button">' . esc_html__( 'Display Directory Size Listing in Text Format', 'it-l10n-backupbuddy' ) . '</a>';
 	echo '</center>';
 }
 

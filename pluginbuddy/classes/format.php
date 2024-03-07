@@ -43,10 +43,10 @@ class pb_backupbuddy_format {
 	 */
 	function file_size( $size ) {
 		$sizes = array( ' Bytes', ' KB', ' MB', ' GB', ' TB', ' PB', ' EB', ' ZB', ' YB');
-		if ( $size == 0 ) {
+		if ( (int) $size <= 0 ) {
 			return( '0 MB' );
 		} else {
-			return ( round( $size / pow( 1024, ( $i = floor( log( $size, 1024 ) ) ) ), $i > 1 ? 2 : 0) . $sizes[$i] );
+			return ( round( (int) $size / pow( 1024, ( $i = floor( log( (int) $size, 1024 ) ) ) ), $i > 1 ? 2 : 0) . $sizes[$i] );
 		}
 	} // End file_size().
 
@@ -62,9 +62,9 @@ class pb_backupbuddy_format {
 	 */
 	function date( $timestamp, $customFormat = '' ) {
 		if ( '' == $customFormat ) {
-			return date( $this->_timestamp, $timestamp );
+			return date( $this->_timestamp, intval( $timestamp ) );
 		} else {
-			return date( $customFormat, $timestamp );
+			return date( $customFormat, intval( $timestamp ) );
 		}
 	} // End date().
 
@@ -141,7 +141,7 @@ class pb_backupbuddy_format {
 						 __('week',   'it-l10n-backupbuddy' ),
 						 __('month',  'it-l10n-backupbuddy' ),
 						 __('year',   'it-l10n-backupbuddy' ),
-						 __('decade'. 'LION' )
+						 __('decade'. 'it-l10n-backupbuddy' )
 						 );
 		$lengths = array('60','60','24','7','4.35','12','10');
 

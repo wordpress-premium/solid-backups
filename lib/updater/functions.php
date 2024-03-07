@@ -34,11 +34,27 @@ class Ithemes_Updater_Functions {
 	}
 
 	public static function get_package_name( $package ) {
+		$solid_names = array(
+			'ithemes-security-pro' => 'Solid Security Pro',
+			'backupbuddy'          => 'Solid Backups',
+			'ithemes-sync'         => 'Solid Central',
+		);
+
+		if ( isset( $solid_names[ $package ] ) ) {
+			return $solid_names[ $package ];
+		}
+
 		$name = str_replace( 'builderchild', 'Builder Child', $package );
 		$name = str_replace( '-', ' ', $name );
 		$name = ucwords( $name );
 		$name = str_replace( 'buddy', 'Buddy', $name );
 		$name = str_replace( 'Ithemes', 'iThemes', $name );
+		$name = str_replace( 'Rcp ', 'RCP ', $name );
+		$name = str_replace( ' Qr ', ' QR ', $name );
+		$name = str_replace( 'Itsec ', 'ITSEC ', $name );
+		$name = str_replace( 'Wpcomplete', 'WPComplete', $name );
+		$name = str_replace( 'Pmpro ', 'PMPro ', $name );
+		$name = str_replace( 'Restrict Content Pro Buddypress', 'Restrict Content Pro - Buddypress', $name );
 
 		return $name;
 	}

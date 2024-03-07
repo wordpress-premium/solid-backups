@@ -5,7 +5,7 @@
  * @package BackupBuddy
  */
 
-pb_backupbuddy::load_script( 'rollbackEvents.js' );
+pb_backupbuddy::load_script( 'pluginbuddy.js' );
 
 pb_backupbuddy::$ui->title(
 	__( 'Database Rollback', 'it-l10n-backupbuddy' ) .
@@ -36,9 +36,9 @@ function pb_status_undourl( undo_url ) {
 <?php
 global $wp_version;
 echo '<div id="pb_backupbuddy_status_wrap">';
-echo pb_backupbuddy::status_box( 'Starting rollback process with BackupBuddy v' . pb_backupbuddy::settings( 'version' ) . ' using WordPress v' . $wp_version . ' on ' . PHP_OS . '...' );
+echo pb_backupbuddy::status_box( 'Starting rollback process with Solid Backups v' . pb_backupbuddy::settings( 'version' ) . ' using WordPress v' . $wp_version . ' on ' . PHP_OS . '...' );
 echo '</div>';
-pb_backupbuddy::status( 'details', 'BackupBuddy v' . pb_backupbuddy::settings( 'version' ) . ' using WordPress v' . $wp_version . ' on ' . PHP_OS . '.' );
+pb_backupbuddy::status( 'details', 'Solid Backups v' . pb_backupbuddy::settings( 'version' ) . ' using WordPress v' . $wp_version . ' on ' . PHP_OS . '.' );
 ?>
 
 
@@ -58,7 +58,7 @@ pb_backupbuddy::status( 'details', 'BackupBuddy v' . pb_backupbuddy::settings( '
 			}
 		}
 
-		// Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php
+		// Used in Solid Backups _backup-perform.php and Importer _header.php
 		json.date = new Date();
 		json.date = new Date(  ( json.time * 1000 ) + json.date.getTimezoneOffset() * 60000 );
 		var seconds = json.date.getSeconds();
@@ -83,7 +83,7 @@ pb_backupbuddy::status( 'details', 'BackupBuddy v' . pb_backupbuddy::settings( '
 
 	} // End function pb_status_append().
 
-	// Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php and _rollback.php
+	// Used in Solid Backups _backup-perform.php and Importer _header.php and _rollback.php
 	function backupbuddy_log( json ) {
 
 		message = '';
@@ -101,7 +101,7 @@ pb_backupbuddy::status( 'details', 'BackupBuddy v' . pb_backupbuddy::settings( '
 
 	// Trigger an error to be logged, displayed, etc.
 	// Returns updated message with trouble URL, etc.
-	// Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php
+	// Used in Solid Backups _backup-perform.php and Importer _header.php
 	function backupbuddyError( message ) {
 
 		// Get start of any error numbers.
@@ -118,7 +118,7 @@ pb_backupbuddy::status( 'details', 'BackupBuddy v' . pb_backupbuddy::settings( '
 				error_number_end = message.toLowerCase().indexOf( ' ', error_number_begin );
 			}
 			error_number = message.slice( error_number_begin, error_number_end );
-			troubleURL = 'https://ithemeshelp.zendesk.com/hc/en-us/articles/211132377-Error-Codes-#' + error_number;
+			troubleURL = 'https://go.solidwp.com/error-codes-#--' + error_number;
 		}
 
 		if ( '' !== troubleURL ) {
@@ -143,7 +143,7 @@ pb_backupbuddy::status( 'details', 'BackupBuddy v' . pb_backupbuddy::settings( '
 	} // end backupbuddyError().
 
 
-	// Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php
+	// Used in Solid Backups _backup-perform.php and Importer _header.php
 	function backupbuddyWarning( message ) {
 		jQuery( '.backupbuddy_warning_list' ).append( '<li>' +  message + '</li>' );
 		return 'Warning: ' + message;
@@ -178,4 +178,4 @@ pb_backupbuddy::status( 'details', 'BackupBuddy v' . pb_backupbuddy::settings( '
 </div>
 
 
-<iframe id="pb_backupbuddy_modal_iframe" name="pb_backupbuddy_modal_iframe" src="<?php echo pb_backupbuddy::ajax_url( 'rollback' ); ?>&step=<?php echo pb_backupbuddy::_GET( 'step' ); ?>&archive=<?php echo pb_backupbuddy::_GET( 'rollback' ); ?>" width="100%" style="max-width: 1000px;" height="1800" frameBorder="0" padding="0" margin="0">Error #4584594579. Browser not compatible with iframes.</iframe>
+<iframe id="pb_backupbuddy_modal_iframe" name="pb_backupbuddy_modal_iframe" src="<?php echo pb_backupbuddy::ajax_url( 'rollback' ); ?>&step=<?php esc_attr_e( pb_backupbuddy::_GET( 'step' ) ); ?>&archive=<?php esc_attr_e( pb_backupbuddy::_GET( 'rollback' ) ); ?>" width="100%" style="max-width: 1000px;" height="1800" frameBorder="0" padding="0" margin="0">Error #4584594579. Browser not compatible with iframes.</iframe>

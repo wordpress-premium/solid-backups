@@ -57,6 +57,11 @@ class BackupBuddy_Restore {
 
 	const STATUS_USER_ABORTED = 600;
 
+	// Number of files to be moved in one pass.
+	const FILE_BATCH_SIZE = 1000;
+
+	const CRON_GROUP = 'solid-backups-restore';
+
 	/**
 	 * Path to storage file.
 	 *
@@ -114,13 +119,6 @@ class BackupBuddy_Restore {
 	private $files;
 
 	/**
-	 * Track number of files restored for each pass.
-	 *
-	 * @var int
-	 */
-	private $files_restored = 0;
-
-	/**
 	 * Tables to restore.
 	 *
 	 * @var array
@@ -133,6 +131,14 @@ class BackupBuddy_Restore {
 	 * @var string
 	 */
 	private $restore_path;
+
+	/**
+	 * Temporary directory for zip extraction.
+	 * Contains backup files to be restored.
+	 *
+	 * @var string
+	 */
+	private $temp_dir;
 
 	/**
 	 * Backup Serial/ID.
@@ -221,6 +227,35 @@ class BackupBuddy_Restore {
 	}
 
 	/**
+	 * Return the Temp directory path.
+	 *
+	 * This normalizes the path with a trailing slash.
+	 *
+	 * @return string  Temp directory path or empty string if not available.
+	 */
+	private function temp_dir() {
+		if ( ! empty( $this->temp_dir ) ) {
+			return self::trailingslashit( $this->temp_dir );
+		}
+
+		if ( ! empty( $this->restore['temp_dir'] ) ) {
+			$this->temp_dir = self::trailingslashit( $this->restore['temp_dir'] );
+			return $this->temp_dir;
+		}
+
+		if ( ! empty( $this->restore['id'] ) ) {
+			$restore = $this->details( $this->restore['id'] );
+
+			if ( ! empty( $restore['temp_dir'] ) ) {
+				$this->temp_dir = self::trailingslashit( $restore['temp_dir'] );
+				return $this->temp_dir;
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Queue up files to be restored.
 	 *
 	 * @param string $zip_file        Zip File name.
@@ -265,6 +300,7 @@ class BackupBuddy_Restore {
 
 		// Setup Files.
 		if ( '*' === $files ) {
+			// Full Restore.
 			$restore['type'] = 'full';
 			$backup_type     = backupbuddy_core::parse_file( $zip_file, 'type' );
 			if ( 'db' === $what ) {
@@ -275,9 +311,28 @@ class BackupBuddy_Restore {
 				}
 			}
 		} elseif ( ! empty( $files ) && ! is_array( $files ) ) {
+			// Restoring a single file/directory.
 			$files = array( $files );
 		}
 
+		/*
+		 * Formatting of $this->files:
+		 *
+		 * Selective Restore Format will be an array of specific
+		 * file paths to be restored.
+		 * It may contain wildcard strings representing entire
+		 * directories, but it will not include a listing
+		 * of all of the files in those directores.
+		 *
+		 * Example:
+		 * array(
+		 *    wp-content/plugins/plugin/index.php,
+		 *    wp-content/plugins/another-plugin/*,
+		 * )
+		 *
+		 * Full Restore Format will simply be:
+		 * array( '*' )
+		*/
 		$restore['files'] = $files;
 
 		// Setup Tables.
@@ -323,7 +378,7 @@ class BackupBuddy_Restore {
 		}
 
 		$restore['profile']      = $backup_type;
-		$restore['restore_path'] = $restore_dir;
+		$restore['restore_path'] = self::trailingslashit( $restore_dir );
 
 		return $this->add_to_queue( $restore );
 	}
@@ -337,11 +392,11 @@ class BackupBuddy_Restore {
 	 */
 	private function add_to_queue( $restore ) {
 		$file_defaults = array(
-			'perms'      => array(), // folders where permissions have been changed.
-			'perm_fails' => array(), // files that failed to set permissions.
-			'copied'     => array(), // files/folders successfully copied.
-			'skipped'    => array(), // identical files skipped during restore.
-			'cleanup'    => array(), // files/folders to cleanup afterwards.
+			'perms'          => array(), // folders where permissions have been changed.
+			'perm_fails'     => array(), // files that failed to set permissions.
+			'moved'          => array(), // files/folders successfully moved.
+			'files_started'  => false,   // If files have started processing.
+			'active_plugins' => array(), // If files have started processing.
 		);
 		$db_defaults   = array(
 			'tables'            => array(), // requested tables for restore.
@@ -434,14 +489,28 @@ class BackupBuddy_Restore {
 			return false;
 		}
 
-		$scheduled = wp_next_scheduled( 'pb_backupbuddy_process_restore_queue' );
-		if ( false === $scheduled ) {
-			$scheduled = backupbuddy_core::schedule_single_event( time(), 'process_restore_queue' );
+		// Attempt to schedule the cron to run now.
+		$restore_id = ! empty( $this->restore['id'] ) ? $this->restore['id'] : 0;
+
+		$has_scheduled_event = backupbuddy_core::has_scheduled_event(
+			'process_restore_queue',
+			array( $restore_id ),
+			self::CRON_GROUP
+		);
+
+		if ( $has_scheduled_event ) {
+			return;
 		}
-		if ( $scheduled && '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-			update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-			spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-		}
+
+		$scheduled  = backupbuddy_core::schedule_single_event(
+			time(),
+			'process_restore_queue',
+			array( $restore_id ),
+			self::CRON_GROUP
+		);
+
+		backupbuddy_core::maybe_spawn_cron();
+
 		return $scheduled;
 	}
 
@@ -453,7 +522,7 @@ class BackupBuddy_Restore {
 	public function schedule_download() {
 		$this->log( 'Scheduling remote zip download...' );
 
-		$remote_types = array( 'stash2', 'stash3', 's3', 's32', 's33' );
+		$remote_types = array( 'stash2', 'stash3', 's32', 's33' );
 		if ( in_array( $this->restore['destination_args']['type'], $remote_types, true ) ) {
 			$schedule_args   = array(
 				$this->restore['destination_args']['type'],
@@ -469,9 +538,9 @@ class BackupBuddy_Restore {
 			$schedule_method = 'process_destination_copy';
 		}
 
-		$scheduled = wp_next_scheduled( $schedule_method, $schedule_args );
-		if ( false === $scheduled ) {
-			$scheduled = backupbuddy_core::schedule_single_event( time(), $schedule_method, $schedule_args );
+		$scheduled = backupbuddy_core::has_scheduled_event( $schedule_method, $schedule_args, self::CRON_GROUP );
+		if ( ! $scheduled ) {
+			$scheduled = backupbuddy_core::schedule_single_event( time(), $schedule_method, $schedule_args, self::CRON_GROUP );
 		}
 
 		if ( ! empty( $this->restore ) && $scheduled ) {
@@ -480,10 +549,7 @@ class BackupBuddy_Restore {
 			$this->log( '✓ Remote zip download scheduled.' );
 			$this->save();
 
-			if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-				update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-				spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-			}
+			backupbuddy_core::maybe_spawn_cron();
 		}
 
 		return $scheduled;
@@ -685,7 +751,7 @@ class BackupBuddy_Restore {
 			} elseif ( self::STATUS_PERMISSIONS === $restore['status'] ) {
 				$status_js['text'] = esc_html__( 'Handling permissions...', 'it-l10n-backupbuddy' );
 			} elseif ( self::STATUS_READY === $restore['status'] ) {
-				$status_js['text'] = esc_html__( 'Beginning zip extraction...', 'it-l10n-backupbuddy' );
+				$status_js['text'] = esc_html__( 'Extracting zipped files...', 'it-l10n-backupbuddy' );
 			} elseif ( self::STATUS_UNZIPPED === $restore['status'] ) {
 				$status_js['text'] = esc_html__( 'Zip extraction complete.', 'it-l10n-backupbuddy' );
 			} else {
@@ -768,10 +834,17 @@ class BackupBuddy_Restore {
 		$status = esc_html__( 'Restoring...', 'it-l10n-backupbuddy' );
 
 		if ( true !== $restore['file_status'] && in_array( $restore['what'], array( 'both', 'files' ), true ) ) {
-			$total_files = count( $restore['extract_files'] ) ? '/' . number_format( count( $restore['extract_files'] ) ) : '';
-			$restored    = ! empty( $restore['copied'] ) ? count( $restore['copied'] ) : 0;
-			if ( 0 !== $restored ) {
-				$status = sprintf( '%s%s Files Restored.', number_format( $restored ), $total_files );
+			$extract_files = 0;
+			if ( ! empty( $restore['extract_files'] ) && is_array( $restore['extract_files'] ) ) {
+				$extract_files = count( $restore['extract_files'] );
+			}
+			$total_files = $extract_files ? '/' . number_format( $extract_files ) : '';
+			$moved = 0;
+			if ( ! empty( $restore['moved'] )  && is_array( $restore['moved'] ) ) {
+				$moved = count( array_unique( $restore['moved'] ) );
+			}
+			if ( 0 !== $moved ) {
+				$status = sprintf( '%s%s Files Restored.', number_format( $moved ), $total_files );
 			}
 		} elseif ( true !== $restore['db_status'] && in_array( $restore['what'], array( 'both', 'db' ), true ) ) {
 			if ( isset( $restore['restored_tables'] ) && isset( $restore['imported_tables'] ) ) {
@@ -794,7 +867,7 @@ class BackupBuddy_Restore {
 	public function cron_in_progress( $create_lock = true ) {
 		$lock_dir  = backupbuddy_core::getLogDirectory();
 		$lock_file = 'backupbuddy-restore.lock';
-		$lock_path = trailingslashit( $lock_dir ) . $lock_file;
+		$lock_path = self::trailingslashit( $lock_dir ) . $lock_file;
 		if ( file_exists( $lock_path ) ) {
 			return true;
 		}
@@ -824,7 +897,7 @@ class BackupBuddy_Restore {
 	public function unlock_cron() {
 		$lock_dir  = backupbuddy_core::getLogDirectory();
 		$lock_file = 'backupbuddy-restore.lock';
-		$lock_path = trailingslashit( $lock_dir ) . $lock_file;
+		$lock_path = self::trailingslashit( $lock_dir ) . $lock_file;
 		if ( ! file_exists( $lock_path ) ) {
 			return false;
 		}
@@ -843,6 +916,9 @@ class BackupBuddy_Restore {
 		$this->restore         = array();
 		$this->current_restore = false;
 		pb_backupbuddy::flush();
+
+		// Clean up Action Scheduler logs.
+		self::housekeeping();
 
 		$return = $this->unlock_cron();
 		if ( true === $schedule_new ) {
@@ -942,9 +1018,6 @@ class BackupBuddy_Restore {
 
 			// Trim the larger chunks of data from the main queue file.
 			unset( $restore_array['extract_files'] );
-			unset( $restore_array['copied'] );
-			unset( $restore_array['skipped'] );
-			unset( $restore_array['cleanup'] );
 			unset( $restore_array['perms'] );
 			unset( $restore_array['perm_fails'] );
 			unset( $restore_array['sql_files'] );
@@ -958,6 +1031,14 @@ class BackupBuddy_Restore {
 			unset( $restore_array['finalize_db'] );
 			unset( $restore_array['errors'] );
 			unset( $restore_array['log'] );
+
+			// Clean up moved files array.
+			if ( isset( $restore_array['moved'] ) ) {
+				$restore_array['moved'] = is_array($restore_array['moved']) ? $restore_array['moved'] : array();
+				$restore_array['moved'] = array_unique($restore_array['moved']);
+			} else {
+				$restore_array['moved'] = array();
+			}
 
 			// Save Queue without extra data.
 			$restore_queue[ $restore_array['id'] ] = wp_json_encode( $restore_array );
@@ -1063,16 +1144,16 @@ class BackupBuddy_Restore {
 			return false;
 		}
 
-		// Prevent overlapping requests.
-		if ( $this->cron_in_progress() ) {
-			$this->schedule_cron();
-			return false;
-		}
-
 		// Handle user abort early.
 		if ( $this->check_for_user_abort() ) {
 			$this->cron_complete( false );
 			return false;
+		}
+
+		// Prevent overlapping requests.
+		if ( $this->cron_in_progress() ) {
+			$this->log( 'Cron in progress...' );
+			$this->schedule_cron();
 		}
 
 		foreach ( $this->restores as $restore_json ) {
@@ -1151,7 +1232,7 @@ class BackupBuddy_Restore {
 				}
 
 				$this->restore['files_ready'] = true;
-				if ( $this->restore_db() ) {
+				if ( $this->should_restore_db() ) {
 					$this->set_status( self::STATUS_DB_READY );
 				} else {
 					$this->restore['db_ready'] = true;
@@ -1162,7 +1243,7 @@ class BackupBuddy_Restore {
 			}
 
 			if ( self::STATUS_DB_READY === $this->restore['status'] ) {
-				if ( $this->restore_db() ) {
+				if ( $this->should_restore_db() ) {
 
 					// Change status while restoring a table.
 					$this->set_status( self::STATUS_DB_TABLES );
@@ -1194,12 +1275,37 @@ class BackupBuddy_Restore {
 
 			// Final steps. No turning back now.
 			if ( self::STATUS_RESTORING_FILES === $this->restore['status'] ) {
-				if ( $this->restore_files() ) {
+				if ( $this->should_restore_files() && empty( $this->restore['file_status'] ) ) {
 					$this->set_status( self::STATUS_COPYING );
 
 					$this->enable_maintenance_mode();
 
-					$files_status = $this->files();
+					// Enqueue Action Scheduler jobs if we haven't already.
+					if ( empty( $this->restore['files_started'] ) ) {
+						$this->restore['files_started'] = true;
+						$this->deactivate_plugins();
+						$this->delete_destination_files();
+
+						// Don't start moving files until deletion is complete.
+						$this->enqueue_files_jobs( $this->restore['id'] );
+						$this->save();
+
+						// Take a breather before proceeding.
+						$this->cron_complete();
+						return true;
+					}
+
+					/*
+					 * This is the point where we both start moving files and
+					 * confirm all of the files have moved.
+					 *
+					 * Restoration starts the first time this is hit
+					 * then it will continue to loop around until all files are moved.
+					 * In the meantime, the async jobs are running.
+					 *
+					 * This will always get to run one last time to mop up.
+					 */
+					$files_status = $this->restore_files( $this->restore['id'] );
 
 					if ( null === $files_status ) {
 						$this->set_status( self::STATUS_RESTORING_FILES );
@@ -1227,7 +1333,7 @@ class BackupBuddy_Restore {
 
 			// Final steps. No turning back now.
 			if ( self::STATUS_RESTORING_DB === $this->restore['status'] ) {
-				if ( $this->restore_db() ) {
+				if ( $this->should_restore_db() ) {
 					$this->set_status( self::STATUS_DATABASE );
 
 					$this->enable_maintenance_mode();
@@ -1337,10 +1443,10 @@ class BackupBuddy_Restore {
 	 * @return bool  Ready to restore.
 	 */
 	private function is_ready_to_restore() {
-		if ( $this->restore_files() && ! $this->restore['files_ready'] ) {
+		if ( $this->should_restore_files() && ! $this->restore['files_ready'] ) {
 			return false;
 		}
-		if ( $this->restore_db() && ! $this->restore['db_ready'] ) {
+		if ( $this->should_restore_db() && ! $this->restore['db_ready'] ) {
 			return false;
 		}
 		if ( $this->is_aborted() ) {
@@ -1368,13 +1474,13 @@ class BackupBuddy_Restore {
 		$this->restore['started'] = current_time( 'timestamp' );
 		$this->restore['status']  = self::STATUS_STARTED;
 
-		if ( $this->restore_files() && is_array( $this->files ) ) {
+		if ( $this->should_restore_files() && is_array( $this->files ) ) {
 			$this->log( 'Total Files: ' . count( $this->files ) );
-		} elseif ( $this->restore_files() ) {
+		} elseif ( $this->should_restore_files() ) {
 			$this->log( 'Restore Path: ' . $this->restore_path );
 		}
 
-		if ( $this->restore_db() && is_array( $this->tables ) ) {
+		if ( $this->should_restore_db() && is_array( $this->tables ) ) {
 			$this->log( 'Total Tables: ' . count( $this->tables ) );
 		}
 
@@ -1428,7 +1534,7 @@ class BackupBuddy_Restore {
 	 *
 	 * @return bool  If files should be restored.
 	 */
-	private function restore_files() {
+	private function should_restore_files() {
 		if ( empty( $this->restore ) ) {
 			return false;
 		}
@@ -1446,7 +1552,7 @@ class BackupBuddy_Restore {
 	 *
 	 * @return bool  If database should be restored.
 	 */
-	private function restore_db() {
+	private function should_restore_db() {
 		if ( empty( $this->restore ) ) {
 			return false;
 		}
@@ -1481,16 +1587,17 @@ class BackupBuddy_Restore {
 		$this->archive      = $this->restore['zip_path'];
 		$this->files        = $this->restore['files'];
 		$this->tables       = empty( $this->restore['tables'] ) ? array() : $this->restore['tables'];
-		$this->restore_path = $this->restore['restore_path'];
+		$this->restore_path = self::trailingslashit( $this->restore['restore_path'] );
+		$this->temp_dir     = ! empty( $this->restore['temp_dir'] ) ? $this->restore['temp_dir'] : '';
 		$this->serial       = backupbuddy_core::parse_file( $this->archive, 'serial' );
 		$this->table_prefix = 'bbrestore' . sanitize_text_field( strtolower( substr( $this->restore['id'], -4 ) ) ) . '_';
 
-		if ( $this->restore_files() && empty( $this->files ) ) {
+		if ( $this->should_restore_files() && empty( $this->files ) ) {
 			$this->error( __( 'Restore Failed, missing files to restore.', 'it-l10n-backupbuddy' ) );
 			return false;
 		}
 
-		if ( $this->restore_db() && empty( $this->tables ) ) {
+		if ( $this->should_restore_db() && empty( $this->tables ) ) {
 			$this->error( __( 'Restore Failed, missing tables to restore.', 'it-l10n-backupbuddy' ) );
 			return false;
 		}
@@ -1509,19 +1616,20 @@ class BackupBuddy_Restore {
 		$this->log( 'Setting temp directory to unzip...' );
 
 		// Calculate temp directory & lock it down.
-		if ( empty( $this->restore['temp_dir'] ) ) {
+		if ( empty( $this->temp_dir() ) ) {
 			$uploads_dir               = wp_upload_dir();
-			$this->restore['temp_dir'] = rtrim( $uploads_dir['basedir'], '/' ) . '/backupbuddy-restoretmp-' . $this->serial . '/';
-			if ( file_exists( $this->restore['temp_dir'] ) ) {
+			$this->restore['temp_dir'] = self::trailingslashit( $uploads_dir['basedir'] ). 'backupbuddy-restoretmp-' . $this->serial . '/';
+			$this->temp_dir            = $this->restore['temp_dir'];
+			if ( file_exists( $this->temp_dir ) ) {
 				// Make sure directory is empty.
 				$this->log( 'Emptying temp restore directory for unzipping...' );
-				pb_backupbuddy::$filesystem->unlink_recursive( $this->restore['temp_dir'], true );
-			} elseif ( false === pb_backupbuddy::$filesystem->mkdir( $this->restore['temp_dir'] ) ) {
-				$this->error( 'Error #458485945: Unable to create temporary location `' . $this->restore['temp_dir'] . '`. Check permissions.' );
+				pb_backupbuddy::$filesystem->unlink_recursive( $this->temp_dir, true );
+			} elseif ( false === pb_backupbuddy::$filesystem->mkdir( $this->temp_dir ) ) {
+				$this->error( 'Error #458485945: Unable to create temporary location `' . $this->temp_dir . '`. Check permissions.' );
 				return false;
 			}
 
-			$this->log( '✓ Temporary directory created: ' . $this->restore['temp_dir'] );
+			$this->log( '✓ Temporary directory created: ' . $this->temp_dir );
 			$this->save();
 		}
 
@@ -1540,23 +1648,20 @@ class BackupBuddy_Restore {
 			return false;
 		}
 
+		$this->log( 'Extracting backup files from zip.' );
+
 		// Generate array of literal files (no wildcards) to extract.
-		if ( $this->is_full_restore() ) { // Full Restores.
-			$this->log( 'All files inside zip queued up for extraction.' );
-			// Only used to verify files.
-			$this->restore['extract_files'] = $this->flatten_file_array( $zip_file_list );
-			foreach ( $this->restore['extract_files'] as $key => &$file ) {
-				$file = str_replace( '*', '', $file ); // Remove any wildcard.
-				if ( ! $file || in_array( $file, $this->get_ignore_files(), true ) || in_array( '*' . basename( $file ), $this->get_ignore_files(), true ) ) {
-					unset( $this->restore['extract_files'][ $key ] );
-				}
-			}
-		} else { // Partial Restores.
-			$this->log( 'Extracting selected files from zip.' );
+
+		// Full Restores.
+		if ( $this->is_full_restore() ) {
+			$path = $this->get_file_restore_safe_path();
+			$this->insert_zip_files( $path, $zip_file_list );
+		} else {
+			// Selective Restores.
 			foreach ( $this->files as $key => &$file ) {
-				$wildcard = false !== strpos( $file, '*' );
-				$file     = str_replace( '*', '', $file ); // Remove any wildcard.
-				if ( $wildcard ) {
+				$is_a_dir = false !== strpos( $file, '*' );
+				$file     = str_replace( '*', '', $file );
+				if ( $is_a_dir ) {
 					$this->insert_zip_files( $file, $zip_file_list );
 				} else {
 					$this->restore['extract_files'][ $file ] = $file;
@@ -1564,46 +1669,42 @@ class BackupBuddy_Restore {
 			}
 		}
 
+		// Only extract files that are going to be restored.
+		$this->restore['extract_files'] = array_filter(
+			$this->restore['extract_files'],
+			array( $this, 'should_restore_path' )
+		);
+
+		/*
+		 * If the user only selected files that should
+		 * not be restored, abort the File Restore.
+		 *
+		 * The Restore will continue to process the database if requested.
+		 */
+		if ( ! count( $this->restore['extract_files'] ) ) {
+			$this->log( 'No restorable files selected. Solid Backups and WP Core files cannot be restored.' );
+			unset( $zipbuddy );
+			$this->restore['file_status'] = true;
+			$this->save();
+			return true;
+		}
+
 		$this->log( 'Extracting zip files...' );
 		$this->save();
 
 		// Do the actual extraction.
-		if ( $this->is_full_restore() ) {
-			$extraction = $zipbuddy->extract( $this->archive, $this->restore['temp_dir'] );
-		} else {
-			$extraction = $zipbuddy->extract( $this->archive, $this->restore['temp_dir'], $this->restore['extract_files'] );
-		}
+		$extraction = $zipbuddy->extract( $this->archive, $this->temp_dir(), $this->restore['extract_files'] );
 
 		unset( $zipbuddy );
 
 		if ( false === $extraction ) {
-			$this->error( 'Error #584984458b. Unable to extract.' );
+			$this->error( 'Error #584984458b. Unable to extract files from Restore zip.' );
 			return false;
 		}
 
 		$this->log( '✓ Zip extracted.' );
 
 		return true;
-	}
-
-	/**
-	 * Convert array of file arrays to single dimension array.
-	 *
-	 * @param array $file_array  Multidimensional file array.
-	 *
-	 * @return array|false  Single dimension file array or false on error.
-	 */
-	public function flatten_file_array( $file_array ) {
-		if ( ! is_array( $file_array ) || empty( $file_array ) ) {
-			$this->error( 'Unexpected data. `flatten_file_array` expected Array but got ' . gettype( $file_array ) );
-			return false;
-		}
-
-		$flat = array();
-		foreach ( $file_array as $file ) {
-			$flat[] = $file[0];
-		}
-		return $flat;
 	}
 
 	/**
@@ -1619,10 +1720,10 @@ class BackupBuddy_Restore {
 			return true;
 		}
 
-		$files = glob( $this->restore['temp_dir'] . '*' );
+		$files = glob( $this->temp_dir() . '*' );
 		if ( count( $files ) <= 0 ) {
 			$this->error( 'Zip extraction failed. No files found.' );
-			$this->log( '× Glob of directory `' . $this->restore['temp_dir'] . '`: <pre>' . print_r( $files, true ) . '</pre>' );
+			$this->log( '× Glob of directory `' . $this->temp_dir() . '`: <pre>' . print_r( $files, true ) . '</pre>' );
 			return false;
 		}
 
@@ -1630,12 +1731,12 @@ class BackupBuddy_Restore {
 
 		// Verify all files/folders to be extracted exist in temp directory. If any missing then delete everything and bail out.
 		foreach ( $this->restore['extract_files'] as $file ) {
-			if ( ! $file ) { // Skip empty values.
+			if ( ! $file ) {
 				continue;
 			}
 
-			if ( ! file_exists( $this->restore['temp_dir'] . $file ) ) {
-				$this->error( 'Could not verify extraction of file: ' . $this->restore['temp_dir'] . $file );
+			if ( ! file_exists( $this->source_path( $file ) ) ) {
+				$this->error( 'Could not verify extraction of file: ' . $this->source_path( $file ) );
 				$verified = false;
 				break;
 			}
@@ -1676,57 +1777,387 @@ class BackupBuddy_Restore {
 	}
 
 	/**
-	 * Move zip files from tmp folder to restore folder.
+	 * Deactivate active plugins.
 	 *
-	 * @return bool  If copied successfully.
+	 * Records active plugins so they can be reactivated later.
+	 *
+	 * @todo need to decide how to handle Network plugins.
 	 */
-	private function files() {
+	private function deactivate_plugins() {
+		if ( ! function_exists( 'deactivate_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		// Get file paths.
+		$plugins = get_option( 'active_plugins' );
+		$files   = $this->restore['extract_files'];
+
+		$plugins = array_filter( $plugins, function( $plugin ) use ( $files ) {
+			// Don't deactivate Solid Backups.
+			if ( false !== strpos( $plugin, 'backupbuddy' ) ) {
+				return false;
+			}
+
+			// Don't deactivate plugins that are not being restored.
+			foreach ( $files as $file ) {
+				if ( false !== strpos( $plugin, $file ) ) {
+					return false;
+				}
+			}
+
+			return true;
+		} );
+
+		if ( empty( $plugins ) ) {
+			return;
+		}
+
+		// Store for later.
+		$this->restore['active_plugins'] = $plugins;
+
+		// Don't call deactivation hooks.
+		deactivate_plugins( $plugins, true );
+		$this->log( '✓ Active Plugins Deactivated: ' . print_r( $plugins, true ) );
+	}
+
+	/**
+	 * Reactivate plugins.
+	 */
+	private function reactivate_plugins() {
+		if (
+			empty( $this->restore['active_plugins'] )
+			|| ! is_array( $this->restore['active_plugins'] )
+		) {
+			return;
+		}
+
+		if ( ! function_exists( 'activate_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		// Only reactivate plugins that still exist after the restore.
+		$this->restore['active_plugins'] = array_filter( $this->restore['active_plugins'], function( $plugin ) {
+			return file_exists( WP_PLUGIN_DIR . '/' . $plugin );
+		} );
+
+		if ( empty( $this->restore['active_plugins'] ) ) {
+			$this->log( '✓ No Plugins to Reactivate after files restored.');
+			return;
+		}
+
+		// Don't call activation hooks.
+		$result = activate_plugins( $this->restore['active_plugins'], '', false, true );
+
+		if ( is_wp_error( $result ) ) {
+			$this->error(
+				sprintf(
+					'Error Reactivating Plugins. Message: %s',
+					$result->get_error_message()
+				)
+			);
+		} elseif ( true !== $result ) {
+			$this->error( 'Error Reactivating Plugins.' );
+			return;
+		}
+
+		$this->log( '✓ Plugins Reactivated: ' . print_r( $this->restore['active_plugins'], true ) );
+
+	}
+
+	/**
+	 * Find the relative path we should used based on the backup type.
+	 *
+	 * This is designed to locate the correct path in the backup zip,
+	 * as well as protect files outside of the wp-content dir from deletion.
+	 *
+	 * @return string A relative path to the safe directory.
+	 */
+	private function get_file_restore_safe_path() {
+		// Media, Plugins, & Themes backup Types are in the root of the backup zip.
+		$backup_type    = backupbuddy_core::parse_file( $this->restore['zip_path'], 'type' );
+		$special_types  = array( 'media', 'plugins', 'themes' );
+		return in_array( $backup_type, $special_types, true ) ? '' : 'wp-content/';
+	}
+
+	/**
+	 * Enqueue Action Scheduler jobs for chunks of files.
+	 *
+	 * @param int $id  Restore ID.
+	 */
+	private function enqueue_files_jobs( $id ) {
+		$chunks = 0;
+
+		if ( $this->is_full_restore() ) {
+			$chunks = self::count_chunks_in_dir( $this->temp_dir() );
+		} else {
+			$single_files = 0;
+			foreach ( $this->files as $rel_path ) {
+				// Format the file path.
+				$rel_path = str_replace( '*', '', $rel_path );
+				if ( ! $rel_path ) {
+					continue;
+				}
+
+				$src_path = $this->source_path( $rel_path );
+
+				if ( is_file( $src_path ) ) {
+					$single_files++;
+					continue;
+				}
+
+				$add_chunks = self::count_chunks_in_dir( $src_path );
+				$chunks     = $chunks + $add_chunks;
+			}
+
+			if ( $single_files ) {
+				// Add chunks for any files in our top-level directory.
+				$addl_chunk = ceil( $ $single_files / self::FILE_BATCH_SIZE );
+				$chunks     = $chunks + $addl_chunk;
+			}
+		}
+
+		// Sanity Check.
+		if ( $chunks > 0 && $chunks <= 50 ) {
+			for ( $i = 0; $i < $chunks; $i++ ) {
+				backupbuddy_core::trigger_async_event( 'restore_files', array( $id, $i ) );
+			}
+		}
+	}
+
+	/**
+	 * Count the number of chunks in a directory.
+	 *
+	 * @param string $dir  Directory to count chunks in.
+	 *
+	 * @return int  Number of chunks.
+	 */
+	private static function count_chunks_in_dir( $dir ) {
+		if ( empty( $dir ) || ! is_dir( $dir ) ) {
+			return 0;
+		}
+
+		$files = self::get_dir_files( $dir );
+		return ceil( count( $files ) / self::FILE_BATCH_SIZE );
+	}
+
+	/**
+	 * Delete files before restoring.
+	 *
+	 * @return bool  True on success, false on failure.
+	 */
+	function delete_destination_files() {
+		if ( $this->is_full_restore() ) {
+			$dest_paths = $this->get_full_delete_paths();
+		} else {
+			$dest_paths = $this->get_selective_delete_paths();
+		}
+
+		if ( empty( $dest_paths ) || ! is_array( $dest_paths ) ) {
+			$this->log( '✓ No Destination Files to delete.' );
+			return true;
+		}
+
+		// This seems superfluous, but we need it to preserve the temp dir itself.
+		$dest_paths = array_filter( $dest_paths, function( $path ) {
+			return ( false === strpos( strtolower( $path ), 'backupbuddy' ) );
+		} );
+
+		$dest_paths = array_filter( $dest_paths, array( $this, 'should_restore_path' ) );
+		$success    = $this->delete_dest_paths( $dest_paths );
+
+		if ( $success ) {
+			$this->log( '✓ Destination Files Deleted.' );
+		} else {
+			$this->error( 'Error deleting Destination files.' );
+		}
+
+		return $success;
+	}
+
+	/**
+	 * Get the Files to delete when running a Full Restore.
+	 *
+	 * This simply selects all the files in the destination directory. It will
+	 * be refined in a later step.
+	 *
+	 * @return array  Array of file paths.
+	 */
+	function get_full_delete_paths() {
+		if ( ! $this->is_full_restore() ) {
+			// Safety Check.
+			return array();
+		}
+
+		$path       = $this->get_file_restore_safe_path();
+		$dest_files = self::get_dir_files( $this->destination_path( $path ) );
+
+		// Only going to use the paths.
+		return array_keys( $dest_files );
+	}
+
+	/**
+	 * Get the files to delete when running a Selective Restore.
+	 *
+	 * We will only delete destination files that are in the $this->files
+	 * array, not simply everything found in the temp directory.
+	 *
+	 * $this->files is the only way for us to know the user's intent -- if a directory
+	 * should be deleted or if just some of the files within it will need deletion.
+	 * For instance, a directory may exist in the temp dir, but those may just be
+	 * hand-picked files, not a representation of the entire directory.
+	 *
+	 * With this in mind we must carefully select the files to delete, which involves
+	 * comparing the source and destination directories.
+	 *
+	 * @return array  Array of destination file paths to be deleted.
+	 */
+	protected function get_selective_delete_paths() {
+		if ( $this->is_full_restore() ) {
+			return array();
+		}
+
+		$dest_items = array();
+
+		foreach ( $this->files as $rel_path ) {
+			// Directories end with wildcard symbols at this point.
+			$is_a_dir = false !== strpos( '*', $rel_path );
+			$rel_path = str_replace( '*', '', $rel_path );
+
+			if ( empty( $rel_path ) ) {
+				continue;
+			}
+
+			$src_path  = $this->source_path( $rel_path );
+			$dest_path = $this->destination_path( $rel_path );
+
+			if ( ! file_exists( $src_path ) || ! file_exists( $dest_path ) ) {
+				continue;
+			}
+
+			// Add this item to the deletion array.
+			$dest_items[] = $dest_path;
+
+			// Add contents of any user-selected directories to the array.
+			if ( $is_a_dir ) {
+
+				// Get all subdirectories and files in this directory.
+				$src_paths = array_keys( self::get_dir_files( $src_path ) );
+
+				// Locate the destination item and add it to the deletion array.
+				foreach ( $src_paths as $src_path ) {
+					$dest_path = $this->destination_path( $src_path );
+
+					if ( ! file_exists( $dest_path ) ) {
+						continue;
+					}
+
+					$dest_items[] = $dest_path;
+				}
+			}
+		}
+
+		return $dest_items;
+	}
+
+	/**
+	 * Remove files from the destination directory.
+	 *
+	 * This is a complicated procedure, as it's not as simple as just
+	 * deleting everything. There are a essential files that need to be preserved,
+	 * and we can't simply skip them individually, as their parent directories might
+	 * be deleted later if we are not careful.
+	 *
+	 * Additionally, when doing a Selective Restore some contents of directories
+	 * will need to be deleted, but perhaps not all.
+	 *
+	 * Extensive documenatation provided here for clarity.
+	 */
+	protected function delete_dest_paths( $dest_paths ) {
+		$success = true;
+		$preserve_parents = array();
+
+		// Put the deepest subdirectories/files at the top of the array.
+		usort( $dest_paths, function( $a, $b ) {
+			return substr_count( $b, '/' ) - substr_count( $a, '/' );
+		});
+
+		foreach ( $dest_paths as $dest_path ) {
+
+			// We've already marked this for preservation.
+			if ( in_array( $dest_path, $preserve_parents, true ) ) {
+				continue;
+			}
+
+			/*
+			 * If this is an important file, skip it, and
+			 * store its parent path so the parent doesn't get
+			 * deleted in this loop. We'll re-check the parent later.
+			 */
+			if ( ! $this->should_restore_path( $dest_path ) ) {
+				$preserve_parents[] = dirname( $dest_path );
+				continue;
+			}
+
+			if ( is_file( $dest_path ) ) {
+				unlink( $dest_path );
+			} elseif ( is_dir( $dest_path ) && self::is_empty_dir( $dest_path ) ) {
+				rmdir( $dest_path );
+			}
+		}
+
+		/*
+		 * Now, starting at the most deeply-nested dirs, re-check
+		 * the preserved dirs and mop up any empty ones.
+		 */
+		foreach ( $preserve_parents as $path ) {
+			if ( is_dir( $path ) && self::is_empty_dir( $path ) ) {
+				rmdir( $path );
+			}
+		}
+
+		// @todo Add some error handling here.
+		return $success;
+	}
+
+	/**
+	 * Restore files from restore tmp (src) folder to (dest) folder.
+	 *
+	 * Prepare for recursive directory copy.
+	 *
+	 * @param int $id         Restore ID.
+	 * @param int $iteration  Iteration number. Used for creating unique Action Scheduler jobs.
+	 *
+	 * @return bool If copied successfully. Null means there are still more files to copy later.
+	 */
+	public function restore_files( $id, $iteration = 0) {
+		if ( empty( $this->restore ) ) {
+			$this->restore = $this->load_restore( array( 'id' => $id ) );
+		}
+
 		$success = false;
 
-		// Log file may be unavailable during file copying/moving.
-		if ( ! count( $this->restore['copied'] ) ) {
-			$this->preserve_directories();
-
+		// Log file may be unavailable during file moving.
+		if ( ! count( $this->restore['moved'] ) ) {
 			$this->log( 'Restoring files...' );
 		}
 
-		// Selective backup restore.
-		if ( is_array( $this->files ) ) {
-			$success = true;
-
-			foreach ( $this->files as $file ) {
-				if ( ! $file || is_array( $file ) ) {
-					continue;
-				}
-
-				$file = str_replace( '*', '', $file ); // Remove any wildcard.
-				if ( ! $file ) {
-					continue;
-				}
-
-				$result = $this->recursive_copy( $this->restore['temp_dir'] . $file, $this->restore_path . $file );
-
-				if ( false === $result ) {
-					$success = false;
-					$this->error( 'Error #9035. Unable to move `' . $this->restore['temp_dir'] . $file . '` to `' . $this->restore_path . $file . '`. Verify permissions on temp folder location & destination directory.' );
-				} elseif ( null === $result ) {
-					// More work to do.
-					return null;
-				}
-			}
-		} elseif ( $this->is_full_restore() ) { // Full backup restore.
-			$result = $this->recursive_copy( $this->restore['temp_dir'], $this->restore_path );
-			if ( true === $result ) {
-				$success = true;
-			} elseif ( null === $result ) {
-				// More work to do.
-				return null;
-			} else {
-				$this->error( 'Error #9035. Unable to move `' . $this->restore['temp_dir'] . '` to `' . $this->restore_path . '`. Verify permissions on temp folder location & destination directory.' );
-			}
+		if ( $this->is_full_restore() ) {
+			// Full backup restore.
+			$source_files = $this->full_restore_files();
+		} elseif ( $this->files ) {
+			// Selective backup restore.
+			$source_files = $this->selective_restore_files();
 		}
 
-		if ( $success ) {
+		if ( empty( $source_files ) || ! is_array( $source_files ) ) {
+			$this->log( 'No backup files found.' );
+		} else {
+			$this->log( 'Continuing restore.' );
+		}
+
+		$success = $this->restore_files_splfileinfo(array_keys( $source_files ) );
+
+		if ( ! empty( $success ) ) {
 			$this->log( '✓ Files restored successfully.' );
 		}
 
@@ -1736,103 +2167,424 @@ class BackupBuddy_Restore {
 	}
 
 	/**
-	 * Move files from unzip directory to restore directory.
+	 * Restore files selectively.
 	 *
-	 * @param string $src    Source file/folder.
-	 * @param string $dest   Destination file/folder.
+	 * This is when the user specifies which files to restore, as opposed
+	 * to a Full Restore.
 	 *
-	 * @return bool|null  If successful or null if more work to be done.
+	 * @return array Array of SplFileInfo objects.
 	 */
-	private function recursive_copy( $src, $dest ) {
-		$success = true;
+	function selective_restore_files() {
+		/*
+		 * Gather all files to be moved.
+		 * This array will consist of SplFileInfo objects.
+		 * The array key is the path to the source file.
+		 */
+		$source_files = array();
 
-		// Break up file restore in batches of 500.
-		if ( $this->files_restored >= 500 ) {
-			return null;
+		foreach ( $this->files as $rel_path ) {
+			// Directories end with wildcard symbols at this point.
+			$rel_path = str_replace( '*', '', $rel_path );
+			$src_path = $this->source_path( $rel_path );
+
+			// Add this path item to the array.
+			$src_item = new SplFileInfo( $src_path );
+			if ( $src_item->isDir() || $src_item->isFile() ) {
+				$source_files[ $src_path ] = $src_item;
+			}
+
+			// Add contents of any directories to the array.
+			if ( $src_item->isDir() ) {
+
+				// Get all subdirectories and files in this directory.
+				$dir_files    = self::get_dir_files( $src_item->getPathname() );
+				$source_files = $source_files + $dir_files;
+			}
 		}
+		return $source_files;
 
-		if ( in_array( $dest, $this->restore['copied'], true ) ) {
-			return $success;
-		}
-
-		if ( is_dir( $src ) ) {
-			if ( ! file_exists( $dest ) ) {
-				pb_backupbuddy::$filesystem->mkdir( $dest );
-			}
-
-			$files = scandir( $src ) ?: array();
-			$files = array_diff( $files, array( '.', '..' ) );
-
-			foreach ( $files as $file ) {
-				$src  = rtrim( $src, '/' );
-				$dest = rtrim( $dest, '/' );
-				if ( false === $this->recursive_copy( "$src/$file", "$dest/$file" ) ) {
-					$success = false;
-					break;
-				}
-				$this->restore['copied'][] = $dest . '/' . $file;
-			}
-		} elseif ( file_exists( $src ) && is_file( $src ) ) {
-			// Skip identical files.
-			if ( file_exists( $dest ) ) {
-				$src_size  = @filesize( $src );
-				$dest_size = @filesize( $dest );
-				$md5_src   = @md5_file( $src );
-				$md5_dest  = @md5_file( $dest );
-
-				if ( false !== $md5_src && false !== $src_size && $src_size === $dest_size && $md5_src === $md5_dest ) {
-					$this->restore['copied'][]  = $dest;
-					$this->restore['skipped'][] = $dest;
-					$this->files_restored++;
-					return $success;
-				}
-
-				$rename = $this->get_backup_filename( $dest );
-				if ( file_exists( $dest ) && is_file( $dest ) && ! in_array( $rename, $this->restore['cleanup'], true ) ) {
-					// Make a backup of the original.
-					@rename( $dest, $rename );
-					$this->restore['cleanup'][ $dest ] = $rename; // Mark file for cleanup.
-				}
-			}
-
-			if ( ! @copy( $src, $dest ) ) {
-				$success = false;
-			} else {
-				if ( ! file_exists( $dest ) ) {
-					$this->error( 'File copied but failed integrity check: ' . esc_html( $dest ) );
-					$success = false;
-				} else {
-					$this->files_restored++;
-					$this->restore['copied'][] = $dest;
-					$this->save();
-				}
-			}
-		} else {
-			$this->error( 'Failed to locate source file to restore: ' . esc_html( $src ) );
-			$success = false;
-		}
-
-		return $success;
 	}
 
 	/**
-	 * Auto-generate a temporary name for file for backup copy.
+	 * Restore all files.
 	 *
-	 * @param string $file  File to create backup name for.
-	 *
-	 * @return string  New backup filename.
+	 * @return array  Array of SplFileInfo objects representing files to move.
 	 */
-	private function get_backup_filename( $file ) {
-		$backup = $file . '.bak';
-		if ( file_exists( $backup ) ) {
-			for ( $i = 1; $i <= 99; $i++ ) {
-				$backup = $file . '(' . $i . ').bak';
-				if ( ! file_exists( $backup ) ) {
-					break;
+	function full_restore_files() {
+		// Restore everything in the temp directory.
+		return self::get_dir_files( $this->temp_dir() );
+	}
+
+	/**
+	 * Move files from the unzip directory to the restore directory.
+	 *
+	 * The input array is an array of SplFileInfo objects, keyed with the path to the temp dir file.
+	 * This expects the array to be sorted by subdirectory depth, deepest first.
+	 *
+	 * @param array $files  Array of SplFileInfo objects representing files to move.
+	 *
+	 * @return bool  If files were moved successfully.
+	 */
+	function restore_files_splfileinfo( $src_paths ) {
+
+		$moved_count = 0;
+
+		foreach ( $src_paths as $src_path ) {
+
+			// Prevent this array from growing too large.
+			$this->restore['moved'] = array_unique( $this->restore['moved'] );
+
+			// Maybe end this batch. Needs to be before continue statements.
+			if ( $moved_count >= self::FILE_BATCH_SIZE ) {
+				$this->save();
+				return null;
+			}
+
+			$rel_path  = $this->relative_path( $src_path );
+			$dest_path = $this->destination_path( $src_path );
+
+			if ( in_array( $rel_path, $this->restore['moved'], true ) ) {
+				// Already moved/created.
+				continue;
+			}
+
+			if ( ! $this->should_restore_path( $src_path ) ) {
+				continue;
+			}
+
+			if ( is_dir( $src_path ) ) {
+
+				if ( is_dir( $dest_path ) ) {
+					$this->restore['moved'][] = $rel_path;
+					$moved_count++;
+					continue;
 				}
+
+				// Create the directory (files will follow).
+				pb_backupbuddy::$filesystem->mkdir( $dest_path );
+				$this->restore['moved'][] = $rel_path;
+				$moved_count++;
+
+			} elseif ( is_file( $src_path ) ) {
+
+				// Create this file's parent directory if it doesn't exist.
+				$parent_dir = dirname( $dest_path );
+				$rel_parent_dir = $this->relative_path( $parent_dir );
+				if ( ! file_exists( $parent_dir ) && ! in_array( $rel_parent_dir, $this->restore['moved'], true ) ) {
+					pb_backupbuddy::$filesystem->mkdir( $parent_dir );
+					$this->restore['moved'][] = $rel_parent_dir;
+					$moved_count++;
+				}
+
+				// This must be checked late in execution.
+				if ( ! file_exists( $src_path ) ) {
+					$this->restore['moved'][] = $rel_path;
+					$moved_count++;
+					continue;
+				}
+
+				// This must be checked as late as possible in execution.
+				if ( $this->is_full_restore() && file_exists( $dest_path ) ) {
+					// Already moved.
+					if ( file_exists( $src_path ) ) {
+						unlink( $src_path );
+					}
+					$this->restore['moved'][] = $rel_path;
+					$moved_count++;
+					continue;
+				} elseif ( file_exists( $dest_path ) ) {
+					// Selective Restore. File already exists.
+					unlink( $dest_path );
+					$this->restore['moved'][] = $rel_path;
+					$moved_count++;
+				}
+
+				// Move the file from the source to the destination.
+				if ( rename( $src_path, $dest_path ) ) {
+
+					if ( $this->file_rename_successful( $dest_path ) ) {
+						$moved_count++;
+					} else {
+						return false;
+					}
+				} else {
+					sleep(2);
+					// Try one more time. Files are moving quickly.
+					if ( ! file_exists( $src_path ) && $this->file_rename_successful( $dest_path ) ) {
+						$this->restore['moved'][] = $rel_path;
+						$moved_count++;
+						continue;
+					}
+					$this->error(
+						sprintf(
+							'Error #9035. Unable to move `%1$s` to `%2$s`.
+							' . PHP_EOL . 'Please retry the Restore again and/or verify file permissions.',
+							esc_html( $src_path ),
+							esc_html( $dest_path )
+
+						)
+					);
+					return false;
+				}
+			} else {
+				// Already moved.
+				$this->restore['moved'][] = $rel_path;
 			}
 		}
-		return $backup;
+
+		$this->save();
+
+		return true;
+	}
+
+	/**
+	 * Handle a file rename.
+	 *
+	 * If successful, add the file to the list of moved files.
+	 * Else, record the error.
+	 *
+	 * @param string $path  Path to (destination) file.
+	 *
+	 * @return bool  If file was moved successfully.
+	 */
+	private function file_rename_successful( $path ) {
+		// Verify the file was moved successfully.
+		if ( file_exists( $path ) ) {
+			$this->restore['moved'][] = $this->relative_path( $path );
+			$this->save();
+			return true;
+		}
+		$this->error(
+			sprintf(
+				'File moved but failed integrity check: %s',
+				esc_html( $path )
+			)
+		);
+		return false;
+	}
+
+	/**
+	 * Recursively get files in a directory.
+	 *
+	 * The items at the top of this array will be those
+	 * most deeply nested in the directory.
+	 *
+	 * This is used to quickly get data on all files in a directory.
+	 * It is used during file deletion and file restoration.
+	 *
+	 * File deletion uses this only to get the paths of files to delete
+	 * by getting the array keys.
+	 *
+	 * @param string $dir  Directory to get files from.
+	 *
+	 * @return array  Array of SplFileInfo objects, keyed with the path to the file.
+	 */
+	private static function get_dir_files( $dir ) {
+		$iterator = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator(
+				$dir,
+				RecursiveDirectoryIterator::SKIP_DOTS
+			),
+			RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		/*
+		 * Freeze the state of the iterator as it would
+		 * otherwise constantly morph as we modify files
+		 * and run forever.
+		 */
+		return iterator_to_array( $iterator );
+	}
+
+	/**
+	 * Ensure a trailing slash is present.
+	 *
+	 * We use this because this file might be used by the
+	 * Sandalone Importer (importbudy) outside of a WP install.
+	 *
+	 * @param string $path  Path to add trailing slash to.
+	 *
+	 * @return string  Path with trailing slash.
+	 */
+	public static function trailingslashit( $path ) {
+		if ( function_exists( 'trailingslashit' ) ) {
+			return trailingslashit( $path );
+		}
+		return rtrim( $path, '/' ) . '/';
+	}
+
+	/**
+	 * Ensure no trailing slash is present.
+	 *
+	 * We use this because this file might be used by the
+	 * Sandalone Importer (importbudy) outside of a WP install.
+	 *
+	 * @param string $path  Path to remove a trailing slash from.
+	 *
+	 * @return string  Path without trailing slash.
+	 */
+	public static function untrailingslashit( $path ) {
+		if ( function_exists( 'untrailingslashit' ) ) {
+			return untrailingslashit( $path );
+		}
+		return rtrim( $path, '/' );
+	}
+
+	/**
+	 * Create path to a file in the temp directory.
+	 *
+	 * @param string $path  Relative path to file.
+	 *
+	 * @return string  Full path to file.
+	 */
+	public function source_path( $path ) {
+		$path = $this->relative_path( $path );
+		return $this->temp_dir() . $path;
+	}
+
+	/**
+	 * Get the destination path for a file.
+	 *
+	 * @param string $path  File path to get destination for.
+	 *
+	 * @return string  Destination path.
+	 */
+	public function destination_path( $path = '' ) {
+		$path = $this->relative_path( $path );
+		return $this->restore_path . $path;
+	}
+
+	/**
+	 * Get the relative path for a file.
+	 *
+	 * This is used for normalization. Provided file paths
+	 * will be forematted to look like they do relative
+	 * to the WP Root directory (ABSPATH).
+	 *
+	 * Examples:
+	 *  - wp-content/uploads/2018/01/image.jpg
+	 *  - wp-content/themes/twentyseventeen/style.css
+	 *  - wp-config.php
+	 *
+	 * Removes the temp path and the destination path and
+	 * returns the relative path.
+	 *
+	 * @param string $path  Path to get relative path for.
+	 *
+	 * @return string  A relative path.
+	 */
+	public function relative_path( $path ) {
+		$rel_path = str_replace( $this->temp_dir(), '', $path );
+		$rel_path = str_replace( $this->restore_path, '', $rel_path );
+		return ltrim( $rel_path, '/' );
+	}
+
+	/**
+	 * Determine if a directory is empty.
+	 *
+	 * @param string $path  Path to check.
+	 *
+	 * @return bool  If directory is empty.
+	 */
+	public static function is_empty_dir( $path ) {
+		return ( is_dir( $path ) && count( scandir( $path ) ) === 2 );
+	}
+
+
+	/**
+	 * Determine if a file or directory should be Restored.
+	 *
+	 * Briefly put, the intent is to prevent WP Core and Solid Backups
+	 * files from being deleted/modified during Restore.
+	 *
+	 * To maintain versatility, file paths here are basic WP Core paths.
+	 * These may be found in the WP root (ABSPATH) or
+	 * in the "root" of the temp/restore directory after files are extracted
+	 * from the backup zip file.
+	 *
+	 * @param string $relative_path  File path to check.
+	 *
+	 * @return bool  If file should be ignored.
+	 */
+	public function should_restore_path( $path ) {
+		$path = $this->relative_path( $path );
+
+		// Check if the user has specified any files to ignore.
+		if (
+			in_array( $path, $this->get_ignore_files(), true )
+			|| in_array( '*' . basename( $path ), $this->get_ignore_files(), true )
+		) {
+			return false;
+		}
+
+		/*
+		 * Always allow .sql files to be restored.
+		 *
+		 * This lets sql files be extracted and processed
+		 * when doing a database/full restore.
+		 */
+		if ( false !== strpos( strtolower( $path ), '.sql' ) ) {
+			return true;
+		}
+
+		/*
+		 * Ignore any Solid Backups files.
+		 * This includes this plugin, as well as any related
+		 * files/directories found inside of wp-content/uploads.
+		 */
+		if ( false !== strpos( strtolower( $path ), 'backupbuddy' ) ) {
+			return false;
+		}
+
+		// Ignore mu-plugins.
+		if ( false !== strpos( strtolower( $path ), 'mu-plugins' ) ) {
+			return false;
+		}
+
+		$root_files = array(
+			'wp-activate.php',
+			'wp-blog-header.php',
+			'wp-comments-post.php',
+			'wp-config-sample.php',
+			'wp-config.php',
+			'wp-cron.php',
+			'wp-links-opml.php',
+			'wp-load.php',
+			'wp-login.php',
+			'wp-mail.php',
+			'wp-settings.php',
+			'wp-signup.php',
+			'wp-trackback.php',
+			'xmlrpc.php',
+		);
+
+		/*
+		 * These file names are specifically found in the root directory.
+		 *
+		 * We don't want to ignore files like this:
+		 * wp-content/plugins/plugin/xmlrpc.php
+		 */
+		if ( in_array( $path, $root_files, true ) ) {
+			return false;
+		}
+
+		/*
+		 * This regex matches strings that may or may not start with a slash,
+		 * but will start with wp-admin or wp-includes. Additionally, it may or
+		 * may not end with a slash.
+		 * It does not match anything in the wp-content directory.
+		 *
+		 * Example of ignored from Restoration:
+		 * Anything starting with wp-admin or wp-admin/.
+		 *
+		 * Not ignored:
+		 * wp-content/themes/theme/scripts/wp-admin.js
+		 */
+		if ( preg_match( '/^\/?(wp-admin|wp-includes)\/?/', $path ) ) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -1841,92 +2593,37 @@ class BackupBuddy_Restore {
 	 * @return bool  If successful or not.
 	 */
 	private function copy_permissions() {
-		$success = true;
-		$fails   = array();
 		$this->log( 'Setting file/folder permissions...' );
-		if ( is_array( $this->files ) ) {
-			foreach ( $this->files as $file ) {
-				if ( ! $file || is_array( $file ) ) {
-					continue;
-				}
 
-				$file = str_replace( '*', '', $file ); // Remove any wildcard.
+		if ( ! is_dir( $this->temp_dir() ) || self::is_empty_dir( $this->temp_dir() ) ) {
+			$this->log( 'Unable to copy permissions. No extracted files found.' );
+			return true;
+		}
+		$success    = true;
+		$fails      = array();
+		$temp_paths = array_keys( self::get_dir_files( $this->temp_dir() ) );
 
-				if ( file_exists( $this->restore_path . $file ) && is_dir( $this->restore_path . $file ) ) {
-					if ( ! $this->restore_permissions( $this->restore['temp_dir'] . $file, $this->restore_path . $file ) ) {
-						$success = false;
-						$fails[] = $this->restore['temp_dir'] . $file;
-					}
-				} else {
-					// Copy permissions/owner/group from old file to new file.
-					$original_mode  = false;
-					$original_owner = false;
-					$original_group = false;
-					if ( file_exists( $this->restore_path . $file ) ) {
-						$original_mode  = (string) substr( sprintf( '%o', fileperms( $this->restore_path . $file ) ), -4 );
-						$original_mode  = ! in_array( $original_mode, array( '0777', '1777' ), true ) ? octdec( $original_mode ) : false;
-						$original_group = filegroup( $this->restore_path . $file );
-					}
-					if ( ! $this->restore_permissions( $this->restore['temp_dir'] . $file, $original_mode, $original_owner, $original_group ) ) {
-						$success = false;
-						$fails[] = $this->restore['temp_dir'] . $file;
-					}
-				}
-			}
-		} elseif ( $this->is_full_restore() ) { // Full backup restore.
-			if ( ! $this->restore_permissions( $this->restore['temp_dir'], $this->restore_path ) ) {
+		foreach( $temp_paths as $rel_path ) {
+			$src_path  = $this->source_path( $rel_path );
+			$dest_path = $this->destination_path( $rel_path );
+			$dest_path = file_exists( $dest_path ) ? $dest_path : false;
+
+			if ( ! $this->set_wp_permission( $src_path, $dest_path ) ) {
 				$success = false;
-				$fails[] = $this->restore['temp_dir'];
+				$fails[] = $rel_path;
 			}
 		}
 
 		if ( count( $fails ) ) {
-			$this->restore['perm_fails'] = $fails;
+			$this->error( '× Error setting permissions for the following files:' );
+			foreach( $fails as $file ) {
+				$this->log( '× ' . $file );
+			}
 		} elseif ( $success ) {
 			$this->log( '✓ Permissions set successfully.' );
 		}
+
 		$this->save();
-
-		return $success;
-	}
-
-	/**
-	 * Recursively restore original file/folder permissions for given path.
-	 *
-	 * @param string        $path      Path to file/folder.
-	 * @param string|octdec $original  Original File/Folder to copy permissions from.
-	 * @param int|false     $owner     Original owner ID.
-	 * @param int|false     $group     Original group ID.
-	 *
-	 * @return bool  If permissions set.
-	 */
-	private function restore_permissions( $path, $original = false, $owner = false, $group = false ) {
-		$success = true;
-
-		if ( ! file_exists( $path ) ) {
-			$this->log( '× Attempted to set permissions for non-existent file: `' . $path . '`.' );
-			return false;
-		}
-
-		// First set permissions for the requested file/folder.
-		if ( ! $this->set_wp_permission( $path, $original, $owner, $group ) ) {
-			$success = false;
-		}
-
-		// Set permissions for subfolders/files.
-		if ( is_dir( $path ) ) {
-			$files = scandir( $path ) ?: array();
-			$files = array_diff( $files, array( '.', '..' ) );
-			foreach ( $files as $file ) {
-				$file_path = rtrim( $path, '/' ) . '/' . $file;
-				if ( false !== $original && is_string( $original ) ) {
-					$original = rtrim( $original, '/' ) . '/' . $file;
-				}
-				if ( ! $this->restore_permissions( $file_path, $original, $owner, $group ) ) {
-					$success = false;
-				}
-			}
-		}
 
 		return $success;
 	}
@@ -1968,7 +2665,8 @@ class BackupBuddy_Restore {
 							$perm = octdec( $copy_mode );
 						}
 					}
-				} elseif ( decoct( octdec( $copy_path ) ) === $copy_path ) {
+				} elseif ( decoct( (int) octdec( $copy_path ) ) === $copy_path ) {
+					// ocdec returns a float, so we need to convert it to an int for decoct.
 					$perm = $copy_path;
 				}
 			}
@@ -2018,6 +2716,7 @@ class BackupBuddy_Restore {
 					$this->restore['perms'][ $full_path ] = $new_mode;
 					$perms_status = @chmod( $full_path, $perm );
 					if ( ! $perms_status ) {
+						$this->restore['perm_fails'][ $full_path ] = $new_mode;
 						$this->log( '× Could not set mode for: `' . $full_path . '` from `' . $current_mode . '` to `' . sprintf( '%o', $perm ) . '`' );
 					}
 				}
@@ -2074,13 +2773,13 @@ class BackupBuddy_Restore {
 		$this->restore = $this->load_restore( $restore );
 
 		if ( ! $this->restore ) {
-			$this->log( '× Could not load retore during user abort.' );
+			$this->log( '× Could not load restore during user abort.' );
 			return false;
 		}
 
 		$abort_dir  = backupbuddy_core::getLogDirectory();
 		$abort_file = 'backupbuddy-restore-abort.nfo';
-		$abort_path = trailingslashit( $abort_dir ) . $abort_file;
+		$abort_path = self::trailingslashit( $abort_dir ) . $abort_file;
 		if ( ! file_exists( $abort_path ) ) {
 			$abort = fopen( $abort_path, 'w' );
 
@@ -2252,9 +2951,11 @@ class BackupBuddy_Restore {
 		}
 
 		// Clean up tmp folder.
-		if ( ! empty( $this->restore['temp_dir'] ) ) {
-			pb_backupbuddy::$filesystem->unlink_recursive( $this->restore['temp_dir'] );
+		if ( ! empty( $this->temp_dir() ) ) {
+			pb_backupbuddy::$filesystem->unlink_recursive( $this->temp_dir() );
 		}
+
+		$this->reactivate_plugins();
 
 		if ( true === $forced ) {
 			// Only write to log one time.
@@ -2289,31 +2990,12 @@ class BackupBuddy_Restore {
 			}
 		}
 
-		$this->cleanup_files();
 		$this->cleanup_db();
 
 		$this->save();
 
 		$this->disable_maintenance_mode();
 		$this->cron_complete();
-	}
-
-	/**
-	 * Perform any necessary file cleanup.
-	 */
-	public function cleanup_files() {
-		if ( ! empty( $this->restore['cleanup'] ) ) {
-			foreach ( $this->restore['cleanup'] as $original_path => $tmp_path ) {
-				if ( file_exists( $tmp_path ) ) {
-					if ( file_exists( $original_path ) ) {
-						pb_backupbuddy::$filesystem->unlink_recursive( $original_path );
-					}
-					@rename( $tmp_path, $original_path );
-				}
-			}
-
-			$this->log( 'Restored original files.' );
-		}
 	}
 
 	/**
@@ -2346,86 +3028,6 @@ class BackupBuddy_Restore {
 	}
 
 	/**
-	 * Make a copy of folders that aren't in the backup that need to stay on the site.
-	 *
-	 * @return bool  If files were preserved.
-	 */
-	private function preserve_directories() {
-		$preserve = false;
-
-		if ( $this->is_full_restore() ) {
-			if ( 'media' === $this->restore['profile'] ) {
-				$preserve = 'uploads';
-			} elseif ( 'plugins' === $this->restore['profile'] ) {
-				$preserve = 'plugins';
-			} elseif ( 'full' === $this->restore['profile'] ) {
-				$preserve = 'both';
-			}
-		}
-
-		if ( ! $preserve && is_array( $this->files ) ) {
-			if ( in_array( 'wp-content/*', $this->files, true ) ) {
-				$preserve = 'both';
-			} elseif ( in_array( 'wp-content/uploads/*', $this->files, true ) ) {
-				$preserve = 'uploads';
-			} elseif ( in_array( 'wp-content/plugins/*', $this->files, true ) ) {
-				$preserve = 'plugins';
-			}
-		}
-
-		if ( false === $preserve ) {
-			return false;
-		}
-
-		$this->log( 'Preserving BackupBuddy Directories...' );
-
-		// Preserve current BackupBuddy Plugin directory.
-		if ( in_array( $preserve, array( 'both', 'plugins' ), true ) ) {
-			$plugins_path = 'plugins' === $this->restore['profile'] ? '/' : '/wp-content/plugins/';
-			$tmp_bub_path = $this->restore['temp_dir'] . $plugins_path . 'backupbuddy';
-
-			// Remove backup/tmp copy of BackupBuddy.
-			pb_backupbuddy::$filesystem->unlink_recursive( $tmp_bub_path );
-
-			// Make sure the installed version of BackupBuddy remains after the restore.
-			$real_bub_path = backupbuddy_core::get_plugins_root() . 'backupbuddy';
-			if ( is_link( $real_bub_path ) ) {
-				symlink( readlink( $real_bub_path ), $tmp_bub_path );
-			} else {
-				pb_backupbuddy::$filesystem->recursive_copy( $real_bub_path, $tmp_bub_path );
-			}
-			$this->restore['copied'][] = $real_bub_path;
-			$this->log( '✓ Preserved BackupBuddy Plugin.' );
-		}
-
-		// Preserve BackupBuddy Backups/Logs Directories.
-		if ( in_array( $preserve, array( 'both', 'uploads' ), true ) ) {
-			$uploads_path = 'media' === $this->restore['profile'] ? '/' : '/wp-content/uploads/';
-
-			// Move all backups in current install to temp_dir.
-			pb_backupbuddy::$filesystem->recursive_copy( backupbuddy_core::getBackupDirectory(), $this->restore['temp_dir'] . $uploads_path . 'backupbuddy_backups' );
-
-			// Move all logs in current install to temp_dir.
-			pb_backupbuddy::$filesystem->recursive_copy( backupbuddy_core::getLogDirectory(), $this->restore['temp_dir'] . $uploads_path . 'pb_backupbuddy' );
-
-			// Delete the current restore logs from temp_dir to prevent overwrite and loss of restore status.
-			unlink( $this->restore['temp_dir'] . $uploads_path . 'pb_backupbuddy/backupbuddy-restores.txt' );
-			if ( ! empty( $this->restore['id'] ) ) {
-				unlink( $this->restore['temp_dir'] . $uploads_path . 'pb_backupbuddy/backupbuddy-restore-' . $this->restore['id'] . '.txt' );
-			}
-
-			$this->restore['copied'][] = backupbuddy_core::getBackupDirectory();
-			$this->restore['copied'][] = backupbuddy_core::getLogDirectory();
-			$this->restore['copied'][] = backupbuddy_core::getTempDirectory(); // Ignore this folder in the backup.
-			$this->log( '✓ Preserved BackupBuddy Backups and Logs Directories.' );
-		}
-
-		$this->save();
-
-		return true;
-	}
-
-	/**
 	 * Post restore cleanup.
 	 *
 	 * Leave debugging should only be set to false whenever restore has completed successfully.
@@ -2437,9 +3039,10 @@ class BackupBuddy_Restore {
 		$files_successful = $this->restore['file_status'];
 		$db_successful    = $this->restore['db_status'];
 
-		if ( ! empty( $this->restore['temp_dir'] ) && file_exists( $this->restore['temp_dir'] ) ) {
-			if ( false === pb_backupbuddy::$filesystem->unlink_recursive( $this->restore['temp_dir'] ) ) {
-				$this->log( '× Unable to delete temporary holding directory `' . $this->restore['temp_dir'] . '`.' );
+		// Remove the unzipped backup temp directory.
+		if ( ! empty( $this->temp_dir() ) && file_exists( $this->temp_dir() ) ) {
+			if ( false === pb_backupbuddy::$filesystem->unlink_recursive( $this->temp_dir() ) ) {
+				$this->log( '× Unable to delete temporary holding directory `' . $this->temp_dir() . '`.' );
 				$error = error_get_last();
 				$this->log( '× Error was: ' . $error['message'] );
 			} else {
@@ -2447,25 +3050,12 @@ class BackupBuddy_Restore {
 			}
 		}
 
-		// Cleanup Folders.
+		$this->reactivate_plugins();
+		self::housekeeping();
+
+		// Cleanup File Restore.
 		if ( true === $files_successful ) {
-			if ( ! empty( $this->restore['cleanup'] ) ) {
-				foreach ( $this->restore['cleanup'] as $index => $remove_dir ) {
-					if ( false === pb_backupbuddy::$filesystem->unlink_recursive( $remove_dir ) ) {
-						$this->log( '× Unable to cleanup `' . $remove_dir . '`.' );
-						$error = error_get_last();
-						$this->log( '× Error was: ' . $error['message'] );
-					} else {
-						unset( $this->restore['cleanup'][ $index ] );
-					}
-				}
-			}
-
-			$file_count = count( $this->restore['extract_files'] );
-
-			unset( $this->restore['copied'] );
-			$this->restore['extract_files'] = $file_count;
-
+			$this->restore['extract_files'] = count( $this->restore['extract_files'] );
 			$this->log( '✓ Cleaned up restore temporary files.' );
 		}
 
@@ -2509,6 +3099,37 @@ class BackupBuddy_Restore {
 		}
 
 		$this->log( '✓ Cleanup complete.' );
+	}
+
+	/**
+	 * Remove Completed & Cancelled backup creation events.
+	 *
+	 * Used by class backupbuddy_housekeeping.
+	 *
+	 * @return int The number of events deleted.
+	 */
+	public static function housekeeping() {
+		$count = self::remove_events_by_status( ActionScheduler_Store::STATUS_COMPLETE );
+		$count += self::remove_events_by_status( ActionScheduler_Store::STATUS_CANCELED );
+		return $count;
+	}
+
+	/**
+	 * Remove backup creation events.
+	 *
+	 * @return int The number of events deleted.
+	 */
+	private static function remove_events_by_status( $status = '' ) {
+		if ( empty( $status ) ) {
+			$status = ActionScheduler_Store::STATUS_COMPLETE;
+		}
+
+		$query_args = array(
+			'group'  => self::CRON_GROUP,
+			'status' => $status,
+		);
+
+		return backupbuddy_core::delete_events( $query_args );
 	}
 
 	/**
@@ -2833,11 +3454,11 @@ class BackupBuddy_Restore {
 		// Possible locations of .SQL file. Look for SQL files in root LAST in case user left files there.
 		$possible_sql_file_paths = array(
 			// Full backup < v2.0.
-			$this->restore['temp_dir'] . 'wp-content/uploads/temp_' . $this->serial . '/',
+			$this->temp_dir() . 'wp-content/uploads/temp_' . $this->serial . '/',
 			// Full backup >= v2.0.
-			$this->restore['temp_dir'] . 'wp-content/uploads/backupbuddy_temp/' . $this->serial . '/',
+			$this->temp_dir() . 'wp-content/uploads/backupbuddy_temp/' . $this->serial . '/',
 			// Determined from detecting DAT file. Should always be the location really... As of v4.1.
-			$this->restore['temp_dir'],
+			$this->temp_dir(),
 		);
 
 		foreach ( $possible_sql_file_paths as $possible_sql_file_path ) { // Check each file location to see which hits.
@@ -3033,8 +3654,8 @@ class BackupBuddy_Restore {
 			$table_basename = preg_replace( '/' . preg_quote( $wpdb->prefix ) . '/', '', $table, 1 );
 		}
 
-		// If any dependencies has not been imported yet and is scheduled to import, move to end.
-		if ( $dependencies && empty( array_intersect( $dependencies, $this->restore['imported_tables'] ) ) ) {
+		// If any dependencies have not been imported yet and are scheduled to import, move to end.
+		if ( is_array( $dependencies ) && empty( array_intersect( $dependencies, $this->restore['imported_tables'] ) ) ) {
 			$not_queued = array_intersect( $dependencies, $this->restore['table_queue'] );
 			if ( ! empty( $not_queued ) ) {
 				if ( ! isset( $this->restore['last_tables'][ $table ] ) ) {
@@ -3044,14 +3665,14 @@ class BackupBuddy_Restore {
 				}
 				return true;
 			} else {
-				$this->log( 'WARNING: Table `' . $table . '` contains dependency on `' . implode( $not_queued, '`, `' ) . '` which is not queued for import.' );
+				$this->log( 'WARNING: Table `' . $table . '` contains dependency on `' . implode( '`, `', $not_queued ) . '` which is not queued for import.' );
 			}
 		}
 
 		$this->handle_constraint( $import_file, $table );
 		$result = $importbuddy->import( $import_file, $wpdb->prefix, $continued, $ignore_errors );
 
-		// More work to be done.
+		// More processing needed later.
 		if ( true !== $result && is_array( $result ) ) {
 			$this->restore['incomplete_tables'][ $table ] = $result[0];
 			$this->save();
@@ -3403,7 +4024,7 @@ class BackupBuddy_Restore {
 		if ( false === $passed && true === $show_alert ) {
 			$settings_url  = admin_url( 'admin.php?page=pb_backupbuddy_settings&tab=advanced' ) . '#pb_backupbuddy_default_restores_permissions';
 			$settings_link = sprintf( '<a href="%s">%s</a>', $settings_url, esc_html__( 'Advanced Settings > Restore Permissions', 'it-l10n-backupbuddy' ) );
-			pb_backupbuddy::disalert( $alert_id, esc_html__( 'WARNING: BackupBuddy has detected potential issues with creating new directories on your server. Double check file/folder permissions set here: ', 'it-l10n-backupbuddy' ) . $settings_link, true, '', array( 'class' => 'below-h2' ) );
+			pb_backupbuddy::disalert( $alert_id, esc_html__( 'WARNING: Solid Backups has detected potential issues with creating new directories on your server. Double check file/folder permissions set here: ', 'it-l10n-backupbuddy' ) . $settings_link, true, '', array( 'class' => 'below-h2' ) );
 		}
 
 		return $passed;

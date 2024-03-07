@@ -1,6 +1,6 @@
 <?php
 /**
- * Reset a BackupBuddy Log File.
+ * Reset a Solid Backups Log File.
  *
  * @package BackupBuddy
  */

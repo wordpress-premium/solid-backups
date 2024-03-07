@@ -14,7 +14,12 @@ $check_level = 'MEDIUM';
 
 global $wpdb;
 
-pb_backupbuddy::$ui->ajax_header();
+pb_backupbuddy::$ui->ajax_header( true, true, 'backupbuddy-admin-iframe-white diagnostics-iframe');
+
+?>
+<div class="diagnostics-iframe-inner">
+<?php
+
 printf( '<h2>%s</h2>', esc_html__( 'Database Table Check', 'it-l10n-backupbuddy' ) );
 
 echo esc_html__( 'Checking table', 'it-l10n-backupbuddy' ) . ' `' . esc_html( $table ) . '` ' . esc_html__( 'using', 'it-l10n-backupbuddy' ) . ' ' . esc_html( $check_level ) . ' ' . esc_html__( 'scan', 'it-l10n-backupbuddy' ) . '...<br><br>';
@@ -33,6 +38,10 @@ foreach ( $rows as $row ) {
 }
 	unset( $rows );
 echo '</table>';
+
+?>
+</div>
+<?php
 pb_backupbuddy::$ui->ajax_footer();
 
 die();

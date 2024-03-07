@@ -10,10 +10,10 @@
 	jQuery(function() {
 		jQuery( '.pb_backupbuddy_hoveraction_sendimportbuddy' ).click( function(e) {
 			<?php if ( '' == pb_backupbuddy::$options['importbuddy_pass_hash'] ) { ?>
-				alert( 'You must set an ImportBuddy password via the BackupBuddy settings page before you can send this file.' );
+				alert( 'You must set an Importer password via the Solid Backups settings page before you can send this file.' );
 				return false;
 			<?php } ?>
-			tb_show( 'BackupBuddy', '<?php echo pb_backupbuddy::ajax_url( 'destination_picker' ); ?>&callback_data=' + jQuery(this).attr('rel') + '&sending=1&TB_iframe=1&width=640&height=455', null );
+			tb_show( 'Solid Backups', '<?php echo pb_backupbuddy::ajax_url( 'destination_picker' ); ?>&callback_data=' + jQuery(this).attr('rel') + '&sending=1&TB_iframe=1&width=640&height=455', null );
 			return false;
 		});
 
@@ -22,7 +22,7 @@
 			if ( '' == pb_backupbuddy::$options['importbuddy_pass_hash'] ) {
 				?>
 
-				var password = prompt( '<?php esc_html_e( 'To download, enter a password to lock the ImportBuddy script from unauthorized access. You will be prompted for this password when you go to importbuddy.php in your browser. Since you have not defined a default password yet this will be used as your default and can be changed later from the Settings page.', 'it-l10n-backupbuddy' ); ?>' );
+				var password = prompt( '<?php esc_html_e( 'To download, enter a password to lock the Importer script from unauthorized access. You will be prompted for this password when you go to importbuddy.php in your browser. Since you have not defined a default password yet this will be used as your default and can be changed later from the Settings page.', 'it-l10n-backupbuddy' ); ?>' );
 				if ( null != password && '' != password ) {
 					window.location.href = '<?php echo pb_backupbuddy::ajax_url( 'importbuddy' ); ?>&p=' + encodeURIComponent( password );
 				}
@@ -34,7 +34,7 @@
 				<?php
 			} else {
 				?>
-				var password = prompt( '<?php esc_html_e( 'To download, either enter a new password for just this download OR LEAVE BLANK to use your default ImportBuddy password (set on the Settings page) to lock the ImportBuddy script from unauthorized access.', 'it-l10n-backupbuddy' ); ?>' );
+				var password = prompt( '<?php esc_html_e( 'To download, either enter a new password for just this download OR LEAVE BLANK to use your default Importer password (set on the Settings page) to lock the Importer script from unauthorized access.', 'it-l10n-backupbuddy' ); ?>' );
 				if ( null != password ) {
 					window.location.href = '<?php echo pb_backupbuddy::ajax_url( 'importbuddy' ); ?>&p=' + encodeURIComponent( password );
 				}
@@ -48,14 +48,14 @@
 
 		// Click meta option in backup list to send a backup to a remote destination.
 		jQuery( '.pb_backupbuddy_hoveraction_send' ).click( function(e) {
-			tb_show( 'BackupBuddy', '<?php echo pb_backupbuddy::ajax_url( 'destination_picker' ); ?>&callback_data=' + jQuery(this).attr('rel') + '&sending=1&action_verb=to%20send%20to&TB_iframe=1&width=640&height=455', null );
+			tb_show( 'Solid Backups', '<?php echo pb_backupbuddy::ajax_url( 'destination_picker' ); ?>&callback_data=' + jQuery(this).attr('rel') + '&sending=1&action_verb=to%20send%20to&TB_iframe=1&width=640&height=455', null );
 			return false;
 		});
 
 
 		// Backup listing View Hash meta clicked.
 		jQuery( '.pb_backupbuddy_hoveraction_hash' ).click( function(e) {
-			tb_show( 'BackupBuddy', '<?php echo pb_backupbuddy::ajax_url( 'hash' ); ?>&callback_data=' + jQuery(this).attr('rel') + '&TB_iframe=1&width=640&height=455', null );
+			tb_show( 'Solid Backups', '<?php echo pb_backupbuddy::ajax_url( 'hash' ); ?>&callback_data=' + jQuery(this).attr('rel') + '&TB_iframe=1&width=640&height=455', null );
 			return false;
 		});
 
@@ -93,7 +93,7 @@
 
 		if ( ( callback_data != '' ) && ( callback_data != 'delayed_send' ) ) {
 			if ( callback_data == 'importbuddy.php' ) {
-				window.location.href = '<?php echo pb_backupbuddy::page_url(); ?>&destination=' + destination_id + '&destination_title=' + destination_title + '&callback_data=' + callback_data;
+				window.location.href = '<?php echo esc_attr( pb_backupbuddy::page_url() ); ?>&destination=' + parseInt( destination_id ) + '&destination_title=' + encodeURIComponent( destination_title ) + '&callback_data=' + encodeURIComponent( callback_data );
 				return false;
 			}
 			jQuery.post( '<?php echo pb_backupbuddy::ajax_url( 'remote_send' ); ?>', { destination_id: destination_id, destination_title: destination_title, file: callback_data, trigger: 'manual', delete_after: delete_after },
@@ -109,7 +109,7 @@
 						}
 						alert( "<?php _e( 'Your file has been scheduled to be sent now. It should arrive shortly.', 'it-l10n-backupbuddy' ); ?> <?php _e( 'You will be notified by email if any problems are encountered.', 'it-l10n-backupbuddy' ); ?>" + " " + delete_alert + "\n\n" + data.slice(1) );
 						/* Try to ping server to nudge cron along since sometimes it doesnt trigger as expected. */
-						jQuery.post( '<?php echo admin_url( 'admin-ajax.php' ); ?>',
+						jQuery.post( '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>',
 							function(data) {
 							}
 						);
@@ -122,7 +122,7 @@
 			jQuery( '#pb_backupbuddy_backup_remotetitle' ).html( 'Destination: "' + destination_title + '".' );
 		} else {
 			<?php $admin_url = is_network_admin() ? network_admin_url( 'admin.php' ) : admin_url( 'admin.php' ); ?>
-			window.location.href = '<?php echo $admin_url; ?>?page=pb_backupbuddy_backup&custom=remoteclient&destination_id=' + destination_id;
+			window.location.href = '<?php echo esc_url( $admin_url ); ?>?page=pb_backupbuddy_backup&custom=remoteclient&destination_id=' + parseInt( destination_id );
 		}
 	} // end pb_backupbuddy_selectdestination().
 </script>
@@ -190,7 +190,7 @@ if ( count( $backups ) === 0 ) {
 	echo '<br>';
 } else {
 	$columns = array(
-		__( 'Backups', 'it-l10n-backupbuddy' ) . ' <img src="' . pb_backupbuddy::plugin_url() . '/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent first">',
+		__( 'Backups', 'it-l10n-backupbuddy' ) . ' <img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent first">',
 		__( 'Profile', 'it-l10n-backupbuddy' ),
 		__( 'File Size', 'it-l10n-backupbuddy' ),
 		'',

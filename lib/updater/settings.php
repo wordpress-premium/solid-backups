@@ -37,20 +37,21 @@ class Ithemes_Updater_Settings {
 	private $options_modified = false;
 	private $do_flush = false;
 	private $initialized = false;
-	private $plugins_cleaned = false;
-	private $themes_cleaned = false;
 	private $db_failure = false;
 
 	private $default_options = array(
-		'timeout-multiplier' => 1,
-		'expiration'         => 0,
-		'timestamp'          => 0,
-		'packages'           => array(),
-		'update_plugins'     => array(),
-		'update_themes'      => array(),
-		'use_ca_patch'       => false,
-		'use_ssl'            => true,
-		'quick_releases'     => false,
+		'timeout-multiplier'       => 1,
+		'expiration'               => 0,
+		'timestamp'                => 0,
+		'error_timestamp'          => 0,
+		'packages'                 => array(),
+		'update_plugins'           => array(),
+		'update_plugins_no_update' => array(),
+		'update_themes'            => array(),
+		'update_themes_no_update'  => array(),
+		'use_ca_patch'             => false,
+		'use_ssl'                  => true,
+		'quick_releases'           => false,
 	);
 
 
@@ -115,6 +116,7 @@ class Ithemes_Updater_Settings {
 			} else if ( $this->is_expired( $this->options['timestamp'] ) ) {
 				$this->flush( 'got stale' );
 			} else if ( ! empty( $this->new_packages ) ) {
+				$this->update_packages();
 				$this->flush( 'new packages' );
 			}
 		}
@@ -140,6 +142,8 @@ class Ithemes_Updater_Settings {
 		if ( 0 == $this->options['timestamp'] ) {
 			$this->update();
 		}
+
+		$this->update_site_url_history();
 	}
 
 	public function shutdown() {
@@ -199,6 +203,37 @@ class Ithemes_Updater_Settings {
 		$this->update_options( array( 'packages' => array_keys( $this->packages ) ) );
 	}
 
+	public function get_package_details( $package = false ) {
+		$details = $this->get_option( 'package_details' );
+
+		if ( false === $package ) {
+			return $details;
+		} else if ( isset( $details[$package] ) ) {
+			return $details[$package];
+		} else {
+			return false;
+		}
+	}
+
+	// Potential license status values: "active", "expired", "unlicensed", "error" (unexpected server response), and false (data is not present for the package).
+	public function get_license_status( $package = false ) {
+		$details = $this->get_package_details( $package );
+
+		if ( false === $package ) {
+			$statuses = array();
+
+			foreach ( $details as $package => $data ) {
+				$statuses[$package] = $data['license_status'];
+			}
+
+			return $statuses;
+		} else if ( is_array( $details ) ) {
+			return $details['license_status'];
+		} else {
+			return false;
+		}
+	}
+
 	public function get_packages() {
 		return $this->packages;
 	}
@@ -215,6 +250,9 @@ class Ithemes_Updater_Settings {
 		if ( ! isset( $update_plugins->response ) || ! is_array( $update_plugins->response ) ) {
 			$update_plugins->response = array();
 		}
+		if ( ! isset( $update_plugins->no_update ) || ! is_array( $update_plugins->no_update ) ) {
+			$update_plugins->no_update = array();
+		}
 
 		$this->flush();
 
@@ -223,32 +261,8 @@ class Ithemes_Updater_Settings {
 		}
 
 		if ( isset( $this->options['update_plugins'] ) && is_array( $this->options['update_plugins'] ) ) {
-			if ( ! $this->plugins_cleaned ) {
-				@include_once( ABSPATH . '/wp-admin/includes/plugin.php' );
-
-				if ( is_callable( 'get_plugin_data' ) ) {
-					foreach ( $this->options['update_plugins'] as $plugin => $update_data ) {
-						if ( ! is_file( WP_PLUGIN_DIR . "/$plugin" ) ) {
-							continue;
-						}
-
-						$plugin_data = get_plugin_data( WP_PLUGIN_DIR . "/$plugin", false, false );
-
-						if ( $plugin_data['Version'] == $update_data->new_version ) {
-							unset( $this->options['update_plugins'][$plugin] );
-							$this->plugins_cleaned = true;
-						}
-					}
-				}
-
-				if ( $this->plugins_cleaned ) {
-					$this->options_modified = true;
-				}
-
-				$this->plugins_cleaned = true;
-			}
-
 			$update_plugins->response = array_merge( $update_plugins->response, $this->options['update_plugins'] );
+			$update_plugins->no_update = array_merge( $update_plugins->no_update, $this->options['update_plugins_no_update'] );
 		}
 
 		return $update_plugins;
@@ -262,6 +276,9 @@ class Ithemes_Updater_Settings {
 		if ( ! isset( $update_themes->response ) || ! is_array( $update_themes->response ) ) {
 			$update_themes->response = array();
 		}
+		if ( ! isset( $update_themes->no_update ) || ! is_array( $update_themes->no_update ) ) {
+			$update_themes->no_update = array();
+		}
 
 		$this->flush();
 
@@ -270,25 +287,8 @@ class Ithemes_Updater_Settings {
 		}
 
 		if ( isset( $this->options['update_themes'] ) && is_array( $this->options['update_themes'] ) ) {
-			if ( ! $this->themes_cleaned ) {
-				foreach ( $this->options['update_themes'] as $theme => $update_data ) {
-					$theme_data = wp_get_theme( $theme );
-
-					if ( $theme_data->get( 'Version' ) === $update_data['new_version'] ) {
-						unset( $this->options['update_themes'][$theme] );
-
-						$this->themes_cleaned = true;
-					}
-				}
-
-				if ( $this->themes_cleaned ) {
-					$this->options_modified = true;
-				}
-
-				$this->themes_cleaned = true;
-			}
-
 			$update_themes->response = array_merge( $update_themes->response, $this->options['update_themes'] );
+			$update_themes->no_update = array_merge( $update_themes->no_update, $this->options['update_themes_no_update'] );
 		}
 
 		return $update_themes;
@@ -340,6 +340,121 @@ class Ithemes_Updater_Settings {
 		}
 
 		return false;
+	}
+
+
+/*
+	public function get_hostname_history() {
+		$this->get_canonical_hostname();
+
+		return $this->options['hostname_details']['history'];
+	}
+
+	public function get_canonical_hostname() {
+		if ( ! is_array( $this->options ) ) {
+			$this->load();
+		}
+
+		$hostname = $this->get_hostname();
+
+		if ( ! isset( $this->options['hostname_details'] ) || ! is_array( $this->options['hostname_details'] ) ) {
+			$this->options['hostname_details'] = array();
+			$this->options_modified = true;
+		}
+
+		if ( empty( $this->options['hostname_details']['canonical'] ) ) {
+			$this->options['hostname_details']['canonical'] = $hostname;
+			$this->options_modified = true;
+		}
+
+		if ( empty( $this->options['hostname_details']['history'] ) || ! is_array( $this->options['hostname_details']['history'] ) || ( time() - max( $this->options['hostname_details']['history'] ) > 600 ) ) {
+			$this->options['hostname_details']['history'][$hostname] = time();
+			$this->options_modified = true;
+		}
+
+		return $this->options['hostname_details']['canonical'];
+	}
+
+	public function update_canonical_hostname( $hostname ) {
+		$this->options['hostname_details']['canonical'] = $this->get_hostname( $hostname );
+		$this->options_modified = true;
+	}
+*/
+
+
+
+	public function update_site_url_history() {
+		$site_url = $this->get_site_url();
+
+		if ( ! isset( $this->options['site_url_history'] ) || ! is_array( $this->options['site_url_history'] ) ) {
+			$this->options['site_url_history'] = array();
+			$this->options_modified = true;
+		}
+
+		if ( empty( $this->options['site_url_history'] ) || ! is_array( $this->options['site_url_history'] ) || ( time() - max( $this->options['site_url_history'] ) > 600 ) ) {
+			$this->options['site_url_history'][$site_url] = time();
+			$this->options_modified = true;
+		}
+	}
+
+
+
+	public function get_site_url( $url = false ) {
+		if ( empty( $url ) ) {
+			$url = network_home_url();
+		}
+
+		$url = strtolower( preg_replace( '|/$|', '', $url ) );
+
+		if ( is_ssl() ) {
+			$url = preg_replace( '|^https?:|', 'https:', $url );
+		} else {
+			$url = preg_replace( '|^https?:|', 'http:', $url );
+		}
+
+		return $url;
+	}
+
+	public function is_request_on_licensed_site_url() {
+		return $this->get_licensed_site_url() === $this->get_site_url();
+	}
+
+	public function get_licensed_site_url_from_server() {
+		$response = Ithemes_Updater_API::get_licensed_site_url();
+
+		if ( ! is_wp_error( $response ) && is_array( $response ) && ! empty( $response['site_url'] ) ) {
+			return $this->get_site_url( "http://{$response['site_url']}" );
+		}
+
+		return '';
+	}
+
+	public function set_licensed_site_url( $url ) {
+		$url = $this->get_site_url( $url );
+		$url = preg_replace( '|^https?://|', '', $url );
+
+		$this->options['site_url'] = $url;
+		$this->options_modified = true;
+	}
+
+	public function get_licensed_site_url() {
+		if ( ! is_array( $this->options ) ) {
+			$this->load();
+		}
+
+		if ( empty( $this->options['site_url'] ) ) {
+			return false;
+		} else {
+			return $this->get_site_url( "http://{$this->options['site_url']}" );
+		}
+	}
+
+	public function is_licensed_site_url_confirmed() {
+		if ( false === $this->get_licensed_site_url() ) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 }
 

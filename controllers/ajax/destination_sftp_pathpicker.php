@@ -78,7 +78,7 @@ if ( count( $sftp_list ) ) {
 		echo '<a href="#" rel="' . esc_attr( $sftp_root . $filename ) . '/" title="Toggle expand...">';
 		echo esc_html( $filename );
 		echo '<div class="pb_backupbuddy_treeselect_control">';
-		echo '<img src="' . esc_attr( pb_backupbuddy::plugin_url() ) . '/images/greenplus.png" style="vertical-align: -3px;" title="Select this path..." class="pb_backupbuddy_filetree_select">';
+		echo '<img src="' . esc_attr( pb_backupbuddy::plugin_url() ) . '/assets/dist/images/greenplus.png" style="vertical-align: -3px;" title="Select this path..." class="pb_backupbuddy_filetree_select">';
 		echo '</div>';
 		echo '</a>';
 		echo '</li>';

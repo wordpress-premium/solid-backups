@@ -31,6 +31,11 @@ if ( ! backupbuddy_data_file()->locate( $zip_file ) ) {
 
 	if ( ! $result ) {
 		$response['error'] = __( 'Unable to create dat file.', 'it-l10n-backupbuddy' );
+
+		if ( backupbuddy_data_file()::creation_is_disabled() ) {
+			$response['error'] .= ' ' . __( '.dat file creation is disabled in Advanced Settings.', 'it-l10n-backupbuddy' );
+		}
+
 		wp_send_json( $response );
 		exit();
 	}

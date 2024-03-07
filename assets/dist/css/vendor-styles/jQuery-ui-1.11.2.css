@@ -1,0 +1,12 @@
+.ui-widget {
+	padding: 10px;
+	line-height: 1.6em;
+}
+.ui-widget .ui-widget {
+	font-size: 1em;
+}
+.ui-widget-content {
+	border: 1px solid #aaaaaa;
+	background: #ffffff;
+	color: #222222;
+}

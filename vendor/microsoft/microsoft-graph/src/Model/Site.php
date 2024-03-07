@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,10 +18,9 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class Site extends BaseItem
 {
@@ -52,6 +50,37 @@ class Site extends BaseItem
     public function setDisplayName($val)
     {
         $this->_propDict["displayName"] = $val;
+        return $this;
+    }
+    
+    /**
+    * Gets the error
+    *
+    * @return PublicError The error
+    */
+    public function getError()
+    {
+        if (array_key_exists("error", $this->_propDict)) {
+            if (is_a($this->_propDict["error"], "Microsoft\Graph\Model\PublicError")) {
+                return $this->_propDict["error"];
+            } else {
+                $this->_propDict["error"] = new PublicError($this->_propDict["error"]);
+                return $this->_propDict["error"];
+            }
+        }
+        return null;
+    }
+    
+    /**
+    * Sets the error
+    *
+    * @param PublicError $val The error
+    *
+    * @return Site
+    */
+    public function setError($val)
+    {
+        $this->_propDict["error"] = $val;
         return $this;
     }
     
@@ -367,6 +396,36 @@ class Site extends BaseItem
     public function setLists($val)
     {
 		$this->_propDict["lists"] = $val;
+        return $this;
+    }
+    
+
+     /** 
+     * Gets the permissions
+    * The permissions associated with the site. Nullable.
+     *
+     * @return array The permissions
+     */
+    public function getPermissions()
+    {
+        if (array_key_exists("permissions", $this->_propDict)) {
+           return $this->_propDict["permissions"];
+        } else {
+            return null;
+        }
+    }
+    
+    /** 
+    * Sets the permissions
+    * The permissions associated with the site. Nullable.
+    *
+    * @param Permission $val The permissions
+    *
+    * @return Site
+    */
+    public function setPermissions($val)
+    {
+		$this->_propDict["permissions"] = $val;
         return $this;
     }
     

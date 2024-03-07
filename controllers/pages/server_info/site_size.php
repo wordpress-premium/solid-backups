@@ -5,10 +5,9 @@
  * @package BackupBuddy
  */
 
-pb_backupbuddy::load_script( 'icicle.js' );
-pb_backupbuddy::load_script( 'icicle_setup.js' );
-pb_backupbuddy::load_style( 'jit_base.css' );
-pb_backupbuddy::load_style( 'jit_icicle.css' );
+pb_backupbuddy::load_script( 'vendor-scripts/icicle.min.js' );
+pb_backupbuddy::load_script( 'icicle-setup.js' );
+wp_print_styles('solid-jit-icicle');
 ?>
 <script type="text/javascript">
 	jQuery(function() {
@@ -46,7 +45,7 @@ pb_backupbuddy::load_style( 'jit_icicle.css' );
 		border-radius: 8px;
 		border: 2px solid white; /* should match background, can't be transparent */
 		background-color: rgba(0, 0, 0, .5);
-	}​
+	}
 </style>
 
 <br>
@@ -75,7 +74,7 @@ pb_backupbuddy::load_style( 'jit_icicle.css' );
 
 	<br>
 	<a class="pb_backupbuddy_site_size_listing_button button button-primary" style="margin-top: 3px;"><?php esc_html_e( 'Display Directory Size Listing', 'it-l10n-backupbuddy' ); ?></a>
-	<span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px;"><img src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/loading.gif" alt="<?php esc_attr_e( 'Loading...', 'it-l10n-backupbuddy' ); ?>" title="<?php esc_attr_e( 'Loading...', 'it-l10n-backupbuddy' ); ?>" width="16" height="16" style="vertical-align: -3px;" /></span>
+	<span class="pb_backupbuddy_loading" style="display: none;"></span>
 </div>
 <br>
 <div id="pb_backupbuddy_site_size_listing_content" style="display: none;"></div>
@@ -89,16 +88,12 @@ is a CPU intensive process and may take a while to load and even time out on som
 ?>
 <br>
 <p><a id="pb_iciclelaunch" class="button button-primary" style="margin-top: 3px;"><?php esc_html_e( 'Display Interactive Graphical Directory Size Map', 'it-l10n-backupbuddy' ); ?></a></p>
-
-<link type="text/css" href="<?php echo pb_backupbuddy::plugin_url(); ?>/css/jit_base.css" rel="stylesheet" />
-<link type="text/css" href="<?php echo pb_backupbuddy::plugin_url(); ?>/css/jit_icicle.css" rel="stylesheet" />
-
 <div style="display: none;" id="pb_infovis_container">
 	<div style="background: #1A1A1A;">
 		<div id="infovis">
 			<br /><br />
 			<div style="margin: 30px;">
-				<h4 style="color: #FFFFFF;"><img src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/loading_large_darkbg.gif" style="vertical-align: -9px;" /> <?php esc_html_e( 'Loading ... Please wait ...', 'it-l10n-backupbuddy' ); ?></h4>
+				<h4 style="color: #FFFFFF;"><img src="<?php echo pb_backupbuddy::plugin_url(); ?>/assets/dist/images/loading_large_darkbg.gif" style="vertical-align: -9px;" /> <?php esc_html_e( 'Loading ... Please wait ...', 'it-l10n-backupbuddy' ); ?></h4>
 			</div>
 		</div>
 	</div>

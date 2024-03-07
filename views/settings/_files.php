@@ -30,8 +30,8 @@ $profile_array = array_merge( pb_backupbuddy::settings( 'profile_defaults' ), $p
 		/* Begin Directory / File Selector */
 		jQuery(document).on( 'click', '.pb_backupbuddy_filetree_exclude', function(){
 			text = jQuery(this).parent().parent().find( 'a' ).attr( 'rel' );
-			if ( ( text == '/wp-config.php' ) || ( text == '/backupbuddy_dat.php' ) || ( text == '/wp-content/' ) || ( text == '/wp-content/uploads/' ) || ( text == '<?php echo '/' . str_replace( ABSPATH, '', backupbuddy_core::getBackupDirectory() ); ?>' ) || ( text == '<?php echo '/' . str_replace( ABSPATH, '', backupbuddy_core::getTempDirectory() ); ?>' ) ) {
-				alert( "<?php esc_html_e( 'You cannot exclude the selected file or directory.  However, you may exclude subdirectories within many directories restricted from exclusion. BackupBuddy directories such as backupbuddy_backups are automatically excluded, preventing backing up backups, and cannot be added to exclusion list.', 'it-l10n-backupbuddy' ); ?>" );
+			if ( ( text == '/wp-config.php' ) || ( text == '/backupbuddy_dat.php' ) || ( text == '/wp-content/' ) || ( text == '/wp-content/uploads/' ) || ( text == '<?php echo '/' . esc_attr( str_replace( ABSPATH, '', backupbuddy_core::getBackupDirectory() ) ); ?>' ) || ( text == '<?php echo '/' . esc_attr( str_replace( ABSPATH, '', backupbuddy_core::getTempDirectory() ) ); ?>' ) ) {
+				alert( "<?php esc_html_e( 'You cannot exclude the selected file or directory.  However, you may exclude subdirectories within many directories restricted from exclusion. Solid Backups directories such as backupbuddy_backups are automatically excluded, preventing backing up backups, and cannot be added to exclusion list.', 'it-l10n-backupbuddy' ); ?>" );
 			} else {
 				jQuery('#pb_backupbuddy_excludes').val( text + "\n" + jQuery('#pb_backupbuddy_excludes').val() );
 			}
@@ -81,9 +81,9 @@ if ( 'files' == $profile_array['type'] ) {
 }
 require_once '_filetree.php';
 
-$before_text = __( 'Excluded files & directories for this profile', 'it-l10n-backupbuddy' );
+$before_text = '<p>' . __( 'Excluded files & directories for this profile', 'it-l10n-backupbuddy' );
 if ( 'defaults' == $profile_array['type'] ) {
-	$before_text = __( '<strong>Default</strong> excluded files & directories (relative to WordPress root)', 'it-l10n-backupbuddy' );
+	$before_text = '<p>' . __( '<strong>Default</strong> excluded files & directories<br>(relative to WordPress root)', 'it-l10n-backupbuddy' );
 }
 
 if ( 'files' == $profile_array['type'] ) {
@@ -123,7 +123,7 @@ if ( 'plugins' == $profile_array['type'] ) {
 			'type'   => 'plaintext',
 			'name'   => 'profiles#' . $profile_id . '#pluginsdirtext',
 			'title'  => __( 'Plugins Directory (profile backup root)', 'it-l10n-backupbuddy' ),
-			'tip'    => __( 'The Plugins backup type is a "smart" profile which automatically selects your WordPress plugins directory root as its backup root to simplify backing up just your media.' ),
+			'tip'    => __( 'The Plugins backup type is a \'smart\' profile which automatically selects your WordPress plugins directory root as its backup root to simplify backing up just your media.' ),
 			'rules'  => '',
 			'css'    => 'width: 100%;',
 			'before' => '<span style="white-space: nowrap;">',
@@ -157,23 +157,46 @@ if ( 'defaults' != $profile_array['type'] ) {
 				'checked'   => '1',
 			),
 			'title'   => 'Use global exclusion defaults?',
-			'after'   => ' Use global defaults<br><span class="description" style="padding-left: 25px;">Uncheck to customize exclusions.</span>',
+			'after'   => sprintf(
+				__( 'Use global defaults<br><p class="description">%1$s</a>', 'it-l10n-backupbuddy' ),
+				__( 'Uncheck to customize tables.', 'it-l10n-backupbuddy' )
+			),
 			'css'     => '',
 		)
 	);
 }
 
+ob_start();
+echo wp_kses(
+	sprintf(
+		__('Hover & select <img src="%2$s/assets/dist/images/redminus.png" style="vertical-align: -3px;"> to exclude. %3$s', 'it-l10n-backupbuddy' ),
+		pb_backupbuddy::plugin_url(),
+		pb_backupbuddy::plugin_url(),
+		pb_backupbuddy::tip( __( 'Click on a directory name to navigate directories. Click the red minus sign to the right of a directory to place it in the exclusion list. /wp-content/, the uploads directory, and Solid Backups backup & temporary directories cannot be excluded. Solid Backups directories are automatically excluded.', 'it-l10n-backupbuddy' ), '', false )
+	),
+	pb_backupbuddy::$ui->kses_post_with_svg()
+);
+
+?>
+<br><div id="exlude_dirs" class="jQueryOuterTree"></div>
+<?php
+echo wp_kses(
+	$before_text . pb_backupbuddy::tip( __( 'List paths relative to the WordPress installation directory to be excluded from backups.  You may use the directory selector to the left to easily exclude directories by ctrl+clicking them.  Paths are relative to root, for example: /wp-content/uploads/items/. Three variables are also permitted to exclude common WordPress directories: {media}, {plugins}, {themes}', 'it-l10n-backupbuddy' ), '', false ) . '</p>',
+	pb_backupbuddy::$ui->kses_post_with_svg()
+);
+
+$default_excluded_files = ob_get_clean();
+
+
 $settings_form->add_setting(
 	array(
 		'type'   => 'textarea',
 		'name'   => 'profiles#' . $profile_id . '#excludes',
-		'title'  => 'Hover & select to navigate, <img src="' . pb_backupbuddy::plugin_url() . '/images/redminus.png" style="vertical-align: -3px;"> to exclude. ' .
-			pb_backupbuddy::tip( __( 'Click on a directory name to navigate directories. Click the red minus sign to the right of a directory to place it in the exclusion list. /wp-content/, the uploads directory, and BackupBuddy backup & temporary directories cannot be excluded. BackupBuddy directories are automatically excluded.', 'it-l10n-backupbuddy' ), '', false ) .
-			'<br><div id="exlude_dirs" class="jQueryOuterTree"></div>',
-		'rules'  => 'string[0-9000]',
+		'title'  => 'Exclude Files & Directories',
+		'rules'  => 'string[0-9000]|th-rowspan-2',
 		'css'    => 'width: 100%; height: 135px;',
-		'before' => $before_text . pb_backupbuddy::tip( __( 'List paths relative to the WordPress installation directory to be excluded from backups.  You may use the directory selector to the left to easily exclude directories by ctrl+clicking them.  Paths are relative to root, for example: /wp-content/uploads/junk/. Three variables are also permitted to exclude common WordPress directories: {media}, {plugins}, {themes}', 'it-l10n-backupbuddy' ), '', false ) . '<br>',
-		'after'  => '<span class="description">' . __( 'One exclusion per line. <b>Enter RELATIVE to your backup root.</b>', 'it-l10n-backupbuddy' ) . '</span>',
+		'before' => $default_excluded_files,
+		'after'  => '<p class="description">' . __( 'One exclusion per line. <strong>Enter RELATIVE to your backup root.</strong>', 'it-l10n-backupbuddy' ) . '</p',
 	)
 );
 

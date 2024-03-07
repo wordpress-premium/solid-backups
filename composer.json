@@ -2,7 +2,7 @@
     "name": "wordpress-premium/backupbuddy",
     "description": "The original 3-in-1 WordPress backup plugin for quick and easy WordPress backups! Restore and move WordPress to a new server or domain, too.",
     "type": "wordpress-plugin",
-    "version": "8.7.4.1",
+    "version": "9.1.10",
     "author": "Brian DiChiara",
     "config": {
         "platform": {

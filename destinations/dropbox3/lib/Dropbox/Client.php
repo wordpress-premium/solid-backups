@@ -9,7 +9,12 @@ namespace Dropbox;
  */
 class Client
 {
-    /**
+	/**
+	 * @var Host|false|mixed|null
+	 */
+	private $host;
+
+	/**
      * The access token used by this client to make authenticated API calls.  You can get an
      * access token via {@link WebAuth}.
      *
@@ -754,7 +759,7 @@ class Client
 				)
 			);
 
-		if ( \pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+		if ( \pb_backupbuddy::full_logging() ) {
 			\pb_backupbuddy::status( 'details', 'Dropbox header: `' . $header . '`.' );
 		}
 

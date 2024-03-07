@@ -25,7 +25,7 @@ require '_remote_sends.php'; // Sets $sends.
 					__( 'Sent File', 'it-l10n-backupbuddy' ),
 					__( 'Destination', 'it-l10n-backupbuddy' ),
 					__( 'Trigger', 'it-l10n-backupbuddy' ),
-					__( 'Transfer Information', 'it-l10n-backupbuddy' ) . ' <img src="' . pb_backupbuddy::plugin_url() . '/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent started first">',
+					__( 'Transfer Information', 'it-l10n-backupbuddy' ) . ' <img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent started first">',
 					__( 'Status', 'it-l10n-backupbuddy' ) . ' <span class="description">(hover for options)</span>',
 				),
 				'css'     => 'width: 100%;',

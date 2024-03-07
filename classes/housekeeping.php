@@ -6,6 +6,10 @@
  * @package BackupBuddy
  */
 
+require_once pb_backupbuddy::plugin_path() . '/classes/class-backupbuddy-restore.php';
+require_once pb_backupbuddy::plugin_path() . '/classes/class-backupbuddy-schedules.php';
+require_once pb_backupbuddy::plugin_path() . '/classes/backup.php';
+
 /**
  * Housekeeping Class
  *
@@ -30,7 +34,7 @@ class backupbuddy_housekeeping {
 			}
 		}
 
-		pb_backupbuddy::status( 'message', 'Starting periodic housekeeeping procedure for BackupBuddy v' . pb_backupbuddy::settings( 'version' ) . '.' );
+		pb_backupbuddy::status( 'message', 'Starting periodic housekeeeping procedure for Solid Backups v' . pb_backupbuddy::settings( 'version' ) . '.' );
 		require_once pb_backupbuddy::plugin_path() . '/classes/core.php';
 		require_once pb_backupbuddy::plugin_path() . '/classes/fileoptions.php';
 		if ( ! isset( pb_backupbuddy::$options ) ) {
@@ -66,14 +70,17 @@ class backupbuddy_housekeeping {
 		self::trim_old_notifications();
 		self::trim_remote_send_stats();
 		self::s3_cancel_multipart_pieces();
-		self::s32_cancel_multipart_pieces();
-		self::cleanup_local_destination_temp();
+		self::cleanup_local_destination_temp( $backup_age_limit );
 		self::purge_logs();
 		self::purge_large_logs();
 		self::clear_cron_send();
 		self::remove_archive_primer_file();
+		self::remove_completed_events();
 
 		self::cleanup_transients( false ); // Don't purge unexpiring transients.
+
+		// Added in 9.1.8. Can be removed in a later version.
+		self::migrate_to_latest_s3_version();
 
 		// PHP tests.
 		self::schedule_php_runtime_tests();
@@ -103,13 +110,13 @@ class backupbuddy_housekeeping {
 
 					// Run troubleshooting test if no snapshot in X days.
 					if ( $days_since_last > backupbuddy_constants::DAYS_BEFORE_RUNNING_TROUBLESHOOTING_TEST ) {
-						if ( false === wp_next_scheduled( 'backupbuddy_cron', array( 'live_troubleshooting_check', array() ) ) ) { // if schedule does not exist...
-							backupbuddy_core::schedule_single_event( time(), 'live_troubleshooting_check', array() ); // Add schedule.
+						if ( false === backupbuddy_core::has_scheduled_event( 'live_troubleshooting_check', array() ) ) { // if schedule does not exist...
+							backupbuddy_core::trigger_async_event( 'live_troubleshooting_check', array() ); // Add schedule.
 						}
 					}
 
 					if ( ( (int) $destination['no_new_snapshots_error_days'] > 0 ) && ( $days_since_last > (int) $destination['no_new_snapshots_error_days'] ) ) {
-						$message = 'Warning! BackupBuddy is configured to notify you if no new BackupBuddy Stash Live Snapshots have been made in `' . (int) $destination['no_new_snapshots_error_days'] . '` days. It has been `' . $days_since_last . '` days since your last Snapshot. There may be a problem with your site\'s Stash Live setup requiring your attention.';
+						$message = 'Warning! Solid Backups is configured to notify you if no new Solid Backups Stash Live Snapshots have been made in `' . (int) $destination['no_new_snapshots_error_days'] . '` days. It has been `' . $days_since_last . '` days since your last Snapshot. There may be a problem with your site\'s Stash Live setup requiring your attention.';
 						pb_backupbuddy::status( 'warning', $message );
 						if ( (int) $destination['no_new_snapshots_error_days'] > 0 ) { // Live destination and notifications are enabled.
 							backupbuddy_core::mail_error( $message );
@@ -121,13 +128,13 @@ class backupbuddy_housekeeping {
 
 					// Run troubleshooting test if no snapshot in X days.
 					if ( $days_since_last > backupbuddy_constants::DAYS_BEFORE_RUNNING_TROUBLESHOOTING_TEST ) {
-						if ( false === wp_next_scheduled( 'backupbuddy_cron', array( 'live_troubleshooting_check', array() ) ) ) { // if schedule does not exist...
-							backupbuddy_core::schedule_single_event( time(), 'live_troubleshooting_check', array() ); // Add schedule.
+						if ( false === backupbuddy_core::has_scheduled_event( 'live_troubleshooting_check', array() ) ) { // if schedule does not exist...
+							backupbuddy_core::trigger_async_event( 'live_troubleshooting_check', array() ); // Add schedule.
 						}
 					}
 
 					if ( ( (int) $destination['no_new_snapshots_error_days'] > 0 ) && ( $days_since_last > ( (int) $destination['no_new_snapshots_error_days'] * 2 ) ) ) {
-						$message = 'Warning! BackupBuddy is configured to notify you if no new BackupBuddy Stash Live Snapshots have been made in `' . (int) $destination['no_new_snapshots_error_days'] . '` days. It has been at least twice this (`' . $days_since_last . '` days) since you set up BackupBuddy Stash Live but the first Snapshot has not been made yet. There may be a problem with your site\'s Stash Live setup requiring your attention.';
+						$message = 'Warning! Solid Backups is configured to notify you if no new Solid Backups Stash Live Snapshots have been made in `' . (int) $destination['no_new_snapshots_error_days'] . '` days. It has been at least twice this (`' . $days_since_last . '` days) since you set up Solid Backups Stash Live but the first Snapshot has not been made yet. There may be a problem with your site\'s Stash Live setup requiring your attention.';
 						pb_backupbuddy::status( 'warning', $message );
 						if ( (int) $destination['no_new_snapshots_error_days'] > 0 ) { // Live destination and notifications are enabled.
 							backupbuddy_core::mail_error( $message );
@@ -154,7 +161,7 @@ class backupbuddy_housekeeping {
 							set_transient( 'pb_backupbuddy_no_new_backup_error', $last_sent, ( 60 * 60 * 24 ) );
 						}
 						if ( ( time() - $last_sent ) > ( 60 * 60 * 24 ) ) { // 24hrs+ elapsed since last email sent.
-							$message = 'Warning! BackupBuddy is configured to notify you if no new backups have completed in `' . pb_backupbuddy::$options['no_new_backups_error_days'] . '` days. It has been `' . $days_since_last . '` days since your last completed backup.';
+							$message = 'Warning! Solid Backups is configured to notify you if no new backups have completed in `' . pb_backupbuddy::$options['no_new_backups_error_days'] . '` days. It has been `' . $days_since_last . '` days since your last completed backup.';
 							pb_backupbuddy::status( 'warning', $message );
 							backupbuddy_core::mail_error( $message );
 						}
@@ -240,9 +247,8 @@ class backupbuddy_housekeeping {
 
 	}
 
-
 	/**
-	 * Clear cronSend
+	 * Clear cronSend.
 	 */
 	public static function clear_cron_send() {
 		// Clean up any old cron file transfer locks.
@@ -256,7 +262,7 @@ class backupbuddy_housekeeping {
 	}
 
 	/**
-	 * Purse Logs
+	 * Purge Logs.
 	 *
 	 * @param string $file_prefix  Log Prefix.
 	 * @param string $limit        Defaults to CLEANUP_MAX_STATUS_LOG_COUNT.
@@ -398,10 +404,15 @@ class backupbuddy_housekeeping {
 				}
 
 				// Made it here so must be finished or failed.
-				if ( false === @unlink( $send_fileoption ) ) {
-					pb_backupbuddy::status( 'warning', 'Unable to delete old remote send fileoptions file `' . $send_fileoption . '`. You may manually delete it. Check directory permissions for future cleanup.' );
-				} else { // Deleted.
-					@unlink( str_replace( '.txt', '.lock', $send_fileoption ) ); // Remove lock file if exists.
+				if ( file_exists( $send_fileoption ) ) {
+					if ( false === @unlink( $send_fileoption ) ) {
+						pb_backupbuddy::status( 'warning', 'Unable to delete old remote send fileoptions file `' . $send_fileoption . '`. You may manually delete it. Check directory permissions for future cleanup.' );
+					}
+				}
+
+				$lock_file = str_replace( '.txt', '.lock', $send_fileoption );
+				if ( file_exists( $lock_file ) ) {
+					@unlink( $lock_file ); // Remove l
 				}
 
 				if ( true === $purge_log ) {
@@ -415,8 +426,7 @@ class backupbuddy_housekeeping {
 
 		return;
 
-	} // End trim_remote_send_stats().
-
+	}
 
 	/**
 	 * Cleans up expired or corrupted transients.
@@ -528,7 +538,7 @@ class backupbuddy_housekeeping {
 		}
 
 		pb_backupbuddy::status( 'details', 'Completed transient cleanup.' );
-	} // End cleanup_transients().
+	}
 
 
 	/**
@@ -575,8 +585,8 @@ class backupbuddy_housekeeping {
 									}
 								}
 
-								$backup_check_spot = __( 'Select Recent Activity > Recent Backups from the BackupBuddy Diagnostics page to find this backup and view its log details and/or manually create a backup to test for problems.', 'it-l10n-backupbuddy' );
-								$send_check_spot   = __( 'Select Recent Activity > Recent Remote Sends/File Transfers on the BackupBuddy Diagnostics page to find this backup and view its log details and/or manually create a backup to test for problems.', 'it-l10n-backupbuddy' );
+								$backup_check_spot = __( 'Select Recent Activity > Recent Backups from the Solid Backups Diagnostics page to find this backup and view its log details and/or manually create a backup to test for problems.', 'it-l10n-backupbuddy' );
+								$send_check_spot   = __( 'Select Recent Activity > Recent Remote Sends/File Transfers on the Solid Backups Diagnostics page to find this backup and view its log details and/or manually create a backup to test for problems.', 'it-l10n-backupbuddy' );
 
 								$timeout_message = '';
 								if ( '' != $timeout_step ) {
@@ -590,7 +600,7 @@ class backupbuddy_housekeeping {
 										$timeout_message = 'The step function `' . $timeout_step . '` appears to have timed out. ' . $backup_check_spot;
 									}
 								}
-								$error_message = 'Scheduled BackupBuddy backup `' . $backup_options->options['archive_file'] . '` started `' . pb_backupbuddy::$format->time_ago( $backup_options->options['start_time'] ) . '` ago likely timed out. ' . $timeout_message;
+								$error_message = 'Scheduled Solid Backups backup `' . $backup_options->options['archive_file'] . '` started `' . pb_backupbuddy::$format->time_ago( $backup_options->options['start_time'] ) . '` ago likely timed out. ' . $timeout_message;
 
 								pb_backupbuddy::status( 'error', $error_message );
 
@@ -719,7 +729,7 @@ class backupbuddy_housekeeping {
 						} else {
 							$filename = basename( $fileoptions_obj->options['file'] );
 						}
-						$error_message = 'A remote destination send of file `' . $filename . '` started `' . pb_backupbuddy::$format->time_ago( $fileoptions_obj->options['start_time'] ) . '` ago sending to the destination titled `' . $destination_title . '` of type `' . $destination_type . '` likely timed out. BackupBuddy will attempt to retry this failed transfer ONCE. If the second attempt succeeds the failed attempt will be replaced in the recent sends list. Check the error log for further details and/or manually send a backup to test for problems.';
+						$error_message = 'A remote destination send of file `' . $filename . '` started `' . pb_backupbuddy::$format->time_ago( $fileoptions_obj->options['start_time'] ) . '` ago sending to the destination titled `' . $destination_title . '` of type `' . $destination_type . '` likely timed out. Solid Backups will attempt to retry this failed transfer ONCE. If the second attempt succeeds the failed attempt will be replaced in the recent sends list. Check the error log for further details and/or manually send a backup to test for problems.';
 						pb_backupbuddy::status( 'error', $error_message );
 						if ( $seconds_ago < backupbuddy_constants::CLEANUP_MAX_AGE_TO_NOTIFY_TIMEOUT ) { // Prevents very old timed out backups from triggering email send.
 							backupbuddy_core::mail_error( $error_message );
@@ -790,7 +800,7 @@ DENY_EXTERNAL;
 		if ( file_exists( backupbuddy_core::getBackupDirectory() . '.htaccess' ) ) {
 			$unlink_status = @unlink( backupbuddy_core::getBackupDirectory() . '.htaccess' );
 			if ( false === $unlink_status ) {
-				pb_backupbuddy::alert( 'Error #844594. Unable to temporarily remove .htaccess security protection on archives directory to allow downloading. Please verify permissions of the BackupBuddy archives directory or manually download via FTP.' );
+				pb_backupbuddy::alert( 'Error #844594. Unable to temporarily remove .htaccess security protection on archives directory to allow downloading. Please verify permissions of the Solid Backups archives directory or manually download via FTP.' );
 			}
 		}
 
@@ -927,7 +937,7 @@ DENY_EXTERNAL;
 	}
 
 	/**
-	 * Remove ImportBuddy Directory
+	 * Remove Importer Directory
 	 */
 	public static function remove_importbuddy_dir() {
 		// Remove any copy of importbuddy directory in root.
@@ -945,17 +955,25 @@ DENY_EXTERNAL;
 
 	/**
 	 * Remove _dat File from Root directory.
+	 *
+	 * This file is created during backup creation.
+	 *
+	 * A false return value does not mean failure, just that the file was not found.
+	 *
+	 * @return bool  True if file is removed, false otherwise.
 	 */
-	public static function remove_dat_file_from_root() {
+	public static function remove_dat_file_from_root() : bool {
 		// Remove any copy of dat files in the site root.
 		pb_backupbuddy::status( 'details', 'Cleaning up dat file if it exists in site root.' );
 		if ( file_exists( ABSPATH . 'backupbuddy_dat.php' ) ) {
 			if ( unlink( ABSPATH . 'backupbuddy_dat.php' ) ) {
 				pb_backupbuddy::status( 'details', 'Unlinked backupbuddy_dat.php in root of site.' );
+				return true;
 			} else {
 				pb_backupbuddy::status( 'details', 'Unable to delete backupbuddy_dat.php in root of site. This file needs to be manually deleted' );
 			}
 		}
+		return false;
 	}
 
 	/**
@@ -1003,7 +1021,7 @@ DENY_EXTERNAL;
 			}
 		}
 		unset( $recent_backup_found );
-	} // End cleanup_temp_dir().
+	}
 
 	/**
 	 * Remove Temp Zip Directories
@@ -1023,18 +1041,17 @@ DENY_EXTERNAL;
 				$file_stats = stat( $file );
 				if ( ( time() - $file_stats['mtime'] ) > $backup_age_limit ) { // If older than 12 hours, delete the log.
 					if ( @pb_backupbuddy::$filesystem->unlink_recursive( $file ) === false ) {
-						$message = 'BackupBuddy was unable to clean up (delete) temporary directory/file: `' . $file . '`. You should manually delete it and/or verify proper file permissions to allow BackupBuddy to clean up for you.';
+						$message = 'Solid Backups was unable to clean up (delete) temporary directory/file: `' . $file . '`. You should manually delete it and/or verify proper file permissions to allow Solid Backups to clean up for you.';
 						pb_backupbuddy::status( 'error', $message );
 						backupbuddy_core::mail_error( $message );
 					}
 				}
 			}
 		}
-	} // End remove_temp_zip_dirs().
-
+	}
 
 	/**
-	 * Deletes any temporary BackupBuddy tables used by deployment or rollback functionality. Tables prefixed with bbold- or bbnew-.
+	 * Deletes any temporary Solid Backups tables used by deployment or rollback functionality. Tables prefixed with bbold- or bbnew-.
 	 *
 	 * @param string $force_serial      Optional. If provided then this only this serial will be cleaned up AND it will be cleaned up now regardless of its age.
 	 * @param int    $backup_age_limit  Backup Age limit.
@@ -1089,17 +1106,15 @@ DENY_EXTERNAL;
 		}
 
 		return;
-	} // End remove_temp_tables().
-
+	}
 
 	/**
-	 * Validate BackupBuddy Schedules in WordPress
+	 * Validate Schedules Exist in Action Scheduler.
 	 *
-	 * Verifies schedules all exist and are set up as expected with proper interverals, etc.
+	 * Verifies schedules all exist.
 	 */
 	public static function validate_bb_schedules_in_wp() {
-
-		// Loop through each BB schedule and create WP schedule to match.
+		// Loop through each BB schedule and create Action Scheduler action to match.
 		foreach ( pb_backupbuddy::$options['schedules'] as $schedule_id => $schedule ) {
 
 			// Remove invalid schedule arrays.
@@ -1108,53 +1123,39 @@ DENY_EXTERNAL;
 				continue;
 			}
 
-			// Retrieve current interval WordPress cron thinks the schedule is at.
-			$cron_inverval = wp_get_schedule( 'backupbuddy_cron', array( 'run_scheduled_backup', array( (int) $schedule_id ) ) );
-			$intervals     = wp_get_schedules();
-
-			if ( false === $cron_inverval ) { // Schedule MISSING. Re-schedule.
-				$result = backupbuddy_core::schedule_event( $schedule['first_run'], $schedule['interval'], 'run_scheduled_backup', array( (int) $schedule_id ) ); // Add new schedule.
-				if ( false === $result ) {
-					$message = 'Error #83443784: A missing schedule was identified but unable to be re-created. Your schedule may not work properly & need manual attention.';
-					pb_backupbuddy::alert( $message, true );
-				} else {
-					pb_backupbuddy::alert( 'Warning #2389373: A missing schedule was identified and re-created. This should have corrected any problem with this schedule.', true );
-				}
+			if ( BackupBuddy_Schedules::schedule_is_disabled( $schedule_id ) ) {
+				// Ensure schedule is not actually scheduled.
+				BackupBuddy_Schedules::unschedule_recurring_backup( $schedule_id );
 				continue;
 			}
 
-			if ( $cron_inverval != $schedule['interval'] ) { // Schedule exists BUT interval is WRONG. Fix it.
-				$cron_run = wp_next_scheduled( 'backupbuddy_cron', array( 'run_scheduled_backup', array( (int) $schedule_id ) ) );
+			// Retrieve current interval WordPress cron thinks the schedule is at.
+			$has_scheduled_action = BackupBuddy_Schedules::backup_is_scheduled( $schedule_id );
 
-				$result = backupbuddy_core::unschedule_event( $cron_run, 'backupbuddy_cron', array( 'run_scheduled_backup', array( (int) $schedule_id ) ) ); // Delete existing schedule.
+			if ( empty( $has_scheduled_action ) ) { // Schedule MISSING. Re-schedule.
+
+				$result = BackupBuddy_Schedules::schedule_recurring_backup( $schedule['first_run'], $schedule['interval'], 'run_scheduled_backup', array( (int) $schedule_id ) ); // Add new schedule.
 				if ( false === $result ) {
-					$message = 'Error removing invalid event from WordPress. Your schedule may not work properly. Please try again. Error #38279343. Check your BackupBuddy error log for details.';
+					$message = sprintf(
+						__( 'Error %s: A missing schedule was identified but unable to be re-created. Your schedule may not work properly & need manual attention.', 'it-l10n-backupbuddy' ),
+						'#83443784'
+					);
 					pb_backupbuddy::alert( $message, true );
-					continue;
-				}
-
-				// Determine when the next run time SHOULD be.
-				if ( 0 == $schedule['last_run'] ) {
-					$next_run = $schedule['first_run'];
 				} else {
-					$next_run = (int) $schedule['last_run'] + (int) $intervals[ $schedule['interval'] ]['interval'];
+					$message = sprintf(
+						__( 'Warning %s: A missing schedule was identified and re-created. This should have corrected any problem with this schedule.', 'it-l10n-backupbuddy' ),
+						'#2389373'
+					);
+					pb_backupbuddy::alert( $message, true, '', '', '', array( 'class' => ' notice-warning ' ) );
 				}
-
-				$result = backupbuddy_core::schedule_event( $next_run, $schedule['interval'], 'run_scheduled_backup', array( (int) $schedule_id ) ); // Add new schedule.
-				if ( false === $result ) {
-					$message = 'Error #237836464: An invalid schedule with the incorrect interval was identified & deleted but unable to be re-created. Your schedule may not work properly & need manual attention.';
-					pb_backupbuddy::alert( $message, true );
-					continue;
-				} else {
-					pb_backupbuddy::alert( 'Warning #2423484: An invalid schedule with the incorrect interval was identified and updated. This should have corrected any problem with this schedule.', true );
-				}
+				continue;
 			}
 		} // end foreach.
 
-	} // End validate_bb_schedules_in_wp().
+	}
 
 	/**
-	 * Backup BackupBuddy Settings
+	 * Backup Solid Backups Settings
 	 */
 	public static function backup_bb_settings() {
 		if ( empty( pb_backupbuddy::$options ) || ( ! isset( pb_backupbuddy::$options['data_version'] ) ) ) { // Don't backup missing/corrupt settings.
@@ -1204,80 +1205,84 @@ DENY_EXTERNAL;
 		if ( false === fwrite( $file_handle, "<?php die('Access Denied.'); // <!-- ?>\n" . base64_encode( serialize( pb_backupbuddy::$options ) ) ) ) {
 			return false;
 		} else {
-			pb_backupbuddy::status( 'details', 'BackupBuddy plugin options backed up.' );
+			pb_backupbuddy::status( 'details', 'Solid Backups plugin options backed up.' );
 		}
 		@fclose( $file_handle );
 
 		return true;
-	} // End backup_bb_settings().
+	}
 
 	/**
-	 * Remove WP Schedules w/no BackupBuddy Schedule
+	 * Remove WP Schedules w/no Solid Backups Schedule
 	 *
 	 * Loop through each WP schedule and delete any schedules without corresponding BB schedules or corrupt entries. Also handles migration from old to new tag backupbuddy_cron.
-	 * NOTE: Also upgrades to new backupbuddy_cron tag from pb_backupbuddy-cron_scheduled_backup AND migrationg of housekeeping tag AND removal of faulty tags.
+	 * Also removes deprecated tags.
 	 */
 	public static function remove_wp_schedules_with_no_bb_schedule() {
 		$cron = get_option( 'cron' );
 
-		foreach ( (array) $cron as $time => $cron_item ) { // Times.
+		// Foreach scheduled Times.
+		foreach ( (array) $cron as $time => $cron_item ) {
 			if ( is_numeric( $time ) ) {
-				// Loop through each schedule for this time.
-				foreach ( (array) $cron_item as $hook_name => $event ) { // Methods.
-					foreach ( (array) $event as $item_name => $item ) { // Full args for method.
 
-						if ( 'backupbuddy_cron' === $hook_name && 'run_scheduled_backup' === $item['args'][0] ) { // scheduled backup.
+				// Loop through each schedule for this time.
+				foreach ( (array) $cron_item as $hook => $action ) {
+					foreach ( (array) $action as $item_name => $item ) {
+
+						// Scheduled backup.
+						if ( backupbuddy_constants::CRON_HOOK === $hook && 'run_scheduled_backup' === $item['args'][0] ) {
 							if ( ! empty( $item['args'] ) ) {
-								if ( ! isset( pb_backupbuddy::$options['schedules'][ $item['args'][1][0] ] ) ) { // BB schedule does not exist so delete this cron item.
-									if ( false === backupbuddy_core::unschedule_event( $time, $hook_name, $item['args'] ) ) { // Delete the scheduled cron.
-										pb_backupbuddy::status( 'error', 'Error #5657667675b. Unable to delete CRON job. Please see your BackupBuddy error log for details.' );
+								if ( ! isset( pb_backupbuddy::$options['schedules'][ $item['args'][1][0] ] ) ) {
+
+									// Schedule does not exist so delete this cron item.
+									if ( backupbuddy_core::unschedule_event( $hook, $item['args'] ) ) {
+										pb_backupbuddy::status(
+											'warning',
+											__( 'Removed stale cron scheduled backup.', 'it-l10n-backupbuddy' )
+										);
 									} else {
-										pb_backupbuddy::status( 'warning', 'Removed stale cron scheduled backup.' );
+										pb_backupbuddy::status(
+											'error',
+											sprintf(
+												__( 'Error %s. Unable to delete cron job. Please see your Solid Backups error log for details.' , 'it-l10n-backupbuddy' ),
+												'#5657667675b'
+											)
+										);
 									}
 								}
-							} else { // No args, something wrong so delete it.
+							} else {
+								// No args, something wrong so delete it.
+								if ( backupbuddy_core::unschedule_event( $hook, $item['args'] ) ) {
+									pb_backupbuddy::status(
+										'warning',
+										__( 'Removed stale cron scheduled backup which had no arguments.', 'it-l10n-backupbuddy' )
+									);
+								} else {
+									pb_backupbuddy::status(
+										'error',
+										sprintf(
+											__( 'Error %s. Unable to delete cron job. Please see your Solid Backups error log for details.', 'it-l10n-backupbuddy' ),
+											'#5657667675c'
+										)
+									);
 
-								if ( false === backupbuddy_core::unschedule_event( $time, $hook_name, $item['args'] ) ) { // Delete the scheduled cron.
-									pb_backupbuddy::status( 'error', 'Error #5657667675c. Unable to delete CRON job. Please see your BackupBuddy error log for details.' );
-								} else {
-									pb_backupbuddy::status( 'warning', 'Removed stale cron scheduled backup which had no arguments.' );
 								}
 							}
-						} elseif ( 'pb_backupbuddy-cron_scheduled_backup' === $hook_name ) { // Upgrade hook name to 'backupbuddy_cron'.
-							if ( false === wp_unschedule_event( $time, $hook_name, $item['args'] ) ) { // Delete the scheduled cron.
-								pb_backupbuddy::status( 'error', 'Error #327237. Unable to delete CRON job for migration to new tag. Please see your BackupBuddy error log for details.' );
-							} else {
-								pb_backupbuddy::status( 'details', 'Removed cron with old tag format.' );
-							}
-							if ( isset( pb_backupbuddy::$options['schedules'][ $item['args'][0] ] ) ) { // BB schedule exists so recreate.
-								$result = backupbuddy_core::schedule_event( $time, pb_backupbuddy::$options['schedules'][ $item['args'][0] ]['interval'], 'run_scheduled_backup', $item['args'] );
-								if ( false === $result ) {
-									pb_backupbuddy::status( 'error', 'Error #8923832: Unable to reschedule with new cron tag.' );
-								} else {
-									pb_backupbuddy::status( 'details', 'Replaced cron with old tag format with new format.' );
-								}
-							} else {
-								pb_backupbuddy::status( 'warning', 'Stale schedule found with WordPress without corresponding BackupBuddy schedule. Not keeping when migrating to new cron tag.' );
-							}
-						} elseif ( 'pb_backupbuddy_cron' === $hook_name ) { // Remove.
-							wp_unschedule_event( $time, $hook_name, $item['args'] );
-						} elseif ( 'pb_backupbuddy_corn' === $hook_name ) { // Remove.
-							wp_unschedule_event( $time, $hook_name, $item['args'] );
-						} elseif ( 'pb_backupbuddy_housekeeping' === $hook_name ) { // Remove.
-							wp_unschedule_event( $time, $hook_name, $item['args'] );
+						} elseif ( 0 === strpos( $hook, 'pb_backupbuddy' ) ) {
+							// Remove deprecated hooks.
+							backupbuddy_core::unschedule_event( $hook, $item['args'] );
 						}
 					} // End foreach.
 					unset( $item );
 					unset( $item_name );
 				} // End foreach.
-				unset( $event );
-				unset( $hook_name );
+				unset( $action );
+				unset( $hook );
 			} // End if is_numeric.
 		} // End foreach.
 		unset( $cron_item );
 		unset( $time );
-
-	} // End remove_wp_schedules_with_no_bb_schedule().
+	}
 
 	/**
 	 * Trim Old Notifications
@@ -1296,81 +1301,37 @@ DENY_EXTERNAL;
 			pb_backupbuddy::status( 'details', 'Periodic cleanup: Replacing notifications.' );
 			backupbuddy_core::replaceNotifications( $notifications );
 		}
-	} // End trim_old_notifications().
+	}
 
 	/**
-	 * S3 Cancel Multipart Pieces.
+	 * Cancel Amazon S3 (v2 and v3) Multipart Pieces.
 	 */
 	public static function s3_cancel_multipart_pieces() {
+
+		if ( empty( pb_backupbuddy::$options['remote_destinations'] ) ) {
+			return;
+		}
+
 		foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination ) {
-			if ( 's3' !== $destination['type'] ) {
-				continue;
-			}
-			if ( isset( $destination['max_chunk_size'] ) && '0' == $destination['max_chunk_size'] ) {
+			if ( ! in_array( $destination['type'], array( 's32', 's33' ), true ) ) {
 				continue;
 			}
 
-			pb_backupbuddy::status( 'details', 'Found S3 Multipart Chunking Destinations to cleanup.' );
+			pb_backupbuddy::status( 'details', 'Found ' . $destination['title'] . ' (AWS S3) Multipart Chunking Destination to cleanup.' );
 			require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
 			$cleanup_result = pb_backupbuddy_destinations::multipart_cleanup( $destination );
-			if ( true === $cleanup_result ) {
-				pb_backupbuddy::status( 'details', 'S3 Multipart Chunking Cleanup Success.' );
+			if ( $cleanup_result ) {
+				pb_backupbuddy::status( 'details', $destination['title'] . ' (AWS S3) Multipart Chunking Destination Cleanup Success.' );
 			} else {
-				pb_backupbuddy::status( 'warning', 'Warning #349742389383: S3 Multipart Chunking Cleanup FAILURE. Manually cleanup stalled multipart send via S3 or try again later.' );
+				pb_backupbuddy::status( 'warning', 'Warning #2389328: ' . $destination['title'] . ' (AWS S3) Multipart Chunking Destination Cleanup failure. Manually clean up the stalled multipart send within S3 or try again later.' );
 			}
 		}
-	} // End s3_cancel_multipart_pieces().
-
-	/**
-	 * S3 v2 Cancel Multipart Pieces.
-	 *
-	 * Note: Cannot cleanup both s32 & s33 type desinations togetehr because of Amazon library
-	 * conflicts. First check whether we have both any s32 or s33 type destinations  - if not then
-	 * there is no problem as we have nothing to do anyway. if we do then as this is a periodic
-	 * process we randomy choose which type of destination to clean up this invocation.
-	 */
-	public static function s32_cancel_multipart_pieces() {
-		$s3x_destination = array(
-			'types'   => array( 's32', 's33' ),
-			'present' => array(),
-		);
-
-		// Derive which s3x types destinations are present (only record each type once).
-		foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination ) {
-			if ( in_array( $destination['type'], $s3x_destination['types'], true ) && ! in_array( $destination['type'], $s3x_destination['present'], true ) ) {
-				$s3x_destination['present'][] = $destination['type'];
-			}
-		}
-
-		// If we have no s3x type destinations then nothing to do.
-		if ( ! empty( $s3x_destination['present'] ) ) {
-
-			// We have s3x types destinations - decide which to process this time
-			// Randomly choose a destination type from those present to process by
-			// generating a random aray index to select which type from those present.
-			$s3x_destination_type = $s3x_destination['present'][ rand( 0, ( count( $s3x_destination['present'] ) - 1 ) ) ];
-
-			foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination ) {
-				if ( $destination['type'] != $s3x_destination_type ) {
-					continue;
-				}
-
-				pb_backupbuddy::status( 'details', 'Found ' . $destination['title'] . ' (' . $s3x_destination_type . ') Multipart Chunking Destination to cleanup.' );
-				require_once pb_backupbuddy::plugin_path() . '/destinations/bootstrap.php';
-				$cleanup_result = pb_backupbuddy_destinations::multipart_cleanup( $destination );
-				if ( true === $cleanup_result ) {
-					pb_backupbuddy::status( 'details', $destination['title'] . ' (' . $s3x_destination_type . ') Multipart Chunking Destination Cleanup Success.' );
-				} else {
-					pb_backupbuddy::status( 'warning', 'Warning #2389328: ' . $destination['title'] . ' (' . $s3x_destination_type . ') Multipart Chunking Destination Cleanup FAILURE. Manually cleanup stalled multipart send via S3 or try again later.' );
-				}
-			}
-		}
-	} // End s32_cancel_multipart_pieces().
+	}
 
 	/**
 	 * Cleanup Local Destination Temp
 	 */
-	public static function cleanup_local_destination_temp() {
+	public static function cleanup_local_destination_temp( $backup_age_limit ) {
 		// Cleanup any temporary local destinations.
 		pb_backupbuddy::status( 'details', 'Cleaning up any temporary local destinations.' );
 		foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => $destination ) {
@@ -1382,7 +1343,7 @@ DENY_EXTERNAL;
 				}
 			}
 		}
-	} // End cleanup_local_destination_temp().
+	}
 
 	/**
 	 * Schedule PHP Runtime Tests
@@ -1415,7 +1376,7 @@ DENY_EXTERNAL;
 			true,        // schedule_results.
 			$force_run,  // force_run.
 		);
-		$schedule_result = backupbuddy_core::schedule_single_event( time(), 'php_runtime_test', $args );
+		$schedule_result = backupbuddy_core::schedule_single_event( time() + 60, 'php_runtime_test', $args );
 		if ( true === $schedule_result ) {
 			pb_backupbuddy::status( 'details', 'PHP runtime test cron event scheduled.' );
 		} else {
@@ -1423,12 +1384,8 @@ DENY_EXTERNAL;
 		}
 
 		// Spawn now if enabled.
-		if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-			pb_backupbuddy::status( 'details', 'Spawning cron now.' );
-			update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-			spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-		}
-	} // End schedule_php_runtime_tests().
+		backupbuddy_core::maybe_spawn_cron();
+	}
 
 	/**
 	 * Schedule PHP Memory Tests
@@ -1461,19 +1418,92 @@ DENY_EXTERNAL;
 			true,        // schedule_results.
 			$force_run,  // force_run.
 		);
-		$schedule_result = backupbuddy_core::schedule_single_event( time(), 'php_memory_test', $args );
-		if ( true === $schedule_result ) {
+		$schedule_result = backupbuddy_core::trigger_async_event( 'php_memory_test', $args );
+		if ( ! empty( $schedule_result ) ) {
 			pb_backupbuddy::status( 'details', 'PHP memory test cron event scheduled.' );
 		} else {
 			pb_backupbuddy::status( 'error', 'PHP memory test cron event FAILED to be scheduled.' );
 		}
 
-		// Spawn now if enabled.
-		if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-			pb_backupbuddy::status( 'details', 'Spawning cron now.' );
-			update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-			spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-		}
-	} // End schedule_php_memory_tests().
+		backupbuddy_core::maybe_spawn_cron();
+	}
 
-} // end class.
+	/**
+	 * Remove completed Action Scheduler actions.
+	 */
+	public static function remove_completed_events() {
+		require_once pb_backupbuddy::plugin_path() . '/destinations/live/live_periodic.php';
+
+		$count = backupbuddy_core::delete_events();
+		$count += backupbuddy_core::delete_events(
+			array(
+				'hook' => 'itbub_cron_test',
+			)
+		);
+
+		// These remove completed and cancelled acitons.
+		$count += backupbuddy_live_periodic::housekeeping();
+		$count += pb_backupbuddy_backup::housekeeping();
+		$count += BackupBuddy_Restore::housekeeping();
+
+		pb_backupbuddy::status( 'details', sprintf( '%s Completed events removed.', $count ) );
+	}
+
+	/**
+	 * Remove canceled Action Scheduler actions.
+	 *
+	 * This will catch up to 250 of canceled Actions.
+	 */
+	public static function remove_canceled_events() {
+
+		$count = backupbuddy_core::delete_events(
+			array(
+				'status' => ActionScheduler_Store::STATUS_CANCELED,
+			)
+		);
+
+		pb_backupbuddy::status( 'details', sprintf( '%s Canceled events removed.', $count ) );
+	}
+
+
+	/**
+	 * Converts all S3-related destinations to S3 (v3).
+	 *
+	 * Note there is a simliar method in destinations/bootstrap.php.
+	 *
+	 * @todo this can be removed in a future version.
+	 *
+	 * @since 9.1.8
+	 *
+	 * @return void
+	 */
+	public static function migrate_to_latest_s3_version() {
+		$updated = false;
+
+		if ( ! isset( pb_backupbuddy::$options['remote_destinations'] ) || ! is_array( pb_backupbuddy::$options['remote_destinations'] ) ) {
+			return;
+		}
+
+		foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => $destination ) {
+			if ( ! in_array( $destination['type'] , [ 's32', 'stash2', 'live' ], true ) ) {
+				continue;
+			}
+
+			if ( 's32' === $destination['type'] ) {
+				$updated = true;
+				pb_backupbuddy::$options['remote_destinations'][ $destination_id ]['type'] = 's33';
+			} else if ( 'stash2' === $destination['type'] ) {
+				$updated = true;
+				pb_backupbuddy::$options['remote_destinations'][ $destination_id ]['type'] = 'stash3';
+			} elseif ( 'live' === $destination['type'] && $destination['destination_version'] !== '3' ) {
+				$updated = true;
+				pb_backupbuddy::$options['remote_destinations'][ $destination_id ]['destination_version'] = '3';
+			}
+		}
+
+		if ( $updated ) {
+			pb_backupbuddy::save();
+		}
+	}
+
+}

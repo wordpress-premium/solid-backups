@@ -9,7 +9,7 @@ is_admin() || die( 'Access Denied.' );
 ?>
 <script type="text/javascript">
 	function pb_backupbuddy_selectdestination( destination_id, destination_title, callback_data, delete_after, mode ) {
-		window.location.href = '<?php echo pb_backupbuddy::page_url(); ?>&custom=remoteclient&destination_id=' + destination_id;
+		window.location.href = '<?php echo esc_attr( pb_backupbuddy::page_url() ); ?>&custom=remoteclient&destination_id=' + parseInt( destination_id );
 	}
 </script>
 
@@ -36,7 +36,7 @@ $tabs = new BackupBuddy_Tabs(
 		),
 		array(
 			'id'       => 'advanced',
-			'label'    => esc_html__( 'Advanced Settings / Troubleshooting', 'it-l10n-backupbuddy' ),
+			'label'    => esc_html__( 'Advanced Settings', 'it-l10n-backupbuddy' ),
 			'callback' => function() {
 				require pb_backupbuddy::plugin_path() . '/views/settings/_advanced.php';
 			},
@@ -54,7 +54,7 @@ $admin_url = is_network_admin() ? network_admin_url( 'admin.php' ) : admin_url( 
 ?>
 <script type="text/javascript">
 	function pb_backupbuddy_selectdestination( destination_id, destination_title, callback_data ) {
-		window.location.href = '<?php echo $admin_url; ?>?page=pb_backupbuddy_backup&custom=remoteclient&destination_id=' + destination_id;
+		window.location.href = '<?php echo esc_url( $admin_url ); ?>?page=pb_backupbuddy_backup&custom=remoteclient&destination_id=' + parseInt( destination_id );
 	}
 </script>
 <?php

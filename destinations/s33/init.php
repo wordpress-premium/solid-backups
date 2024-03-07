@@ -5,7 +5,7 @@
  * @package BackupBuddy
  */
 
-use Aws\S3\S3Client; // Alias namespace.
+use Solid_Backups\Strauss\Aws\S3\S3Client;
 
 /**
  * DO NOT CALL THIS CLASS DIRECTLY. CALL VIA: pb_backupbuddy_destination in bootstrap.php.
@@ -48,8 +48,8 @@ class pb_backupbuddy_destination_s33 {
 	 * @var array
 	 */
 	public static $destination_info = array(
-		'name'        => 'Amazon S3 (v3)',
-		'description' => 'Amazon S3 is a well known cloud storage provider. This destination is known to be reliable and works well with BackupBuddy. Supports both bursting and chunking. <a href="http://aws.amazon.com/s3/" target="_blank">Learn more here.</a>',
+		'name'        => 'Amazon S3',
+		'description' => 'Amazon S3 is a well known cloud storage provider. This destination is known to be reliable and works well with Solid Backups. Supports both bursting and chunking. <a href="https://go.solidwp.com/amazons3" target="_blank">Learn more here.</a>',
 		'category'    => 'best', // best, normal, or legacy.
 	);
 
@@ -136,26 +136,22 @@ class pb_backupbuddy_destination_s33 {
 	 * @return array  Array of formatted and sanitized settings.
 	 */
 	private static function _init( $settings ) {
-		//pb_backupbuddy::status( 'details', 'Loading AWS SDK in _init.' );
-		require_once dirname( dirname( __FILE__ ) ) . '/_s3lib3/aws-autoloader.php';
-		//pb_backupbuddy::status( 'details', 'SDK loaded.' );
-
 		$settings = self::_formatSettings( $settings ); // Format all settings.
 
-		// If not connected with these exact settings (by comparisong signatue of $settings ) then connect & prepare bucket.
+		// If not connected with these exact settings (by comparing signatue of $settings ) then connect & prepare bucket.
 		//if ( ! isset( self::$_client ) ) {
 		$newSignature = md5( serialize( $settings ) );
 		if ( $newSignature != self::$_client_signature ) {
 			self::$_client_signature = md5( serialize( $settings ) );
 
-			$s3Config = array();
+			$s3config = array();
 
 			// Base credentials.
-			$s3Config['credentials'] = self::getCredentials( $settings );
+			$s3config['credentials'] = self::getCredentials( $settings );
 
 			// SSL option.
 			if ( '0' == $settings['ssl'] ) {
-				$s3Config['scheme'] = 'http';
+				$s3config['scheme'] = 'http';
 				pb_backupbuddy::status( 'details', 'SSL disabled.' );
 			}
 
@@ -175,16 +171,16 @@ class pb_backupbuddy_destination_s33 {
 				}
 			}
 
-			$s3Config['signature_version'] = 'v4';
-			$s3Config['region'] = str_replace( array( '.amazonaws.com.cn', '.amazonaws.com', 's3-' ), '', $settings['region'] );
-			if ( 's3' == $s3Config['region'] ) {
-				$s3Config['region'] = 'us-east-1';
+			$s3config['signature_version'] = 'v4';
+			$s3config['region'] = str_replace( array( '.amazonaws.com.cn', '.amazonaws.com', 's3-' ), '', $settings['region'] );
+			if ( 's3' == $s3config['region'] ) {
+				$s3config['region'] = 'us-east-1';
 			}
-			$s3Config['version'] = '2006-03-01'; // Some regions now requiring this.
+			$s3config['version'] = '2006-03-01'; // Some regions now requiring this.
 
 			if ( ! empty( $settings['client_settings'] ) ) {
 				foreach ( $settings['client_settings'] as $setting => $value ) {
-					$s3Config[$setting] = $value;
+					$s3config[$setting] = $value;
 				}
 			}
 			if ( ! empty( $settings['settings_override'] ) ) {
@@ -193,12 +189,12 @@ class pb_backupbuddy_destination_s33 {
 				}
 			}
 
-			if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
-				//error_log( '$s3config: ' . print_r( $s3Config, true ) );
+			if ( pb_backupbuddy::full_logging() ) {
+				//error_log( '$s3config: ' . print_r( $s3config, true ) );
 			}
 
 			if ( '1' == $settings['debug_mode'] ) {
-				$s3Config['debug'] = array(
+				$s3config['debug'] = array(
 					'logfn'       => function ( $msg ) {
 						pb_backupbuddy::status( 'details', 'S3(v3)debug: ' . $msg );
 					},
@@ -209,11 +205,10 @@ class pb_backupbuddy_destination_s33 {
 			}
 
 			if ( isset( $settings['accelerate'] ) && ( '1' == $settings['accelerate'] ) ) {
-				$s3Config['use_accelerate_endpoint'] = true;
+				$s3config['use_accelerate_endpoint'] = true;
 			}
 
-			self::$_client = new S3Client( $s3Config );
-			// self::$_client->getConfig()->set( 'curl.options', array( 'body_as_string' => true ) ); // Work around "[curl] 65: necessary data rewind wasn't possible" issue. See https://github.com/aws/aws-sdk-php/issues/284
+			self::$_client = new S3Client( $s3config );
 
 		}
 
@@ -278,7 +273,7 @@ class pb_backupbuddy_destination_s33 {
 		$chunkSizeBytes   = $settings['max_burst'] * 1024 * 1024; // Send X mb at a time to limit memory usage.
 		self::$_timeStart = microtime( true );
 
-		if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+		if ( pb_backupbuddy::full_logging() ) {
 			pb_backupbuddy::status( 'details', 'Settings due to log level: `' . print_r( $settings, true ) . '`.' );
 		}
 
@@ -366,11 +361,12 @@ class pb_backupbuddy_destination_s33 {
 					'ETag'       => $response['ETag'],
 				);
 
-				if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+				if ( pb_backupbuddy::full_logging() ) {
 					pb_backupbuddy::status( 'details', 'Success sending chunk. Upload details due to log level: `' . print_r( $response, true ) . '`.' );
 				} else {
 					pb_backupbuddy::status( 'details', 'Success sending chunk. Enable full logging for upload result details.' );
 				}
+
 				$uploaded_size = $contentLength;
 				$elapseTime    = ( microtime(true) - $sendStart );
 				if ( 0 == $elapseTime ) {
@@ -541,17 +537,16 @@ class pb_backupbuddy_destination_s33 {
 						$cronHashID = md5( $cronTime . serialize( $cronArgs ) );
 						$cronArgs[] = $cronHashID;
 
-						$schedule_result = backupbuddy_core::schedule_single_event( $cronTime, 'destination_send', $cronArgs );
+						// @TODO need autoloader.
+						require_once( pb_backupbuddy::plugin_path() . '/destinations/live/live_periodic.php' );
+						$schedule_result = backupbuddy_core::trigger_async_event( 'destination_send', $cronArgs, backupbuddy_live_periodic::CRON_GROUP );
 						if ( true === $schedule_result ) {
 							pb_backupbuddy::status( 'details', 'Next S3 chunk step cron event scheduled.' );
 						} else {
 							pb_backupbuddy::status( 'error', 'Next S3 chunk step cron event FAILED to be scheduled.' );
 						}
 
-						if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-							update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-							spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-						}
+						backupbuddy_core::maybe_spawn_cron();
 
 						return array( $settings['_multipart_id'], 'Sent part ' . $settings['_multipart_partnumber'] . ' of ' . count( $settings['_multipart_counts'] ) . ' parts.' . $update_status );
 					} else { // End if.
@@ -568,7 +563,10 @@ class pb_backupbuddy_destination_s33 {
 
 		} // End while not feof.
 
-		@fclose( $f );
+		// Make sure the file got closed if we make it this far
+		if ( is_resource( $f ) ) {
+			@fclose( $f );
+		}
 
 		/***** BEGIN FILE ARCHIVE LIMITS *****/
 
@@ -628,7 +626,7 @@ class pb_backupbuddy_destination_s33 {
 		try {
 			$response = self::$_client->createMultipartUpload( $thisCall );
 		} catch ( Exception $e ) {
-			if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+			if ( pb_backupbuddy::full_logging() ) {
 				pb_backupbuddy::status( 'details', 'Call details due to logging level: `' . print_r( $thisCall, true ) . '`.' );
 			}
 			$message = $e->getMessage();
@@ -827,6 +825,7 @@ class pb_backupbuddy_destination_s33 {
 
 		$prefix  = ! empty( $settings['remote_path'] ) ? $settings['remote_path'] : '';
 		$backups = self::get_files( $settings );
+		$backups = is_array( $backups ) ? $backups : array();
 
 		$backup_list       = array();
 		$backup_sort_dates = array();
@@ -837,7 +836,7 @@ class pb_backupbuddy_destination_s33 {
 			if ( false !== stristr( $backup, '/' ) ) { // Do NOT display any files within a deeper subdirectory.
 				continue;
 			}
-			if ( ! preg_match( pb_backupbuddy_destination_s33::BACKUP_FILENAME_PATTERN, $backup ) && 'importbuddy.php' !== $backup ) { // Do not display any files that do not appear to be a BackupBuddy backup file (except importbuddy.php).
+			if ( ! preg_match( pb_backupbuddy_destination_s33::BACKUP_FILENAME_PATTERN, $backup ) && 'importbuddy.php' !== $backup ) { // Do not display any files that do not appear to be a Solid Backups backup file (except importbuddy.php).
 				continue;
 			}
 
@@ -892,7 +891,7 @@ class pb_backupbuddy_destination_s33 {
 	 * @return bool  If file was deleted.
 	 */
 	public static function deleteFile( $settings, $file ) {
-		return self::delete( $settings, $files );
+		return self::delete( $settings, $file );
 	} // End deleteFile().
 
 	/**
@@ -1111,6 +1110,7 @@ class pb_backupbuddy_destination_s33 {
 	 * @return array  Array of dat files.
 	 */
 	public static function get_dat_orphans( $settings ) {
+		$settings = self::_init( $settings );
 		$backups_array = self::listFiles( $settings );
 		if ( ! is_array( $backups_array ) ) {
 			return false;
@@ -1118,7 +1118,7 @@ class pb_backupbuddy_destination_s33 {
 
 		$orphans = array();
 		$backups = array();
-		$files   = self::get_files( $settings, array( '.dat' ) );
+		$files   = self::get_files( $settings );
 
 		if ( ! is_array( $files ) ) {
 			return false;
@@ -1137,7 +1137,7 @@ class pb_backupbuddy_destination_s33 {
 
 		// Loop through dat files looking for orphans.
 		foreach ( $files as $file ) {
-			$filename = isset( $file['Key'] ) ? $file['Key'] : $file['filename'];
+			$filename = str_ireplace( $settings['directory'], '', $file['Key'] );
 
 			// Appears to not be a dat file for this site.
 			if ( strpos( $filename, 'backup-' . $prefix ) === false ) {
@@ -1202,21 +1202,6 @@ class pb_backupbuddy_destination_s33 {
 			$credentials['key']    = $settings['accesskey'];
 			$credentials['secret'] = $settings['secretkey'];
 		}
-
-		/*
-		if ( '1' == $settings['use_server_cert'] ) {
-			pb_backupbuddy::status( 'details', 'Using webserver certificates (not bundled with BackupBuddy) based on destination settings.' );
-			$credentials['ssl.certificate_authority'] = 'system';
-		} else {
-			pb_backupbuddy::status( 'details', 'Using bundled cacert.pem file based on destination settings.' );
-			$credentials['ssl.certificate_authority'] = true; //pb_backupbuddy::plugin_path() . '/destinations/_s3lib2/Guzzle/Http/Resources/cacert.pem';
-		}
-
-		if ( '1' == $settings['disable_hostpeer_verficiation'] ) {
-			pb_backupbuddy::status( 'warning', 'Disabling SSL peer and host validation based on destination settings. Any prior certificate bundle settings will be ignored. CAUTION: This removes man-in-the-middle protections. Use only if needed due to host issues.' );
-			$credentials['ssl.certificate_authority'] = false; // Disables host & peer validations.
-		}
-		*/
 
 		return $credentials;
 
@@ -1283,20 +1268,20 @@ class pb_backupbuddy_destination_s33 {
 
 		$parts = count( $uploads );
 
-		if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+		if ( pb_backupbuddy::full_logging()) {
 			pb_backupbuddy::status( 'details', 'Multipart upload check retrieved. Found `' . $parts . '` multipart uploads in progress / stalled. Full logging mode details: `' . print_r( $response, true ) . '`' );
 		} else {
-			pb_backupbuddy::status( 'details', 'Multipart upload check retrieved. Found `' . $parts . '` multipart uploads in progress / stalled. Old BackupBuddy parts will be cleaned up (if any found) ...' );
+			pb_backupbuddy::status( 'details', 'Multipart upload check retrieved. Found `' . $parts . '` multipart uploads in progress / stalled. Old Solid Backups parts will be cleaned up (if any found) ...' );
 		}
 
 		// Loop through each incomplete multipart upload.
 		foreach ( $uploads as $upload ) {
-			if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+			if ( pb_backupbuddy::full_logging() ) {
 				pb_backupbuddy::status( 'details', 'Checking upload (full logging mode): ' . print_r( $upload, true ) );
 			}
-			//if ( FALSE !== stristr( $upload['Key'], $backupDetectPrefix ) ) { // BackupBuddy backup file.
+			//if ( FALSE !== stristr( $upload['Key'], $backupDetectPrefix ) ) { // Solid Backups backup file.
 			$initiated = strtotime( $upload['Initiated'] );
-			if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+			if ( pb_backupbuddy::full_logging() ) {
 				pb_backupbuddy::status( 'details', 'Multipart Chunked Upload(s) detected in progress. Full logging age: `' . pb_backupbuddy::$format->time_ago( $initiated ) . '`.' );
 			}
 
@@ -1314,7 +1299,7 @@ class pb_backupbuddy_destination_s33 {
 					pb_backupbuddy::status( 'error', 'Stalled Multipart Chunked abort of file `' . $upload['Key'] . '` with ID `' . $upload['UploadId'] . '` FAILED. Manually abort it. Details: `' . $e . '`.' );
 				}
 			} else {
-				if ( pb_backupbuddy::$options['log_level'] != '3' ) { // Full logging NOT enabled.
+				if ( ! pb_backupbuddy::full_logging() ) {
 					pb_backupbuddy::status( 'details', 'Multipart Chunked Uploads not aborted as not too old.' );
 				}
 			}
@@ -1335,7 +1320,7 @@ class pb_backupbuddy_destination_s33 {
 	 * @return bool  True on all okay, false otherwise.
 	 */
 	private static function _prepareBucketAndRegion( $settings, $createBucket = true ) {
-		$error = 'BackupBuddy Error #32823893: Obsolete function call.';
+		$error = 'Solid Backups Error #32823893: Obsolete function call.';
 		error_log( $error );
 		echo $error;
 		return false;
@@ -1363,7 +1348,7 @@ class pb_backupbuddy_destination_s33 {
 			$detectedRegion      = '';
 			$maybe_create_bucket = true;
 			$message             = 'Exception retrieving information for bucket `' . $settings['bucket'] . '`. Assuming region in $settings correct. If using IAM security, verify this resource ALLOWs the action "s3:GetBucketLocation". Details: `' . "$e" . '`. Full result: `' . print_r( $result, true ) . '`.';
-			if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+			if ( pb_backupbuddy::full_logging() ) {
 				pb_backupbuddy::status( 'details', 'Settings used due to log level: `' . print_r( $settings, true ) . '`.' );
 			}
 			echo $message;
@@ -1419,7 +1404,7 @@ class pb_backupbuddy_destination_s33 {
 			$i++;
 		}
 
-		if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+		if ( pb_backupbuddy::full_logging() ) {
 			pb_backupbuddy::status( 'details', 'Multipart counts due to log level: `' . print_r( $values, true ) . '`.' );
 		}
 		return $values;

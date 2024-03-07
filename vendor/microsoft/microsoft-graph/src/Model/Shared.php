@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 /**
@@ -18,10 +17,9 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class Shared extends Entity
 {
@@ -129,7 +127,7 @@ class Shared extends Entity
     public function getSharedDateTime()
     {
         if (array_key_exists("sharedDateTime", $this->_propDict)) {
-            if (is_a($this->_propDict["sharedDateTime"], "Microsoft\Graph\Model\\DateTime")) {
+            if (is_a($this->_propDict["sharedDateTime"], "\DateTime")) {
                 return $this->_propDict["sharedDateTime"];
             } else {
                 $this->_propDict["sharedDateTime"] = new \DateTime($this->_propDict["sharedDateTime"]);

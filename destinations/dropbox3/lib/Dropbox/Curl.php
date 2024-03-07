@@ -22,7 +22,7 @@ final class Curl
     function __construct($url)
     {
 
-		if ( \pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+		if ( \pb_backupbuddy::full_logging() ) {
 			ob_start();
 			$this->debugout = fopen('php://output', 'w');
 		}
@@ -34,7 +34,7 @@ final class Curl
         \pb_backupbuddy::status( 'details', 'Curl URL: `' . $url . '`.' );
         $this->handle = curl_init($url);
 
-        if ( \pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+        if ( \pb_backupbuddy::full_logging() ) {
 	        curl_setopt($this->handle, CURLOPT_VERBOSE, true);
 	        curl_setopt($this->handle, CURLOPT_STDERR, $this->debugout);
 	   }
@@ -138,7 +138,7 @@ final class Curl
 
 		$statusCode = curl_getinfo( $this->handle, CURLINFO_HTTP_CODE );
 
-		if ( '3' == \pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+		if ( \pb_backupbuddy::full_logging() ) {
 			fclose( $this->debugout );
 			$debug = ob_get_clean();
 			\pb_backupbuddy::status( 'details', 'Dropbox HTTP debug: `' . $debug . '`.' );

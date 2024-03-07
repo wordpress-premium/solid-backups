@@ -1,1 +1,1 @@
-<?php die(); // Test file for testing BackupBuddy remote transfers. You may delete this file if found on your destination server.
+<?php die(); // Test file for testing Solid Backups remote transfers. You may delete this file if found on your destination server.

@@ -27,7 +27,7 @@ if ( $create_db_result === true ) {
 	echo 'Success! Created database, user, and assigned user to database.';
 } else {
 	echo "Unable to automatically create database with the provided settings. Check settings or manually create the database from your host's control panel. See tutorial at: ";
-	echo "http://ithemes.com/tutorial-create-database-in-cpanel/\n\n";
+	echo "https://go.solidwp.com/backups-tutorials\n\n";
 	echo "Error details:\n" . implode( "\n", $create_db_result);
 }
 

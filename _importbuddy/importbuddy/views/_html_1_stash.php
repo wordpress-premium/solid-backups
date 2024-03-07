@@ -36,7 +36,7 @@ function stashAPI( $settings, $action, $additional_params = array() ) {
 	} elseif ( isset( $settings['itxapi_token'] ) ) { // Used on initital connection to
 		$params = array( 'token' => $settings['itxapi_token'] ); // itxapi_password is a HASH of user's password.
 	} else {
-		$error = 'BackupBuddy Error #793749436: No valid token (itxapi_token) or hashed password (itxapi_password) specified. This should not happen.';
+		$error = 'Solid Backups Error #793749436: No valid token (itxapi_token) or hashed password (itxapi_password) specified. This should not happen.';
 		trigger_error( $error, E_USER_NOTICE );
 		return $error;
 	}
@@ -105,7 +105,7 @@ $credentials_form->add_setting(
 	array(
 		'type'  => 'text',
 		'name'  => 'itxapi_username',
-		'title' => __( 'iThemes username', 'it-l10n-backupbuddy' ),
+		'title' => __( 'SolidWP username', 'it-l10n-backupbuddy' ),
 		'rules' => 'required|string[1-45]',
 	)
 );
@@ -113,13 +113,13 @@ $credentials_form->add_setting(
 	array(
 		'type'  => 'password',
 		'name'  => 'itxapi_password_raw',
-		'title' => __( 'iThemes password', 'it-l10n-backupbuddy' ),
+		'title' => __( 'SolidWP password', 'it-l10n-backupbuddy' ),
 		'rules' => 'required|string[1-45]',
 	)
 );
 
 $settings_result = $credentials_form->process();
-$login_welcome   = '<center>' . __( 'Log in to Stash with your iThemes.com member account.', 'it-l10n-backupbuddy' ) . '<br><br>';
+$login_welcome   = '<center>' . __( 'Log in to Stash with your SolidWP member account.', 'it-l10n-backupbuddy' ) . '<br><br>';
 
 if ( count( $settings_result ) === 0 ) { // No form submitted.
 
@@ -136,7 +136,7 @@ if ( count( $settings_result ) === 0 ) { // No form submitted.
 	} else { // No form errors; process!
 
 		require_once dirname( dirname( __FILE__ ) ) . '/lib/requestcore/requestcore.class.php';
-		require_once dirname( dirname( __FILE__ ) ) . '/lib/stash2/class.itx_helper2.php';
+		require_once dirname( dirname( __FILE__ ) ) . '/lib/3/class.itx_helper2.php';
 
 		global $wp_version;
 		$itxapi_username = strtolower( $settings_result['data']['itxapi_username'] );
@@ -264,7 +264,7 @@ if ( count( $settings_result ) === 0 ) { // No form submitted.
 						pb_backupbuddy::$ui->list_table(
 							$display_list,
 							array(
-								'columns' => array( 'Type', 'Uploaded<img src="' . pb_backupbuddy::plugin_url() . '/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent first"><span class="description">(Click to download)</span>', 'File Size', 'Action' ),
+								'columns' => array( 'Type', 'Uploaded<img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/sort_down.png" style="vertical-align: 0px;" title="Sorted most recent first"><span class="description">(Click to download)</span>', 'File Size', 'Action' ),
 								'css'     => 'width: 100%;',
 							)
 						);
@@ -284,6 +284,6 @@ if ( count( $settings_result ) === 0 ) { // No form submitted.
 
 <br><hr>
 <center>
-	<a href="https://sync.ithemes.com/stash" target="_blank" class="button button-secondary">Manage your Stash files via iThemes Sync</a>
+	<a href="https://go.solidwp.com/stash" target="_blank" class="button button-secondary">Manage your Stash files via Solid Central</a>
 </center>
 <br>

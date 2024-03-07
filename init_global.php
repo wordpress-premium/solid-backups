@@ -1,7 +1,7 @@
 <?php // This code runs everywhere. pb_backupbuddy::$options preloaded.
 
 
-/***** BEGIN BackupBuddy Stash Live Init *****/
+/***** BEGIN Solid Backups Stash Live Init *****/
 foreach( pb_backupbuddy::$options['remote_destinations'] as $destination ) { // See if we have Live activated.
 	if ( 'live' == $destination['type'] ) {
 		include( 'destinations/live/live_continuous.php' );
@@ -9,27 +9,27 @@ foreach( pb_backupbuddy::$options['remote_destinations'] as $destination ) { // 
 		break;
 	}
 }
-/***** END BackupBuddy Stash Live Init *****/
-
+/***** END Solid Backups Stash Live Init *****/
 
 
 include( 'classes/constants.php' );
 include( 'classes/api.php' );
+require_once( pb_backupbuddy::plugin_path() . '/vendor/woocommerce/action-scheduler/action-scheduler.php' );
 
 
 // Handle API calls if backupbuddy_api_key is posted. If anything fails security checks pretend nothing at all happened.
 if ( isset( $_SERVER['HTTP_BACKUPBUDDY_API_KEY' ] ) && ( '' != $_SERVER['HTTP_BACKUPBUDDY_API_KEY' ] ) ) { // Although the header is passed with dashes PHP changes these to underscores after they are received. However, if you send the header with underscores it will silently be dropped.
-	if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+	if ( pb_backupbuddy::full_logging() ) {
 		pb_backupbuddy::status( 'details', 'Deployment incoming call: HTTP_BACKUPBUDDY-API-KEY header set' );
 	}
 
 	if ( defined( 'BACKUPBUDDY_API_ENABLE' ) && ( TRUE == BACKUPBUDDY_API_ENABLE ) ) {
-		if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+		if ( pb_backupbuddy::full_logging() ) {
 			pb_backupbuddy::status( 'details', 'Deployment incoming call: API enabled via wp-config.' );
 		}
 
 		if ( ( isset( pb_backupbuddy::$options['remote_api'] ) ) && ( count( pb_backupbuddy::$options['remote_api']['keys'] ) > 0 ) ) { // Verify API is enabled. && defined( 'BACKUPBUDDY_API_SALT' ) && ( 'CHANGEME' != BACKUPBUDDY_API_SALT ) && ( strlen( BACKUPBUDDY_API_SALT ) >= 5 )
-			if ( pb_backupbuddy::$options['log_level'] == '3' ) { // Full logging enabled.
+			if ( pb_backupbuddy::full_logging() ) {
 				pb_backupbuddy::status( 'details', 'Deployment incoming call: API keys are defined / turned on.' );
 			}
 
@@ -41,33 +41,6 @@ if ( isset( $_SERVER['HTTP_BACKUPBUDDY_API_KEY' ] ) && ( '' != $_SERVER['HTTP_BA
 
 	}
 }
-
-// Internal cron (disabled by default).
-if ( ( '1' == pb_backupbuddy::$options['use_internal_cron'] ) && ( 'process_backup' == pb_backupbuddy::_POST( 'backupbuddy_cron_action' ) ) ) {
-	// Verify access to trigger cron.
-	if ( pb_backupbuddy::$options['log_serial'] != pb_backupbuddy::_POST( 'backupbuddy_key' ) ) {
-		die( 'Access Denied.' );
-	}
-
-	// Ignore anything older than 5 min.
-	$max_cron_age = 60 * 5;
-	if ( time() - pb_backupbuddy::_POST( 'backupbuddy_time' ) > ( $max_cron_age ) ) {
-		die( 'Cron action too old.' );
-	}
-
-	// Try to prevent any caching layer.
-	@header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-	@header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-	@header("Cache-Control: no-store, no-cache, must-revalidate");
-	@header("Cache-Control: post-check=0, pre-check=0", false);
-	@header("Pragma: no-cache");
-
-	// Process.
-	require_once( pb_backupbuddy::plugin_path() . '/classes/core.php' );
-	backupbuddy_core::process_backup( pb_backupbuddy::_POST( 'backupbuddy_serial' ) );
-	die( '`' . microtime( true ) . '`' );
-}
-
 
 // Make localization happen.
 if ( ( ! defined( 'PB_STANDALONE' ) ) && ( '1' != pb_backupbuddy::$options['disable_localization'] ) ) {
@@ -147,21 +120,21 @@ function backupbuddy_jetpack_security_report() {
 	$lastRun = pb_backupbuddy::$options['last_backup_finish'];
 	if ( 0 === $lastRun ) { // never made a backup.
 		$args['status'] = 'warning';
-		$args['message'] = __( 'You have not completed your first BackupBuddy backup.', 'it-l10n-backupbuddy' );
+		$args['message'] = __( 'You have not completed your first Solid Backups backup.', 'it-l10n-backupbuddy' );
 	} else { // have made a backup.
 		$args['last'] = $lastRun;
 
 		// If the last backup was too long ago then change status to warning. Only calculate a backup was ever made.
 		if ( ( time() - $lastRun ) > $maxTimeWithoutBackupBeforeWarn ) {
 			$args['status'] = 'warning';
-			$args['message'] .= ' ' . __( 'It has been over a month since your last BackupBuddy backup completed.', 'it-l10n-backupbuddy' );
+			$args['message'] .= ' ' . __( 'It has been over a month since your last Solid Backups backup completed.', 'it-l10n-backupbuddy' );
 		}
 	}
 
 	// Determine next run.
 	$nextRun = 0;
 	foreach ( pb_backupbuddy::$options['schedules'] as $schedule_id => $schedule ) { // Find soonest schedule to run next.
-		$thisRun = wp_next_scheduled( 'backupbuddy_cron', array( 'run_scheduled_backup', array( (int)$schedule_id ) ) );
+		$thisRun = backupbuddy_core::next_scheduled( 'run_scheduled_backup', array( (int)$schedule_id ) );
 		if ( false !== $thisRun ) {
 			if ( ( 0 === $nextRun ) || ( $thisRun < $nextRun ) ) { // Set next run if $thisRun is going to run sooner than schedule in $nextRun.
 				$nextRun = $thisRun;
@@ -170,7 +143,7 @@ function backupbuddy_jetpack_security_report() {
 	}
 	if ( 0 === $nextRun ) {
 		$args['status'] = 'warning';
-		$args['message'] .= ' ' . __( 'You do not currently have any backup schedules in BackupBuddy.', 'it-l10n-backupbuddy' );
+		$args['message'] .= ' ' . __( 'You do not currently have any backup schedules in Solid Backups.', 'it-l10n-backupbuddy' );
 	} else {
 		$args['next'] = $nextRun;
 	}
@@ -218,11 +191,13 @@ function itbub_ajax_nopriv_itbub_http_loop_back_test() {
 		status_header(400);
 		die();
 	}
+	// If we made it here, we're good.
+	wp_die('-1');
 }
 add_action( 'wp_ajax_nopriv_itbub_http_loop_back_test', 'itbub_ajax_nopriv_itbub_http_loop_back_test' );
 
 
-// iThemes Sync Verb Support
+// Solid Sync Verb Support
 function backupbuddy_register_sync_verbs( $api ) {
 	$verbs = array(
 		'backupbuddy-run-backup'				=> 'Ithemes_Sync_Verb_Backupbuddy_Run_Backup',

@@ -5,18 +5,18 @@ if ( isset( $destination['disabled'] ) && ( '1' == $destination['disabled'] ) ) 
 
 //pb_backupbuddy::$ui->title( 'Rackspace Cloudfiles' );
 //echo '<h3>Viewing `' . $destination['title'] . '` (' . $destination['type'] . ')</h3>';
-	
+
 	// Rackspace information
 	$rs_username = $destination['username'];
 	$rs_api_key = $destination['api_key'];
 	$rs_container = $destination['container'];
 	$rs_server = $destination['server'];
-	
+
 	$directory = '';
 	if ( isset( $settings['directory'] ) && ( '' != $settings['directory'] ) ) {
 		$directory = trim( $settings['directory'], '\\/' ) . '/'; // Trailing slash. No leading slash.
 	}
-	
+
 	/*
 	if ( isset( $destination['server'] ) ) {
 		$rs_server = $destination['server'];
@@ -25,25 +25,25 @@ if ( isset( $destination['disabled'] ) && ( '1' == $destination['disabled'] ) ) 
 	}
 	$rs_path = ''; //$destination['path'];
 	*/
-	
+
 	require_once( pb_backupbuddy::plugin_path() . '/destinations/rackspace/lib/rackspace/cloudfiles.php');
 	$auth = new CF_Authentication( $rs_username, $rs_api_key, NULL, $rs_server );
 	$auth->authenticate();
-	
+
 	try {
 	$conn = new CF_Connection( $auth );
 	} catch (Exception $e) {
 		echo 'Error #847834: Exception caught accessing Rackspace. If this persists try deleting (by selecting the configure destination button) & re-creating this destination. Details: `' . $e->getMessage() . '`.';
 		die();
 	}
-	
+
 	// Set container
 	$container = @$conn->get_container($rs_container);
-	
+
 	// Delete Rackspace backups
 	if ( !empty( $_POST['delete_file'] ) ) {
 		pb_backupbuddy::verify_nonce();
-		
+
 		$delete_count = 0;
 		if ( !empty( $_POST['files'] ) && is_array( $_POST['files'] ) ) {
 			// loop through and delete Rackspace files
@@ -58,19 +58,16 @@ if ( isset( $destination['disabled'] ) && ( '1' == $destination['disabled'] ) ) 
 		}
 		echo '<br>';
 	}
-	
+
 	// Copy Rackspace backup to the local backup files
 	if ( !empty( $_GET['cpy_file'] ) ) {
 		pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
 		echo '<br>';
 		pb_backupbuddy::status( 'details',  'Scheduling Cron for creating Rackspace copy.' );
 		backupbuddy_core::schedule_single_event( time(), 'process_rackspace_copy', array( $_GET['cpy_file'], $rs_username, $rs_api_key, $rs_container, $rs_server ) );
-		if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-			update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-			spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-		}
+		backupbuddy_core::maybe_spawn_cron();
 	}
-	
+
 	// List objects in container
 	/*
 	if ( $rs_path != '' ) {
@@ -111,7 +108,7 @@ $urlPrefix = pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . h
 			</tfoot>
 			<tbody>
 				<?php
-				
+
 				if ( empty( $results ) ) {
 					echo '<tr><td colspan="5" style="text-align: center;"><i>You have not created any Rackspace backups yet.</i></td></tr>';
 				} else {
@@ -146,7 +143,7 @@ $urlPrefix = pb_backupbuddy::ajax_url( 'remoteClient' ) . '&destination_id=' . h
 				<input type="submit" name="delete_file" value="Delete from Rackspace" class="button-secondary delete" />
 			</div>
 		</div>
-		
+
 		<?php pb_backupbuddy::nonce(); ?>
 	</form><br />
 </div>

@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,39 +18,42 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class TermsAndConditionsAcceptanceStatus extends Entity
 {
     /**
-    * Gets the userDisplayName
-    * Display name of the user whose acceptance the entity represents.
+    * Gets the acceptedDateTime
+    * DateTime when the terms were last accepted by the user.
     *
-    * @return string The userDisplayName
+    * @return \DateTime The acceptedDateTime
     */
-    public function getUserDisplayName()
+    public function getAcceptedDateTime()
     {
-        if (array_key_exists("userDisplayName", $this->_propDict)) {
-            return $this->_propDict["userDisplayName"];
-        } else {
-            return null;
+        if (array_key_exists("acceptedDateTime", $this->_propDict)) {
+            if (is_a($this->_propDict["acceptedDateTime"], "\DateTime")) {
+                return $this->_propDict["acceptedDateTime"];
+            } else {
+                $this->_propDict["acceptedDateTime"] = new \DateTime($this->_propDict["acceptedDateTime"]);
+                return $this->_propDict["acceptedDateTime"];
+            }
         }
+        return null;
     }
     
     /**
-    * Sets the userDisplayName
-    * Display name of the user whose acceptance the entity represents.
+    * Sets the acceptedDateTime
+    * DateTime when the terms were last accepted by the user.
     *
-    * @param string $val The userDisplayName
+    * @param \DateTime $val The acceptedDateTime
     *
     * @return TermsAndConditionsAcceptanceStatus
     */
-    public function setUserDisplayName($val)
+    public function setAcceptedDateTime($val)
     {
-        $this->_propDict["userDisplayName"] = $val;
+        $this->_propDict["acceptedDateTime"] = $val;
         return $this;
     }
     
@@ -85,35 +87,60 @@ class TermsAndConditionsAcceptanceStatus extends Entity
     }
     
     /**
-    * Gets the acceptedDateTime
-    * DateTime when the terms were last accepted by the user.
+    * Gets the userDisplayName
+    * Display name of the user whose acceptance the entity represents.
     *
-    * @return \DateTime The acceptedDateTime
+    * @return string The userDisplayName
     */
-    public function getAcceptedDateTime()
+    public function getUserDisplayName()
     {
-        if (array_key_exists("acceptedDateTime", $this->_propDict)) {
-            if (is_a($this->_propDict["acceptedDateTime"], "\DateTime")) {
-                return $this->_propDict["acceptedDateTime"];
-            } else {
-                $this->_propDict["acceptedDateTime"] = new \DateTime($this->_propDict["acceptedDateTime"]);
-                return $this->_propDict["acceptedDateTime"];
-            }
+        if (array_key_exists("userDisplayName", $this->_propDict)) {
+            return $this->_propDict["userDisplayName"];
+        } else {
+            return null;
         }
-        return null;
     }
     
     /**
-    * Sets the acceptedDateTime
-    * DateTime when the terms were last accepted by the user.
+    * Sets the userDisplayName
+    * Display name of the user whose acceptance the entity represents.
     *
-    * @param \DateTime $val The acceptedDateTime
+    * @param string $val The userDisplayName
     *
     * @return TermsAndConditionsAcceptanceStatus
     */
-    public function setAcceptedDateTime($val)
+    public function setUserDisplayName($val)
     {
-        $this->_propDict["acceptedDateTime"] = $val;
+        $this->_propDict["userDisplayName"] = $val;
+        return $this;
+    }
+    
+    /**
+    * Gets the userPrincipalName
+    * The userPrincipalName of the User that accepted the term.
+    *
+    * @return string The userPrincipalName
+    */
+    public function getUserPrincipalName()
+    {
+        if (array_key_exists("userPrincipalName", $this->_propDict)) {
+            return $this->_propDict["userPrincipalName"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the userPrincipalName
+    * The userPrincipalName of the User that accepted the term.
+    *
+    * @param string $val The userPrincipalName
+    *
+    * @return TermsAndConditionsAcceptanceStatus
+    */
+    public function setUserPrincipalName($val)
+    {
+        $this->_propDict["userPrincipalName"] = $val;
         return $this;
     }
     

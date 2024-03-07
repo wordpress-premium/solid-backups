@@ -246,7 +246,7 @@ class pb_backupbuddy_destination_ftp {
 			return false;
 		}
 
-		pb_backupbuddy::status( 'message', 'Successfully wrote remote file locally to `' . $destination_file . '`.' );
+		pb_backupbuddy::status( 'message', 'Successfully wrote remote file locally to `' . esc_attr( $destination_file ) . '`.' );
 
 		// Grab dat file too.
 		if ( '.zip' === substr( $remote_file, -4 ) ) {
@@ -538,7 +538,7 @@ class pb_backupbuddy_destination_ftp {
 			$total_transfer_size += $filesize;
 
 			$destination_file = basename( $file ); // Using chdir() so path not needed. $path . '/' . basename( $file );
-			pb_backupbuddy::status( 'details', 'About to put to FTP local file `' . $file . '` of size `' . pb_backupbuddy::$format->file_size( $filesize ) . '` to remote file `' . $destination_file . '`.' );
+			pb_backupbuddy::status( 'details', 'About to put to FTP local file `' . $file . '` of size `' . pb_backupbuddy::$format->file_size( $filesize ) . '` to remote file `' . esc_attr( $destination_file ) . '`.' );
 			$send_time            = -microtime( true );
 			$upload               = ftp_put( self::$conn_id, $destination_file, $file, FTP_BINARY );
 			$send_time           += microtime( true );
@@ -550,11 +550,11 @@ class pb_backupbuddy_destination_ftp {
 
 				return false;
 			} else {
-				pb_backupbuddy::status( 'details', 'Success completely sending `' . $destination_file . '` to destination.' );
+				pb_backupbuddy::status( 'details', 'Success completely sending `' . esc_attr( $destination_file ) . '` to destination.' );
 			}
 
 			if ( $delete_remote_after ) {
-				pb_backupbuddy::status( 'details', 'Deleting `' . $destination_file . '` per `delete_remote_after` parameter.' );
+				pb_backupbuddy::status( 'details', 'Deleting `' . esc_attr( $destination_file ) . '` per `delete_remote_after` parameter.' );
 				self::delete( $settings, $destination_file );
 			}
 

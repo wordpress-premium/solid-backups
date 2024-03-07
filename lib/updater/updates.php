@@ -81,9 +81,12 @@ class Ithemes_Updater_Updates {
 		$details = Ithemes_Updater_Packages::get_full_details( $response );
 
 		$updates = array(
-			'update_themes'  => array(),
-			'update_plugins' => array(),
-			'expiration'     => $details['expiration'],
+			'update_themes'            => array(),
+			'update_themes_no_update'  => array(),
+			'update_plugins'           => array(),
+			'update_plugins_no_update' => array(),
+			'package_details'          => array(),
+			'expiration'               => $details['expiration'],
 		);
 
 		if ( ! $cached ) {
@@ -105,7 +108,19 @@ class Ithemes_Updater_Updates {
 
 
 		foreach ( $details['packages'] as $path => $data ) {
-			if ( empty( $data['package-url'] ) || version_compare( $data['installed'], $data['available'], '>=' ) ) {
+
+			if ( ! isset( $data['status'] ) ) {
+				$data['status'] = $GLOBALS['ithemes-updater-settings']->get_license_status( $data['package'] );
+			}
+
+			$updates['package_details'][$data['package']] = array(
+				'type'           => $data['type'],
+				'path'           => $path,
+				'version'        => $data['installed'],
+				'license_status' => $data['status'],
+			);
+
+			if ( empty( $data['package-url'] ) ) {
 				continue;
 			}
 
@@ -113,52 +128,52 @@ class Ithemes_Updater_Updates {
 			$force_minor_version_update = $GLOBALS['ithemes-updater-settings']->get_option( 'force_minor_version_update' );
 			$quick_releases = $GLOBALS['ithemes-updater-settings']->get_option( 'quick_releases' );
 
-			if ( ( isset( $data['upgrade'] ) && ! $data['upgrade'] ) && ! $force_minor_version_update && ! $quick_releases ) {
-				continue;
+			$update_available = true;
+
+			if ( version_compare( $data['installed'], $data['available'], '>=' ) ) {
+				$update_available = false;
+			} else if ( ( isset( $data['upgrade'] ) && ! $data['upgrade'] ) && ! $force_minor_version_update && ! $quick_releases ) {
+				$update_available = false;
+			}
+
+
+			$update = $data['wp_update_data'];
+
+			if ( 'plugin' == $data['type'] ) {
+				$update['slug']   = dirname( $path );
+				$update['plugin'] = $path;
+
+				if ( isset( $update['compatibility'] ) && is_array( $update['compatibility'] ) ) {
+					$update['compatibility'] = (object) $update['compatibility'];
+				}
+			} else {
+				$update['theme'] = $path;
+				$update['url']   = self_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . dirname( $path ) . '&section=changelog&TB_iframe=true&width=600&height=800' );
+			}
+
+			if ( ! $update_available ) {
+				unset( $update['autoupdate'] );
+				unset( $update['disable_autoupdate'] );
+				unset( $update['upgrade_notice'] );
 			}
 
 			if ( ! $use_ssl ) {
-				$data['package-url'] = preg_replace( '/^https/', 'http', $data['package-url'] );
+				$update['package'] = preg_replace( '/^https/', 'http', $update['package'] );
 			}
+
 
 			if ( 'plugin' == $data['type'] ) {
-				$update = array(
-					'id'          => 0,
-					'slug'        => dirname( $path ),
-					'plugin'      => $path,
-					'new_version' => $data['available'],
-					'url'         => $data['info-url'],
-					'package'     => $data['package-url'],
-				);
-
-				if ( isset( $data['autoupdate'] ) ) {
-					$update['autoupdate'] = $data['autoupdate'];
-				}
-				if ( isset( $data['upgrade_notice'] ) ) {
-					$update['upgrade_notice'] = $data['upgrade_notice'];
-				}
-
 				$update = (object) $update;
-			}
-			else {
-				$update = array(
-					'theme'       => $path,
-					'new_version' => $data['available'],
-					'url'         => self_admin_url( 'plugin-install.php?tab=plugin-information&plugin=' . dirname( $path ) . '&section=changelog&TB_iframe=true&width=600&height=800' ),
-					'package'     => $data['package-url'],
-				);
-
-				if ( isset( $data['autoupdate'] ) ) {
-					$update['autoupdate'] = $data['autoupdate'];
-				}
-				if ( isset( $data['upgrade_notice'] ) ) {
-					$update['upgrade_notice'] = $data['upgrade_notice'];
-				}
-
+			} else {
 				$path = dirname( $path );
 			}
 
-			$updates["update_{$data['type']}s"][$path] = $update;
+
+			if ( $update_available ) {
+				$updates["update_{$data['type']}s"][$path] = $update;
+			} else {
+				$updates["update_{$data['type']}s_no_update"][$path] = $update;
+			}
 		}
 
 

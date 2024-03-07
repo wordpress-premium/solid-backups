@@ -1,12 +1,16 @@
 <?php
 /**
- * Google Drive (v2) Main Destination Class
+ * Google Drive Main Destination Class
  *
  * DO NOT CALL THIS CLASS DIRECTLY. CALL VIA: pb_backupbuddy_destination in bootstrap.php.
  *
  * @package BackupBuddy
  */
 
+use Solid_Backups\Strauss\Google\Client as Google_Client;
+use Solid_Backups\Strauss\Google\Service\Drive as Google_Service_Drive;
+use Solid_Backups\Strauss\Google\Service\Drive\DriveFile as Google_Service_Drive_DriveFile;
+use Solid_Backups\Strauss\Google\Http\MediaFileUpload as Google_Http_MediaFileUpload;
 /**
  * GDrive Destination class.
  *
@@ -26,8 +30,8 @@ class pb_backupbuddy_destination_gdrive2 {
 	 * @var array
 	 */
 	public static $destination_info = array(
-		'name'        => 'Google Drive (v2)',
-		'description' => 'Send files to Google Drive using OAuth2. <a href="https://drive.google.com" target="_blank">Learn more here.</a>',
+		'name'        => 'Google Drive',
+		'description' => 'Send files to Google Drive using OAuth2. <a href="https://go.solidwp.com/google-drive-link-" target="_blank">Learn more here.</a>',
 		'category'    => 'best', // best, normal, legacy.
 	);
 
@@ -73,14 +77,14 @@ class pb_backupbuddy_destination_gdrive2 {
 	/**
 	 * Instance of GDrive Client
 	 *
-	 * @var \Google_Client
+	 * @var Solid_Backups\Strauss\Google\Client
 	 */
 	private static $client = '';
 
 	/**
 	 * Instance of Google Service Drive.
 	 *
-	 * @var \Google_Service_Drive
+	 * @var Solid_Backups\Strauss\Google\Service\Drive
 	 */
 	private static $api = false;
 
@@ -150,7 +154,7 @@ class pb_backupbuddy_destination_gdrive2 {
 		}
 
 		if ( false === self::get_client() ) {
-			self::error( __( 'There was a problem connecting Google Drive (v2). Please contact support for assistance.', 'it-l10n-backupbuddy' ) );
+			self::error( __( 'There was a problem connecting Google Drive. Please contact support for assistance.', 'it-l10n-backupbuddy' ) );
 			return false;
 		}
 
@@ -236,7 +240,7 @@ class pb_backupbuddy_destination_gdrive2 {
 	 *
 	 * @param bool $fresh  If the cached client should be ignored.
 	 *
-	 * @return \Google_Client|false  Google_Client object if successful.
+	 * @return Solid_Backups\Strauss\Google\Client|false  Google_Client object if successful.
 	 */
 	public static function get_client( $fresh = false ) {
 		if ( false !== self::$client && false === $fresh ) {
@@ -245,13 +249,13 @@ class pb_backupbuddy_destination_gdrive2 {
 			}
 		}
 
-		pb_backupbuddy::status( 'details', 'Connecting to Google Drive (v2).' );
+		pb_backupbuddy::status( 'details', 'Connecting to Google Drive.' );
 
 		self::$client = new Google_Client();
-		self::$client->setApplicationName( 'BackupBuddy v' . pb_backupbuddy::settings( 'version' ) );
+		self::$client->setApplicationName( 'Solid Backups v' . pb_backupbuddy::settings( 'version' ) );
 		self::$client->addScope( 'https://www.googleapis.com/auth/drive' );
 		self::$client->setAccessType( 'offline' ); // Required so that Google will return the refresh token.
-		self::$client->setApprovalPrompt( 'force' ); // Required if they have already authorized the application on another site.
+		self::$client->setPrompt( 'consent' ); // Required if they have already authorized the application on another site.
 		// self::$client->getHttpClient()->setDefaultOption( 'headers/disable_gzip', self::$settings['disable_gzip'] );
 
 		if ( self::$settings['service_account_file'] ) { // Service account.
@@ -296,7 +300,7 @@ class pb_backupbuddy_destination_gdrive2 {
 
 			if ( self::$settings['token'] ) {
 				// Set token initially.
-				pb_backupbuddy::status( 'details', 'Setting Google Drive (v2) Access Token.' );
+				pb_backupbuddy::status( 'details', 'Setting Google Drive Access Token.' );
 				pb_backupbuddy::status( 'details', 'TOKEN: ' . self::$settings['token'] );
 				try {
 					self::$client->setAccessToken( self::$settings['token'] );
@@ -308,14 +312,14 @@ class pb_backupbuddy_destination_gdrive2 {
 
 				// Make sure token is up-to-date.
 				if ( self::$client->isAccessTokenExpired() ) {
-					pb_backupbuddy::status( 'status', 'Google Drive (v2) Access Token expired. Attempting to refresh...' );
+					pb_backupbuddy::status( 'status', 'Google Drive Access Token expired. Attempting to refresh...' );
 					if ( self::$client->getRefreshToken() ) {
 						self::$client->fetchAccessTokenWithRefreshToken( self::$client->getRefreshToken() );
 						self::$settings['token'] = json_encode( self::$client->getAccessToken() );
 						if ( ! self::save() ) {
-							pb_backupbuddy::status( 'error', 'Error #202003270842: Could not save refresh token for Google Drive (v2).' );
+							pb_backupbuddy::status( 'error', 'Error #202003270842: Could not save refresh token for Google Drive.' );
 						} else {
-							pb_backupbuddy::status( 'status', 'Google Drive (v2) Access Token refreshed.' );
+							pb_backupbuddy::status( 'status', 'Google Drive Access Token refreshed.' );
 						}
 					}
 				}
@@ -328,7 +332,7 @@ class pb_backupbuddy_destination_gdrive2 {
 				self::$api = new Google_Service_Drive( self::$client );
 			} catch ( Exception $e ) {
 				$error = self::get_gdrive_exception_error( $e );
-				self::error( 'Google Drive (v2) Error: ' . $error );
+				self::error( 'Google Drive Error: ' . $error );
 				return false;
 			}
 
@@ -368,10 +372,10 @@ class pb_backupbuddy_destination_gdrive2 {
 	 */
 	public static function send( $settings = false, $files = array(), $send_id = '', $delete_after = false, $delete_remote_after = false ) {
 		if ( ! self::is_ready( $settings ) ) {
-			return self::error( 'Error #38923923: Unable to connect with Google Drive (v2). See log for details.' );
+			return self::error( 'Error #38923923: Unable to connect with Google Drive. See log for details.' );
 		}
 
-		pb_backupbuddy::status( 'details', 'Google Drive (v2) send() function started. Settings: `' . print_r( self::$settings, true ) . '`.' );
+		pb_backupbuddy::status( 'details', 'Google Drive send() function started. Settings: `' . print_r( self::$settings, true ) . '`.' );
 		self::$time_start = microtime( true );
 
 		if ( ! is_array( $files ) ) {
@@ -422,7 +426,7 @@ class pb_backupbuddy_destination_gdrive2 {
 			$drive_file = new Google_Service_Drive_DriveFile(
 				array(
 					'name'        => basename( $file ),
-					'description' => 'BackupBuddy file',
+					'description' => 'Solid Backups file',
 				)
 			);
 
@@ -449,7 +453,7 @@ class pb_backupbuddy_destination_gdrive2 {
 				$create = self::$api->files->create( $drive_file, $file_args );
 			} catch ( Exception $e ) {
 				$error = self::get_gdrive_exception_error( $e );
-				self::error( 'Error #3232783268336: initiating upload to Google Drive (v2). Details: ' . $error, 'alert' );
+				self::error( 'Error #3232783268336: initiating upload to Google Drive. Details: ' . $error, 'alert' );
 				return false;
 			}
 
@@ -566,7 +570,7 @@ class pb_backupbuddy_destination_gdrive2 {
 				fclose( $fs );
 			}
 
-			if ( is_a( $upload_status, 'Google_Service_Drive_DriveFile' ) ) {
+			if ( $upload_status instanceof Solid_Backups\Strauss\Google\Service\Drive\DriveFile ) {
 				pb_backupbuddy::status( 'details', 'Uploaded File ID: ' . $upload_status->getId() );
 
 				// Upload Success.
@@ -647,10 +651,7 @@ class pb_backupbuddy_destination_gdrive2 {
 			pb_backupbuddy::status( 'error', 'Next chunk cron upload event FAILED to be scheduled.' );
 		}
 
-		if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-			update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-			spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-		}
+		backupbuddy_core::maybe_spawn_cron();
 
 		// File pointer location, elapsed time during the import.
 		return array( self::$settings['_media_progress'], 'Sent part ' . self::$settings['_chunks_sent'] . ' of ' . self::$settings['_chunks_total'] . ' parts.' );
@@ -685,13 +686,13 @@ class pb_backupbuddy_destination_gdrive2 {
 			$limit = self::$settings['media_archive_limit'];
 		} else {
 			$limit = 0;
-			pb_backupbuddy::status( 'warning', 'Warning #34352453244. Google Drive (v2) was unable to determine backup type (reported: `' . $backup_type . '`) so archive limits NOT enforced for this backup.' );
+			pb_backupbuddy::status( 'warning', 'Warning #34352453244. Google Drive was unable to determine backup type (reported: `' . $backup_type . '`) so archive limits NOT enforced for this backup.' );
 		}
-		pb_backupbuddy::status( 'details', 'Google Drive (v2) database backup archive limit of `' . $limit . '` of type `' . $backup_type . '` based on destination settings.' );
+		pb_backupbuddy::status( 'details', 'Google Drive database backup archive limit of `' . $limit . '` of type `' . $backup_type . '` based on destination settings.' );
 
 		if ( $limit > 0 ) {
 
-			pb_backupbuddy::status( 'details', 'Google Drive (v2) archive limit enforcement beginning.' );
+			pb_backupbuddy::status( 'details', 'Google Drive archive limit enforcement beginning.' );
 
 			// Get file listing.
 			$search_count = 1;
@@ -717,7 +718,7 @@ class pb_backupbuddy_destination_gdrive2 {
 
 			arsort( $backups );
 
-			pb_backupbuddy::status( 'details', 'Google Drive (v2) found `' . count( $backups ) . '` backups of this type when checking archive limits.' );
+			pb_backupbuddy::status( 'details', 'Google Drive found `' . count( $backups ) . '` backups of this type when checking archive limits.' );
 
 			if ( count( $backups ) > $limit ) {
 				pb_backupbuddy::status( 'details', 'More archives (' . count( $backups ) . ') than limit (' . $limit . ') allows. Trimming...' );
@@ -736,22 +737,22 @@ class pb_backupbuddy_destination_gdrive2 {
 
 						if ( true !== pb_backupbuddy_destinations::delete( self::$settings, $backup_id ) ) {
 							global $pb_backupbuddy_destination_errors;
-							pb_backupbuddy::status( 'details', 'Unable to delete excess Google Drive (v2) file `' . $backup_id . '`. Details: `' . print_r( $pb_backupbuddy_destination_errors, true ) . '`.' );
+							pb_backupbuddy::status( 'details', 'Unable to delete excess Google Drive file `' . $backup_id . '`. Details: `' . print_r( $pb_backupbuddy_destination_errors, true ) . '`.' );
 							$delete_fail_count++;
 						}
 					}
 				}
 				pb_backupbuddy::status( 'details', 'Finished trimming excess backups.' );
 				if ( 0 !== $delete_fail_count ) {
-					self::error( 'Google Drive (v2) remote limit could not delete ' . $delete_fail_count . ' backups.', 'mail' );
+					self::error( 'Google Drive remote limit could not delete ' . $delete_fail_count . ' backups.', 'mail' );
 				}
 			}
 
-			pb_backupbuddy::status( 'details', 'Google Drive (v2) completed archive limiting.' );
+			pb_backupbuddy::status( 'details', 'Google Drive completed archive limiting.' );
 			return true;
 		}
 
-		pb_backupbuddy::status( 'details', 'No Google Drive (v2) archive file limit to enforce.' );
+		pb_backupbuddy::status( 'details', 'No Google Drive archive file limit to enforce.' );
 		return false;
 	} // prune.
 
@@ -777,7 +778,7 @@ class pb_backupbuddy_destination_gdrive2 {
 	 */
 	public static function getDriveInfo( $settings = false ) {
 		if ( ! self::is_ready( $settings ) ) {
-			self::error( __( 'Unable to connect with Google Drive (v2). See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
+			self::error( __( 'Unable to connect with Google Drive. See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
 			return false;
 		}
 
@@ -805,22 +806,22 @@ class pb_backupbuddy_destination_gdrive2 {
 	 */
 	public static function test( $settings = false ) {
 		if ( ! self::is_ready( $settings ) ) {
-			self::error( 'Unable to connect with Google Drive (v2). See log for details.', 'echo' );
+			self::error( 'Unable to connect with Google Drive. See log for details.', 'echo' );
 			return false;
 		}
 
-		pb_backupbuddy::status( 'details', 'Testing Google Drive (v2) destination.' );
+		pb_backupbuddy::status( 'details', 'Testing Google Drive destination.' );
 		$files = array( pb_backupbuddy::plugin_path() . '/destinations/remote-send-test.php' );
 
 		$send_id = 'TEST-' . pb_backupbuddy::random_string( 12 );
 		$results = self::send( false, $files, $send_id, false, true );
 
 		if ( true === $results ) {
-			esc_html_e( 'Success sending test file to Google Drive (v2).', 'it-l10n-backupbuddy' );
+			esc_html_e( 'Success sending test file to Google Drive.', 'it-l10n-backupbuddy' );
 			return true;
 		}
 
-		esc_html_e( 'Failure sending test file to Google Drive (v2).', 'it-l10n-backupbuddy' );
+		esc_html_e( 'Failure sending test file to Google Drive.', 'it-l10n-backupbuddy' );
 		return false;
 	} // test.
 
@@ -931,14 +932,14 @@ class pb_backupbuddy_destination_gdrive2 {
 	 */
 	public static function listFiles( $settings = false, $mode = 'default' ) {
 		if ( ! self::is_ready( $settings ) ) {
-			self::error( __( 'Error #233233: Unable to connect with Google Drive (v2). See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
+			self::error( __( 'Error #233233: Unable to connect with Google Drive. See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
 			return false;
 		}
 
 		$files = self::get_folder_contents( false, array( 'query' => 'backups' ) );
 
 		if ( ! is_array( $files ) ) {
-			self::error( __( 'Unexpected response retrieving Google Drive (v2) folder contents for folder: ', 'it-l10n-backupbuddy' ) . $folder_path );
+			self::error( __( 'Unexpected response retrieving Google Drive folder contents for folder: ', 'it-l10n-backupbuddy' ) . $folder_path );
 			return array();
 		}
 
@@ -1006,7 +1007,7 @@ class pb_backupbuddy_destination_gdrive2 {
 	 *
 	 * @param array  $action_menu  Action menu array.
 	 * @param string $file         Backup File.
-	 * @param object $class        BackupBuddy Backups class instance.
+	 * @param object $class        Solid Backups Backups class instance.
 	 *
 	 * @return array  Modified action menu.
 	 */
@@ -1025,18 +1026,18 @@ class pb_backupbuddy_destination_gdrive2 {
 	 */
 	public static function force_download( $settings = false, $file_id = '' ) {
 		if ( ! self::is_ready( $settings ) ) {
-			self::error( __( 'Error #233233: Unable to connect with Google Drive (v2). See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
+			self::error( __( 'Error #233233: Unable to connect with Google Drive. See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
 			exit();
 		}
 
 		$file = self::get_file_meta( false, $file_id );
 
 		if ( ! $file ) {
-			self::error( __( 'Missing Google Drive (v2) File for download.', 'it-l10n-backupbuddy' ), 'echo' );
+			self::error( __( 'Missing Google Drive File for download.', 'it-l10n-backupbuddy' ), 'echo' );
 			exit();
 		}
 
-		pb_backupbuddy::status( 'details', __( 'Attempting to download Google Drive (v2) file: ', 'it-l10n-backupbuddy' ) . $file_id );
+		pb_backupbuddy::status( 'details', __( 'Attempting to download Google Drive file: ', 'it-l10n-backupbuddy' ) . $file_id );
 
 		flush();
 
@@ -1077,7 +1078,7 @@ class pb_backupbuddy_destination_gdrive2 {
 	 */
 	public static function get_file_meta( $settings = false, $file_id = '' ) {
 		if ( ! self::is_ready( $settings ) ) {
-			self::error( __( 'Error #3839483a: Unable to connect with Google Drive (v2). See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
+			self::error( __( 'Error #3839483a: Unable to connect with Google Drive. See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
 			return false;
 		}
 
@@ -1194,20 +1195,20 @@ class pb_backupbuddy_destination_gdrive2 {
 	 */
 	public static function getFile( $settings = false, $file_id = '', $local_file = '' ) {
 		if ( ! self::is_ready( $settings ) ) {
-			self::error( __( 'Error #3839483b: Unable to connect with Google Drive (v2). See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
+			self::error( __( 'Error #3839483b: Unable to connect with Google Drive. See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
 			return false;
 		}
 
 		try {
 			$file = self::$api->files->get( $file_id );
 		} catch ( Exception $e ) {
-			pb_backupbuddy::status( 'details', 'Unable to retrieve Google Drive (v2) file via `' . $file_id . '`. Attempting to lookup file by name.' );
+			pb_backupbuddy::status( 'details', 'Unable to retrieve Google Drive file via `' . $file_id . '`. Attempting to lookup file by name.' );
 			pb_backupbuddy::status( 'details', 'Google Drive Responded: ' . self::get_gdrive_exception_error( $e ) );
 			$file = self::get_file_by_name( $file_id );
 		}
 
 		if ( ! $file ) {
-			self::error( 'Error #202003271548: Unable to locate requested Google Drive (v2) file `' . $file_id . '`.', 'echo' );
+			self::error( 'Error #202003271548: Unable to locate requested Google Drive file `' . $file_id . '`.', 'echo' );
 			return false;
 		}
 
@@ -1235,7 +1236,7 @@ class pb_backupbuddy_destination_gdrive2 {
 			// Or just overwrite the existing file by not doing anything?
 		}
 
-		pb_backupbuddy::status( 'details', 'About to get Google Drive (v2) file with ID `' . $file_id . '` to store in `' . $local_file . '`.' );
+		pb_backupbuddy::status( 'details', 'About to get Google Drive file with ID `' . $file_id . '` to store in `' . $local_file . '`.' );
 
 		$opts = array(
 			'alt' => 'media', // Instruct that file contents be returned.
@@ -1258,7 +1259,7 @@ class pb_backupbuddy_destination_gdrive2 {
 
 		fclose( $fh );
 
-		pb_backupbuddy::status( 'details', 'Google Drive (v2) file download completed successfully.' );
+		pb_backupbuddy::status( 'details', 'Google Drive file download completed successfully.' );
 
 		return true;
 	} // getFile.
@@ -1288,7 +1289,7 @@ class pb_backupbuddy_destination_gdrive2 {
 			return $file;
 		}
 
-		pb_backupbuddy::status( 'details', 'Google Drive (v2) file lookup failed. An unexpected error has occurred.' );
+		pb_backupbuddy::status( 'details', 'Google Drive file lookup failed. An unexpected error has occurred.' );
 		return false;
 	}
 
@@ -1302,7 +1303,7 @@ class pb_backupbuddy_destination_gdrive2 {
 	 */
 	public static function delete( $settings = false, $files = array() ) {
 		if ( ! self::is_ready( $settings ) ) {
-			self::error( 'Error #4839484: Unable to connect with Google Drive (v2). See log for details.', 'echo' );
+			self::error( 'Error #4839484: Unable to connect with Google Drive. See log for details.', 'echo' );
 			return false;
 		}
 
@@ -1316,13 +1317,13 @@ class pb_backupbuddy_destination_gdrive2 {
 			try {
 				$file = self::$api->files->get( $file_id );
 			} catch ( Exception $e ) {
-				pb_backupbuddy::status( 'details', 'Unable to retrieve Google Drive (v2) file via `' . $file_id . '` for deletion. Attempting to lookup file by name.' );
+				pb_backupbuddy::status( 'details', 'Unable to retrieve Google Drive file via `' . $file_id . '` for deletion. Attempting to lookup file by name.' );
 				pb_backupbuddy::status( 'details', 'Google Drive Responded: ' . self::get_gdrive_exception_error( $e ) );
 				$file = self::get_file_by_name( $file_id );
 			}
 
 			if ( ! $file ) {
-				self::error( 'Error #202004201327: Unable to locate requested Google Drive (v2) file `' . $file_id . '` for deletion.', 'echo' );
+				self::error( 'Error #202004201327: Unable to locate requested Google Drive file `' . $file_id . '` for deletion.', 'echo' );
 				return false;
 			}
 
@@ -1334,7 +1335,7 @@ class pb_backupbuddy_destination_gdrive2 {
 				self::error( self::get_gdrive_exception_error( $e ), 'echo' );
 				return false;
 			}
-			pb_backupbuddy::status( 'details', 'Google Drive (v2) file `' . $file_id . '` deleted.' );
+			pb_backupbuddy::status( 'details', 'Google Drive file `' . $file_id . '` deleted.' );
 		}
 
 		return true;
@@ -1355,7 +1356,7 @@ class pb_backupbuddy_destination_gdrive2 {
 		}
 
 		if ( ! self::is_ready( $settings ) ) {
-			self::error( __( 'Error #2378327: Unable to connect with Google Drive (v2). See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
+			self::error( __( 'Error #2378327: Unable to connect with Google Drive. See log for details.', 'it-l10n-backupbuddy' ), 'echo' );
 			return false;
 		}
 
@@ -1448,7 +1449,7 @@ class pb_backupbuddy_destination_gdrive2 {
 	}
 
 	/**
-	 * Callback when a Google Drive (v2) destination is deleted.
+	 * Callback when a Google Drive destination is deleted.
 	 *
 	 * @param array $settings  Destination Settings Array.
 	 */
@@ -1457,12 +1458,12 @@ class pb_backupbuddy_destination_gdrive2 {
 			return false;
 		}
 
-		pb_backupbuddy::status( 'details', 'Attempting to revoke Google Drive (v2) Auth Token before Destination Delete...' );
+		pb_backupbuddy::status( 'details', 'Attempting to revoke Google Drive Auth Token before Destination Delete...' );
 
 		if ( self::$client->revokeToken() ) {
-			pb_backupbuddy::status( 'details', 'Google Drive (v2) Auth Token Revoked.' );
+			pb_backupbuddy::status( 'details', 'Google Drive Auth Token Revoked.' );
 		} else {
-			pb_backupbuddy::status( 'details', 'Could not revoke Google Drive (v2) Auth Token.' );
+			pb_backupbuddy::status( 'details', 'Could not revoke Google Drive Auth Token.' );
 		}
 	}
 

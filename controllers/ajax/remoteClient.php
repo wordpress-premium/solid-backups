@@ -2,12 +2,14 @@
 /**
  * Remote Client AJAX Controller
  *
+ * Used to display destination settings on the Destination Management page.
+ *
  * @package BackupBuddy
  */
 
 backupbuddy_core::verifyAjaxAccess();
 
-pb_backupbuddy::$ui->ajax_header( true, true, 'backupbuddy-admin-iframe' );
+pb_backupbuddy::$ui->ajax_header( true, true, 'backupbuddy-admin-iframe backupbuddy-remote-client-iframe' );
 
 $destination_id = pb_backupbuddy::_GET( 'destination_id' );
 

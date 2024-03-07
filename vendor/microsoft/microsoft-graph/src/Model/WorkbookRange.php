@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,10 +18,9 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class WorkbookRange extends Entity
 {
@@ -462,35 +460,6 @@ class WorkbookRange extends Entity
     }
     
     /**
-    * Gets the valueTypes
-    * Represents the type of data of each cell. The possible values are: Unknown, Empty, String, Integer, Double, Boolean, Error. Read-only.
-    *
-    * @return string The valueTypes
-    */
-    public function getValueTypes()
-    {
-        if (array_key_exists("valueTypes", $this->_propDict)) {
-            return $this->_propDict["valueTypes"];
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-    * Sets the valueTypes
-    * Represents the type of data of each cell. The possible values are: Unknown, Empty, String, Integer, Double, Boolean, Error. Read-only.
-    *
-    * @param string $val The valueTypes
-    *
-    * @return WorkbookRange
-    */
-    public function setValueTypes($val)
-    {
-        $this->_propDict["valueTypes"] = $val;
-        return $this;
-    }
-    
-    /**
     * Gets the values
     * Represents the raw values of the specified range. The data returned could be of type string, number, or a boolean. Cell that contain an error will return the error string.
     *
@@ -516,6 +485,35 @@ class WorkbookRange extends Entity
     public function setValues($val)
     {
         $this->_propDict["values"] = $val;
+        return $this;
+    }
+    
+    /**
+    * Gets the valueTypes
+    * Represents the type of data of each cell. Possible values are: Unknown, Empty, String, Integer, Double, Boolean, Error. Read-only.
+    *
+    * @return string The valueTypes
+    */
+    public function getValueTypes()
+    {
+        if (array_key_exists("valueTypes", $this->_propDict)) {
+            return $this->_propDict["valueTypes"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the valueTypes
+    * Represents the type of data of each cell. Possible values are: Unknown, Empty, String, Integer, Double, Boolean, Error. Read-only.
+    *
+    * @param string $val The valueTypes
+    *
+    * @return WorkbookRange
+    */
+    public function setValueTypes($val)
+    {
+        $this->_propDict["valueTypes"] = $val;
         return $this;
     }
     

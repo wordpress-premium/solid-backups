@@ -9,7 +9,7 @@
 backupbuddy_core::verifyAjaxAccess();
 
 pb_backupbuddy::load();
-pb_backupbuddy::$ui->ajax_header();
+pb_backupbuddy::$ui->ajax_header( true, true, 'backupbuddy-admin-iframe-white' );
 
 if ( '' != pb_backupbuddy::_POST( 'import_settings' ) ) {
 	$import = trim( stripslashes( pb_backupbuddy::_POST( 'import_data' ) ) );
@@ -29,7 +29,7 @@ if ( '' != pb_backupbuddy::_POST( 'import_settings' ) ) {
 				if ( $schedules ) {
 					foreach ( $schedules as $schedule ) {
 						if ( ! empty( $schedule['id'] ) ) {
-							wp_clear_scheduled_hook( 'backupbuddy_cron', array( 'run_scheduled_backup', array( (int) $schedule['id'] ) ) );
+							wp_clear_scheduled_hook( backupbuddy_constants::CRON_HOOK, array( 'run_scheduled_backup', array( (int) $schedule['id'] ) ) );
 						}
 					}
 				}
@@ -66,21 +66,21 @@ if ( '' != pb_backupbuddy::_POST( 'import_settings' ) ) {
 		}
 	}
 }
+?>
 
-echo '<h2>Export BackupBuddy Settings</h2>';
-echo 'Copy the encoded plugin settings below and paste it into the destination BackupBuddy Settings Import page.<br><br>';
-echo '<textarea style="width: 100%; height: 100px;" wrap="on">';
-echo base64_encode( serialize( pb_backupbuddy::$options ) );
-echo '</textarea>';
-
-echo '<br><br><br>';
-
-echo '<h2>Import BackupBuddy Settings</h2>';
-echo 'Paste encoded plugin settings below to import & replace current settings.  If importing settings from an older version and errors are encountered please deactivate and reactivate the plugin.<br><br>';
-echo '<form method="post" action="' . esc_attr( pb_backupbuddy::ajax_url( 'importexport_settings' ) ) . '">';
-echo '<textarea style="width: 100%; height: 100px;" wrap="on" name="import_data"></textarea>';
-echo '<br><br><input type="submit" name="import_settings" value="Import Settings" class="button button-primary">';
-echo '</form>';
-
+<div class="import-export-content">
+	<h2><?php esc_html_e( 'Export Solid Backups Settings', 'it-l10n-backupbuddy' ); ?></h2>
+	<p><?php esc_html_e( 'Copy the encoded plugin settings below and paste it into the destination Solid Backups Settings Import page.', 'it-l10n-backupbuddy' ); ?></p>
+	<div class="solid-backups-form">
+		<textarea style="width: 100%; max-width: 100%; height: 100px;" wrap="on"><?php echo esc_html( base64_encode( serialize( pb_backupbuddy::$options ) ) ); ?></textarea>
+	</div>
+	<h2><?php esc_html_e( 'Import Solid Backups Settings', 'it-l10n-backupbuddy' ); ?></h2>
+	<p><?php esc_html_e(' Paste encoded plugin settings below to import & replace current settings.  If importing settings from an older version and errors are encountered please deactivate and reactivate the plugin.', 'it-l10n-backupbuddy' ); ?></p>
+	<form method="post" action="<?php echo esc_attr( pb_backupbuddy::ajax_url( 'importexport_settings' ) ); ?>" class="solid-backups-form">
+		<textarea style="width: 100%; max-width: 100%; height: 100px;" wrap="on" name="import_data"></textarea><br/>
+		<div class="solid-backups-form-buttons"><input type="submit" name="import_settings" value="<?php echo esc_attr( __( 'Import Settings', 'it-l10n-backupbuddy' ) ); ?>" class="button button-primary"></div>
+	</form>
+</div>
+<?php
 pb_backupbuddy::$ui->ajax_footer();
 die();

@@ -2111,9 +2111,98 @@
 	Bug Fix: Reverted Composer dependency updates due to PHP compatibility.
 8.7.2.0 - 2020-12-22 - Brian DiChiara
 	Bug Fix: Actually reverted Composer dependency updates due to PHP compatibility.
-8.7.3.0 - 2021-06-24 - Lew Ayotte	
+8.7.3.0 - 2021-06-24 - Lew Ayotte
 	Bug Fix: PHP 8 Compat fix for import buddy
 8.7.4.0 - 2021-07-21 - Lew Ayotte
 	Bug Fix: Dropbox v3 authentication SDK fix
 8.7.4.1 - 2022-03-11 - Lew Ayotte
 	Bug Fix: Fixing TLS version for Dropbox v3 from 1.0 to 1.2 min, required by Dropbox
+8.7.4.2 - 2022-07-02 - Lew Ayotte
+	Bug Fix: Fixing file path check for local directory copy destination
+8.7.5 - 2022-09-02 - Lew Ayotte
+	Releasing non-quick-release tag
+8.8.0 - 2022-09-27 - Lew Ayotte
+	Releasing PHP8 Compatibility
+	Bug Fix: Resolved issue with format settings variable not mergine properly
+8.8.1 - 2023-01-10 - Lew Ayotte / Glenn Ansley
+	XSS Vulnerability fixes
+	Looback Test Fixes
+	Other Bug Fixes
+8.8.2 - 2023-01-24 - Lew Ayotte / Glenn Ansley
+	XSS Vulnerbality fixes
+	Looback Test Fixes
+	PHP 8 Updates for licensing/updater module
+9.0.0 - 2023-09-10 - John Regan
+	New: iThemes BackupBuddy is now Solid Backups! Learn More: https://go.solidwp.com/backups-welcome-to-solidwp
+	Important: The minimum supported version is now PHP 7.2.
+	New: Solid Backups has an easy-to-use redesigned interface, while maintaining the existing layout and functionality.
+	Enhancement: Enhanced stability through significant upgrades, leveraging Action Scheduler in place of sole dependence on WP-Cron.
+	Tweak: The Diagnostics tab "Cron" now includes "Pending Actions," displaying upcoming Action Scheduler actions.
+	Tweak: ImportBuddy has been renamed the Standalone Importer.
+	Tweak: In case Stash Live appears to be stalled, a "Resume Process" link will now be visible, allowing you to confirm its ongoing operation.
+	Tweak: The Diagnostics tab "Logs/Other" is now labeled "Troubleshooting."
+	Removed: The malware scanning feature has been removed because it’s best handled at the server level by your host. Use Solid Security Pro to proactively protect your site and prevent malware from ever reaching it.
+	Removed: The following Remote Destinations have been removed (existing users of these destinations will experience no interruption in service): Rackspace, Google Drive v1, BackupBuddy Stash v2, Amazon S3 v2.
+	Bug Fix: Buttons clicked on the Stash Live page would re-fire if the page was refreshed.
+	Bug Fix: Fatal errors when using PHP 8.
+	Dev Note: Addition of Action Scheduler: https://actionscheduler.org.
+	Dev Note: File Restoration safely deletes existing files before restoration instead of attempting to overwrite them.
+	Dev Note: File Restoration now deactivates and reactivates active plugins during restoration.
+9.1.0 - 2023-10-30 - John Regan / Jared Hill / Lisa Canini
+	Enhancement: Major refactor of Stash Live to improve speed and reliability. It now uses Action Scheduler to drive the process from the backend instead of a JS trigger.
+	Enhancement: Old/Unused Actions are cleaned up after Stash Live runs and during daily Housekeeping.
+	Bug Fix: PHP 7.2 compatibility errors.
+	Bug Fix: PHP error when capturing a MySQLi error message.
+	Bug Fix: OneDrive failed to send large files.
+9.1.1 - 2023-11-06 - John Regan
+	Bug Fix: Dropbox (v3) access tokens were expiring after 4 hours. They now last until you remove access.
+	Bug Fix: Google Drive (v2) was not allowing connections from multiple sites using Solid Backups.
+	Security: Harden against XSS attacks. Thanks to Robin Wood (digi.ninja) for disclosing this issue.
+9.1.2 - 2023-11-09 - John Regan
+	Bug Fix: Scheduled Backups were not being scheduled and cancelled appropriately.
+	Bug Fix: AJAX URLs were not being rendered correctly for destination sends.
+	Bug Fix: Several PHP Errors related to missing/unexpected data.
+	Removed: Support for deprecated mysql_* functions.
+	Dev Note: Introduces new class BackupBuddy_Schedules to handle Scheduled backups.
+9.1.3 - 2023-11-15 - John Regan, Timothy Jacobs
+	Bug Fix: Sending backups to remote destinations that required chunking would not complete.
+9.1.4 - 2023-12-04 - John Regan, Timothy Jacobs
+	Enhancement: Better check for unique Action Scheduler events to prevent duplicate/unnecessary events.
+	Enhancement: Perform checks for allowed server PHP functions (like `phpinfo()`).
+	Bug Fix: Backup Creation could halt unexpectedly due to locked fileoptions files. Steps now process sequentially instead of nearly simultaneously.
+	Bug Fix: Some zip processing errors were caused by trying to close a non-existent zip file.
+	Bug Fix: File Tree displays were not showing proper indentation.
+9.1.5 - 2024-01-08 - John Regan, Timothy Jacobs
+	Removed: "Force Internal Cron" feature has been removed. This is no longer necessary since Action Scheduler was implemented in v9.0
+	Bug Fix: The inclusion of GuzzleHttp within the Amazon S3 destination caused conflicts with other plugins.
+	Bug Fix: Scheduled Backups were not being scheduled correctly.
+	Dev Note: The AWS PHP SDK v3 is now included as a composer package, instead of located within the destinations/ directory.
+	Dev Note: Strauss is now available for namespacing composer packages.
+9.1.6 - 2024-01-25 - John Regan, Timothy Jacobs, Lisa Canini
+	Enhancement: Backup Creation screen design updated.
+	Enhancement: SolidWP Telemetry added to gather information for product improvement. Requires permission from administrators for use.
+	Removed: Support for the old Google Drive (v1).
+	Bug Fix: The Standalone Importer (ImportBuddy) would not complete.
+	Bug Fix: Google Drive Destination errors.
+	Bug Fix: Files not fully removed during cleanup actions.
+	Bug Fix: Destination options shown twice during Backup Creation.
+	Bug Fix: Plugin conflict issues.
+9.1.7 - 2024-01-31 - John Regan, Jared Hill
+	Bug Fix: Telemetry saving error.
+	Bug Fix: Integrity Check setting display.
+	Bug Fix: PHP 7.2 Compatibility issues.
+9.1.8 - 2024-02-12 - John Regan, Jared Hill, Timothy Jacobs
+	Enhancement: All S3 (v2) Destinations are migrated to S3 (v3) Destinations.
+	Removed: Support for S3 (v2) Destination.
+	Bug Fix: Backups and Stash Live were timing out due to fileoptions locked errors.
+	Bug Fix: S3 (v2) errors related to the "set()" function.
+	Dev Note: The default value of limit_single_cron_per_pass has been changed to false.
+9.1.9 - 2024-02-27 - John Regan, Jared Hill
+	Bug Fix: Removed backup pulse and blank events from backup process, fixing fileoptions locked during backup process issue.
+	Bug Fix: Updating broken links for Stash storage.
+9.1.10 - 2024-03-05 - John Regan, Jared Hill
+	Enhancement: Adding the capability to the diagnostics page to delete all .dat files.
+	Enhancement: Updating the design of the diagnostics troubleshooting page.
+	Enhancement: Hiding the Quick Start menu after the form is submitted.
+	Bug Fix: Fixing rules delimiter on Exclusions field in settings.
+	Bug Fix: Updating broken links for Stash storage.

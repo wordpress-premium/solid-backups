@@ -18,7 +18,7 @@ pb_backupbuddy::set_status_serial( 'ms_import' );
 $action = isset( $_GET['action'] ) ? $_GET['action'] : false;
 ?>
 <div class="wrap">
-	<p>For BackupBuddy Multisite documentation, please visit the <a href="https://ithemeshelp.zendesk.com/hc/en-us/articles/115004532967-Backup-Restore-and-Migrate-with-BackupBuddy-Multisite-Experimental-">BackupBuddy Multisite Codex</a>.</p>
+	<p>For Solid Backups Multisite documentation, please visit the <a href="https://go.solidwp.com/backup-restore-migrate-multisite">Solid Backups Multisite Codex</a>.</p>
 
 	<?php
 	if ( ! current_user_can( 'manage_sites' ) ) {

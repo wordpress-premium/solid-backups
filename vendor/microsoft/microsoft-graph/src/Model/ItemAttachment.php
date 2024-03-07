@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,16 +18,15 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class ItemAttachment extends Attachment
 {
     /**
     * Gets the item
-    * The attached message or event. Navigation property.
+    * The attached contact, message or event. Navigation property.
     *
     * @return OutlookItem The item
     */
@@ -47,7 +45,7 @@ class ItemAttachment extends Attachment
     
     /**
     * Sets the item
-    * The attached message or event. Navigation property.
+    * The attached contact, message or event. Navigation property.
     *
     * @param OutlookItem $val The item
     *

@@ -8,7 +8,7 @@
 /**
  * Instance generator for Data File class with class autoloader.
  *
- * @return object  BackupBuddy_Data_File instance.
+ * @return BackupBuddy_Data_File instance.
  */
 function backupbuddy_data_file() {
 	if ( ! class_exists( 'BackupBuddy_Data_File' ) ) {
@@ -21,7 +21,7 @@ function backupbuddy_data_file() {
 /**
  * Instance generator for Restore class.
  *
- * @return object  BackupBuddy_Restore instance.
+ * @return BackupBuddy_Restore instance.
  */
 function backupbuddy_restore() {
 	if ( ! class_exists( 'BackupBuddy_Restore' ) ) {
@@ -34,7 +34,7 @@ function backupbuddy_restore() {
 /**
  * Instance generator for Backups class.
  *
- * @return object  BackupBuddy_Backups instance.
+ * @return BackupBuddy_Backups instance.
  */
 function backupbuddy_backups() {
 	if ( ! class_exists( 'BackupBuddy_Backups' ) ) {

@@ -5,23 +5,25 @@
 class pb_backupbuddy_destination_rackspace { // Change class name end to match destination name.
 
 	public static $destination_info = array(
-		'name'			=>		'Rackspace Cloud Files',
-		'description'	=>		'Rackspace Cloud Files is an online cloud storage service (like Amazon S3) for storing files. <a href="http://www.rackspace.com/cloud/public/files/" target="_blank">Learn more here.</a>',
-		'category'		=>		'legacy', // best, normal, legacy
+		// Hide this destination from being added by user. Deprecated May 2023.
+		'deprecated'  => true,
+		'name'        => 'Rackspace Cloud Files',
+		'description' => 'Rackspace Cloud Files is an online cloud storage service (like Amazon S3) for storing files. <a href="https://go.solidwp.com/rackspace-404-error-replace-link" target="_blank">Learn more here.</a>',
+		'category'    => 'legacy', // best, normal, legacy
 	);
 
 	// Default settings. Should be public static for auto-merging.
 	public static $default_settings = array(
-		'type'			=>		'rackspace',	// MUST MATCH your destination slug. Required destination field.
-		'title'			=>		'',		// Required destination field.
-		'username'		=>		'',		// Rackspace account username.
-		'api_key'		=>		'',		// Rackspace API key.
-		'container'		=>		'',		// Rackspace container to send into.
-		'server'		=>		'https://auth.api.rackspacecloud.com', // Server address to connect to for sending. For instance the UK Rackspace cloud URL differs.
-		'archive_limit'	=>		'0',
-		'service_net'	=>		'0',	// Whether to use internal service net to reduce bandwidth when internal to the Rackspace network.
-		'disable_file_management'	=>		'0',		// When 1, _manage.php will not load which renders remote file management DISABLED.
-		'disabled'					=>		'0',		// When 1, disable this destination.
+		'type'                    => 'rackspace', // MUST MATCH your destination slug. Required destination field.
+		'title'                   => '', // Required destination field.
+		'username'                => '', // Rackspace account username.
+		'api_key'                 => '', // Rackspace API key.
+		'container'               => '', // Rackspace container to send into.
+		'server'                  => 'https://auth.api.rackspacecloud.com', // Server address to connect to for sending. For instance the UK Rackspace cloud URL differs.
+		'archive_limit'	          => '0',
+		'service_net'             => '0', // Whether to use internal service net to reduce bandwidth when internal to the Rackspace network.
+		'disable_file_management' => '0', // When 1, _manage.php will not load which renders remote file management DISABLED.
+		'disabled'                => '0', // When 1, disable this destination.
 	);
 
 

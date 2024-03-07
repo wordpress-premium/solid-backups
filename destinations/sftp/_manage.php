@@ -42,15 +42,12 @@ if ( ! $sftp ) {
 if ( pb_backupbuddy::_GET( 'cpy' ) ) {
 	// Copy sFTP backups to the local backup files.
 	$copy = pb_backupbuddy::_GET( 'cpy' );
-	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
+	pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the transfer gets interrupted, click the "Refresh" icon after the transfer is complete to try again.' );
 	echo '<br>';
 	pb_backupbuddy::status( 'details', 'Scheduling Cron for creating sFTP copy.' );
 	backupbuddy_core::schedule_single_event( time(), 'process_destination_copy', array( $destination, $copy ) );
 
-	if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-		update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-		spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-	}
+	backupbuddy_core::maybe_spawn_cron();
 }
 
 // Delete sftp backups.

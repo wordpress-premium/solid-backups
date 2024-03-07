@@ -8,23 +8,25 @@
 ?>
 <?php if ( false !== backupbuddy_live::getLiveID() ) : ?>
 	<div class="tabs clearfix">
-		<button class="tab-toggle stash-live selected">Stash Live</button>
-		<button class="tab-toggle traditional">Traditional</button>
+		<button class="tab-toggle stash-live selected"><?php esc_html_e( 'Stash Live', 'it-l10n-backupbuddy' ); ?></button>
+		<button class="tab-toggle traditional"><?php esc_html_e( 'Traditional', 'it-l10n-backupbuddy' ); ?></button>
 	</div>
 	<div class="stash-live-wrapper"><div class="spinner is-active"></div></div>
 	<script type="text/template" class="backupbuddy-stash-live-dashboard-widget-tmpl">
 		<div class="backupbuddy-live-stats-currently">
-			<span class="backupbuddy-pulsing-orb"></span>
+			<div>
+				<span class="backupbuddy-pulsing-orb"></span>
+			</div>
 			<div class="backupbuddy-currently-message">
 				<span class="backupbuddy-inline-label"><?php esc_html_e( 'Currently', 'it-l10n-backupbuddy' ); ?></span>: {{ stats.current_function_pretty }}
 			</div>
 		</div>
 		<div class="backupbuddy-live-stats-overview">
-			<h3><?php esc_html_e( 'BackupBuddy Stash Live requested new snapshot files', 'it-l10n-backupbuddy' ); ?>:</h3>
+			<h3><?php esc_html_e( 'Solid Backups Stash Live requested new snapshot files', 'it-l10n-backupbuddy' ); ?>:</h3>
 			<div class="backupbuddy-stats-time-ago">{{ stats.last_remote_snapshot_ago }}</div>
 
 			<div class="backupbuddy-stats-overview-manage-live backup-now">
-				<a href="<?php echo esc_url( $stashlive_url ); ?>" class="backupbuddy-live-button secondary"><?php esc_html_e( 'Manage Stash Live', 'it-l10n-backupbuddy' ); ?></a>
+				<a href="<?php echo esc_url( $stashlive_url ); ?>" class="button button-primary"><?php esc_html_e( 'Manage Stash Live', 'it-l10n-backupbuddy' ); ?></a>
 			</div>
 		</div>
 	</script>
@@ -111,34 +113,37 @@
 	<?php if ( isset( $get_overview['lastBackupStats']['finish'] ) ) { // only show if a last backup exists. ?>
 		<div class="info-group">
 			<h3>Latest Backup</h3>
-			<ul class="backup-list">
-				<li>
-					<div class="list-wrapper">
-						<div class="list-title">
+			<table class="backup-list">
+				<thead>
+					<tr>
+						<th>Time</th>
+						<th>Size</th>
+						<th>Type</th>
+						<th>&nbsp;</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>
+							<?php echo esc_html( $time_nice ); ?>
+						</td>
+						<td>
+							<?php echo esc_html( $archive_size ); ?>
+						</td>
+						<td class="backup-type">
+							<?php echo esc_html( $backup_type ); ?>
+						</td>
+						<td class="backup-download">
 							<?php echo $last_backup_title; // @codingStandardsIgnoreLine: ok. ?>
-						</div>
-						<div class="list-description">
-							<div class="backup-type description-item">
-								<span>Type</span><br>
-								<?php echo esc_html( $backup_type ); ?>
-							</div>
-							<div class="backup-size description-item">
-								<span>Size</span><br>
-								<?php echo esc_html( $archive_size ); ?>
-							</div>
-							<div class="backup-time description-item">
-								<span>Time</span><br>
-								<?php echo esc_html( $time_nice ); ?>
-							</div>
-						</div>
-					</div>
-				</li>
-			</ul>
+						</td>
+					</tr>
+				</tbody>
+			</table>
 		</div>
 	<?php } ?>
 
 	<div class="backup-now">
-		<a href="<?php echo esc_url( $backup_url ); ?>"><?php esc_html_e( 'Backup Now', 'it-l10n-backupbuddy' ); ?></a>
+		<a href="<?php echo esc_url( $backup_url ); ?>" class="button button-primary"><?php esc_html_e( 'Backup Now', 'it-l10n-backupbuddy' ); ?></a>
 	</div>
 </div>
 
@@ -180,7 +185,7 @@
 		jQuery( 'a[href$="#backupbuddy-recent-edits"]' ).on( 'click', function(e) {
 			e.preventDefault();
 			var rel = jQuery( this ).attr( 'rel' ) ? '&rel=' + jQuery( this ).attr( 'rel' ) : '';
-			tb_show( 'BackupBuddy', '<?php echo pb_backupbuddy::ajax_url( 'recent_edits' ); ?>' + rel + '&TB_iframe=1&width=640&height=455', null );
+			tb_show( 'Solid Backups', '<?php echo pb_backupbuddy::ajax_url( 'recent_edits' ); ?>' + rel + '&TB_iframe=1&width=640&height=455', null );
 			return false;
 		});
 

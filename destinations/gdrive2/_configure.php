@@ -10,6 +10,16 @@
  * @package BackupBuddy
  */
 
+if ( pb_backupbuddy_destinations::is_using_destination_type( 'gdrive' ) ) {
+	// This destination cannot be added (and therefore edited) if the deprecated Google Drive (v1) destination is in use.
+	?>
+	<p style="margin-bottom: 1em">
+		<?php esc_html_e( 'You are attempting to add a destination (Google Drive) that is incompatible with the deprecated Google Drive (v1). You must delete that Google Drive (v1) destination to proceed.', 'it-l10n-backupbuddy' ); ?>
+	</p>
+	<?php
+	return;
+}
+
 pb_backupbuddy_destination_gdrive2::add_settings( $destination_settings );
 
 global $pb_hide_save;
@@ -55,8 +65,8 @@ if ( 'add' === $mode ) {
 			}
 
 			if ( empty( $token['refresh_token'] ) ) {
-				$help_link = '<br><a href="https://help.ithemes.com/hc/en-us/articles/360045778773" target="_blank" rel="noopener">https://help.ithemes.com/hc/en-us/articles/360045778773</a>';
-				pb_backupbuddy::alert( __( 'Unable to retrieve refresh token from Google Drive authorization. Please follow the instructions on the link below to reset BackupBuddy\'s access to Google Drive:', 'it-l10n-backupbuddy' ) . $help_link, true );
+				$help_link = '<br><a href="https://go.solidwp.com/google-drive-missing-refresh-token" target="_blank" rel="noopener">https://go.solidwp.com/google-drive-missing-refresh-token</a>';
+				pb_backupbuddy::alert( __( 'Unable to retrieve refresh token from Google Drive authorization. Please follow the instructions on the link below to reset Solid Backups\'s access to Google Drive:', 'it-l10n-backupbuddy' ) . $help_link, true );
 			} else {
 				$token     = json_encode( $token );
 				$client_id = pb_backupbuddy_destination_gdrive2::$settings['client_id'];
@@ -203,7 +213,7 @@ if ( 'add' === $mode ) {
 			?>
 			<p><b>&nbsp;&nbsp;Service Account Setup:</b></p>
 			<ol>
-				<li><a href="https://console.developers.google.com/iam-admin/serviceaccounts/" target="_blank" class="button secondary-button" style="vertical-align: 0;">Click here to launch the Create Service Account page</a></li>
+				<li><a href="https://go.solidwp.com/google-account-service-accounts" target="_blank" class="button button-secondary secondary-button" style="vertical-align: 0;">Click here to launch the Create Service Account page</a></li>
 				<li>Click "Select a Project", select your project, and click "Open"</li>
 				<li>Click "+ Create Service Account" at the top of the page</li>
 				<li>Enter a descriptive name and a role of "Storage -> Storage Admin" (our default recommendation)</li>
@@ -260,7 +270,7 @@ if ( 'save' !== $mode ) {
 }
 
 if ( 'add' === $mode ) {
-	$default_name = 'My Google Drive (v2)';
+	$default_name = 'My Google Drive';
 }
 
 $settings_form->add_setting(
@@ -373,7 +383,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 $settings_form->add_setting(
@@ -384,7 +394,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 $settings_form->add_setting(
@@ -395,7 +405,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 $settings_form->add_setting(
@@ -406,7 +416,7 @@ $settings_form->add_setting(
 		'tip'   => __( '[Example: 5] - Enter 0 for no limit. This is the maximum number of this type of archive to be stored in this specific destination. If this limit is met the oldest backup of this type will be deleted.', 'it-l10n-backupbuddy' ),
 		'rules' => 'int[0-9999999]',
 		'css'   => 'width: 50px;',
-		'after' => ' backups. &nbsp;<span class="description">0 or blank for no limit.</span>',
+		'after' => ' backups. <p class="description">0 or blank for no limit.</p>',
 	)
 );
 
@@ -415,7 +425,7 @@ $settings_form->add_setting(
 	array(
 		'type'      => 'title',
 		'name'      => 'advanced_begin',
-		'title'     => '<span class="dashicons dashicons-arrow-right"></span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
+		'title'     => '<span class="advanced-toggle-title-icon">' . pb_backupbuddy::$ui->get_icon( 'chevronleft' ) . '</span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
 		'row_class' => 'advanced-toggle-title',
 	)
 );
@@ -429,7 +439,7 @@ $settings_form->add_setting(
 		'rules'     => 'required|int[0-9999999]',
 		'css'       => 'width: 50px;',
 		'after'     => ' MB',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 
@@ -442,7 +452,7 @@ $settings_form->add_setting(
 		'rules'     => '',
 		'css'       => 'width: 50px;',
 		'after'     => ' secs. <span class="description">' . esc_html__( 'Blank for detected default:', 'it-l10n-backupbuddy' ) . ' ' . backupbuddy_core::detectMaxExecutionTime() . ' sec</span>',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 
@@ -458,7 +468,7 @@ $settings_form->add_setting(
 		'tip'       => __( '[Default: unchecked] - If you are getting Invalid jSON errors from Google, you can try checking this option.', 'it-l10n-backupbuddy' ),
 		'css'       => '',
 		'after'     => '<span class="description"> ' . __( 'Check to disable gzip compression.', 'it-l10n-backupbuddy' ) . '</span>',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );
 
@@ -472,11 +482,11 @@ if ( 'edit' !== $mode || ( isset( pb_backupbuddy_destination_gdrive2::$settings[
 				'checked'   => '1',
 			),
 			'title'     => __( 'Disable file management', 'it-l10n-backupbuddy' ),
-			'tip'       => __( '[[Default: unchecked] - When checked, selecting this destination disables browsing or accessing files stored at this destination from within BackupBuddy. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination.', 'it-l10n-backupbuddy' ),
+			'tip'       => __( '[[Default: unchecked] - When checked, selecting this destination disables browsing or accessing files stored at this destination from within Solid Backups. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination. NOTE: Once enabled this cannot be disabled without deleting and re-creating this destination.', 'it-l10n-backupbuddy' ),
 			'css'       => '',
 			'rules'     => '',
 			'after'     => __( 'Once disabled you must recreate the destination to re-enable.', 'it-l10n-backupbuddy' ),
-			'row_class' => 'advanced-toggle',
+			'row_class' => 'advanced-toggle advanced-toggle-hidden',
 		)
 	);
 }
@@ -493,6 +503,6 @@ $settings_form->add_setting(
 		'css'       => '',
 		'after'     => '<span class="description"> ' . __( 'Check to disable this destination until re-enabled.', 'it-l10n-backupbuddy' ) . '</span>',
 		'rules'     => '',
-		'row_class' => 'advanced-toggle',
+		'row_class' => 'advanced-toggle advanced-toggle-hidden',
 	)
 );

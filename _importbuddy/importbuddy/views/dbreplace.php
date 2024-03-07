@@ -22,21 +22,21 @@ if ( ! file_exists( ABSPATH . 'wp-config.php' ) ) { // Normal config file not fo
 		}
 	}
 	if ( '' == $configFile ) {
-		pb_backupbuddy::alert( '<b>Error:</b> This tool requires an existing WordPress installation to perform database replacements on. No WordPress wp-config.php configuration file was found in the same directory as importbuddy.php. ' . $parentConfigMessage . ' <br><br> <b>Note:</b> ImportBuddy automatically handles migrating & replacing your site URLs and file paths during restore/migration; this tool is not needed for normal backup / restore operations.', true );
+		pb_backupbuddy::alert( '<b>Error:</b> This tool requires an existing WordPress installation to perform database replacements on. No WordPress wp-config.php configuration file was found in the same directory as importbuddy.php. ' . $parentConfigMessage . '</p><p><b>Note:</b> The Importer automatically handles migrating & replacing your site URLs and file paths during restore/migration; this tool is not needed for normal backup / restore operations.', true );
 	}
 } else { // Use normal config file.
 	$configFile = ABSPATH . 'wp-config.php';
 }
 
 if ( '' != $configFile ) {
-	
+
 	// Read in wp-config.php file contents.
 	$configContents = file_get_contents( $configFile );
 	if ( false === $configContents ) {
 		pb_backupbuddy::alert( 'Error: Unable to read wp-config.php configuration file.' );
 		return;
 	}
-	
+
 	// Grab database settings from wp-config.php contents.
 	preg_match( '/define\([\s]*(\'|")DB_NAME(\'|"),[\s]*(\'|")(.*)(\'|")[\s]*\);/i', $configContents, $matches );
 	$databaseSettings['name'] = $matches[4];
@@ -48,9 +48,9 @@ if ( '' != $configFile ) {
 	$databaseSettings['host'] = $matches[4];
 	preg_match( '/\$table_prefix[\s]*=[\s]*(\'|")(.*)(\'|");/i', $configContents, $matches );
 	$databaseSettings['prefix'] = $matches[2];
-	
+
 	//print_r( $databaseSettings );
-	
+
 	// Connect to database.
 	global $wpdb;
 	$wpdb = new wpdb( $databaseSettings['username'], $databaseSettings['password'], $databaseSettings['name'], $databaseSettings['host'] );

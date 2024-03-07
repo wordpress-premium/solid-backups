@@ -1,6 +1,6 @@
 <?php
 /**
- * BackupBuddy Stash Live Parent Class
+ * Solid Backups Stash Live Parent Class
  *
  * @package BackupBuddy
  * @author Dustin Bolton
@@ -8,7 +8,7 @@
  */
 
 /**
- * BackupBuddy Live Class
+ * Solid Backups Live Class
  */
 class backupbuddy_live {
 
@@ -27,6 +27,13 @@ class backupbuddy_live {
 	const STASH_QUOTA_TRANSIENT_EXPIRE = 300;
 
 	/**
+	 * Action Scheduler Group.
+	 *
+	 * @var string
+	 */
+	const CRON_GROUP = 'solid-backups-live';
+
+	/**
 	 * Live Destination ID
 	 *
 	 * @var int
@@ -34,7 +41,7 @@ class backupbuddy_live {
 	private static $_liveDestinationID = '';
 
 	/**
-	 * Retrieves quota information for associated Stash account.
+	 * Retrieve quota information for associated Stash account.
 	 *
 	 * @param bool $bust_cache  Ignore transient when getting quota.
 	 *
@@ -48,9 +55,9 @@ class backupbuddy_live {
 			$settings = backupbuddy_live_periodic::get_destination_settings();
 
 			require_once( pb_backupbuddy::plugin_path() . '/destinations/live/live_periodic.php' );
-			require_once( pb_backupbuddy::plugin_path() . '/destinations/stash' . $settings['destination_version'] . '/init.php' );
+			require_once( pb_backupbuddy::plugin_path() . '/destinations/stash3/init.php' );
 
-			$quota = call_user_func_array( array( 'pb_backupbuddy_destination_stash' . $settings['destination_version'], 'get_quota' ), array( $settings ) );
+			$quota = call_user_func_array( array( 'pb_backupbuddy_destination_stash3', 'get_quota' ), array( $settings ) );
 			if ( false === $quota ) {
 				pb_backupbuddy::status( 'error', 'Error #3489348944: Could not get quota for Stash Live.' );
 			}
@@ -61,12 +68,12 @@ class backupbuddy_live {
 		}
 	}
 
-
-	/* queue_manual_scan()
+	/**
+	 * Queues a directory for file and signature scanning. eg: Used by media upload to look
+	 * for new files (including thumbnails, etc) for an uploaded image.
 	 *
-	 * Queues a directory for file and signature scanning. eg: Used by media upload to look for new files (including thumbnails, etc) for an uploaded image.
-	 *
-	 * @param	string	$directory	Directory to scan. Trailing slash optional. Important: MUST be below/within the ABSPATH or we return false.
+	 * @param string  $directory  Directory to scan.
+	 *                Trailing slash optional. Important: MUST be below/within the ABSPATH or we return false.
 	 */
 	public static function queue_manual_file_scan( $directory ) {
 		require_once( 'live_periodic.php' );
@@ -77,53 +84,24 @@ class backupbuddy_live {
 			return false;
 		}
 
-		self::queue_step( 'update_files_list', array( $directory ) );
-
-	} // End queue_manual_file_scan().
-
-
-
-	// $force_use_jump_transient forces use of transient method instead of running now to prevent issues queing from within a periodic function step.
-	public static function queue_step( $step, $args = array(), $skip_run_now = false, $force_run_now = false ) {
-
-		$run_now = false;
-		$state = backupbuddy_live_periodic::get_stats();
-		$assume_timed_out_after = backupbuddy_core::adjustedMaxExecutionTime() + backupbuddy_constants::TIMED_OUT_PROCESS_RESUME_WIGGLE_ROOM;
-		if ( 'daily_init' == $state['step']['function'] ) { // Currently idling so okay to run now.
-			$run_now = true;
-		} elseif ( time() - $state['stats']['last_activity'] > $assume_timed_out_after ) { // Probably timed out so okay to run now.
-			$run_now = true;
-		}
-
-		set_transient( 'backupbuddy_live_jump', array( $step, $args ), 60*60*48 ); // Tells Live process to restart from the beginning (if mid-process) so new settigns apply.
-
-		if ( ( true === $force_run_now ) || ( ( true === $run_now ) && ( false === $skip_run_now ) ) ) {
-			backupbuddy_live_periodic::_set_next_step( $step, $args, $save_now_and_unlock = true );
-
-			$schedule_result = backupbuddy_core::schedule_single_event( time(), 'live_periodic', $cronArgs = array() );
-			if ( true === $schedule_result ) {
-				pb_backupbuddy::status( 'details', 'Live Periodic chunk step cron event for step `' . $step . '` scheduled.' );
-			} else {
-				pb_backupbuddy::status( 'error', 'Next Live Periodic chunk step cron event for step `' . $step . '` FAILED to be scheduled.' );
-			}
-			if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-				pb_backupbuddy::status( 'details', 'Spawning cron now.' );
-				update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-				spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-			}
-		} else { // Already running. Trigger to restart at beginning.
-			//set_transient( 'backupbuddy_live_jump', array( $step, $args ), 60*60*48 ); // Tells Live process to restart from the beginning (if mid-process) so new settigns apply.
-		}
-
-	} // End queue_step().
+		backupbuddy_live_periodic::queue_step( 'update_files_list', array( $directory ) );
+	}
 
 
 
+	/**
+	 * Update the Live Activity Time for the DB.
+	 */
 	public static function update_db_live_activity_time() {
 		$activity_time_file = backupbuddy_core::getLogDirectory() . 'live/db_activity-' . pb_backupbuddy::$options['log_serial'] . '.txt';
 		@touch( $activity_time_file );
-	} // End update_db_live_activity_time().
+	}
 
+	/**
+	 * Get the Live Activity Time for the DB.
+	 *
+	 * @return int  Last activity time.
+	 */
 	public static function get_db_live_activity_time() {
 		$activity_time_file = backupbuddy_core::getLogDirectory() . 'live/db_activity-' . pb_backupbuddy::$options['log_serial'] . '.txt';
 		if ( ! file_exists( $activity_time_file ) ) {
@@ -135,11 +113,11 @@ class backupbuddy_live {
 		return $mtime;
 	}
 
-
-	/* calculateTables()
+	/**
+	 * Calculate array of tables Live should back up based on
+	 * Live additional inclusions/exclusions and global defaults.
 	 *
-	 * Calculates array of tables Live should back up based on Live additional inclusions/exclusions and global defaults.
-	 *
+	 * @return array  Array of tables to back up.
 	 */
 	public static function calculateTables() {
 
@@ -149,9 +127,13 @@ class backupbuddy_live {
 		$tables = backupbuddy_core::calculate_tables( $results[2], $results[0], $results[1] );
 
 		return $tables;
-	} // End calculateTables().
+	}
 
-
+	/**
+	 * Caclulate table includes/excludes based on Live-specific settings.
+	 *
+	 * @return array  Array of tables
+	 */
 	public static function _calculate_table_includes_excludes_basedump() {
 
 		$profile = pb_backupbuddy::$options['profiles'][0];
@@ -180,24 +162,25 @@ class backupbuddy_live {
 
 		return array( $includes, $excludes, $base_dump_mode );
 
-	} // End _calculate_table_includes_excludes().
+	}
 
-
-	/* getLiveDatabaseSnapshotDir()
+	/**
+	 * Get the Live database snapshot directory.
 	 *
 	 * Has trailing slash.
 	 *
+	 * @return string  Live database snapshot directory.
 	 */
 	public static function getLiveDatabaseSnapshotDir() {
 		return backupbuddy_core::getTempDirectory() . pb_backupbuddy::$options['log_serial'] . '/live_db_snapshot/';
 	}
 
-
-
-	/* getOption()
+	/* Get a Live Option.
 	 *
-	 * description
+	 * @param string  $option    Option to get.
+	 * @param bool    $makeArray  Whether to return as array (true) or string (false).
 	 *
+	 * @return mixed  Option value.
 	 */
 	public static function getOption( $option, $makeArray = false ) {
 		if ( true !== self::_setLiveID() ) {
@@ -225,53 +208,41 @@ class backupbuddy_live {
 		} else {
 			return $optionValue;
 		}
-	} // End getOption().
+	}
 
-
-
+	/**
+	 * Get the human-redable name of a Live function.
+	 *
+	 * @param string  $function  Function name.
+	 *
+	 * @return string  Human-readable function name.
+	 */
 	public static function pretty_function( $function ) {
-		$user_label = '';
-		if ( ! empty( wp_get_current_user()->user_firstname ) ) {
-			$user_label = wp_get_current_user()->user_firstname;
-		} else {
-			$user_label = wp_get_current_user()->user_login;
-		}
 		$functions = array(
-			'daily_init' => array(
-				__( 'Up to date. Watching for changes...', 'it-l10n-backupbuddy' ),
-				__( 'Up to date. Keeping an eye on that awesome new blog post...', 'it-l10n-backupbuddy' ),
-				__( 'Up to date. We are all ears, waiting for your next move...', 'it-l10n-backupbuddy' ),
-				__( 'Up to date. Eating popcorn and keeping movies safe from your Media Gallery...', 'it-l10n-backupbuddy' ),
-				sprintf( __( 'Up to date. Your move, %s...', 'it-l10n-backupbuddy' ), $user_label )
-			),
-			'database_snapshot' => __( 'Capturing entire database', 'it-l10n-backupbuddy' ),
+			'daily_init'                => __( 'Up to date. Watching for changes...', 'it-l10n-backupbuddy' ),
+			'database_snapshot'         => __( 'Capturing entire database', 'it-l10n-backupbuddy' ),
 			'send_pending_db_snapshots' => __( 'Sending captured database files', 'it-l10n-backupbuddy' ),
-			'process_table_deletions' => __( 'Processing deleted tables', 'it-l10n-backupbuddy' ),
-			'update_files_list' => __( 'Scanning for new or deleted files', 'it-l10n-backupbuddy' ),
-			'update_files_signatures' => __( 'Scanning for file changes', 'it-l10n-backupbuddy' ),
-			'process_file_deletions' => __( 'Processing deleted files', 'it-l10n-backupbuddy' ),
-			'send_pending_files' => __( 'Sending new & modified files... This may take a while', 'it-l10n-backupbuddy' ),
-			'audit_remote_files' => __( 'Auditing backed up files for integrity', 'it-l10n-backupbuddy' ),
-			'run_remote_snapshot' => __( 'Creating snapshot (if due)', 'it-l10n-backupbuddy' ),
-			'wait_on_transfers' => __( 'Waiting for pending file transfers to finish', 'it-l10n-backupbuddy' ),
+			'process_table_deletions'   => __( 'Processing deleted tables', 'it-l10n-backupbuddy' ),
+			'update_files_list'         => __( 'Scanning for new or deleted files', 'it-l10n-backupbuddy' ),
+			'update_files_signatures'   => __( 'Scanning for file changes', 'it-l10n-backupbuddy' ),
+			'process_file_deletions'    => __( 'Processing deleted files', 'it-l10n-backupbuddy' ),
+			'send_pending_files'        => __( 'Sending new & modified files...', 'it-l10n-backupbuddy' ),
+			'audit_remote_files'        => __( 'Auditing backed up files for integrity', 'it-l10n-backupbuddy' ),
+			'run_remote_snapshot'       => __( 'Creating snapshot (if due)', 'it-l10n-backupbuddy' ),
+			'wait_on_transfers'         => __( 'Waiting for pending file transfers to finish', 'it-l10n-backupbuddy' ),
 		);
+
 		if ( isset( $functions[ $function ] ) ) {
-			if ( is_array( $functions [ $function ] ) ) {
-				return $functions[ $function][ array_rand( $functions[ $function ] )];
-			} else {
-				return $functions[ $function ];
-			}
-		} else {
-			return __( 'Unknown', 'it-l10n-backupbuddy' );
+			return $functions[ $function ];
 		}
-	} // End pretty_function().
 
+		return __( 'Unknown', 'it-l10n-backupbuddy' );
+	}
 
-
-	/* _setLiveID()
+	/* *
+	 * Set teh Live Destination ID.
 	 *
-	 * description
-	 *
+	 * @return bool  Whether Live ID was set.
 	 */
 	private static function _setLiveID() {
 		if ( '' == self::$_liveDestinationID ) {
@@ -282,19 +253,18 @@ class backupbuddy_live {
 				}
 			}
 			if ( '' == self::$_liveDestinationID ) {
-				//pb_backupbuddy::status( 'error', 'Warning #382938932: No Live destination was found configured. Set up BackupBuddy Stash Live.' );
 				return false;
 			}
 		}
 		return true;
-	} // End _setLiveID().
+	}
 
-
-
-	/* getLiveID()
+	/**
+	 * Get the Live destination ID.
 	 *
 	 * Returns ID of remote destination or FALSE if not found.
 	 *
+	 * @return mixed  Live destination ID or false if not found.
 	 */
 	public static function getLiveID() {
 		if ( '' == self::$_liveDestinationID ) {
@@ -306,8 +276,16 @@ class backupbuddy_live {
 		return self::$_liveDestinationID;
 	}
 
-
-	// TODO: $delete param only temporarily needed for server-side transition to new api server based archive trimming.
+	/**
+	 * Get the archive limit settings array.
+	 *
+	 * @todo $delete param only temporarily needed for server-side transition to new
+	 *       api server based archive trimming.
+	 *
+	 * @param bool $delete  Whether to actually delete or just dry-run.
+	 *
+	 * @return array  Array of archive limit settings.
+	 */
 	public static function get_archive_limit_settings_array( $delete = true ) {
 		$destination_id = backupbuddy_live::getLiveID();
 		$destination_settings = backupbuddy_live_periodic::get_destination_settings();
@@ -349,6 +327,11 @@ class backupbuddy_live {
 	}
 
 
+	/**
+	 * Send archive limit settings to remote server.
+	 *
+	 * @return bool  Whether settings were sent.
+	 */
 	public static function send_trim_settings() {
 		require_once( pb_backupbuddy::plugin_path() . '/destinations/live/live_periodic.php' );
 
@@ -366,11 +349,19 @@ class backupbuddy_live {
 			return true;
 		}
 
-	} // End trim_remote_archives().
+	}
 
-
-
-	// Deprecated as of 7.0.5.5 pending verified of new system.
+	/**
+	 * Trim remote archives.
+	 *
+	 * Deprecated as of 7.0.5.5 pending verified of new system.
+	 *
+	 * @deprecated
+	 *
+	 * @param bool $echo  Whether to echo results.
+	 *
+	 * @return bool  Whether archives were trimmed.
+	 */
 	public static function trim_remote_archives( $echo = false ) {
 		require_once( pb_backupbuddy::plugin_path() . '/destinations/live/live_periodic.php' );
 
@@ -402,7 +393,6 @@ class backupbuddy_live {
 			}
 		}
 
-
 		$additionalParams = array(
 			'delete'  => true, // Whether to actually delete or just dry-run.
 			'limits' => $limits,
@@ -433,9 +423,16 @@ class backupbuddy_live {
 
 			return true;
 		}
+	}
 
-	} // End trim_remote_archives().
-
-
-
-} // end class backupbuddy_live.
+	/**
+	 * Using a DB query, remove all live-related actions from the action scheduler table.
+	 *
+	 * This is separate from live_periodic. It is only used on actions in the 'live' group.
+	 *
+	 * This removes *everything* (completed, failed, pending, etc).
+	 */
+	public static function remove_all_live_actions() {
+		backupbuddy_core::delete_all_events_by_group( self::CRON_GROUP );
+	}
+}

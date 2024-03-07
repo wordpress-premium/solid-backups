@@ -45,7 +45,7 @@ if ( 'defaults' != $profile_array['type'] ) {
 					'0'  => 'Do not skip',
 				),
 				'title'       => __( 'Skip database dump on backup', 'it-l10n-backupbuddy' ),
-				'tip'         => __( '[Default: disabled] - (WARNING: This prevents BackupBuddy from backing up the database during any kind of backup. This is for troubleshooting / advanced usage only to work around being unable to backup the database.', 'it-l10n-backupbuddy' ),
+				'tip'         => __( '[Default: disabled] - (WARNING: This prevents Solid Backups from backing up the database during any kind of backup. This is for troubleshooting / advanced usage only to work around being unable to backup the database.', 'it-l10n-backupbuddy' ),
 				'css'         => '',
 				'rules'       => 'required',
 				'orientation' => 'vertical',
@@ -80,7 +80,7 @@ if ( 'defaults' != $profile_array['type'] ) {
 				'1'  => __( 'Classic (v1.x) - Entire backup in single PHP page load', 'it-l10n-backupbuddy' ),
 				'2'  => __( 'Modern (v2.x+) - Split across page loads via WP cron', 'it-l10n-backupbuddy' ),
 			),
-			'tip'     => __( '[Default: Modern] - If you are encountering difficulty backing up due to WordPress cron, HTTP Loopbacks, or other features specific to version 2.x you can try classic mode which runs like BackupBuddy v1.x did.', 'it-l10n-backupbuddy' ),
+			'tip'     => __( '[Default: Modern] - If you are encountering difficulty backing up due to WordPress cron, HTTP Loopbacks, or other features specific to version 2.x you can try classic mode which runs like Solid Backups v1.x did.', 'it-l10n-backupbuddy' ),
 			'rules'   => 'required',
 		)
 	);

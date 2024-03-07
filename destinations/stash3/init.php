@@ -21,8 +21,8 @@ class pb_backupbuddy_destination_stash3 {
 	 * @var array
 	 */
 	public static $destination_info = array(
-		'name'        => 'BackupBuddy Stash (v3)',
-		'description' => '<b>The easiest of all destinations</b> for PHP v5.5+; just enter your iThemes login and Stash away! Store your backups in the BackupBuddy cloud safely with high redundancy and encrypted storage.  Supports multipart uploads for larger file support with both bursting and chunking. Active BackupBuddy customers receive <b>free</b> storage! Additional storage upgrades optionally available. <a href="http://ithemes.com/backupbuddy-stash/" target="_blank">Learn more here.</a>',
+		'name'        => 'Solid Backups Stash',
+		'description' => '<b>The easiest of all destinations</b> for PHP v5.5+; just enter your SolidWP login and Stash away! Store your backups in the Solid Backups cloud safely with high redundancy and encrypted storage.  Supports multipart uploads for larger file support with both bursting and chunking. Active Solid Backups customers receive <b>free</b> storage! Additional storage upgrades optionally available. <a href="https://go.solidwp.com/solid-backups-stash" target="_blank">Learn more here.</a>',
 		'category'    => 'best', // best, normal, or legacy.
 	);
 
@@ -36,8 +36,8 @@ class pb_backupbuddy_destination_stash3 {
 		'type'                    => 'stash3',   // MUST MATCH your destination slug. Required destination field.
 		'title'                   => '',         // Required destination field.
 
-		'itxapi_username'         => '',         // Username to connect to iThemes API.
-		'itxapi_token'            => '',         // Site token for iThemes API.
+		'itxapi_username'         => '',         // Username to connect to Solid API.
+		'itxapi_token'            => '',         // Site token for Solid API.
 
 		'ssl'                     => '1',        // Whether or not to use SSL encryption for connecting.
 		'server_encryption'       => 'AES256',   // Encryption (if any) to have the destination enact. Empty string for none.
@@ -115,7 +115,7 @@ class pb_backupbuddy_destination_stash3 {
 				return false;
 			}
 
-			if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+			if ( pb_backupbuddy::full_logging() ) {
 				pb_backupbuddy::status( 'details', 'Stash API upload action response due to logging level: `' . print_r( $response, true ) . '`.' );
 			}
 
@@ -142,7 +142,7 @@ class pb_backupbuddy_destination_stash3 {
 	 */
 	public static function test( $settings ) {
 		$settings = self::_init( $settings );
-		if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+		if ( pb_backupbuddy::full_logging() ) {
 			error_log( 'Debug #8393283:' );
 			error_log( print_r( $settings, true ) );
 		}
@@ -239,99 +239,49 @@ class pb_backupbuddy_destination_stash3 {
 	 * @return string|void  Quota bar HTML or void when echo'd.
 	 */
 	public static function get_quota_bar( $account_info, $echo = false ) {
-		$return  = '<div class="backupbuddy-stash3-quotawrap">';
-		$return .= '
-		<style>
-			.outer_progress {
-				-moz-border-radius: 4px;
-				-webkit-border-radius: 4px;
-				-khtml-border-radius: 4px;
-				border-radius: 4px;
+		ob_start();
+		?>
+		<div class="backupbuddy-stash3-quotawrap quota-wrap">
+			<div class="quota_outer_progress">
+				<div class="quota_inner_progress" style="width: <?php echo esc_attr( $account_info['quota_used_percent'] ); ?>%"></div>
+			</div>
 
-				border: 1px solid #DDD;
-				background: #EEE;
+			<table class="quota_progress_table">
+				<tbody>
+					<tr>
+						<td><?php esc_html_e( 'Free Tier', 'it-l10n-backupbuddy' ); ?></td>
+						<td><?php esc_html_e( 'Paid Tier', 'it-l10n-backupbuddy' ); ?></td>
+						<td></td>
+						<td><?php esc_html_e( 'Total', 'it-l10n-backupbuddy' ); ?></td>
+						<td><?php esc_html_e( 'Used', 'it-l10n-backupbuddy' ); ?></td>
+						<td><?php esc_html_e( 'Available', 'it-l10n-backupbuddy' ); ?></td>
+					</tr>
 
-				max-width: 700px;
+					<tr>
+						<td><?php echo esc_html( $account_info['quota_free_nice'] ); ?></td>
+						<td>
+							<?php echo esc_html( '0' === $account_info['quota_paid'] ? 'none' : $account_info['quota_paid_nice'] ); ?>
+						</td>
+						<td></td>
+						<td><?php echo esc_html( $account_info['quota_total_nice'] ); ?></td>
+						<td><?php echo esc_html( $account_info['quota_used_nice'] . ' (' . $account_info['quota_used_percent'] . '%)' ); ?></td>
+						<td><?php echo esc_html( $account_info['quota_available_nice'] ); ?></td>
+					</tr>
+				</tbody>
+			</table>
 
-				margin-left: auto;
-				margin-right: auto;
-
-				height: 30px;
-			}
-
-			.inner_progress {
-				border-right: 1px solid #85bb3c;
-				background: #8cc63f url("' . pb_backupbuddy::plugin_url() . '/destinations/stash3/progress.png") 50% 50% repeat-x;
-
-				height: 100%;
-			}
-
-			.progress_table {
-				color: #5E7078;
-				font-family: "Open Sans", Arial, Helvetica, Sans-Serif;
-				font-size: 14px;
-				line-height: 20px;
-				text-align: center;
-
-				margin-left: auto;
-				margin-right: auto;
-				margin-bottom: 20px;
-				max-width: 700px;
-			}
-		</style>';
-
-		if ( isset( $account_info['quota_warning'] ) && ( $account_info['quota_warning'] != '' ) ) {
-			// echo '<div style="color: red; max-width: 700px; margin-left: auto; margin-right: auto;"><b>Warning</b>: ' . $account_info['quota_warning'] . '</div><br>';
-		}
-
-		$return .= '
-		<div class="outer_progress">
-			<div class="inner_progress" style="width: ' . $account_info['quota_used_percent'] . '%"></div>
+			<div class="quota-links">
+				<b><?php esc_html_e( 'Upgrade storage:', 'it-l10n-backupbuddy' ); ?></b> &nbsp;
+				<a href="https://go.solidwp.com/solid-backups-stash" target="_blank" style="text-decoration: none;">+ 5GB</a>, &nbsp;
+				<a href="https://go.solidwp.com/solid-backups-stash" target="_blank" style="text-decoration: none;">+ 10GB</a>, &nbsp;
+				<a href="https://go.solidwp.com/solid-backups-stash" target="_blank" style="text-decoration: none;">+ 25GB</a>&nbsp;|&nbsp;
+				<a class="quota-link quota-link-manage-stash" href="https://go.solidwp.com/solid-stash-account" target="_blank"><?php esc_html_e( 'Manage Stash & Stash Live Files', 'it-l10n-backupbuddy' ); ?></a>
+				&nbsp;|&nbsp;
+				<a class="quota-link quota-link-manage-account" href="https://go.solidwp.com/solid-stash-account-link" target="_blank"><?php esc_html_e( 'Manage Account', 'it-l10n-backupbuddy' ); ?></a>
+			</div>
 		</div>
-
-		<table align="center" class="progress_table">
-			<tbody><tr align="center">
-			    <td style="width: 10%; font-weight: bold; text-align: center">Free Tier</td>
-			    <td style="width: 10%; font-weight: bold; text-align: center">Paid Tier</td>
-			    <td style="width: 10%"></td>
-			    <td style="width: 10%; font-weight: bold; text-align: center">Total</td>
-			    <td style="width: 10%; font-weight: bold; text-align: center">Used</td>
-			    <td style="width: 10%; font-weight: bold; text-align: center">Available</td>
-			</tr>
-
-			<tr align="center">
-				<td style="text-align: center">' . $account_info['quota_free_nice'] . '</td>
-				<td style="text-align: center">';
-		if ( '0' == $account_info['quota_paid'] ) {
-			$return .= 'none';
-		} else {
-			$return .= $account_info['quota_paid_nice'];
-		}
-					$return .= '</td>
-				<td></td>
-				<td style="text-align: center">' . $account_info['quota_total_nice'] . '</td>
-				<td style="text-align: center">' . $account_info['quota_used_nice'] . ' (' . $account_info['quota_used_percent'] . '%)</td>
-				<td style="text-align: center">' . $account_info['quota_available_nice'] . '</td>
-			</tr>
-			';
-		$return             .= '
-		</tbody></table>';
-
-		$return .= '<div style="text-align: center;">';
-		$return .= '
-		<b>' . __( 'Upgrade storage', 'it-l10n-backupbuddy' ) . ':</b> &nbsp;
-		<a href="https://ithemes.com/member/cart.php?action=add&id=290" target="_blank" style="text-decoration: none;">+ 5GB</a>, &nbsp;
-		<a href="https://ithemes.com/member/cart.php?action=add&id=291" target="_blank" style="text-decoration: none;">+ 10GB</a>, &nbsp;
-		<a href="https://ithemes.com/member/cart.php?action=add&id=292" target="_blank" style="text-decoration: none;">+ 25GB</a>
-
-		&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href="https://sync.ithemes.com/stash/" target="_blank" style="text-decoration: none;"><b>Manage Stash & Stash Live Files</b></a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;<a href="https://sync.ithemes.com/stash/" target="_blank" style="text-decoration: none;"><b>Manage Account</b></a>';
-
-		// Welcome text.
-		$up_path = '/';
-
-		$return .= '<br><br></div>';
-		$return .= '</div>';
-
+		<?php
+		$return = ob_get_clean();
 		if ( false === $echo ) {
 			return $return;
 		}
@@ -420,7 +370,7 @@ class pb_backupbuddy_destination_stash3 {
 			$uploaded      = $file['uploaded_timestamp'];
 			$backup_date   = backupbuddy_core::parse_file( $backup, 'datetime' );
 			$size          = (double) $file['size'];
-			$download_link = admin_url() . sprintf( '?stash3-destination-id=%s&stash3-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
+			$download_link = admin_url() . sprintf( '?stash-destination-id=%s&stash-download=%s', backupbuddy_backups()->get_destination_id(), rawurlencode( $backup ) );
 
 			add_filter( 'backupbuddy_backup_columns', array( 'pb_backupbuddy_destination_stash3', 'set_table_column_header' ), 10, 2 );
 
@@ -579,7 +529,7 @@ class pb_backupbuddy_destination_stash3 {
 			'delete' => true,
 		);
 
-		if ( '3' == pb_backupbuddy::$options['log_level'] ) { // Full logging enabled.
+		if ( pb_backupbuddy::full_logging() ) {
 			pb_backupbuddy::status( 'details', 'Trim params based on settings: `' . print_r( $additional_params, true ) . '`.' );
 		}
 
@@ -670,7 +620,7 @@ class pb_backupbuddy_destination_stash3 {
 				if ( ! isset( $response['success'] ) || ( '1' != $response['success'] ) ) {
 					pb_backupbuddy::status( 'error', 'Error #3289327932: Something went wrong. Success was not reported. Detailed response: `' . print_r( $response, true ) . '`.' );
 				} else {
-					pb_backupbuddy::status( 'details', 'Successfully inititated cron kicker with API.' );
+					pb_backupbuddy::status( 'details', 'Successfully  cron kicker with API.' );
 					return true;
 				}
 			}
@@ -810,7 +760,7 @@ class pb_backupbuddy_destination_stash3 {
 		$dat_files = self::get_files( $settings, array( '.dat' ) );
 		$success   = true;
 
-		if ( ! count( $dat_files ) ) {
+		if ( ! is_array( $dat_files ) || empty( $dat_files ) ) {
 			return false;
 		}
 

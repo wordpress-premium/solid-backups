@@ -1,6 +1,6 @@
 <?php
 /**
- * ImportBuddy Home View
+ * Importer Home View
  *
  * @package BackupBuddy
  */
@@ -62,7 +62,7 @@ if ( pb_backupbuddy::_GET( 'file' ) != '' ) {
 	$backup_archives = array( pb_backupbuddy::_GET( 'file' ) );
 	echo '<div style="padding: 15px; background: #FFFFFF;">Restoring from backup <i>' . htmlentities( pb_backupbuddy::_GET( 'file' ) ) . '</i></div>
 	<form action="?ajax=2" method="post" target="miniFrame">';
-	echo '<input type="hidden" name="file" value="' . pb_backupbuddy::_GET( 'file' ) . '">';
+	echo '<input type="hidden" name="file" value="' . esc_attr( pb_backupbuddy::_GET( 'file' ) ) . '">';
 } else {
 	?>
 
@@ -77,7 +77,7 @@ if ( pb_backupbuddy::_GET( 'file' ) != '' ) {
 
 		// Look for manually unzipped
 		pb_backupbuddy::alert(
-			'<b>No BackupBuddy Zip backup found in this directory `' . ABSPATH . '`</b> -
+			'<b>No Solid Backups Zip backup found in this directory `' . ABSPATH . '`</b> -
 			You must upload a backup file by FTP (into the same directory as this importbuddy.php file), the upload tab, or import from Stash via the Stash tab above to continue.
 			<b>Do not rename the backup file from its original filename.</b> If you manually extracted/unzipped, upload the backup file,
 			select it, then select <i>Advanced Troubleshooting Options</i> & click <i>Skip Zip Extraction</i>. Refresh this page once you have uploaded the backup.'
@@ -139,8 +139,8 @@ if ( pb_backupbuddy::_GET( 'file' ) != '' ) {
 			if ( $backup_id == 0 ) {
 				echo 'checked="checked" ';
 			}
-			echo 'name="file" value="' . $backup_archive['file'] . '" data-type="' . $backup_type . '"> ' . $backup_archive['file'];
-			echo '<span style="float: right;">' . pb_backupbuddy::$format->file_size( filesize( ABSPATH . $backup_archive['file'] ) ) . '</span>';
+			echo 'name="file" value="' . esc_attr( $backup_archive['file'] ) . '" data-type="' . $backup_type . '"> ' . esc_attr( $backup_archive['file'] );
+			echo '<span style="float: right;">' . pb_backupbuddy::$format->file_size( filesize( ABSPATH . esc_attr( $backup_archive['file'] ) ) ) . '</span>';
 
 			echo '<div class="description" style="margin-left: 22px; margin-top: 6px; font-style: normal; line-height: 26px;">';
 			$meta = array();
@@ -170,17 +170,19 @@ if ( pb_backupbuddy::_GET( 'file' ) != '' ) {
 			// Show meta button if meta info available.
 			if ( $backup_archive['comment']['type'] != '' ) {
 				$file_hash = md5( $backup_archive['file'] );
-				echo '<a href="#hash_view" class="button button-tertiary leanModal view_hash_click" style=" float: right;" id="view_hash_' . $i . '" data-file="' . $backup_archive['file'] . '">View Checksum</a>';
-				echo '<a href="#info_' . $file_hash . '" class="button button-tertiary leanModal" style="float: right;" id="view_meta_' . $i . '">View Meta</a>';
+				echo '<a href="#hash_view" class="button leanModal view_hash_click" style=" float: right;" id="view_hash_' . $i . '" data-file="' . $backup_archive['file'] . '">View Checksum</a>';
+				echo '<a href="#info_' . $file_hash . '" class="button leanModal" style="float: right;" id="view_meta_' . $i . '">View Meta</a>';
 				?>
 				<div id="hash_view" style="display: none;">
 					<div class="modal">
 						<div class="modal_header">
-							<a class="modal_close">&times;</a>
 							<h2>View Checksum</h2>
+							<a class="modal_close">
+								<span class="modal_close_icon">&times;</span><span>Close</span>
+							</a>
 						</div>
 						<div class="modal_content">
-							<span id="hash_view_loading"><img src="importbuddy/images/loading.gif"> Calculating backup file Checksum (MD5 hash)... This may take a moment...</span>
+							<span id="hash_view_loading"><img src="<?php echo pb_backupbuddy::plugin_url(); ?>/assets/dist/images/loading.gif"> Calculating backup file Checksum (MD5 hash)... This may take a moment...</span>
 							<span id="hash_view_response"></span>
 						</div>
 					</div>
@@ -188,8 +190,10 @@ if ( pb_backupbuddy::_GET( 'file' ) != '' ) {
 				<div id="<?php echo 'info_' . $file_hash; ?>" style="display: none; height: 90%;">
 					<div class="modal">
 						<div class="modal_header">
-							<a class="modal_close">&times;</a>
 							<h2>Backup Meta Information</h2>
+							<a class="modal_close">
+								<span class="modal_close_icon">&times;</span><span>Close</span>
+							</a>
 						</div>
 						<div class="modal_content">
 							<?php
@@ -251,8 +255,8 @@ if ( ( ! empty( $backup_archives ) ) || ( 'stash' == pb_backupbuddy::_POST( 'upl
 				</label>
 			</div>
 
-			<input type="submit" name="submit" value="Restore Backup" class="it-button">
-			<button id="advanced_options_button" href="#pb_advanced_modal" class="it-button it-secondary leanModal">Advanced Options</button>
+			<input type="submit" name="submit" value="Restore Backup" class="button button-primary">
+			<button id="advanced_options_button" href="#pb_advanced_modal" class="button button-secondary leanModal">Advanced Options</button>
 		</center>
 	</div>
 <?php
@@ -268,9 +272,13 @@ if ( ( ! empty( $backup_archives ) ) || ( 'stash' == pb_backupbuddy::_POST( 'upl
 <div id="pb_advanced_modal" style="display: none;">
 	<div class="modal">
 		<div class="modal_header">
-			<a class="modal_close">&times;</a>
-			<h2>Advanced Options</h2>
-			Exercise caution. Additional options available on subsequent steps.
+			<div>
+				<h2>Advanced Options</h2>
+				<p>Exercise caution. Additional options available on subsequent steps.</p>
+			</div>
+			<a class="modal_close">
+				<span class="modal_close_icon">&times;</span><span>Close</span>
+			</a>
 		</div>
 		<div class="modal_content">
 
@@ -308,9 +316,13 @@ echo '</form>';
 <div id="pb_upload_modal" style="display: none;">
 	<div class="modal">
 		<div class="modal_header">
-			<a class="modal_close">&times;</a>
-			<h2>Upload Backup</h2>
-			Smaller backups can be uploaded here directly from your computer. Larger backups work best over FTP or other methods.
+			<div>
+				<h2>Upload Backup</h2>
+				<p>Smaller backups can be uploaded here directly from your computer. Larger backups work best over FTP or other methods.</p>
+			</div>
+			<a class="modal_close">
+				<span class="modal_close_icon">&times;</span><span>Close</span>
+			</a>
 		</div>
 		<div class="modal_content">
 
@@ -336,9 +348,13 @@ echo '</form>';
 <div id="pb_stash_modal" style="display: none;">
 	<div class="modal">
 		<div class="modal_header">
-			<a class="modal_close">&times;</a>
-			<h2>Restore Backup from Stash</h2>
-			Backups stored in your iThemes Stash may be retrieved for restoring here.
+			<div>
+				<h2>Restore Backup from Stash</h2>
+				<p>Backups stored in your Solid Stash may be retrieved for restoring here.</p>
+			</div>
+			<a class="modal_close">
+				<span class="modal_close_icon">&times;</span><span>Close</span>
+			</a>
 		</div>
 		<div class="modal_content">
 

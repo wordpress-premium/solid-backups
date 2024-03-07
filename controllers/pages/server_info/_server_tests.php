@@ -5,11 +5,13 @@
  * IMPORTANT NOTE:
  *
  * This file is shared between multiple projects / purposes:
- *   + BackupBuddy (this plugin) Server Info page.
- *   + ImportBuddy.php (BackupBuddy importer) Server Information button dropdown display.
+ *   + Solid Backups (this plugin) Server Info page.
+ *   + ImportBuddy.php (Standalone Importer) Server Information button dropdown display.
  *   + ServerBuddy (plugin)
  *
  * Use caution when updated to prevent breaking other projects.
+ *
+ * @todo For Solid Backups, break this up into AJAX calls to prevent blocking the page load.
  *
  * @package  BackupBuddy
  */
@@ -23,6 +25,10 @@ if ( ! function_exists( 'phpinfo_array' ) ) {
 	 * @return array  PHP Info contents, array( local, master ).
 	 */
 	function phpinfo_array( $mode = -1 ) {
+		if ( ! backupbuddy_core::is_func_allowed( 'phpinfo' ) ) {
+			return array();
+		}
+
 		ob_start();
 		phpinfo( $mode );
 		$s = ob_get_contents();
@@ -111,13 +117,30 @@ if ( ! function_exists( 'pb_backupbuddy_get_loadavg' ) ) {
 			if ( function_exists( 'file_get_contents' ) && @file_exists( '/proc/loadavg' ) ) {
 				$load = explode( chr( 32 ), @file_get_contents( '/proc/loadavg' ) );
 				if ( is_array( $load ) && ( count( $load ) >= 3 ) ) {
-					$result = array_slice( $load, 0, 3 );
-					return $result;
+					return array_slice( $load, 0, 3 );
 				}
 			}
+
 			if ( function_exists( 'shell_exec' ) ) {
-				$str = substr( strrchr( @shell_exec( 'uptime' ), ':' ), 1 );
-				return array_map( 'trim', explode( ',', $str ) );
+				/*
+				 * Uptime command should return something like this:
+				 * 09:10:18 up 106 days, 32 min, 2 users, load average: 0.22, 0.41, 0.32
+				 */
+				$uptime = @shell_exec( 'uptime' );
+				if ( ! empty( $uptime ) ) {
+
+					// Get everything after the last colon.
+					$uptime = strrchr( $uptime, ':' );
+
+					if ( ! empty( $uptime ) ) {
+						$uptime = explode( ',', substr( $uptime, 1 ) );
+
+						if ( ! empty( $uptime ) ) {
+							return array_map( 'trim', $uptime );
+						}
+					}
+				}
+				return array();
 			}
 		}
 		return $result;
@@ -141,9 +164,9 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 
 		$suggestion_text = $latest_backupbuddy_nonminor_version;
 		if ( pb_backupbuddy::settings( 'version' ) == $latest_backupbuddy_version ) { // At absolute latest including minor.
-			$suggestion_text .= ' (major version) or ' . $latest_backupbuddy_version . ' (<a href="options-general.php?page=ithemes-licensing" title="You may enable upgrading to the quick release version on the iThemes Licensing page.">quick release</a>)';
+			$suggestion_text .= ' (major version) or ' . $latest_backupbuddy_version . ' (<a href="options-general.php?page=ithemes-licensing" title="You may enable upgrading to the quick release version on the SolidWP Licensing page.">quick release</a>)';
 		} elseif ( $latest_backupbuddy_nonminor_version != $latest_backupbuddy_version ) { // Minor version available that is newer than latest major.
-			$suggestion_text .= ' (major version) or ' . $latest_backupbuddy_version . ' (<a href="plugins.php?ithemes-updater-force-minor-update=1" title="You may enable upgrading to the quick release version on the iThemes Licensing page.">quick release version</a>; <a href="options-general.php?page=ithemes-licensing" title="Once you have licensed BackupBuddy you may select this to go to the Plugins page to upgrade to the latest quick release version. Typically only the main major versions are available for automatic updates but this option instructs the updater to display minor version updates for approximately one hour. If it does not immediately become available on the Plugins page, try refreshing a couple of times.">quick release settings</a>)';
+			$suggestion_text .= ' (major version) or ' . $latest_backupbuddy_version . ' (<a href="plugins.php?ithemes-updater-force-minor-update=1" title="You may enable upgrading to the quick release version on the SolidWP Licensing page.">quick release version</a>; <a href="options-general.php?page=ithemes-licensing" title="Once you have licensed Solid Backups you may select this to go to the Plugins page to upgrade to the latest quick release version. Typically only the main major versions are available for automatic updates but this option instructs the updater to display minor version updates for approximately one hour. If it does not immediately become available on the Plugins page, try refreshing a couple of times.">quick release settings</a>)';
 		} else {
 			$suggestion_text .= ' (latest)';
 		}
@@ -157,10 +180,10 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 		$version_string .= ' <span style="display: block; max-width: 250px; font-size: 8px; line-height:1.25;">[DEV: ' . $commit_line . ']</span>';
 	}
 	$parent_class_test = array(
-		'title'      => 'BackupBuddy Version',
+		'title'      => 'Solid Backups Version',
 		'suggestion' => $suggestion_text,
 		'value'      => $version_string,
-		'tip'        => __( 'Version of BackupBuddy currently running on this site.', 'it-l10n-backupbuddy' ),
+		'tip'        => __( 'Version of Solid Backups currently running on this site.', 'it-l10n-backupbuddy' ),
 	);
 	if ( version_compare( pb_backupbuddy::settings( 'version' ), $latest_backupbuddy_nonminor_version, '<' ) ) {
 		$parent_class_test['status'] = 'WARNING';
@@ -230,8 +253,8 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 
 	// ADDHANDLER HTACCESS CHECK.
 	$parent_class_test = array(
-		'title'      => 'AddHandler in .htaccess',
-		'suggestion' => 'host dependant (none best unless required)',
+		'title'      => __( 'AddHandler in .htaccess', 'it-l10n-backupbuddy' ),
+		'suggestion' => __( 'host dependent (none best unless required)', 'it-l10n-backupbuddy' ),
 		'tip'        => __( 'If detected then you may have difficulty migrating your site to some hosts without first removing the AddHandler line. Some hosts will malfunction with this line in the .htaccess file.', 'it-l10n-backupbuddy' ),
 	);
 	if ( file_exists( ABSPATH . '.htaccess' ) ) {
@@ -348,8 +371,8 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	$parent_class_test = array(
 		'title'      => 'Tested PHP Max Execution Time',
 		'suggestion' => '>= 30 seconds (30+ best)',
-		'value'      => $tested_runtime_value . $disabled . ' <a class="pb_backupbuddy_refresh_stats pb_backupbuddy_testPHPRuntime" rel="run_php_runtime_test" alt="' . pb_backupbuddy::ajax_url( 'run_php_runtime_test' ) . '" title="' . __( 'Run Test (may take several minutes)', 'it-l10n-backupbuddy' ) . '"><img src="' . pb_backupbuddy::plugin_url() . '/images/refresh_gray.gif" style="vertical-align: -1px;"> <span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px;"><img src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" alt="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" title="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" width="16" height="16" style="vertical-align: -3px;" /></span></a>',
-		'tip'        => __( 'This is the TESTED amount of time that PHP allows scripts to run. The test was performed by outputting / logging the script time elapsed once per second until PHP timed out and thus the time reported stopped. This gives a fairly accurate number compared to the reported number which is most often overriden at the server with a limit.', 'it-l10n-backupbuddy' ) . ' ' . 'This test is limited to `' . pb_backupbuddy::$options['php_runtime_test_minimum_interval'] . '` seconds based on your advanced settings (0 = disabled). Automatically rescans during housekeeping after `' . pb_backupbuddy::$options['php_runtime_test_minimum_interval'] . '` seconds elapse between tests as well always on plugin activation.',
+		'value'      => $tested_runtime_value . $disabled . ' <a class="pb_backupbuddy_refresh_stats pb_backupbuddy_testPHPRuntime" rel="run_php_runtime_test" alt="' . pb_backupbuddy::ajax_url( 'run_php_runtime_test' ) . '" title="' . __( 'Run Test (may take several minutes)', 'it-l10n-backupbuddy' ) . '">' . pb_backupbuddy::$ui->get_icon( 'update' ) . '<span class="pb_backupbuddy_loading" style="display: none;"></span></a>',
+		'tip'        => __( 'This is the TESTED amount of time that PHP allows scripts to run. The test was performed by outputting / logging the script time elapsed once per second until PHP timed out and thus the time reported stopped. This gives a fairly accurate number compared to the reported number which is most often overridden at the server with a limit.', 'it-l10n-backupbuddy' ) . ' ' . 'This test is limited to `' . pb_backupbuddy::$options['php_runtime_test_minimum_interval'] . '` seconds based on your advanced settings (0 = disabled). Automatically rescans during housekeeping after `' . pb_backupbuddy::$options['php_runtime_test_minimum_interval'] . '` seconds elapse between tests as well always on plugin activation.',
 	);
 	if ( is_numeric( pb_backupbuddy::$options['tested_php_runtime'] ) && ( pb_backupbuddy::$options['tested_php_runtime'] < 29 ) ) {
 		$parent_class_test['status'] = 'FAIL';
@@ -368,10 +391,10 @@ if ( backupbuddy_core::adjustedMaxExecutionTime() != $bb_php_max_execution ) { /
 }
 if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	$parent_class_test = array(
-		'title'      => 'BackupBuddy PHP Max Execution Time',
+		'title'      => 'Solid Backups PHP Max Execution Time',
 		'suggestion' => '>= 30 seconds (30+ best)',
 		'value'      => $bb_php_max_execution_string,
-		'tip'        => esc_attr__( 'This is the max execution time BackupBuddy is using for chunking. It is the lesser of the values of the reported PHP execution time and actual tested execution time. If the BackupBuddy "Max time per chunk" Advanced Setting is set then that value is used instead.', 'it-l10n-backupbuddy' ),
+		'tip'        => esc_attr__( 'This is the max execution time Solid Backups is using for chunking. It is the lesser of the values of the reported PHP execution time and actual tested execution time. If the Solid Backups "Max time per chunk" Advanced Setting is set then that value is used instead.', 'it-l10n-backupbuddy' ),
 	);
 	if ( $bb_php_max_execution < 28 ) { // Has a little wiggle room.
 		$parent_class_test['status'] = 'FAIL';
@@ -459,6 +482,8 @@ foreach ( $mem_limits as $mem_limit ) {
 			} else {
 				$parent_class_test['status'] = 'OK';
 			}
+		} else {
+			$parent_class_test['status'] = 'OK';
 		}
 	} else {
 		$parent_class_test['status'] = 'WARNING';
@@ -495,8 +520,8 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	$parent_class_test = array(
 		'title'      => 'Tested PHP Memory Limit',
 		'suggestion' => '>= 256 MB',
-		'value'      => $tested_memory_value . $disabled . ' <a class="pb_backupbuddy_refresh_stats pb_backupbuddy_testPHPMemory" rel="run_php_memory_test" alt="' . pb_backupbuddy::ajax_url( 'run_php_memory_test' ) . '" title="' . __( 'Run Test (may take several minutes)', 'it-l10n-backupbuddy' ) . '"><img src="' . pb_backupbuddy::plugin_url() . '/images/refresh_gray.gif" style="vertical-align: -1px;"> <span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px;"><img src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" alt="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" title="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" width="16" height="16" style="vertical-align: -3px;" /></span></a>',
-		'tip'        => __( 'This is the TESTED amount of memory allowed to PHP scripts. The test was performed by outputting / logging the script memory usage while memory usage was increased. This gives a fairly accurate number compared to the reported number which is commonly overriden at the server with a limit, making it difficult to ascertain.', 'it-l10n-backupbuddy' ) . ' This test is limited to running no more often than every `' . pb_backupbuddy::$options['php_memory_test_minimum_interval'] . '` seconds based on your advanced settings (0 = disabled). Runs during housekeeping as well always on plugin activation.',
+		'value'      => $tested_memory_value . $disabled . ' <a class="pb_backupbuddy_refresh_stats pb_backupbuddy_testPHPMemory" rel="run_php_memory_test" alt="' . pb_backupbuddy::ajax_url( 'run_php_memory_test' ) . '" title="' . __( 'Run Test (may take several minutes)', 'it-l10n-backupbuddy' ) . '">' . pb_backupbuddy::$ui->get_icon( 'update' ) . '<span class="pb_backupbuddy_loading" style="display: none;"></span></a>',
+		'tip'        => __( 'This is the TESTED amount of memory allowed to PHP scripts. The test was performed by outputting / logging the script memory usage while memory usage was increased. This gives a fairly accurate number compared to the reported number which is commonly overridden at the server with a limit, making it difficult to ascertain.', 'it-l10n-backupbuddy' ) . ' This test is limited to running no more often than every `' . pb_backupbuddy::$options['php_memory_test_minimum_interval'] . '` seconds based on your advanced settings (0 = disabled). Runs during housekeeping as well always on plugin activation.',
 	);
 	if ( is_numeric( pb_backupbuddy::$options['tested_php_memory'] ) ) {
 		if ( 0 == pb_backupbuddy::$options['tested_php_memory'] ) {
@@ -538,7 +563,7 @@ if ( true == ini_get( 'log_errors' ) ) {
 $parent_class_test           = array(
 	'title'      => 'PHP Error Logging (log_errors)',
 	'suggestion' => 'enabled',
-	'value'      => $parent_class_val . ' [<a href="javascript:void(0)" class="pb_backupbuddy_testErrorLog" rel="' . pb_backupbuddy::ajax_url( 'testErrorLog' ) . '" title="' . __( 'Testing this will trigger an error_log() event with the content "BackupBuddy Test - This is only a test. A user triggered BackupBuddy to determine if writing to the PHP error log is working as expected."', 'it-l10n-backupbuddy' ) . '">Test</a>]',
+	'value'      => $parent_class_val . ' [<a href="javascript:void(0)" class="pb_backupbuddy_testErrorLog" rel="' . pb_backupbuddy::ajax_url( 'testErrorLog' ) . '" title="' . __( 'Testing this will trigger an error_log() event with the content "Solid Backups Test - This is only a test. A user triggered Solid Backups to determine if writing to the PHP error log is working as expected."', 'it-l10n-backupbuddy' ) . '">Test</a>]',
 	'tip'        => __( 'Whether or not PHP errors are logged to a file or not. Set by php.ini log_errors', 'it-l10n-backupbuddy' ),
 );
 $parent_class_test['status'] = 'OK';
@@ -586,7 +611,7 @@ if ( defined( 'PB_IMPORTBUDDY' ) ) {
 $zip_methods = implode( ', ', pb_backupbuddy::$classes['zipbuddy']->_zip_methods );
 
 if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
-	$zipmethod_refresh = '<a class="pb_backupbuddy_refresh_stats" rel="refresh_zip_methods" alt="' . pb_backupbuddy::ajax_url( 'refresh_zip_methods' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '"><img src="' . pb_backupbuddy::plugin_url() . '/images/refresh_gray.gif" style="vertical-align: -1px;"> <span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px;"><img src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" alt="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" title="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" width="16" height="16" style="vertical-align: -3px;" /></span></a>';
+	$zipmethod_refresh = '<a class="pb_backupbuddy_refresh_stats" rel="refresh_zip_methods" alt="' . pb_backupbuddy::ajax_url( 'refresh_zip_methods' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '">' . pb_backupbuddy::$ui->get_icon( 'update' ) . ' <span class="pb_backupbuddy_loading" style="display: none;"></span></a>';
 } else {
 	$zipmethod_refresh = '';
 }
@@ -630,7 +655,7 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	$parent_class_test           = array(
 		'title'      => 'Site Size',
 		'suggestion' => 'n/a',
-		'value'      => '<span id="pb_stats_refresh_site_size">' . $site_size . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_site_size" alt="' . pb_backupbuddy::ajax_url( 'refresh_site_size' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '"><img src="' . pb_backupbuddy::plugin_url() . '/images/refresh_gray.gif" style="vertical-align: -1px;"> <span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px;"><img src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" alt="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" title="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" width="16" height="16" style="vertical-align: -3px;" /></span></a>',
+		'value'      => '<span id="pb_stats_refresh_site_size">' . $site_size . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_site_size" alt="' . pb_backupbuddy::ajax_url( 'refresh_site_size' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '">' . pb_backupbuddy::$ui->get_icon( 'update' ) . ' <span class="pb_backupbuddy_loading" style="display: none;"></span></a>',
 		'tip'        => __( 'Total size of your site (starting in your WordPress main directory) INCLUDING any excluded directories / files.', 'it-l10n-backupbuddy' ),
 	);
 	$parent_class_test['status'] = 'OK';
@@ -646,7 +671,7 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	$parent_class_test           = array(
 		'title'      => 'Site Size (Default Exclusions applied)',
 		'suggestion' => 'n/a',
-		'value'      => '<span id="pb_stats_refresh_site_size_excluded">' . $site_size_excluded . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_site_size_excluded" alt="' . pb_backupbuddy::ajax_url( 'refresh_site_size_excluded' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '"><img src="' . pb_backupbuddy::plugin_url() . '/images/refresh_gray.gif" style="vertical-align: -1px;"> <span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px;"><img src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" alt="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" title="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" width="16" height="16" style="vertical-align: -3px;" /></span></a>',
+		'value'      => '<span id="pb_stats_refresh_site_size_excluded">' . $site_size_excluded . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_site_size_excluded" alt="' . pb_backupbuddy::ajax_url( 'refresh_site_size_excluded' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '">' . pb_backupbuddy::$ui->get_icon( 'update' ) . ' <span class="pb_backupbuddy_loading" style="display: none;"></span></a>',
 		'tip'        => __( 'Total size of your site (starting in your WordPress main directory) EXCLUDING any directories / files you have marked for exclusion.', 'it-l10n-backupbuddy' ),
 	);
 	$parent_class_test['status'] = 'OK';
@@ -662,7 +687,7 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	$parent_class_test           = array(
 		'title'      => 'Site number of files',
 		'suggestion' => 'n/a',
-		'value'      => '<span id="pb_stats_refresh_objects">' . $site_objects . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_objects" alt="' . pb_backupbuddy::ajax_url( 'refresh_site_objects' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '"><img src="' . pb_backupbuddy::plugin_url() . '/images/refresh_gray.gif" style="vertical-align: -1px;"> <span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px;"><img src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" alt="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" title="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" width="16" height="16" style="vertical-align: -3px;" /></span></a>',
+		'value'      => '<span id="pb_stats_refresh_objects">' . $site_objects . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_objects" alt="' . pb_backupbuddy::ajax_url( 'refresh_site_objects' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '">' . pb_backupbuddy::$ui->get_icon( 'update' ) . ' <span class="pb_backupbuddy_loading" style="display: none;"></span></a>',
 		'tip'        => __( 'Total number of files/folders in your site (starting in your WordPress main directory) INCLUDING any excluded directories / files.', 'it-l10n-backupbuddy' ),
 	);
 	$parent_class_test['status'] = 'OK';
@@ -677,7 +702,7 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	$parent_class_test           = array(
 		'title'      => 'Site number of files (Default Exclusions applied)',
 		'suggestion' => 'n/a',
-		'value'      => '<span id="pb_stats_refresh_objects_excluded">' . $site_objects_excluded . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_objects_excluded" alt="' . pb_backupbuddy::ajax_url( 'refresh_site_objects_excluded' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '"><img src="' . pb_backupbuddy::plugin_url() . '/images/refresh_gray.gif" style="vertical-align: -1px;"> <span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px;"><img src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" alt="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" title="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" width="16" height="16" style="vertical-align: -3px;" /></span></a>',
+		'value'      => '<span id="pb_stats_refresh_objects_excluded">' . $site_objects_excluded . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_objects_excluded" alt="' . pb_backupbuddy::ajax_url( 'refresh_site_objects_excluded' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '">' . pb_backupbuddy::$ui->get_icon( 'update' ) . ' <span class="pb_backupbuddy_loading" style="display: none;"></span></a>',
 		'tip'        => __( 'Total number of files/folders site (starting in your WordPress main directory) EXCLUDING any directories / files you have marked for exclusion.', 'it-l10n-backupbuddy' ),
 	);
 	$parent_class_test['status'] = 'OK';
@@ -688,7 +713,7 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	$parent_class_test           = array(
 		'title'      => 'Database Size',
 		'suggestion' => 'n/a',
-		'value'      => '<span id="pb_stats_refresh_database_size">' . pb_backupbuddy::$format->file_size( pb_backupbuddy::$options['stats']['db_size'] ) . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_database_size" alt="' . pb_backupbuddy::ajax_url( 'refresh_database_size' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '"><img src="' . pb_backupbuddy::plugin_url() . '/images/refresh_gray.gif" style="vertical-align: -1px;"> <span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px;"><img src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" alt="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" title="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" width="16" height="16" style="vertical-align: -3px;" /></span></a>',
+		'value'      => '<span id="pb_stats_refresh_database_size">' . pb_backupbuddy::$format->file_size( pb_backupbuddy::$options['stats']['db_size'] ) . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_database_size" alt="' . pb_backupbuddy::ajax_url( 'refresh_database_size' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '">' . pb_backupbuddy::$ui->get_icon( 'update' ) . ' <span class="pb_backupbuddy_loading" style="display: none;"></span></a>',
 		'tip'        => __( 'Total size of your database INCLUDING any excluded tables.', 'it-l10n-backupbuddy' ),
 	);
 	$parent_class_test['status'] = 'OK';
@@ -699,7 +724,7 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	$parent_class_test           = array(
 		'title'      => 'Database Size (Default Exclusions applied)',
 		'suggestion' => 'n/a',
-		'value'      => '<span id="pb_stats_refresh_database_size_excluded">' . pb_backupbuddy::$format->file_size( pb_backupbuddy::$options['stats']['db_size_excluded'] ) . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_database_size_excluded" alt="' . pb_backupbuddy::ajax_url( 'refresh_database_size_excluded' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '"><img src="' . pb_backupbuddy::plugin_url() . '/images/refresh_gray.gif" style="vertical-align: -1px;"> <span class="pb_backupbuddy_loading" style="display: none; margin-left: 10px;"><img src="' . pb_backupbuddy::plugin_url() . '/images/loading.gif" alt="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" title="' . __( 'Loading...', 'it-l10n-backupbuddy' ) . '" width="16" height="16" style="vertical-align: -3px;" /></span></a>',
+		'value'      => '<span id="pb_stats_refresh_database_size_excluded">' . pb_backupbuddy::$format->file_size( pb_backupbuddy::$options['stats']['db_size_excluded'] ) . '</span> <a class="pb_backupbuddy_refresh_stats" rel="refresh_database_size_excluded" alt="' . pb_backupbuddy::ajax_url( 'refresh_database_size_excluded' ) . '" title="' . __( 'Refresh', 'it-l10n-backupbuddy' ) . '">' . pb_backupbuddy::$ui->get_icon( 'update' ) . ' <span class="pb_backupbuddy_loading" style="display: none;"></span></a>',
 		'tip'        => __( 'Total size of your database EXCLUDING any tables you have marked for exclusion.', 'it-l10n-backupbuddy' ),
 	);
 	$parent_class_test['status'] = 'OK';
@@ -861,7 +886,7 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 		'title'      => 'WordPress Alternate Cron',
 		'suggestion' => 'Varies (server-dependent)',
 		'value'      => $alternate_cron_status,
-		'tip'        => __( 'Some servers do not allow sites to connect back to themselves at their own URL.  WordPress and BackupBuddy make use of these "Http Loopbacks" for several things.  Without them you may encounter issues. If your server needs it or you are directed by support you may enable Alternate Cron in your wp-config.php file.  When enabled this setting will display "Enabled" to remind you.', 'it-l10n-backupbuddy' ),
+		'tip'        => __( 'Some servers do not allow sites to connect back to themselves at their own URL.  WordPress and Solid Backups make use of these "Http Loopbacks" for several things.  Without them you may encounter issues. If your server needs it or you are directed by support you may enable Alternate Cron in your wp-config.php file.  When enabled this setting will display "Enabled" to remind you.', 'it-l10n-backupbuddy' ),
 	);
 	$parent_class_test['status'] = __( 'OK', 'it-l10n-backupbuddy' );
 	array_push( $tests, $parent_class_test );
@@ -1037,13 +1062,20 @@ array_push( $tests, $parent_class_test );
 // Load Average.
 if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	$load_average = pb_backupbuddy_get_loadavg();
-	foreach ( $load_average as &$this_load ) {
-		$this_load = round( $this_load, 2 );
+
+	if ( is_array( $load_average ) && ! empty( $load_average ) ) {
+		foreach ( $load_average as &$this_load ) {
+			$this_load = round( floatval( $this_load ), 2 );
+		}
+		$load_average = implode( ', ', $load_average );
+	} else {
+		return '<em>' . __( 'Unable to calculate Average', 'it-l10n-backupbuddy' ) . '</em>';
 	}
-	$parent_class_test           = array(
+
+	$parent_class_test = array(
 		'title'      => 'Server Load Average',
 		'suggestion' => 'n/a',
-		'value'      => implode( ', ', $load_average ),
+		'value'      => $load_average,
 		'tip'        => __( 'Server CPU use in intervals: 1 minute, 5 minutes, 15 minutes. E.g. .45 basically equates to 45% CPU usage.', 'it-l10n-backupbuddy' ),
 	);
 	$parent_class_test['status'] = 'OK';
@@ -1066,7 +1098,7 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 		'title'      => 'PHP SSH2, SFTP Support',
 		'suggestion' => 'n/a',
 		'value'      => $connect . ', ' . $sftp,
-		'tip'        => __( 'Whether or not your server is configured to allow SSH2 connections over PHP or SFTP connections or PHP. Most hosts do not currently provide this feature. Information only; BackupBuddy cannot make use of this functionality at this time.', 'it-l10n-backupbuddy' ),
+		'tip'        => __( 'Whether or not your server is configured to allow SSH2 connections over PHP or SFTP connections or PHP. Most hosts do not currently provide this feature. Information only; Solid Backups cannot make use of this functionality at this time.', 'it-l10n-backupbuddy' ),
 	);
 	$parent_class_test['status'] = 'OK';
 	array_push( $tests, $parent_class_test );
@@ -1079,7 +1111,7 @@ $parent_class_test = array(
 	'title'      => 'WordPress ABSPATH',
 	'suggestion' => 'n/a',
 	'value'      => '<span style="display: inline-block; max-width: 250px;">' . ABSPATH . '</span>',
-	'tip'        => __( 'This is the directory which WordPress reports to BackupBuddy it is installed in.', 'it-l10n-backupbuddy' ),
+	'tip'        => __( 'This is the directory which WordPress reports to Solid Backups it is installed in.', 'it-l10n-backupbuddy' ),
 );
 if ( ! @file_exists( ABSPATH ) ) {
 	$parent_class_test['status'] = 'WARNING';
@@ -1116,7 +1148,7 @@ if ( defined( 'GD_SYSTEM_PLUGIN_DIR' ) || class_exists( '\\WPaaS\\Plugin' ) ) {
 		'title'      => 'GoDaddy Managed WordPress Hosting Detected',
 		'suggestion' => 'n/a',
 		'value'      => 'Potentially Detected',
-		'tip'        => __( 'GoDaddy\'s Managed WordPress Hosting recently experienced problems resulting in the WordPress cron not working properly resulting in WordPress\' built-in scheduling and automation functionality malfunctioning. GoDaddy has addressed this issue for US-based customers and we believe it to be resolved for those hosted in the USA. Non-US customers should contact GoDaddy support. However, if you still experience issues and require a partial workaround go to BackupBuddy -> Settings page -> Advanced Settings / Troubleshooting tab -> Check the box Force internal cron -> Scroll down and Save the settings.  This may help you be able to make a manual traditional backup though it may be slow and is not guaranteed.', 'it-l10n-backupbuddy' ),
+		'tip'        => __( 'GoDaddy\'s Managed WordPress Hosting recently experienced problems resulting in the WordPress cron not working properly resulting in WordPress\' built-in scheduling and automation functionality malfunctioning. GoDaddy has addressed this issue for US-based customers and we believe it to be resolved for those hosted in the USA. Non-US customers should contact GoDaddy support. However, if you still experience issues and require a partial workaround go to Solid Backups -> Settings page -> Advanced Settings tab -> Check the box Force internal cron -> Scroll down and Save the settings.  This may help you be able to make a manual traditional backup though it may be slow and is not guaranteed.', 'it-l10n-backupbuddy' ),
 	);
 	$parent_class_test['status'] = 'WARNING';
 	array_push( $tests, $parent_class_test );
@@ -1193,10 +1225,10 @@ if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
 	}
 
 	$parent_class_test           = array(
-		'title'      => 'BackupBuddy Deployment API wp-config setting',
+		'title'      => 'Solid Backups Deployment API wp-config setting',
 		'suggestion' => 'n/a',
 		'value'      => $deployment_enabled,
-		'tip'        => __( 'Enabling the BackupBuddy Deployment API via the wp-config.php allows other BackupBuddy installations supplied with the authentication key to Push to or Pull from this site\'s data. Useful for development purposes.', 'it-l10n-backupbuddy' ),
+		'tip'        => __( 'Enabling the Solid Backups Deployment API via the wp-config.php allows other Solid Backups installations supplied with the authentication key to Push to or Pull from this site\'s data. Useful for development purposes.', 'it-l10n-backupbuddy' ),
 	);
 	$parent_class_test['status'] = 'OK';
 	array_push( $tests, $parent_class_test );

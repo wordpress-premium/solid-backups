@@ -63,7 +63,7 @@ class pb_backupbuddy_destination_sftp {
 		}
 
 		// Crank up logging level if in debug mode.
-		if ( '3' == pb_backupbuddy::$options['log_level'] && ! defined( 'NET_SFTP_LOGGING' ) ) {
+		if ( pb_backupbuddy::full_logging()&& ! defined( 'NET_SFTP_LOGGING' ) ) {
 			define( 'NET_SFTP_LOGGING', NET_SFTP_LOG_COMPLEX );
 		}
 	} // end _init().

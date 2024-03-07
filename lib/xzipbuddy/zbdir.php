@@ -3,7 +3,7 @@
  *	pluginbuddy_zbdir Class
  *
  *  Provides a directory class for zipbuddy for building a directory tree for backup
- *	
+ *
  *	Version: 1.0.0
  *	Author:
  *	Author URI:
@@ -15,9 +15,9 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 	 *	pluginbuddy_zbdir_xclusion Class
 	 *
 	 *  Abstract class for handling file/directory exclusions or inclusions
-	 *	
+	 *
 	 *	All xclusions must be either all relative to the same root path or all
-	 *	absolute paths. 
+	 *	absolute paths.
 	 *	All xclusions must have normalized directory separators
 	 *	All xclusions must start with / if relative to a root path
 	 *	All dir xclusions must terminate in / (normalized directory separator)
@@ -34,13 +34,13 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 	 *	relative xclusion paths. Not sure if this will be required and in any case it may
 	 *	well give a high performance hit in some cases so probably better to build a
 	 *	new xclusions object using the absolute paths.
-	 *	
+	 *
 	 *	@return		null
 	 *
 	 */
 
 	abstract class pluginbuddy_zbdir_xclusion {
-	
+
 		const NORM_DIRECTORY_SEPARATOR	= '/';
 		const LAST_CHARACTER 			= -1;
 		const ALL_XCLUSIONS 			= 'all';
@@ -48,25 +48,25 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		const FILE_XCLUSIONS 			= 'file';
 		const UNKNOWN_XCLUSIONS 		= 'unknown';
 		const PATTERN_XCLUSIONS 		= 'pattern';
-		
+
 		const DELIMITER					= '!';
 		const ESCAPED_DELIMITER			= '\!';
-		
+
 		protected $_files 	 			= array();
 		protected $_dirs  	 			= array();
 		protected $_all   	 			= array();
 		protected $_patterns 			= array();
-		
+
 		protected $_options	 			= array();
 		protected $_root	 			= '';
 		protected $_pattern_auto_delimit = true;
-		
+
 		protected static $_default_options = array( 'root' => "",
 													'pattern_auto_delimit' => true );
 
 		/**
 		 *	__construct()
-		 *	
+		 *
 		 *	Construct the object with possible initial array of xclusions
 		 *	The options may contain a "root" directory which would be the root of the
 		 *	xclusion paths. For every "unknown" xclusion addition that does not have a
@@ -76,47 +76,47 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		 *	xclusion will be treated as a file. The root may be empty if the xclusions are
 		 *	actually absolute in which case the test on the xclusion itself would indicate
 		 *	whether it was a directory or not.
-		 *	
+		 *
 		 *  @param		array	$unknowns	(Optional) Possible set of xclusions that could be file and/or directory xclusions
 		 *  @param		array	$options	(Optional) Possible name=>value options
 		 *	@return		none
 		 *
 		 */
 		public function __construct( array $unknowns = array(), array $options = array() ) {
-		
+
 			// Get our options based on defaults or passed values
 			$this->_options = array_merge( self::$_default_options, $options );
 			$this->_root = $this->_options[ 'root' ];
 			$this->_pattern_auto_delimit = $this->_options[ 'pattern_auto_delimit' ];
 
 			self::add( $unknowns );
-		
+
 		}
-		
+
 		/**
 		 *	__destruct()
-		 *	
+		 *
 		 *	Destroy the object - all object storage will be recoverd by default
-		 *	
+		 *
 		 *  @param		none
 		 *	@return		none
 		 *
 		 */
 		public function __destruct() {
-		
+
 		}
-	
+
 		/**
 		 *	get()
-		 *	
+		 *
 		 *	Get required type of xclusions as array
-		 *	
+		 *
 		 *  @param		mixed	$type	(optional) Const value that indicates the type of xclusions to get
 		 *	@return		array			The requested xclusions (could be empty)
 		 *
 		 */
 		public function get( $type = self::ALL_XCLUSIONS ) {
-		
+
 			switch ( $type ) {
 				case self::DIR_XCLUSIONS:
 					$xclusions = $this->_dirs;
@@ -133,65 +133,65 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			}
 
 			return $xclusions;
-			
+
 		}
-		
+
 		/**
 		 *	get_dir()
-		 *	
+		 *
 		 *	Get directory type of xclusions as array
-		 *	
+		 *
 		 *  @param		none
 		 *	@return		array			The requested xclusions (could be empty)
 		 *
 		 */
 		public function get_dir() {
-		
+
 			return self::get( self::DIR_XCLUSIONS );
-		
-		} 
-	
+
+		}
+
 		/**
 		 *	get_file()
-		 *	
+		 *
 		 *	Get file type of xclusions as array
-		 *	
+		 *
 		 *  @param		none
 		 *	@return		array			The requested xclusions (could be empty)
 		 *
 		 */
 		public function get_file() {
-		
+
 			return self::get( self::FILE_XCLUSIONS );
-		
+
 		}
-		
+
 		/**
 		 *	get_pattern()
-		 *	
+		 *
 		 *	Get pattern type of xclusions as array
-		 *	
+		 *
 		 *  @param		none
 		 *	@return		array			The requested xclusions (could be empty)
 		 *
 		 */
 		public function get_pattern() {
-		
+
 			return self::get( self::PATTERN_XCLUSIONS );
-		
+
 		}
-		
+
 		/**
 		 *	add()
-		 *	
+		 *
 		 *	Add an array of xlcusions to any existing xclusions
-		 *	
+		 *
 		 *  @param		array	$xclusions	The xclusions to add - could be directory/file/pattern type
 		 *	@return		object				Reference to this object
 		 *
 		 */
 		public function add( array $xclusions = array(), $type = self::UNKNOWN_XCLUSIONS ) {
-		
+
 			switch( $type ) {
 				case self::DIR_XCLUSIONS:
 					$this->_dirs = array_unique( array_merge( $this->_dirs, $xclusions ) );
@@ -205,126 +205,126 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 				case self::UNKNOWN_XCLUSIONS:
 				default:
 					foreach ( $xclusions as $xclusion ) {
-			
+
 						if ( self::NORM_DIRECTORY_SEPARATOR === substr( $xclusion, self::LAST_CHARACTER ) ) {
-				
+
 							$this->_dirs[] = $xclusion;
-				
+
 						} else {
-						
+
 							// With no trailing slash this _may_ be a file or directory exclusion so
 							// we'll try and test for it being a directory and base the decision on
 							// whether we can determine that or not.
 							if ( @is_dir( $this->_root . $xclusion ) ) {
-							
+
 								// Tests as a directory - must add the trailing separator
 								$this->_dirs[] = $xclusion . self::NORM_DIRECTORY_SEPARATOR;
-							
+
 							} else {
-								
+
 								// Either definitely a file or the test was inclonclusive because
 								// perhaps we didn't haev a complete directory path to test
 								$this->_files[] = $xclusion;
-							
+
 							}
-							
+
 						}
-			
+
 					}
-					
-					$this->_dirs = array_unique( $this->_dirs );		
-					$this->_files = array_unique( $this->_files );		
+
+					$this->_dirs = array_unique( $this->_dirs );
+					$this->_files = array_unique( $this->_files );
 			}
-			
+
 			// Always refresh the combined array whatever has been added
 			// Note: All xclusions does _not_ include pattern xclusions
 			$this->_all = array_unique( array_merge( $this->_dirs, $this->_files ) );
-			
+
 			return $this;
 
 		}
-		
+
 		/**
 		 *	add_file()
-		 *	
+		 *
 		 *	Add an array of type file xlcusions to any existing file xclusions
-		 *	
+		 *
 		 *  @param		array	$xclusions	The xclusions to add
 		 *	@return		object				Reference to this object
 		 *
 		 */
 		public function add_file( array $xclusions = array() ) {
-		
+
 			return self::add( $xclusions, self::FILE_XCLUSIONS );
-		
+
 		}
-	
+
 		/**
 		 *	add_dir()
-		 *	
+		 *
 		 *	Add an array of directory file xlcusions to any existing directory xclusions
-		 *	
+		 *
 		 *  @param		array	$xclusions	The xclusions to add
 		 *	@return		object				Reference to this object
 		 *
 		 */
 		public function add_dir( array $xclusions = array() ) {
-		
+
 			return self::add( $xclusions, self::DIR_XCLUSIONS );
-		
+
 		}
-		
+
 		/**
 		 *	add_pattern()
 		 *
 		 *	Add an array of type pattern xlcusions to any existing pattern xclusions
 		 * 	Add delimiters if we are auto-delimiting. If an auto delimit option is given
 		 * 	then will override the default, otherwise the default will be used.
-		 *	
+		 *
 		 *  @param		array	$xclusions		The xclusions to add
 		 * 	@param		bool	$auto_delimit	True to auto-delimit patterns, false to not, null to use default
 		 *	@return		object					Reference to this object
 		 *
 		 */
 		public function add_pattern( array $xclusions = array(), $auto_delimit = null ) {
-			
+
 			$add_delimiter = ( is_bool( $auto_delimit ) ) ? $auto_delimit : $this->_pattern_auto_delimit ;
-		
+
 			if ( true === $add_delimiter ) {
-				
+
 				foreach ( $xclusions as &$xclusion ) {
-					
+
 					// If our delimiter appears in the pattern we must escape it
 					$xclusion = self::DELIMITER . str_replace( self::DELIMITER, self::ESCAPED_DELIMITER, $xclusion ) . self::DELIMITER;
-				
+
 				}
-				
+
 				// Not strictly necessary but just so we remember
 				unset( $xclusion );
-					
+
 			}
-					
+
 			return self::add( $xclusions, self::PATTERN_XCLUSIONS );
-		
+
 		}
-		
+
 		/**
 		 *	matches()
-		 *	
+		 *
 		 *	Does the path match any member of the set
-		 *	
+		 *
 		 *  @param		string	$path		The path to test for match to the set members
 		 *  @param		string	$type		The set members to test against
 		 *	@return		bool				True if matches any in set, otherwise False
 		 *
 		 */
 		public function matches( $path = '', $type = self::ALL_XCLUSIONS ) {
-		
+
 			$result = false;
-		
+
 			// Currently only handle single path and not array of paths
 			if ( is_string( $path ) ) {
-			
+
 				switch( $type ) {
 					case self::DIR_XCLUSIONS:
 						$candidates = &$this->_dirs;
@@ -336,54 +336,54 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 					default:
 						$candidates = &$this->_all;
 				}
-			
+
 				$result = in_array( $path, $candidates );
-				
+
 			}
-			
+
 			return $result;
-		
+
 		}
-	
+
 		/**
 		 *	matches_regex()
-		 *	
+		 *
 		 *	Does the path match any member of the pattern set
 		 * 	Patterns must already be delimited
-		 *	
+		 *
 		 *  @param		string	$path		The path to test for match to the pattern set members
 		 *	@return		bool				True if matches any in pattern set, otherwise False
 		 *
 		 */
 		public function matches_regex( $path = '' ) {
-		
+
 			$result = false;
-		
+
 			// Currently only handle single path and not array of paths
 			if ( is_string( $path ) ) {
-			
+
 				foreach ( $this->_patterns as $pattern ) {
 
 					if ( 1 === preg_match( $pattern, $path ) ) {
-						
+
 						$result = true;
 						break;
-							
-					} 
+
+					}
 
 				}
-				
+
 			}
-			
+
 			return $result;
-		
+
 		}
 
 		/**
 		 *	prefix_of()
-		 *	
+		 *
 		 *	Is any member of the set a prefix of the path
-		 *	
+		 *
 		 *  @param		string	$path		The path to test the set members to be prefix of
 		 *  @param		string	$type		The set members to test against
 		 *	@param		bool	$exclusive	True if member in set not allowed to be exact match to path
@@ -391,7 +391,7 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		 *
 		 */
 		public function prefix_of( $path, $type = self::ALL_XCLUSIONS, $exclusive = true ) {
-		
+
 			switch( $type ) {
 				case self::DIR_XCLUSIONS:
 					$candidates = &$this->_dirs;
@@ -403,40 +403,40 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 				default:
 					$candidates = &$this->_all;
 			}
-			
+
 			foreach ( $candidates as $candidate ) {
-			
+
 				// The candidate _must_ be found at the start of the path (to be a true prefix of the path)
 				if ( 0 === strpos( $path, $candidate ) ) {
-				
+
 					// If not wanting exclusivity then can simply return here
 					if ( false == $exclusive ) {
-					
+
 						return true;
-						
+
 					}
-					
+
 					// Otherwise we must check for exclusivity
 					if ( 0 <> strcmp( $path, $candidate ) ) {
-				
+
 						return true;
-							
+
 					}
 
 				}
-				
+
 			}
-			
+
 			return false;
-			
+
 		}
-		
-		
+
+
 		/**
 		 *	prefixed_by()
-		 *	
+		 *
 		 *	Is any member of the set prefixed by the path
-		 *	
+		 *
 		 *  @param		string	$path		The possible prefix path
 		 *  @param		string	$type		The set members to test against
 		 *	@param		bool	$exclusive	True if prefix not allowed to be exact match to member in set
@@ -444,7 +444,7 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		 *
 		 */
 		public function prefixed_by( $path, $type = self::ALL_XCLUSIONS, $exclusive = true ) {
-		
+
 			switch( $type ) {
 				case self::DIR_XCLUSIONS:
 					$candidates = &$this->_dirs;
@@ -456,60 +456,60 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 				default:
 					$candidates = &$this->_all;
 			}
-			
+
 			foreach ( $candidates as $candidate ) {
-			
+
 				// The path _must_ be found at the start of the candidate (to be a true prefix of the candidate)
 				if ( 0 === strpos( $candidate, $path ) ) {
-				
+
 					// If not wanting exclusivity then can simply return here
 					if ( false == $exclusive ) {
-					
+
 						return true;
-						
+
 					}
-					
+
 					// Otherwise we must check for exclusivity
 					if ( 0 <> strcmp( $candidate, $path ) ) {
-				
+
 						return true;
-							
+
 					}
-					
+
 				}
-				
+
 			}
-			
+
 			return false;
-			
+
 		}
-		
+
 	}
-	
+
 	/**
 	 *	pluginbuddy_zbdir_exclusion Class
 	 *
 	 *  Class for specifically handling file/directory exclusions
-	 *	
+	 *
 	 *	@return		null
 	 *
 	 */
 	class pluginbuddy_zbdir_exclusion extends pluginbuddy_zbdir_xclusion {
 
 	}
-	
+
 	/**
 	 *	pluginbuddy_zbdir_inclusion Class
 	 *
 	 *  Class for specifically handling file/directory inclusions
-	 *	
+	 *
 	 *	@return		null
 	 *
 	 */
 	class pluginbuddy_zbdir_inclusion extends pluginbuddy_zbdir_xclusion {
-	
-	}	
-	
+
+	}
+
 	/**
 	 *	pluginbuddy_zbdir_node Class
 	 *
@@ -534,7 +534,7 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 	 *	and if any subsequent visit is required then it must be built again (either in keep
 	 *	mode or not, dependent on the requirement). So fot multiple visits this is more
 	 *	processot intensive - so it's really a balance of requirements vs resources.
-	 * 
+	 *
 	 *	Visiing a tree means that we visit each node (in a depth first manner) and methods
 	 * 	on a provided output handler are called by the node for each file/directory by
 	 *	which the specific output handler can build up some information about the tree.
@@ -555,7 +555,7 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 	 *	is also better for command line zip as we can simply pass it the file name as parameter.
 	 *	Future capabilities might allow exclusions based on criteria such as file size - so
 	 *	exclude all files >X MB so as to avoid including other large backup files for example.
-	 * 
+	 *
 	 *	The root path represents the root of where we are building the tree from. The path
 	 *	is the path to this node relative to the root. So for a root of /home/user/site/ and
 	 *	a path of /wp-content/plugins the actual node would represent /home/user/site/wp-content/plugins.
@@ -583,7 +583,7 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 	 *	but it is safer to have the root node do it. The dpeth monitoring will also enable
 	 *	us to consider bailing out if it appears we are disappearing down a black-hole
 	 *	because of some bad looping symlink setup or whatever.
-	 * 
+	 *
 	 * 	The $mode parameter is used to define how we respond to exclusions/inclusions. In
 	 * 	a standard mode all excluded items are ignored totally. In a complete mode all
 	 * 	items are recorded. In both cases the item 'status' will indicate whether the item
@@ -591,7 +591,7 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 	 * 	item is excluded or included. The reason may be present in a debug mode that would
 	 * 	record, for example, the rule that was triggered and perhaps the specific matches
 	 * 	that led to the exclusion or inclusion (FFS)
-	 *	
+	 *
 	 *	@return		null
 	 *
 	 */
@@ -606,7 +606,7 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		const STATUS_INCLUDED = 'included';
 		const STATUS_EXCLUDED = 'excluded';
 		const STATUS_UNKNOWN = 'unknown';
-		
+
 		protected $_items = array();
 		protected $_root = '';
 		protected $_path = '';
@@ -618,12 +618,12 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		protected $_keep = false;
 		protected $_depth = 0;
 		protected $_mode = self::STANDARD_MODE;
-		
+
 		// For storing data abount items in the directory represented by the node
 		protected $_terminals = array();
 		protected $_symdirs = array();
 		protected $_children = array();
-		
+
 		// This is for storing data about this directory node
 		protected $_self = array();
 		// Directory content size
@@ -639,10 +639,10 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		// Indicates whether _this_ directory would be empty (no content included)
 		// even if building a complete tree where we record both excluded and included stuff
 		protected $_empty = true;
-	
+
 		/**
 		 *	__construct()
-		 *	
+		 *
 		 *	Construct the node object
 		 *
 		 *	Constructs a tree node wheer $root is tha root of the tree and $path is the
@@ -653,11 +653,11 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		 *	4) root may be <drive>:/ if windows
 		 *	As the path is generally relative to the root it makes handling exclusions and
 		 *	inclusions easier/faster because shorter than the absolute paths would be.
-		 *	
+		 *
 		 *	Both the root and the path must be normalized to *nix style deparators.
 		 *
 		 *	Will throw exception if a directory cannot be scanned.
-		 *	
+		 *
 		 *  @param		string	$root				Directory path of the root of the tree
 		 *  @param		string	$path				Directory path relative to the root
 		 *	@param		object	$exclusion_handler
@@ -672,13 +672,13 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		 *
 		 */
 		public function __construct( $root = '', $path = '', $exclusions_handler = null, $inclusions_handler = null, $visitor = null, $ignore_symlinks = true, $keep = false, $mode = self::STANDARD_MODE, $in_exclusion_zone = false, $depth = 0  ) {
-			
+
 			// Do not change root even if it is just / because *nix can hanle
 			// multiple / as path separators, e.g., /home/jeremy and //home/jeremy
 			// and //home//jeremy and //home///jeremy are all equivalent
 			// The caller must give us a root path that is / terminated
 			$this->_root = trim( $root );
-			
+
 			// If path is / will not be changed
 			// Path will have / suffix added even if it is empty
 			// Note: this is the _internal_ representation of the path -
@@ -688,34 +688,34 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			// view the path is definitelly a relative path (to a root)
 			// as it doesn't start with /
 			$this->_path = ( self::NORM_DIRECTORY_SEPARATOR === ( $this->_path = trim( $path ) ) ) ? $this->_path : rtrim( $this->_path, self::NORM_DIRECTORY_SEPARATOR) . self::NORM_DIRECTORY_SEPARATOR ;
-			
+
 			// check if exclusions handler not object and throw exception
 			// we must have an exclusions handler
 			$this->_exclusions_handler = $exclusions_handler;
-			
+
 			// check if inclusions handler not object and throw exception
 			// we must have an inclusions handler
 			$this->_inclusions_handler = $inclusions_handler;
-			
+
 			// check if output handler not object and throw exception
 			// we must have an output handler even if noop
 			$this->_visitor = $visitor;
-			
+
 			// Global indication of whether or not we are ignoring/not-following
 			// symlinks. If that is the case then although we note a directory
 			// we will not descend into it. For a file we always note it anyway.
 			$this->_ignore_symlinks = $ignore_symlinks;
-			
+
 			// We can choose to not keep child nodes as they are visited, so in
 			// other words just traverse the structure and clean it up as we go.
 			// This can use less memory but if we want to visit multiple times
 			// it is less time efficient because we have to build/destroy the
-			// nodes every time. 
+			// nodes every time.
 			$this->_keep = $keep;
-			
+
 			// Record what mode we are operating in
 			$this->_mode = $mode;
-			
+
 			// The parent is telling us that this node (directory) is in an
 			// exclusion zone - the parent or a previous ancestor matched it
 			// or a previous directory on this path as a specific exclusion
@@ -753,17 +753,17 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 				// override it if it should be true. The caller could mess things
 				// up by setting it true incorrectly but then this would be a
 				// programming error...
-				$this->_in_exclusion_zone = ( $this->_in_exclusion_zone || ( ( true === $this->_exclusions_handler->matches( $this->_path ) && ( false === $this->_inclusions_handler->matches( $this->_path ) ) ) ) );				
+				$this->_in_exclusion_zone = ( $this->_in_exclusion_zone || ( ( true === $this->_exclusions_handler->matches( $this->_path ) && ( false === $this->_inclusions_handler->matches( $this->_path ) ) ) ) );
 			}
-			
+
 			// Keep track of our descent depth in case we later want to introduce
 			// a limit in case of handling some error condition (e.g., loop)
 			// Initial node is depth 0, incremented when passed to a child node
 			$this->_depth = $depth;
-			
+
 			// Record our exclusion/inclusion status dependent on our exclusion zone status
 			$this->_status = ( true === $this->_in_exclusion_zone ) ? self::STATUS_EXCLUDED : self::STATUS_INCLUDED ;
-			
+
 			// This is just to record when the node has been visited so that
 			// on subsequent visits we do not repeat unnecessary work.
 			$this->_visited = false;
@@ -772,19 +772,19 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			if ( false === ( $this->_items = @scandir( $this->_root . ltrim( $this->_path, self::NORM_DIRECTORY_SEPARATOR ) ) ) ) {
 				throw new Exception( 'Unable to scan directory ' . $this->_root . ltrim( $this->_path, self::NORM_DIRECTORY_SEPARATOR ) );
 			}
-			
+
 			// First remove pesky entries if present
 			$this->_items = array_diff( $this->_items, array( '..', '.' ) );
-			
+
 			// We must determine whether the directory is truly empty (scandir only returns . and ..)
 			// or nothing at all for Windows(?) rather than later just empty because all it's
 			// content has been excluded - there is a subtle difference
 			$this->_vacant = empty( $this->_items );
-			
+
 			// Exclude some further known fluff that would count as content even if excluded
 			// and so the directory could not be regarded as truly empty (vacant)
 			$this->_items = array_diff( $this->_items, array( '.DS_Store' ) );
-			
+
 			// Now handle each item as per exclusions/inclusions
 			// TODO: Have a mode whereby the user can decide that the tree should represent
 			// the _complete_ tree with exclusions and inclusions. So instead of when an
@@ -803,19 +803,19 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			// key=>value pairs to add and then we choose to add or not - basically need
 			// to work out the most efficient way.
 			foreach ( $this->_items as $item ) {
-				
+
 				$action = self::NO_ACTION;
 				$attributes = array();
-				
+
 				( @is_link( $this->_root . ltrim( $this->_path, self::NORM_DIRECTORY_SEPARATOR ) . $item ) ) ? $is_link = true : $is_link = false;
 				if ( @is_file( $this->_root . ltrim( $this->_path, self::NORM_DIRECTORY_SEPARATOR ) . $item ) ) {
-					
+
 					// Setup the default attributes that apply to all files
 					// Note: regardless of whatever rule may match, whether the file is
 					// in an exclusion zone or not is always determined by the state of
 					// _this_ directory
 					$attributes = array( 'directory' => false, 'symlink' => $is_link, 'ignore' => $this->_ignore_symlinks, 'ezone' => $this->_in_exclusion_zone );
-					
+
 					// Rules:
 					// 1) File matches specific inclusion - include file
 					// 1a) File matches a specific pattern inclusion - include file
@@ -835,20 +835,20 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 						$action = self::EXCLUDE_ACTION;
 					} elseif ( true === $this->_exclusions_handler->matches_regex( $this->_path . $item ) ) {
 						$action = self::EXCLUDE_ACTION;
-					} elseif ( true === $this->_inclusions_handler->matches( $this->_path ) ) {					
+					} elseif ( true === $this->_inclusions_handler->matches( $this->_path ) ) {
 						$action = self::INCLUDE_ACTION;
-					} elseif ( true === $this->_inclusions_handler->matches_regex( $this->_path ) ) {					
+					} elseif ( true === $this->_inclusions_handler->matches_regex( $this->_path ) ) {
 						$action = self::INCLUDE_ACTION;
-					} elseif ( true === $this->_exclusions_handler->matches( $this->_path ) ) {			
+					} elseif ( true === $this->_exclusions_handler->matches( $this->_path ) ) {
 						$action = self::EXCLUDE_ACTION;
-					} elseif ( true === $this->_exclusions_handler->matches_regex( $this->_path ) ) {			
+					} elseif ( true === $this->_exclusions_handler->matches_regex( $this->_path ) ) {
 						$action = self::EXCLUDE_ACTION;
-					} elseif ( true === $this->_in_exclusion_zone ) {		
+					} elseif ( true === $this->_in_exclusion_zone ) {
 						$action = self::EXCLUDE_ACTION;
-					} else {	
+					} else {
 						$action = self::INCLUDE_ACTION;
 					}
-					
+
 					// We will record the file if included or regardless if building a complete tree
 					// otherwise just do nothing if the file is being excluded.
 					// If we are recording an item we update empty based on whether it's being recorded
@@ -859,7 +859,7 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 						$attributes[ 'status' ] = ( self::INCLUDE_ACTION === $action ) ? self::STATUS_INCLUDED : self::STATUS_EXCLUDED ;
 						$this->_terminals[ $this->_path . $item ] = self::stat( $this->_root, $this->_path, $item, $attributes );
 					}
-					
+
 				} elseif ( @is_dir( $this->_root . ltrim( $this->_path, self::NORM_DIRECTORY_SEPARATOR ) . $item ) ) {
 
 					// Setup the default attributes that apply to all directories
@@ -886,43 +886,43 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 					if ( true === $this->_inclusions_handler->matches( $this->_path . $item . '/' ) ) {
 						// Rule 1
 						$action = self::INCLUDE_ACTION;
-						$attributes[ 'ezone' ] = false; 
+						$attributes[ 'ezone' ] = false;
 					} elseif ( true === $this->_inclusions_handler->matches_regex( $this->_path . $item . '/' ) ) {
 						// Rule 1a
 						$action = self::INCLUDE_ACTION;
-						$attributes[ 'ezone' ] = false; 
+						$attributes[ 'ezone' ] = false;
 					} elseif ( ( true === $this->_exclusions_handler->matches( $this->_path . $item . '/' ) ) &&
 							   ( true === $this->_inclusions_handler->prefixed_by( $this->_path . $item . '/' ) ) ) {
 						// Rule 2
 						$action = self::INCLUDE_ACTION;
-						$attributes[ 'ezone' ] = true; 
+						$attributes[ 'ezone' ] = true;
 					} elseif ( ( true === $this->_exclusions_handler->matches_regex( $this->_path . $item . '/' ) ) &&
 							   ( true === $this->_inclusions_handler->prefixed_by( $this->_path . $item . '/' ) ) ) {
 						// Rule 2a
 						$action = self::INCLUDE_ACTION;
-						$attributes[ 'ezone' ] = true; 
+						$attributes[ 'ezone' ] = true;
 					} elseif ( true === $this->_inclusions_handler->prefixed_by( $this->_path . $item . '/' ) ) {
 						// Rule 3
 						$action = self::INCLUDE_ACTION;
-						$attributes[ 'ezone' ] = $this->_in_exclusion_zone; 
+						$attributes[ 'ezone' ] = $this->_in_exclusion_zone;
 					} elseif ( true === $this->_exclusions_handler->matches( $this->_path . $item . '/' ) ) {
 						// Rule 4
 						$action = self::EXCLUDE_ACTION;
-						$attributes[ 'ezone' ] = true; 
+						$attributes[ 'ezone' ] = true;
 					} elseif ( true === $this->_exclusions_handler->matches_regex( $this->_path . $item . '/' ) ) {
 						// Rule 4a
 						$action = self::EXCLUDE_ACTION;
-						$attributes[ 'ezone' ] = true; 
+						$attributes[ 'ezone' ] = true;
 					} elseif ( true === $this->_in_exclusion_zone ) {
 						// Rule 5
 						$action = self::EXCLUDE_ACTION;
-						$attributes[ 'ezone' ] = true; 
+						$attributes[ 'ezone' ] = true;
 					} else {
 						// Rule 6
 						$action = self::INCLUDE_ACTION;
-						$attributes[ 'ezone' ] = $this->_in_exclusion_zone; 
+						$attributes[ 'ezone' ] = $this->_in_exclusion_zone;
 					}
-					
+
 					// We will record the directory if included or regardless if building a complete tree
 					// otherwise just do nothing if the file is being excluded
 					if ( ( self::INCLUDE_ACTION === $action ) || ( self::COMPLETE_MODE === $this->_mode ) ) {
@@ -937,7 +937,7 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 
 				}
 			}
-			
+
 			// Set things up so now visit - this will recurse down the tree
 			// if required and the child nodes will be kept or destroyed dependent
 			// on the option. The keep=false option gives us a way to traverse a
@@ -951,15 +951,15 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			// visit just uses what data we have already defined and stored. This
 			// is obviously more resource intensive on memory but makes multiple
 			// visits less cpu intensive.
-			self::visit();		
-	
+			self::visit();
+
 		}
-		
+
 		/**
 		 *	__destruct()
-		 *	
+		 *
 		 *	Desroy the object - all object storage will be recoverd by default
-		 *	
+		 *
 		 *	Simply destroy any child nodes (which will recurse down)
 		 *	Everything else handled by the unset() of _this_ object
 		 *	and the various handler objects are owned by the original
@@ -977,14 +977,14 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 					unset( $child[ 'child' ] );
 				}
 			}
-			
+
 		}
-		
+
 		/**
 		 *	stat()
-		 *	
+		 *
 		 *	Return an array of information about the particular item
-		 *	
+		 *
 		 *	Return an array of information about the item
 		 *	$extra is an array of key=>value pairs to merge in as additional/override
 		 *	Note: for "absolute_path" key item we need to "fake" the $item value when
@@ -1002,39 +1002,39 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		public function stat( $root = '', $path = '', $item = '', $extra = array() ) {
 
 			$stat = array();
-			
+
 			$stat[ 'filename' ] = basename( $path . $item );
 			$stat[ 'name' ] = ( $path . $item );
 			// Relative path has no / prefix and has / suffix added _unless_ dirname() is only /
 			$stat[ 'relative_path' ] = ltrim( dirname( $path . $item ), self::NORM_DIRECTORY_SEPARATOR ) . ( ( self::NORM_DIRECTORY_SEPARATOR === dirname( $path . $item ) ) ? '' : self::NORM_DIRECTORY_SEPARATOR );
 			// Absolute path must be based on /path/item or, if item is empty, and has / suffix added
 			$stat[ 'absolute_path' ] = dirname( $root . ltrim( $path, self::NORM_DIRECTORY_SEPARATOR ) .  ( ( ( self::NORM_DIRECTORY_SEPARATOR === $path ) && ( '' === $item ) ) ? '.' : $item ) ) . self::NORM_DIRECTORY_SEPARATOR;
-	
+
 			// For symlinks we are _not_ following we need to do lstat and not stat
 			if ( ( isset( $extra[ 'symlink' ] ) && $extra[ 'symlink' ] ) && ( isset( $extra[ 'ignore' ] ) && $extra[ 'ignore' ] ) ) {
 				$php_stat = @lstat( $root . ltrim( $path, self::NORM_DIRECTORY_SEPARATOR ) . $item );
 			} else {
 				$php_stat = @stat( $root . ltrim( $path, self::NORM_DIRECTORY_SEPARATOR ) . $item );
 			}
-			
+
 			// Take what we want from the stat details - not much for now
 			if ( is_array( $php_stat )) {
 				$stat[ 'size' ] = $php_stat[ 'size' ];
 			}
-			
+
 			// Record if the file is readable/writeable so we may do some preemptive troubleshooting
 			$stat[ 'is_readable' ] = @is_readable( $root . ltrim( $path, self::NORM_DIRECTORY_SEPARATOR ) . $item );
 			$stat[ 'is_writable' ] = @is_writable( $root . ltrim( $path, self::NORM_DIRECTORY_SEPARATOR ) . $item );
-	
+
 			// Add any additional information or any overrides
 			$stat = array_merge( $stat, $extra );
-			
+
 			return $stat;
 		}
-		
+
 		/**
 		 *	get_tsize()
-		 *	
+		 *
 		 *	Return an total size of all the content of the directory, including
 		 *	subdirectories.
 		 *
@@ -1043,13 +1043,13 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		 *
 		 */
 		public function get_tsize() {
-		
+
 			return $this->_tsize;
 		}
-		
+
 		/**
 		 *	visit()
-		 *	
+		 *
 		 *	The visit funciton that builds information about the node and extends down paths
 		 *	for any subdirectories thus building the structure further.
 		 *
@@ -1074,7 +1074,7 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			if ( null === $visitor ) {
 				$visitor = $this->_visitor;
 			}
-			
+
 			// Assemble the details for this directory node
 			if ( false === $this->_visited ) {
 				// Directory itself has 0 size
@@ -1082,12 +1082,12 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 				if ( true === $this->_vacant ) {
 					// Directory is really empty, _never_ had any content
 					// based on scandir() output for this directory being empty.
-					// We can set the other vars as well. It's up to the 
+					// We can set the other vars as well. It's up to the
 					// zip method whether it includes this directory or not
 					// (or rather the generator of the file list for the method).
 					$vars[ 'empty' ] = true;
 					$vars[ 'csize' ] = (double)0;
-					$vars[ 'tsize' ] = (double)0;				
+					$vars[ 'tsize' ] = (double)0;
 				} elseif ( empty( $this->_terminals ) && empty( $this->_symdirs ) && empty( $this->_children ) ) {
 					// The directory originally had some content but it has all
 					// been excluded. Again set the vars accordingly and it will
@@ -1121,12 +1121,12 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			$visitor->add( $this->_self );
 			// Get the key of the item just added so we can modify it later
 			$update_key = $visitor->get_last_key();
-	
+
 			// Give output handler each terminal item
 			foreach ( $this->_terminals as $terminal ) {
 				$visitor->add( $terminal );
 			}
-			
+
 			// Give output handler each symdir (these are directories we are _not_
 			// following, not by virtue of being excluded as such but because we are
 			// not following symlinks at all). So the recorded details for the symdir
@@ -1144,9 +1144,9 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			// where possible and since the condition can be determined by the available
 			// attributes that seems to be the best solution at present.
 			foreach ( $this->_symdirs as $symdir ) {
-				$visitor->add( $symdir );			
+				$visitor->add( $symdir );
 			}
-			
+
 			// If we are visiting then what we do depends on whether this is a
 			// kept file tree or not. If it is previously created and kept then
 			// we should have an array of child nodes that we can visit. If this
@@ -1154,14 +1154,14 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			// and visit and keep the nodes otherwise we simply create and visit
 			// and then destroy each node
 			foreach ( $this->_children as &$child ) {
-				
+
 				if ( false === $this->_visited ) {
 					// This is our first visit so we need to create the child object
 					// If we are keeping the tree then we'll save the object reference
 					// otherwise we'll destroy the child.
 					$child[ 'child' ] = new pluginbuddy_zbdir_node( $this->_root, $child[ 'name' ], $this->_exclusions_handler, $this->_inclusions_handler, $this->_visitor, $this->_ignore_symlinks, $this->_keep, $this->_mode, $child[ 'ezone' ], $child[ 'depth' ] );
 					// Increment the total size for this directory node by the total size of the child
-					$this->_tsize += (double)$child[ 'child' ]->get_tsize(); 
+					$this->_tsize += (double)$child[ 'child' ]->get_tsize();
 					if ( false === $this->_keep ) {
 						unset( $child[ 'child' ] );
 					}
@@ -1172,196 +1172,196 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 					if ( isset( $child[ 'child' ]) && ( is_object( $child[ 'child' ] ) ) ) {
 						$child[ 'child' ]->visit( $visitor );
 					}
-					
+
 				}
-	
+
 			}
-			
+
 			// Now we have to do some updating on first visit to patch values we
 			// didn't know before - use the item key we saved earlier
 			if ( false === $this->_visited ) {
 				$this->_self[ 'tsize' ] = (double)$this->_tsize;
 				$visitor->update( $update_key, array( 'tsize' => (double)$this->_tsize ) );
 			}
-			
+
 			// Remember that we have been visited so that any subsequent visit
 			// will just use what has already been set up
 			$this->_visited = true;
-			
+
 			// The caller may need to know the actual visitor used if called with null
 			return $visitor;
-			
+
 		}
-	
+
 	}
-	
+
 	class pluginbuddy_zbdir_null_object {
-		
+
 		public function __construct() {
-			
+
 		}
-		
+
 		public function __destruct() {
-			
+
 		}
-		
+
 		public function __call( $method, $arguments ) {
-			
+
 		}
-		
+
 	}
-		
+
 	// Currently just a wrapper for pb_backupbuddy::status()
 	// TODO: Would prefer to have a generic logger and this would
 	// extend it if required (we may not even need this dependent
 	// on how logging evolves)
 	class pluginbuddy_zbdir_logger {
-		
+
 		protected $_prefix = '';
 		protected $_suffix = '';
-		
+
 		public function __construct( $prefix = "", $suffix = "" ) {
-			
+
 			if ( !empty( $prefix ) ) {
 
 				$this->set_prefix( $prefix );
 
 			}
-			
+
 			if ( !empty( $suffix ) ) {
 
 				$this->set_suffix( $suffix );
 
 			}
-			
+
 		}
-		
+
 		public function __destruct() {
-			
+
 		}
-		
+
 		public function set_prefix( $prefix = "" ) {
-			
+
 			$this->_prefix = $prefix;
-			
+
 			return $this;
-			
+
 		}
-		
+
 		public function get_prefix() {
-			
+
 			return $this->_prefix;
 
 		}
-		
+
 		public function set_suffix( $suffix = "" ) {
-			
+
 			$this->_suffix = $suffix;
-			
+
 			return $this;
-			
+
 		}
-		
+
 		public function get_suffix() {
-			
+
 			return $this->_suffix;
 
 		}
-		
+
 		public function log( $level, $message, $prefix = null, $suffix = null ) {
-			
+
 			$prefix_to_use = ( is_null( $prefix ) ) ? $this->_prefix : ( ( is_string( $prefix ) ) ? $prefix : "" ) ;
 			$suffix_to_use = ( is_null( $suffix ) ) ? $this->_suffix : ( ( is_string( $suffix ) ) ? $suffix : "" ) ;
-			
+
 			pb_backupbuddy::status( $level, $prefix_to_use . $message . $suffix_to_use );
-			
+
 			return $this;
-			
+
 		}
-		
+
 	}
 
 	// Basic class definition that satisfies node requirements
 	class pluginbuddy_zbdir_visitor {
-		
+
 		protected $_logger = null;
-		
+
 		protected $_process_monitor = null;
-	
+
 		public function __construct() {
-			
+
 		}
-		
+
 		public function __destruct() {
-			
+
 		}
-		
+
 		public function add( $item = array() ) {
-		
+
 		}
-		
+
 		public function get_last_key() {
 			return 0;
 		}
-		
+
 		public function update( $key, $updates = array() ) {
 
 		}
-		
+
 		public function finalize() {
 
 		}
 
 		public function set_logger( $logger ) {
-			
+
 			$this->_logger = $logger;
-			
+
 			return $this;
-			
+
 		}
-		
+
 		public function get_logger() {
-			
+
 			if ( is_null( $this->_logger ) ) {
 
 				$logger = new pluginbuddy_zbdir_null_object();
 				$this->set_logger( $logger );
 
 			}
-			
+
 			return $this->_logger;
-			
+
 		}
-		
+
 		public function set_process_monitor( $process_monitor ) {
-			
+
 			$this->_process_monitor = $process_monitor;
-			
+
 			return $this;
-			
+
 		}
-		
+
 		public function get_process_monitor() {
-			
+
 			// If no process monitor has been defined then create a
 			// null object to use.
 			if ( is_null( $this->_process_monitor ) ) {
-				
+
 				$pm = new pluginbuddy_zbdir_null_object();
 				$this->set_process_monitor( $pm );
-				
+
 			}
-			
+
 			return $this->_process_monitor;
-			
+
 		}
-		
+
 	}
 
 	// This class can be used to visit the the tree and builds a flat array
 	// of the tree contents with all the details for every file and directory
 	// that are defined to be in the tree. It can be used to get details about
-	// the tree such as the number of files and directories, the total size of 
+	// the tree such as the number of files and directories, the total size of
 	// all included files, listing of contents in various forms, etc. It is
 	// not specific to building a list of backup contents for any particular
 	// zip method but can be used to derive such a list. Alternatively a
@@ -1369,20 +1369,20 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 	// just that required to produce the list for that method in whatever
 	// format was required.
 	class pluginbuddy_zbdir_visitor_details extends pluginbuddy_zbdir_visitor {
-		
+
 		// This array will hold the details for each item in the tree
 		protected $_items = array();
-		
+
 		// This array will hold keys of the fields that the vistor wants when
 		// an item is added, e.g., just file name or maybe naem and size, etc.
 		protected $_wanted_keys = array();
-		
+
 		// This bool tells us whether we want all fields or only those as
 		// defined by the $_wanted_keys array
 		protected $_want_all = true;
 
 		public function __construct( $wanted_keys = array() ) {
-		
+
 			// Setup the array of wanted keys - we're assuming that we'll only want
 			// a subset in general so always do this rather than bother to test if
 			// wanted_keys is empty as there is little overhead in the foreach loop
@@ -1390,78 +1390,78 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			foreach ( $wanted_keys as $key ) {
 				$this->_wanted_keys[ $key ] = true;
 			}
-			
+
 			$this->_want_all = ( empty( $this->_wanted_keys ) ) ? true : false ;
-		
+
 			parent::__construct();
-			
+
 		}
-		
+
 		public function __destruct() {
-		
+
 			parent::__destruct();
-			
+
 		}
-		
+
 		public function add( $item = array() ) {
-		
+
 			if ( true === $this->_want_all ) {
-			
+
 				// Add the item - note that just numeric keys for now, not using
 				// any item value for key
 				$this->_items[] = $item;
-			
+
 			} else {
-			
+
 				// We need to only take the item fields that we want
 				$this->_items[] = array_intersect_key( $item, $this->_wanted_keys );
-			
+
 			}
-			
+
 			if ( 0 === ( ( $count = $this->count() ) % 100 ) ) {
-				
+
 				// Keep an eye on process progress (if there is a process monitor set)
 				$this->get_process_monitor()->checkpoint();
-				
+
 				// Log progress (if there is a logger set)
 				$this->get_logger()->log( 'details', 'Determining list of candidate files + directories to be added to the zip archive: ' . $count );
-				
+
 			}
-			
+
 		}
-		
+
 		public function get_last_key() {
-		
+
 			// Tell the caller the array key of the item just added
 			return ( count( $this->_items ) - 1 );
-			
+
 		}
-		
+
 		public function update( $key, $updates = array() ) {
-		
+
 			// The caller wants to update some details of the item identified by the key
 			if ( isset( $this->_items[ $key ] ) ) {
-			
+
 				// Create an array for the update based on whether we want all fields or not
-				
+
 				if ( true === $this->_want_all ) {
-		
+
 					// We are using all fileds so want to update all
 					$item_update = $updates;
-		
+
 				} else {
-		
+
 					// We need to only take the item fields that we want
 					$item_update = array_intersect_key( $updates, $this->_wanted_keys );
-		
+
 				}
-			
+
 				$this->_items[ $key ] = array_merge( $this->_items[ $key ], $item_update );
-				
+
 			}
-			
+
 		}
-		
+
 		// Called by user of the visitor after completion of visit to do
 		// any final actions
 		public function finalize() {
@@ -1470,9 +1470,9 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			// which in general will not be an exact multiple of 100
 			$count = $this->count();
 			$this->get_logger()->log( 'details', 'Determining list of candidate files + directories to be added to the zip archive: ' . $count );
-			
+
 		}
-		
+
 		// Get selected item values as a string for display or otherwise
 		// Normally a bool will be cast as empty string if false which isn't
 		// ideal in this context so we handle this specifcally. We could call
@@ -1480,68 +1480,68 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		// keys and use that in a switch to handle the specific key conversion
 		// to string but this FFS.
 		public function get_as_string( $keys = array(), $delimiter = ':' ) {
-		
+
 			$strings = array();
 			foreach ( $this->_items as $item ) {
-			
+
 				$string = '';
 				foreach ( $keys as $key ) {
-				
+
 					if ( isset( $item[ $key ] ) ) {
-					
+
 						if ( is_bool( $item[ $key ] ) ) {
-						
+
 							$string .= ( $item[ $key ] ) ? '1': '0' ;
-							
+
 						} else {
-						
+
 							$string .= $item[ $key ];
-							
+
 						}
-						
+
 					}
-					
+
 					// Always add delimiter to delimit fields
 					$string .= $delimiter;
-					
+
 				}
-				
+
 				// Always trim off final delimiter
 				if ( false !== ( $where = strrpos( $string, $delimiter ) ) ) {
 					$string = substr( $string, 0, $where );
 				}
-				
+
 				$strings[] = $string;
-				
+
 			}
-			
+
 			return $strings;
-			
+
 		}
-		
+
 		// Return the list as an array where each item only has the specific details
-		// identified by the requested keys 
+		// identified by the requested keys
 		public function get_as_array( $keys = array() ) {
-		
+
 			$result = array();
-			
+
 			foreach ( $this->_items as $item ) {
-			
+
 				$current = array();
 				foreach ( $keys as $key ) {
-				
+
 					( isset( $item[ $key ] ) ) ? ( $current[ $key ] = $item[ $key ] ) : false ;
-					
+
 				}
-				
+
 				$result[] = $current;
-				
+
 			}
-			
+
 			return $result;
-			
+
 		}
-		
+
 		// Simple function to count the number of items that match some
 		// key=>value pair criteria. Currently it's just a "match-all"
 		// criteria.
@@ -1549,45 +1549,45 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 		public function count( $criteria = array() ) {
 
 			$count = 0;
-			
+
 			if ( empty( $criteria ) ) {
-			
+
 				$count = count( $this->_items );
-				
+
 			} else {
-			
+
 				foreach ( $this->_items as $item ) {
-				
+
 					$match = true;
 					foreach ( $criteria as $key => $value ) {
-					
+
 						( isset( $item[ $key ] ) && ( $value === $item[ $key ] ) ) ? $match : $match = false ;
 
 					}
-					
+
 					( $match ) ? $count++ : $count ;
-					
+
 				}
-				
+
 			}
-			
+
 			return $count;
-			
+
 		}
-		
+
 	}
 
 	/**
 	 *	pluginbuddy_zbdir Class
 	 *
 	 *  Class for building a list of files to be included in a backup
-	 *	
+	 *
 	 *	@return		null
 	 *
 	 */
 
 	class pluginbuddy_zbdir {
-	
+
 		const NORM_DIRECTORY_SEPARATOR = '/';
 		const DIRECTORY_SEPARATORS = '/\\';
 		const TREE_NONE = 0;
@@ -1597,13 +1597,13 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
         /**
          * The path of this directory node
          * Will have a trailing directory separator
-         * 
+         *
          * @var root string
          */
         protected $_root = "";
-        
+
         protected $_options = array();
-        
+
         protected static $_default_options = array( 'exclusions' => array(),
 													'exclusions_handler' => null,
         										    'inclusions' => array(),
@@ -1614,26 +1614,26 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
         										    'visitor' => null,
         										    'ignore_symlinks' => true,
         										    'keep_tree' => false);
-        								  
+
         protected $_exclusions_handler = null;
         protected $_inclusions_handler = null;
         protected $_visitor = null;
-        
+
         protected $_root_node = null;
 
 		/**
 		 *	__construct()
-		 *	
+		 *
 		 *	Default constructor.
-		 *	
-		 *	
+		 *
+		 *
 		 *	@param		string		$root			The root path of the tree
 		 *	@param		array		$options		The various options as an associative array
 		 *	@return		null
 		 *
 		 */
 		public function __construct( $root = '', $options = array() ) {
-		
+
 			// Do not change root even if it is just / because *nix can hanle
 			// multiple / as path separators, e.g., /home/jeremy and //home/jeremy
 			// and //home//jeremy and //home///jeremy are all equivalent
@@ -1646,63 +1646,63 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 
 			// Get our options based on defaults or passed values
 			$this->_options = array_merge( self::$_default_options, $options );
-			
+
 			// Use provided exclusions handler, otherwise create our own
 			// Have to handle populating the handler slightly differently
 			// for each case
 			if ( is_object( $this->_options[ 'exclusions_handler' ] ) ) {
-				
+
 				$this->_exclusions_handler = $this->_options[ 'exclusions_handler' ];
-				
+
 				// Must add any exclusions provided - the provided handler must have
 				// had the root option correctly set to allow for properly checking
 				// if an exclusion is a directory when it has no trailing slash
 				$this->_exclusions_handler->add( $this->_options[ 'exclusions' ] );
-				
+
 				// Must add any pattern exclusions provided using the auto-delimit mode
 				// chosen by the user which may not be the same as the provided handler
 				// was created with as default
 				$this->_exclusions_handler->add_pattern( $this->_options[ 'pattern_exclusions' ], $this->_options[ 'pattern_auto_delimit' ] );
 
 			} else {
-				
+
 				// Note: exclusions are added at creation of handler and the user chosen
 				// auto-delimit mode is set as the default
 				$this->_exclusions_handler = new pluginbuddy_zbdir_exclusion( $this->_options[ 'exclusions' ], array( 'root' => $this->_root, 'pattern_auto_delimit' => $this->_options[ 'pattern_auto_delimit' ] ) );
 
 				// Pattern exclusions added using the previously set auto-delimit mode
 				$this->_exclusions_handler->add_pattern( $this->_options[ 'pattern_exclusions' ] );
-				
+
 			}
-			
+
 			// Use provided inclusions handler, otherwise create our own
 			// Have to handle populating the handler slightly differently
 			// for each case
 			if ( is_object( $this->_options[ 'inclusions_handler' ] ) ) {
-				
+
 				$this->_inclusions_handler = $this->_options[ 'inclusions_handler' ];
-				
+
 				// Must add any inclusions provided - the provided handler must have
 				// had the root option correctly set to allow for properly checking
 				// if an inclusion is a directory when it has no trailing slash
 				$this->_inclusions_handler->add( $this->_options[ 'inclusions' ] );
-				
+
 				// Must add any pattern inclusions provided using the auto-delimit mode
 				// chosen by the user which may not be the same as the provided handler
 				// was created with as default
 				$this->_inclusions_handler->add_pattern( $this->_options[ 'pattern_inclusions' ], $this->_options[ 'pattern_auto_delimit' ] );
 
 			} else {
-				
+
 				// Note: inclusions are added at creation of handler and the user chosen
 				// auto-delimit mode is set as the default
 				$this->_inclusions_handler = new pluginbuddy_zbdir_inclusion( $this->_options[ 'inclusions' ], array( 'root' => $this->_root, 'pattern_auto_delimit' => $this->_options[ 'pattern_auto_delimit' ] ) );
 
 				// Pattern inclusions added using the previously set auto-delimit mode
 				$this->_inclusions_handler->add_pattern( $this->_options[ 'pattern_inclusions' ] );
-				
+
 			}
-			
+
 			// Now we need a visitor that we should have been given. If not then we
 			// create a null visitor that does nothing and the assumtion is that the tree is
 			// being kept and will be visited with a specific visitor subsequently
@@ -1712,7 +1712,7 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			} else {
 				$this->_visitor = $this->_options[ 'visitor' ];
 			}
-			
+
 			// Now we are ready to build the tree
 			try {
 				$this->_root_node = new pluginbuddy_zbdir_node( $this->_root, '', $this->_exclusions_handler, $this->_inclusions_handler, $this->_visitor, $this->_options[ 'ignore_symlinks' ], $this->_options[ 'keep_tree' ] );
@@ -1722,14 +1722,14 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 
 				// Maybe we should clean up our handlers, etc., or maybe doesn't
 				// really matter at present as we will likely terminate anyway
-				
+
 				// And throw it on
 				throw $e;
 			}
-			
+
 			// Do any last actions required by the visitor after we have fully traversed the tree
 			$this->_visitor->finalize();
-			
+
 			// If we didn't bomb out with an exception then we should have built the tree and visited it
 			// with either our null visitor or the visitor we were given. The caller can use their visitor
 			// as they require as it is owned by them. We may be asked to visit again in which case we
@@ -1738,41 +1738,41 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			// remembers the original visitor and will use it again). Obvously need to take care with
 			// this - the caller should manage it's own visitor which may mean "clearing" it before
 			// using it again dependent on what it actually does.
-		
+
 		}
-		
+
 		/**
 		 *	__destruct()
-		 *	
+		 *
 		 *	Default destructor.
-		 *	
+		 *
 		 *	@return		null
 		 *
 		 */
 		public function __destruct( ) {
-		
+
 			// Destroy exclusions handler if we own it
 			if ( null == $this->_options[ 'exclusions_handler' ] ) {
 				unset( $this->_exclusions_handler );
 			}
-			
+
 			// Destroy inclusions handler if we own it
 			if ( null == $this->_options[ 'inclusions_handler' ] ) {
 				unset( $this->_inclusions_handler );
 			}
-			
+
 			// Destroy the output handler if we own it
 			if ( null == $this->_options[ 'visitor' ] ) {
 				unset( $this->_visitor );
 			}
-			
+
 			// Finally destroy the root node which will destroy the tree as required
 			unset( $this->_root_node );
-		
+
 		}
-		
+
 		public function visit( $visitor = null ) {
-		
+
 			// Being asked to visit the tree again - note that if the visitor is null then
 			// previous visitor is being used again and the root node will have remembered
 			// it so we just call the root node visit with visitor. for this reason we have
@@ -1780,13 +1780,13 @@ if ( !class_exists( "pluginbuddy_zbdir" ) ) {
 			// finalise() function.
 			// FFS: Mayber we should check we have a kept tree otherwise there is nothing to
 			// visit
-			
+
 			$visitor = $this->_root_node->visit( $visitor );
-		
+
 			$visitor->finalize();
-			
+
 		}
-	
+
 	}
 
 }

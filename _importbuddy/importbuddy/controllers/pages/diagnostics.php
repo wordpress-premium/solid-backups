@@ -92,9 +92,9 @@ if ( !defined( 'PB_IMPORTBUDDY' ) ) { // NOT IN IMPORTBUDDY:
 			$wp_settings[] = array( 'Network Home URL', network_home_url(), 'network_home_url()' );
 		}
 
-		$wp_settings[] = array( 'BackupBuddy local storage', backupbuddy_core::getBackupDirectory(), 'BackupBuddy Settings' );
-		$wp_settings[] = array( 'BackupBuddy temporary files', backupbuddy_core::getTempDirectory(), 'Upload Base + BackupBuddy' );
-		$wp_settings[] = array( 'BackupBuddy logs', backupbuddy_core::getLogDirectory(), 'Upload Base + BackupBuddy' );
+		$wp_settings[] = array( 'Solid Backups local storage', backupbuddy_core::getBackupDirectory(), 'Solid Backups Settings' );
+		$wp_settings[] = array( 'Solid Backups temporary files', backupbuddy_core::getTempDirectory(), 'Upload Base + Solid Backups' );
+		$wp_settings[] = array( 'Solid Backups logs', backupbuddy_core::getLogDirectory(), 'Upload Base + Solid Backups' );
 
 		// Display WP settings..
 		pb_backupbuddy::$ui->list_table(

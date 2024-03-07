@@ -5,7 +5,4 @@
  * @package BackupBuddy
  */
 
-?>
-<h1><?php esc_html_e( 'Add New Schedule', 'it-l10n-backupbuddy' ); ?></h1>
-<?php
-$schedule_form->display_settings( '+ Add Schedule' );
+$schedule_form->display_settings( __( '+ Add Schedule', 'it-l10n-backupbuddy' ), '<div class="solid-backups-form-buttons">', '</div>', '' );

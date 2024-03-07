@@ -1,7 +1,7 @@
 <?php
 class Ithemes_Sync_Verb_Backupbuddy_Get_LiveStats extends Ithemes_Sync_Verb {
 	public static $name = 'backupbuddy-get-liveStats';
-	public static $description = 'Retrieve BackupBuddy Stash Live stats.';
+	public static $description = 'Retrieve Solid Backups Stash Live stats.';
 	
 	
 	public function run( $arguments = array() ) {

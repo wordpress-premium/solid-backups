@@ -55,11 +55,12 @@ final class Ithemes_Updater_WP_CLI_Ithemes_Licensing extends WP_CLI_Command {
 			'format'  => 'table',
 		);
 
-		$assoc_args = wp_parse_args( $assoc_args, $default_args );
-		$package_details = Ithemes_Updater_API::get_package_details();
+		$assoc_args      = wp_parse_args( $assoc_args, $default_args );
+		$package_details = Ithemes_Updater_API::get_package_details( false );
 
 		if ( is_wp_error( $package_details ) ) {
 			WP_CLI::error( sprintf( 'Unable to retrieve product details: %1$s (%2$s)', $package_details->get_error_message(), $package_details->get_error_code() ) );
+
 			return;
 		}
 
@@ -117,15 +118,15 @@ final class Ithemes_Updater_WP_CLI_Ithemes_Licensing extends WP_CLI_Command {
 
 			foreach ( $packages as &$package ) {
 				foreach ( $columns as $column ) {
-					if ( ! isset( $package[$column] ) ) {
-						$package[$column] = '';
+					if ( ! isset( $package[ $column ] ) ) {
+						$package[ $column ] = '';
 					}
 				}
 			}
 
 			WP_CLI\Utils\format_items( $assoc_args['format'], $packages, $columns );
-		} else if ( $assoc_args['verbose'] ) {
-			WP_CLI::error( 'No iThemes products were found matching the current criteria.' );
+		} elseif ( $assoc_args['verbose'] ) {
+			WP_CLI::error( 'No SolidWP products were found matching the current criteria.' );
 		}
 	}
 
@@ -210,8 +211,8 @@ final class Ithemes_Updater_WP_CLI_Ithemes_Licensing extends WP_CLI_Command {
 		);
 
 		$assoc_args = wp_parse_args( $assoc_args, $default_args );
-		$user = getenv( 'ITHEMES_USER' );
-		$pass = getenv( 'ITHEMES_PASS' );
+		$user       = getenv( 'ITHEMES_USER' );
+		$pass       = getenv( 'ITHEMES_PASS' );
 
 		if ( isset( $assoc_args['ithemes-user'] ) ) {
 			$user = $assoc_args['ithemes-user'];
@@ -221,28 +222,33 @@ final class Ithemes_Updater_WP_CLI_Ithemes_Licensing extends WP_CLI_Command {
 		}
 
 		if ( empty( $user ) ) {
-			WP_CLI::error( 'You must supply the iThemes member username.' );
+			WP_CLI::error( 'You must supply the SolidWP member username.' );
+
 			return;
 		}
 		if ( empty( $pass ) ) {
-			WP_CLI::error( 'You must supply the iThemes member password.' );
+			WP_CLI::error( 'You must supply the SolidWP member password.' );
+
 			return;
 		}
 
 		if ( empty( $products ) && ! $assoc_args['all'] ) {
 			WP_CLI::error( "You must supply one or more products or use the --all flag." );
+
 			return;
-		} else if ( ! empty( $products ) && $assoc_args['all'] ) {
+		} elseif ( ! empty( $products ) && $assoc_args['all'] ) {
 			WP_CLI::error( 'You must supply one or more products or use the --all flag, but not both.' );
+
 			return;
 		}
 
 
-		$package_details = Ithemes_Updater_API::get_package_details();
+		$package_details = Ithemes_Updater_API::get_package_details( false );
 
 		if ( $assoc_args['all'] ) {
 			if ( is_wp_error( $package_details ) ) {
 				WP_CLI::error( sprintf( 'Unable to retrieve product details: %1$s (%2$s)', $package_details->get_error_message(), $package_details->get_error_code() ) );
+
 				return;
 			}
 
@@ -265,9 +271,9 @@ final class Ithemes_Updater_WP_CLI_Ithemes_Licensing extends WP_CLI_Command {
 			}
 		} else {
 			foreach ( $products as $index => $product ) {
-				if ( ! isset( $package_details['packages'][$product] ) ) {
-					WP_CLI::error( "$product is not a valid iThemes product. Licensing for it cannot be {$verb}d." );
-					unset( $products[$index] );
+				if ( ! isset( $package_details['packages'][ $product ] ) ) {
+					WP_CLI::error( "$product is not a valid SolidWP product. Licensing for it cannot be {$verb}d." );
+					unset( $products[ $index ] );
 				}
 			}
 
@@ -284,6 +290,7 @@ final class Ithemes_Updater_WP_CLI_Ithemes_Licensing extends WP_CLI_Command {
 
 		if ( is_wp_error( $response ) ) {
 			WP_CLI::error( Ithemes_Updater_API::get_error_explanation( $response ) );
+
 			return;
 		}
 
@@ -308,7 +315,7 @@ final class Ithemes_Updater_WP_CLI_Ithemes_Licensing extends WP_CLI_Command {
 			if ( 'activate' === $verb ) {
 				if ( ! empty( $data['key'] ) ) {
 					WP_CLI::success( "Activated the product license for $package." );
-				} else if ( ! empty( $data['status'] ) && ( 'expired' === $data['status'] ) ) {
+				} elseif ( ! empty( $data['status'] ) && ( 'expired' === $data['status'] ) ) {
 					WP_CLI::warning( "Unable to activate the product license for $package. Your product subscription has expired." );
 				} else {
 					WP_CLI::error( "Unable to activate the product license for $package. {$data['error']['message']}" );
@@ -316,7 +323,7 @@ final class Ithemes_Updater_WP_CLI_Ithemes_Licensing extends WP_CLI_Command {
 			} else {
 				if ( isset( $data['status'] ) && ( 'inactive' == $data['status'] ) ) {
 					WP_CLI::success( "Deactivated the product license for $package." );
-				} else if ( isset( $data['error'] ) && isset( $data['error']['message'] ) ) {
+				} elseif ( isset( $data['error'] ) && isset( $data['error']['message'] ) ) {
 					WP_CLI::error( "Unable to deactivate the product license for $package. {$data['error']['message']}" );
 				} else {
 					WP_CLI::error( "Unable to deactivate the product license for $package. Unknown server error." );
@@ -325,10 +332,74 @@ final class Ithemes_Updater_WP_CLI_Ithemes_Licensing extends WP_CLI_Command {
 		}
 	}
 
+	/**
+	 * Set the URL this product will be licensed on.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <url>
+	 * : The URL to be licensed.
+	 *
+	 * [--ithemes-user=<user>]
+	 * : iThemes member username. This value can also be supplied by an ITHEMES_USER environment variable.
+	 *
+	 * [--ithemes-pass=<pass>]
+	 * : iThemes member password. This value can also be supplied by an ITHEMES_PASS environment variable.
+	 *
+	 * @subcommand set-licensed-url
+	 */
+	public function set_licensed_url( $args, $assoc_args ) {
+		$this->verify_updater_is_present();
+
+		require_once( $GLOBALS['ithemes_updater_path'] . '/api.php' );
+		require_once( $GLOBALS['ithemes_updater_path'] . '/keys.php' );
+		require_once( $GLOBALS['ithemes_updater_path'] . '/functions.php' );
+		require_once( $GLOBALS['ithemes_updater_path'] . '/settings.php' );
+
+		list( $site_url ) = $args;
+
+		$user = getenv( 'ITHEMES_USER' );
+		$pass = getenv( 'ITHEMES_PASS' );
+
+		if ( isset( $assoc_args['ithemes-user'] ) ) {
+			$user = $assoc_args['ithemes-user'];
+		}
+
+		if ( isset( $assoc_args['ithemes-pass'] ) ) {
+			$pass = $assoc_args['ithemes-pass'];
+		}
+
+		/** @var Ithemes_Updater_Settings $settings */
+		$settings = $GLOBALS['ithemes-updater-settings'];
+
+		$site_url = $settings->get_site_url( $site_url );
+
+		if ( Ithemes_Updater_Keys::get() ) {
+			$site_url_from_server = $settings->get_licensed_site_url_from_server();
+
+			if ( $site_url !== $site_url_from_server ) {
+				$response = Ithemes_Updater_API::set_licensed_site_url(
+					$user,
+					$pass,
+					$site_url
+				);
+
+				if ( is_wp_error( $response ) ) {
+					WP_CLI::error( $response );
+				} else {
+					WP_CLI::success( 'Licensed site URL updated.' );
+				}
+			}
+		} else {
+			$settings->set_licensed_site_url( $site_url );
+			WP_CLI::success( 'Licensed site URL saved.' );
+		}
+	}
+
 	private function verify_updater_is_present() {
 		if ( empty( $GLOBALS['ithemes_updater_path'] ) ) {
 			if ( defined( 'ITHEMES_UPDATER_DISABLE' ) && ITHEMES_UPDATER_DISABLE ) {
-				WP_CLI::error( 'The iThemes updater library is disabled on this site due to the ITHEMES_UPDATER_DISABLE define being set to a truthy value. Licensing for this site cannot be managed.' );
+				WP_CLI::error( 'The SolidWP updater library is disabled on this site due to the ITHEMES_UPDATER_DISABLE define being set to a truthy value. Licensing for this site cannot be managed.' );
 			} else {
 				WP_CLI::error( 'The $GLOBALS[\'ithemes_updater_path\'] variable is empty or not set. This indicates that the updater was not loaded although the cause for this is not known.' );
 			}

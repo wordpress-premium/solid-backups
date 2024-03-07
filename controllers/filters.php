@@ -1,6 +1,6 @@
 <?php
 /**
- * Various BackupBuddy Filters
+ * Various Solid Backups Filters
  *
  * @package BackupBuddy
  */
@@ -132,8 +132,8 @@ class pb_backupbuddy_filters extends pb_backupbuddy_filterscore {
 	 */
 	public function plugin_row_meta( $plugin_meta, $plugin_file ) {
 		if ( isset( $plugin_meta[2] ) && strstr( $plugin_meta[2], 'backupbuddy' ) ) {
-			$plugin_meta[] = '<a href="https://ithemeshelp.zendesk.com/hc/en-us/categories/200062300-BackupBuddy/" target="_blank">' . __( 'Documentation', 'it-l10n-backupbuddy' ) . '</a>';
-			$plugin_meta[] = '<a href="http://ithemes.com/support/" target="_blank">' . __( 'Support', 'it-l10n-backupbuddy' ) . '</a>';
+			$plugin_meta[] = '<a href="https://go.solidwp.com/backups-help" target="_blank">' . __( 'Documentation', 'it-l10n-backupbuddy' ) . '</a>';
+			$plugin_meta[] = '<a href="https://go.solidwp.com/support" target="_blank">' . __( 'Support', 'it-l10n-backupbuddy' ) . '</a>';
 
 			return $plugin_meta;
 		} else {

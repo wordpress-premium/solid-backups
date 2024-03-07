@@ -24,9 +24,9 @@ $settings_form->add_setting( array(
 	'type'		=>		'textarea',
 	'name'		=>		'api_key',
 	'title'		=>		__( 'Remote API Key', 'it-l10n-backupbuddy' ),
-	'tip'		=>		__( 'Copy & paste the destination site\'s BackupBuddy API Key. Find this under the other remote site\'s BackupBuddy Remote Destinations page by clicking the \'Show Deployment Key\' button near the top.', 'it-l10n-backupbuddy' ),
+	'tip'		=>		__( 'Copy & paste the destination site\'s Solid Backups API Key. Find this under the other remote site\'s Solid Backups Remote Destinations page by clicking the \'Show Deployment Key\' button near the top.', 'it-l10n-backupbuddy' ),
 	'rules'		=>		'required|string[0-1000]',
-	'css'		=>		'width: 680px; height: 110px; padding: 8;',
+	'css'		=>		'width: 100%; max-width: 540px; height: 110px; padding: 8;',
 	'after'		=>		$after,
 ) );
 
@@ -48,7 +48,7 @@ $settings_form->add_setting( array(
 	'title'		=>		__( 'Directory Exclusions', 'it-l10n-backupbuddy' ),
 	'tip'		=>		__( 'Enter additional files or directories, relative to the WordPress root (ABSPATH) to exclude from Deployment. One file/directory per line.', 'it-l10n-backupbuddy' ),
 	'rules'		=>		'string[0-1000]',
-	'css'		=>		'width: 680px; height: 60px; padding: 8;',
+	'css'		=>		'width: 100%; max-width: 540px; height: 60px; padding: 8;',
 	'after'		=>		'<br>One exclusion per line. <b>Enter RELATIVE to WordPress root (ABSPATH).</b>',
 ) );
 
@@ -58,7 +58,7 @@ $settings_form->add_setting( array(
 	'title'		=>		__( 'Additional Inclusions', 'it-l10n-backupbuddy' ),
 	'tip'		=>		__( 'Enter additional files or directories, relative to the WordPress root (ABSPATH) to include during Deployment. One file/directory per line.', 'it-l10n-backupbuddy' ),
 	'rules'		=>		'string[0-1000]',
-	'css'		=>		'width: 680px; height: 60px; padding: 8;',
+	'css'		=>		'width: 100%; max-width: 540px; height: 60px; padding: 8;',
 	'after'		=>		'<br>One inclusion per line. <b>Enter RELATIVE to WordPress root (ABSPATH).</b>',
 ) );
 
@@ -71,7 +71,7 @@ $settings_form->add_setting( array(
 	'css'		=>		'',
 	'after'		=>		'<span class="description"> ' . __('Check to enable file hashing.', 'it-l10n-backupbuddy' ) . '</span>',
 	'rules'		=>		'',
-	//'row_class'	=>		'advanced-toggle',
+	//'row_class'	=>		'advanced-toggle advanced-toggle-hidden',
 ) );
 
 $settings_form->add_setting( array(
@@ -100,7 +100,7 @@ $settings_form->add_setting( array(
 $settings_form->add_setting( array(
 	'type'		=>		'title',
 	'name'		=>		'advanced_begin',
-	'title'		=>		'<span class="dashicons dashicons-arrow-right"></span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
+	'title'		=>		'<span class="advanced-toggle-title-icon">' . pb_backupbuddy::$ui->get_icon( 'chevronleft' ) . '</span> ' . __( 'Advanced Options', 'it-l10n-backupbuddy' ),
 	'row_class'	=>		'advanced-toggle-title',
 ) );
 
@@ -114,7 +114,7 @@ $settings_form->add_setting( array(
 	'rules'		=>		'required|int[0-9999999]',
 	'css'		=>		'width: 50px;',
 	'after'		=>		' MB. <span class="description">' . __( 'Default', 'it-l10n-backupbuddy' ) . ': 10 MB</span>',
-	'row_class'	=>		'advanced-toggle',
+	'row_class'	=>		'advanced-toggle advanced-toggle-hidden',
 ) );
 $settings_form->add_setting( array(
 	'type'		=>		'text',
@@ -124,7 +124,7 @@ $settings_form->add_setting( array(
 	'rules'		=>		'required|int[0-9999999]',
 	'css'		=>		'width: 50px;',
 	'after'		=>		' files/pass. <span class="description">' . __( 'Default', 'it-l10n-backupbuddy' ) . ': 10</span>',
-	'row_class'	=>		'advanced-toggle',
+	'row_class'	=>		'advanced-toggle advanced-toggle-hidden',
 ) );
 
 $settings_form->add_setting( array(
@@ -136,5 +136,5 @@ $settings_form->add_setting( array(
 	'css'		=>		'',
 	'after'		=>		'<span class="description"> ' . __('Check to disable this destination until re-enabled.', 'it-l10n-backupbuddy' ) . '</span>',
 	'rules'		=>		'',
-	'row_class'	=>		'advanced-toggle',
+	'row_class'	=>		'advanced-toggle advanced-toggle-hidden',
 ) );

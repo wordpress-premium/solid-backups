@@ -37,7 +37,7 @@ if ( 'delete_backup' === pb_backupbuddy::_POST( 'bulk_action' ) ) {
 			if ( true === pb_backupbuddy_destinations::delete( $settings, $item ) ) {
 				$deleted_files++;
 			} else {
-				pb_backupbuddy::alert( 'Error: Unable to delete `' . $item . '`. Verify permissions or try again.' );
+				pb_backupbuddy::alert( 'Error: Unable to delete `' . esc_attr( $item ) . '`. Verify permissions or try again.' );
 			}
 		}
 
@@ -53,15 +53,12 @@ if ( '' !== pb_backupbuddy::_GET( 'cpy' ) ) {
 	$drive_file = pb_backupbuddy_destination_onedrive::get_drive_item( false, $copy );
 
 	if ( $drive_file ) {
-		pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete.' );
+		pb_backupbuddy::alert( 'The remote file is now being copied to your local backups. If the transfer gets interrupted, click the "Refresh" icon after the transfer is complete to try again.' );
 
 		pb_backupbuddy::status( 'details', 'Scheduling Cron for OneDrive file copy to local.' );
 		backupbuddy_core::schedule_single_event( time(), 'process_destination_copy', array( $settings, $drive_file->name, $copy ) );
 
-		if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-			update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-			spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-		}
+		backupbuddy_core::maybe_spawn_cron();
 	} else {
 		pb_backupbuddy::alert( 'Invalid remote file.', true );
 	}

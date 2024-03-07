@@ -27,8 +27,8 @@ if ( 'add' === $mode ) { // ADD MODE.
 		array(
 			'type'  => 'text',
 			'name'  => 'itxapi_username',
-			'title' => __( 'iThemes username', 'it-l10n-backupbuddy' ),
-			'tip'   => __( '[Example: kerfuffle] - Your iThemes.com membership username.', 'it-l10n-backupbuddy' ),
+			'title' => __( 'SolidWP username', 'it-l10n-backupbuddy' ),
+			'tip'   => __( '[Example: kerfuffle] - Your solidwp.com membership username.', 'it-l10n-backupbuddy' ),
 			'rules' => 'required|string[1-45]',
 		)
 	);
@@ -36,15 +36,15 @@ if ( 'add' === $mode ) { // ADD MODE.
 		array(
 			'type'  => 'password',
 			'name'  => 'itxapi_password_raw',
-			'title' => __( 'iThemes password', 'it-l10n-backupbuddy' ),
-			'tip'   => __( '[Example: 48dsds!s08K%x2s] - Your iThemes.com membership password.', 'it-l10n-backupbuddy' ),
+			'title' => __( 'SolidWP password', 'it-l10n-backupbuddy' ),
+			'tip'   => __( '[Example: 48dsds!s08K%x2s] - Your solidwp.com membership password.', 'it-l10n-backupbuddy' ),
 			'rules' => 'required|string[1-250]',
 		)
 	);
 
 	$settings_result = $credentials_form->process();
 
-	$login_welcome = __( 'Log in with your iThemes.com member account to begin.', 'it-l10n-backupbuddy' );
+	$login_welcome = __( 'Log in with your solidwp.com member account to begin.', 'it-l10n-backupbuddy' );
 
 	if ( count( $settings_result ) === 0 ) { // No form submitted.
 		echo $login_welcome;
@@ -150,7 +150,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 				if ( ( 'stash2' == $destination['type'] ) || ( 'stash' == $destination['type'] ) ) {
 					if ( ( isset( $destination['itxapi_username'] ) ) && ( strtolower( $destination['itxapi_username'] ) == strtolower( $itxapi_username ) ) ) {
 						echo '<br><br>';
-						pb_backupbuddy::alert( 'Note: You already have a Stash destination set up under the provided iThemes account username.  It is unnecessary to create multiple Stash destinations that go to the same user account as they are effectively the same destination and a duplicate.' );
+						pb_backupbuddy::alert( 'Note: You already have a Stash destination set up under the provided SolidWP account username.  It is unnecessary to create multiple Stash destinations that go to the same user account as they are effectively the same destination and a duplicate.' );
 						break;
 					}
 				}
@@ -285,7 +285,7 @@ if ( 'save' === $mode || 'edit' === $mode || '' != $itxapi_token ) {
 			'title'     => __( 'Encrypt connection', 'it-l10n-backupbuddy' ) . '*',
 			'tip'       => __( '[Default: enabled] - When enabled, all transfers will be encrypted with SSL encryption. Disabling this may aid in connection troubles but results in lessened security. Note: Once your files arrive on our server they are encrypted using AES256 encryption. They are automatically decrypted upon download as needed.', 'it-l10n-backupbuddy' ),
 			'css'       => '',
-			'after'     => '<span class="description"> ' . __( 'Enable connecting over SSL.', 'it-l10n-backupbuddy' ) . '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Files are always encrypted with AES256 upon arrival.</span>',
+			'after'     => '<span class="description"> ' . __( 'Enable connecting over SSL.', 'it-l10n-backupbuddy' ) . '<br>* Files are always encrypted with AES256 upon arrival.</span>',
 			'rules'     => '',
 			'row_class' => 'advanced-toggle',
 		)

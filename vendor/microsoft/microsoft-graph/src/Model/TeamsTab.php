@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,71 +18,12 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class TeamsTab extends Entity
 {
-    /**
-    * Gets the displayName
-    * Name of the tab.
-    *
-    * @return string The displayName
-    */
-    public function getDisplayName()
-    {
-        if (array_key_exists("displayName", $this->_propDict)) {
-            return $this->_propDict["displayName"];
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-    * Sets the displayName
-    * Name of the tab.
-    *
-    * @param string $val The displayName
-    *
-    * @return TeamsTab
-    */
-    public function setDisplayName($val)
-    {
-        $this->_propDict["displayName"] = $val;
-        return $this;
-    }
-    
-    /**
-    * Gets the webUrl
-    * Deep link url of the tab instance. Read only.
-    *
-    * @return string The webUrl
-    */
-    public function getWebUrl()
-    {
-        if (array_key_exists("webUrl", $this->_propDict)) {
-            return $this->_propDict["webUrl"];
-        } else {
-            return null;
-        }
-    }
-    
-    /**
-    * Sets the webUrl
-    * Deep link url of the tab instance. Read only.
-    *
-    * @param string $val The webUrl
-    *
-    * @return TeamsTab
-    */
-    public function setWebUrl($val)
-    {
-        $this->_propDict["webUrl"] = $val;
-        return $this;
-    }
-    
     /**
     * Gets the configuration
     * Container for custom settings applied to a tab. The tab is considered configured only once this property is set.
@@ -118,8 +58,66 @@ class TeamsTab extends Entity
     }
     
     /**
+    * Gets the displayName
+    * Name of the tab.
+    *
+    * @return string The displayName
+    */
+    public function getDisplayName()
+    {
+        if (array_key_exists("displayName", $this->_propDict)) {
+            return $this->_propDict["displayName"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the displayName
+    * Name of the tab.
+    *
+    * @param string $val The displayName
+    *
+    * @return TeamsTab
+    */
+    public function setDisplayName($val)
+    {
+        $this->_propDict["displayName"] = $val;
+        return $this;
+    }
+    
+    /**
+    * Gets the webUrl
+    * Deep link URL of the tab instance. Read only.
+    *
+    * @return string The webUrl
+    */
+    public function getWebUrl()
+    {
+        if (array_key_exists("webUrl", $this->_propDict)) {
+            return $this->_propDict["webUrl"];
+        } else {
+            return null;
+        }
+    }
+    
+    /**
+    * Sets the webUrl
+    * Deep link URL of the tab instance. Read only.
+    *
+    * @param string $val The webUrl
+    *
+    * @return TeamsTab
+    */
+    public function setWebUrl($val)
+    {
+        $this->_propDict["webUrl"] = $val;
+        return $this;
+    }
+    
+    /**
     * Gets the teamsApp
-    * The application that is linked to the tab. This cannot be changed after tab creation.
+    * The application that is linked to the tab.
     *
     * @return TeamsApp The teamsApp
     */
@@ -138,7 +136,7 @@ class TeamsTab extends Entity
     
     /**
     * Sets the teamsApp
-    * The application that is linked to the tab. This cannot be changed after tab creation.
+    * The application that is linked to the tab.
     *
     * @param TeamsApp $val The teamsApp
     *

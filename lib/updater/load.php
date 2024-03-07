@@ -5,7 +5,7 @@ Written by Chris Jean for iThemes.com
 */
 
 
-$it_registration_list_version   = '1.5.1';
+$it_registration_list_version   = '1.8.3';
 $it_registration_list_library   = 'updater';
 $it_registration_list_init_file = dirname( __FILE__ ) . '/init.php';
 

@@ -2910,7 +2910,7 @@ msgstr "För att ladda hem, ange ett lösenord för att låsa ImportBuddy-skript
 
 #: views/migrate-home.php:41
 #@ it-l10n-backupbuddy
-msgid "To download, either enter a new password for just this download OR LEAVE BLANK to use your default ImportBuddy password (set on the Settings page) to lock the ImportBuddy script from unauthorized access."
+msgid "To download, either enter a new password for just this download OR LEAVE BLANK to use your default Importer password (set on the Settings page) to lock the ImportBuddy script from unauthorized access."
 msgstr "För att hämta, ange antingen ett nytt lösenord för bara denna hämtning, ELLER LÄMNA BLANKT om du vill använda ditt standard ImportBuddy-lösenord (angivet på sidan Inställningar) för att låsa ImportBuddy-skriptet från obehörig åtkomst."
 
 #: views/scheduling.php:51
@@ -4670,7 +4670,7 @@ msgstr "Allmänna inställningar"
 
 #: controllers/help/settings.php:9
 #@ it-l10n-backupbuddy
-msgid "This section contains the basic settings for BackupBuddy. At a minimum you should configure the ImportBuddy password and notification emails so you will be notified if backups fail."
+msgid "This section contains the basic settings for BackupBuddy. At a minimum you should configure the Importer password and notification emails so you will be notified if backups fail."
 msgstr "Detta avsnitt innehåller de grundläggande inställningarna för BackupBuddy. Som minimum bör du konfigurera ImportBuddy lösenordet och e-post så du meddelas om misslyckade säkerhetskopieringar."
 
 #: controllers/help/settings.php:16
@@ -5637,7 +5637,7 @@ msgstr "En fil eller katalog -exkludering per rad."
 
 #: views/settings/_general.php:58
 #@ it-l10n-backupbuddy
-msgid "ImportBuddy password"
+msgid "Importer password"
 msgstr "ImportBuddy lösenord"
 
 #: views/settings/_general.php:67
@@ -6216,7 +6216,7 @@ msgstr "[Default: oskyddad] - När ikryssad, val av denna destination inaktivera
 
 #: destinations/dropbox/_manage.php:64
 #@ it-l10n-backupbuddy
-msgid "The remote file is now being copied to your local backups. If the backup gets marked as bad during copying, please wait a bit then click the `Refresh` icon to rescan after the transfer is complete."
+msgid "The remote file is now being copied to your local backups. If the transfer gets interrupted, click the "Refresh" icon after the transfer is complete to try again."
 msgstr "Fjärrfilen kopieras nu till dina lokala säkerhetskopior. Om säkerhetskopian blir märkta som dålig under kopiering, vänligen vänta ett ögnblick och sedan klickar du på ikonen 'Uppdatera' för att skanna igen efter överföringen är slutförd."
 
 #: destinations/ftp/_configure.php:173

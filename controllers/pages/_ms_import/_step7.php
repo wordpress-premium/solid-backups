@@ -9,23 +9,23 @@ $blog_id = isset( $_POST[ 'blog_id' ] ) ? absint( $_POST[ 'blog_id' ] ) : die( '
 $new_db_prefix = $wpdb->get_blog_prefix( $blog_id );
 
 echo $this->status_box( 'Migrating users . . .' );
-echo '<div id="pb_importbuddy_working" style="width: 100px;"><center><img src="' . pb_backupbuddy::plugin_url() . '/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
+echo '<div id="pb_importbuddy_working" style="width: 100px;"><center><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
 pb_backupbuddy::flush();
 
 $this->status( 'message', 'NOTE: If a user you are attempting to import already exists in the network then they will NOT be migrated. This may result in orphaned posts with no author listed.' );
 
-// Delete BackupBuddy options for imported site.
-$this->status( 'details', 'Clearing importing BackupBuddy options.' );
+// Delete Solid Backups options for imported site.
+$this->status( 'details', 'Clearing importing Solid Backups options.' );
 $sql = "DELETE from {$new_db_prefix}options WHERE option_name = %s LIMIT 1";
 $wpdb->query( $wpdb->prepare( $sql, 'pluginbuddy_backupbuddy' ) );
 
-// Clear out all BackupBuddy cron jobs.
-$this->status( 'details', 'Clearing importing BackupBuddy scheduled crons.' );
+// Clear out all Solid Backups cron jobs.
+$this->status( 'details', 'Clearing importing Solid Backups scheduled crons.' );
 
-// Clear out any cron hooks related to BackupBuddy for imported site. - Ron H.
-$wipe_cron_hooks = array( 
+// Clear out any cron hooks related to Solid Backups for imported site. - Ron H.
+$wipe_cron_hooks = array(
 						'backupbuddy_cron', // Only cron as of BB v6.4.0.9.
-						
+
 						// TODO: Remove all of these in future after v6.6.4.0.9 change is solidly adopted. Remove around v8.0?
 						pb_backupbuddy::settings( 'slug' ) . '-cron_final_cleanup',
 						pb_backupbuddy::settings( 'slug' ) . '-cron_process_backup',
@@ -99,16 +99,16 @@ $users_skipped = 0;
 $users_skipped_blog = 0;
 foreach ( $users as $user ) { // For each source user to migrate.
 	$user_count++;
-	
+
 	pb_backupbuddy::status( 'details', '-----' );
 	pb_backupbuddy::status( 'details', 'Attempting to import user `' . $user->user_login . '` with email `' . $user->user_email . '`.' );
-	
+
 	$old_user_id = $user->ID;
 	$old_user_pass = $user->user_pass;
 	$sql = "select ID from {$wpdb->users} where user_login = '{$user->user_login}' or user_email = %s"; // Get user if they already exist on network.
 	$sql = $wpdb->prepare( $sql, $user->user_email );
-	$user_id = $wpdb->get_var( $sql ); // We will see if user already exists; 
-	
+	$user_id = $wpdb->get_var( $sql ); // We will see if user already exists;
+
 	if ( null === $user_id ) { // User does NOT already exist in network.
 		$new_destination_user_args = array();
 		foreach ( $user as $key => $user_param ) { // Loop through all user parameters.
@@ -126,14 +126,14 @@ foreach ( $users as $user ) { // For each source user to migrate.
 				$new_user_role = $key;
 			}
 		}
-		
+
 		// Add user into network no matter what.
 		unset( $new_destination_user_args[ 'ID' ] );
 		pb_backupbuddy::status( 'details', 'Inserting user with parameters: `' . implode( ', ', $new_destination_user_args ) . '`.' );
 		$user_id = wp_insert_user( $new_destination_user_args ); // Create new user into network.
-		
+
 		pb_backupbuddy::status( 'details', 'Sleeping 15 seconds' );
-		
+
 		// Only add user into this specific blog subsite if they had a capability on the source site.
 		if ( $new_user_role == '' ) {
 			pb_backupbuddy::status( 'warning', 'WARNING: User with old user ID of `' . $old_user_id . '` did not have a role assigned on source site. This user was imported into the network but NOT assigned to this blog with a capability.' );
@@ -142,32 +142,32 @@ foreach ( $users as $user ) { // For each source user to migrate.
 			add_user_to_blog( $blog_id, $user_id, $new_user_role ); // Add this user to the destination blog.
 			$wpdb->update( $wpdb->users, array( 'user_pass' => $old_user_pass ), array( 'ID' => $user_id ) ); // Keep password the same.
 			pb_backupbuddy::status( 'details', 'Added user `' . $user->user_login . '` with ID `' . $user_id . '` and role `' . $new_user_role . '` to blog ID `' . $blog_id . '`.' );
-			
+
 			// Remove user from main site (wp_insert_user() added to main site by default earlier.
 			remove_user_from_blog( $user_id, 1 ); // Remove user from main site.
 			pb_backupbuddy::status( 'details', 'Removed user\'s temporary assignment to main Network site.' );
-			
+
 			// Update post author IDs with the user's new user ID.
 			pb_backupbuddy::status( 'details', 'Updating post author ID from old user ID `' . $old_user_id . '` to new ID `' . $user_id . '` in table `' . $new_db_prefix . 'posts`.' );
-			$rows_updated = $wpdb->update( $new_db_prefix . 'posts', array( 'post_author' => absint( $user_id ) ), array( 'post_author' => $old_user_id ), array( '%d' ) ); 
+			$rows_updated = $wpdb->update( $new_db_prefix . 'posts', array( 'post_author' => absint( $user_id ) ), array( 'post_author' => $old_user_id ), array( '%d' ) );
 			pb_backupbuddy::status( 'details', 'Row(s) modified: `' . $rows_updated . '`.' );
-			
+
 			// Update comment author IDs with the user's new user ID.
 			pb_backupbuddy::status( 'details', 'Updating comment author ID from old user ID `' . $old_user_id . '` to new ID `' . $user_id . '` in table `' . $new_db_prefix . 'comments`.' );
 			$rows_updated = $wpdb->update( $new_db_prefix . 'comments', array( 'user_id' => absint( $user_id ) ), array( 'user_id' => $old_user_id ), array( '%d' ) );
 			pb_backupbuddy::status( 'details', 'Row(s) modified: `' . $rows_updated . '`.' );
 		}
-		
-		
-		
-		
+
+
+
+
 		// Handle usermeta.
 		$sql = "select meta_key,meta_value from `{$new_db_prefix}usermeta` WHERE user_id={$old_user_id} AND meta_key NOT LIKE '%\_capabilities'";
 		pb_backupbuddy::status( 'details', 'Getting usermeta data. SQL query: `' . $sql . '`.' );
 		$usermetas = $wpdb->get_results( $sql ); // Users to import.
 		if ( is_array( $usermetas ) ) {
 			pb_backupbuddy::status( 'message', 'Found usermeta data to migrate for this user (old ID: `' . $old_user_id . '`). Importing & migrating...' );
-			
+
 			$user_meta_rows_count = 0;
 			foreach( $usermetas as $usermeta ) {
 				$meta_key = backupbuddy_core::dbEscape( $usermeta->meta_key );
@@ -178,19 +178,19 @@ foreach ( $users as $user ) { // For each source user to migrate.
 				pb_backupbuddy::status( 'details', 'Row(s) modified: `' . $rows_modified . '`.' );
 				$user_meta_rows_count++;
 			}
-			
+
 			pb_backupbuddy::status( 'details', 'Copied and migrated `' . $user_meta_rows_count . '` usermeta rows.' );
 		}
-		
-		
-		
+
+
+
 	} else { // User already exists.
 		pb_backupbuddy::status( 'warning', 'Username `' . $user->user_login . '` or email `' . $user->user_email . '` already exists with user ID `' . $user_id . '`. User skipped.' );
 		$users_skipped++;
 	}
-	
 
-	
+
+
 } //end foreach
 
 $this->status( 'message', 'Migrated ' . $user_count . ' users. ' . $users_skipped . ' users were skipped due to collision. ' . $users_skipped_blog . ' were imported into the network but not to the specific subsite due to lack of capabilities.' );
@@ -222,7 +222,7 @@ pb_backupbuddy::flush();
 
 //Output form interface
 global $current_site;
-	$errors = false;	
+	$errors = false;
 	$blog = $domain = $path = '';
 	$form_url = add_query_arg( array(
 		'step' => '8',
@@ -239,7 +239,7 @@ global $current_site;
 <h3>Last Step: Final Cleanup</h3>
 
 <label for="delete_backup" style="width: auto; font-size: 12px;"><input type="checkbox" name="delete_backup" id="delete_backup" value="1" checked> Delete backup zip archive</label>
-<br>		
+<br>
 <label for="delete_temp" style="width: auto; font-size: 12px;"><input type="checkbox" name="delete_temp" id="delete_temp" value="1" checked> Delete temporary import files</label>
 
 

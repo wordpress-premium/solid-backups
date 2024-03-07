@@ -19,7 +19,7 @@ pb_backupbuddy::load_script( 'jquery' );
 <div id="pb_backupbuddy_working" style="width: 100px; margin-bottom: 30px;">
 	<br>
 	<center>
-		<img src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/working.gif" title="<?php esc_attr_e( 'Working', 'it-l10n-backupbuddy' ); ?>... <?php esc_attr_e( 'Please wait as this may take a moment', 'it-l10n-backupbuddy' ); ?>...">
+		<img src="<?php echo pb_backupbuddy::plugin_url(); ?>/assets/dist/images/working.gif" title="<?php esc_attr_e( 'Working', 'it-l10n-backupbuddy' ); ?>... <?php esc_attr_e( 'Please wait as this may take a moment', 'it-l10n-backupbuddy' ); ?>...">
 	</center>
 </div>
 <script>

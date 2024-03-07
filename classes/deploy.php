@@ -229,8 +229,8 @@ class backupbuddy_deploy {
 
 
 	public function hashFileMap( $root ) {
-		error_log( 'BackupBuddy Error #83837833: Not currently in use.' );
-		die( 'BackupBuddy Error #83837833: Not currently in use.' );
+		error_log( 'Solid Backups Error #83837833: Not currently in use.' );
+		die( 'Solid Backups Error #83837833: Not currently in use.' );
 
 
 		$generate_sha1 = true;

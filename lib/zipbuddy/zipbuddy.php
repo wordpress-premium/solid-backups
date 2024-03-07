@@ -659,14 +659,15 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 
 			// Create new transient if we didn't have one, it was expired or we nuked it because invalid
 			if ( false === $aggregate_available_methods ) {
+				$aggregate_available_methods = array();
 
 				// Get all available methods in $available_methods - must return them in order best -> worst
 				// Also getting the method details array which is keyed by method tag
 				$this->get_available_zip_methods( $this->_supported_zip_methods, $available_methods, $available_methods_details );
 
-				// Now we have to combine the two arrays into an aggregate to save
-				$aggregate_available_methods[ 'methods' ] = $available_methods;
-				$aggregate_available_methods[ 'details' ] = $available_methods_details;
+				// Now we have to combine the two arrays into an aggregate to save.
+				$aggregate_available_methods['methods'] = $available_methods;
+				$aggregate_available_methods['details'] = $available_methods_details;
 
 				// Only save if we are using caching
 				if ( $this->use_cached_methods() ) {
@@ -794,7 +795,7 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 		}
 
 		/**
-		 * Get zip methods based on BackupBuddy settings.
+		 * Get zip methods based on Solid Backups settings.
 		 *
 		 * @return array  Array of available zip methods.
 		 */
@@ -1310,17 +1311,14 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 		}
 
 		/**
-		 *	add_directory_to_zip()
+		 * Adds a directory to a new or existing (TODO: not yet available) ZIP file.
 		 *
-		 *	Adds a directory to a new or existing (TODO: not yet available) ZIP file.
+		 * @param string $zip_file                 Full path & filename of ZIP file to create.
+		 * @param string $add_directory            Full directory to add to zip file.
+		 * @param array  $excludes                 Optional. Array of strings of paths/files to exclude from zipping
+		 * @param string $temporary_zip_directory  Optional. Full directory path to directory to temporarily place ZIP
 		 *
-		 *	@param	string				Full path & filename of ZIP file to create.
-		 *	@param	string				Full directory to add to zip file.
-		 *	@param	array( string )		Array of strings of paths/files to exclude from zipping
-		 *	@param	string				Full directory path to directory to temporarily place ZIP
-		 *	@param	boolean				True: only use PCLZip. False: try all available
-		 *
-		 *	@return						true on success, false otherwise
+		 * @return bool true on success, false otherwise
 		 *
 		 */
 		public function add_directory_to_zip( $zip_file, $add_directory, $excludes = array(), $temporary_zip_directory = '' ) {
@@ -1440,7 +1438,6 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 
 						// Got a valid zip file so we can just return - method will have cleaned up the temporary directory
 						pb_backupbuddy::status( 'details', __('The ', 'it-l10n-backupbuddy' ) . $method_tag . __(' method for ZIP was successful.','it-l10n-backupbuddy' ) );
-						unset( $zipper );
 
 						// We have to return here because we cannot break out of foreach
 						return true;
@@ -1471,15 +1468,13 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 		}
 
 		/**
-		 *	unzip()
+		 * Extracts the contents of a zip file to the specified directory using the best unzip methods possible.
 		 *
-		 *	Extracts the contents of a zip file to the specified directory using the best unzip methods possible.
+		 * @param string      $zip_file                  Full path & filename of ZIP file to extract from.
+		 * @param string      $destination_directory     Full directory path to extract into.
+		 * @param bool|string $force_compatibility_mode  Optional. False: use all available, String: use that method
 		 *
-		 *	@param	string		$zip_file					Full path & filename of ZIP file to extract from.
-		 *	@param	string		$destination_directory		Full directory path to extract into.
-		 *	@param	bool|string $force_compatibility_mode	False: use all available, String: use that method
-		 *
-		 *	@return	bool									true on success, false otherwise
+		 * @return bool  true on success, false otherwise
 		 */
 		public function unzip( $zip_file, $destination_directory, $force_compatibility_mode = false ) {
 
@@ -1557,26 +1552,26 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 		}
 
 		/**
-		 *	extract()
+		 * Extracts the specified contents of a zip file to the specified destination using the best unzip methods possible.
+		 * The destination directory _must_ already exist and be writable - this function does not create it.
 		 *
-		 *	Extracts the specified contents of a zip file to the specified destination using the best unzip methods possible.
-		 *	The destination directory _must_ already exist and be writable - this function does not create it
-		 *	The items are an array of mapping of what => where, e.g.
-		 *	array( "dir/myfile.txt" => "", "dir/myfile.txt" => "tmpfilename", "dir/myfile.txt" => "dir/myfile.txt" )
-		 *	In the first case the file is extracted to $destination_directory/myfile.txt
-		 *	In the second case the file is extracted to $destination_directory/tmpfilename
-		 *	In the third case the file is extracted to $destination_directory/dir/myfile.txt
-		 *	Note: in the second case the file is initially extrcated as myfile.txt and then rename to tmpfilename
-		 *	Another example is for directory extraction:
-		 *	array( "dir/*" => "dir/*" )
-		 *	Whereby the directory dir and all it's content (recursively) is extracted to $destination/dir
-		 *	Note: the * is required otherwise you just get an empty directory
+		 * The items are an array of mapping of what => where, e.g.
+		 *      array( "dir/myfile.txt" => "", "dir/myfile.txt" => "tmpfilename", "dir/myfile.txt" => "dir/myfile.txt" )
+		 *      In the first case the file is extracted to $destination_directory/myfile.txt
+		 *      In the second case the file is extracted to $destination_directory/tmpfilename
+		 *      In the third case the file is extracted to $destination_directory/dir/myfile.txt
+		 *      Note: in the second case the file is initially extrcated as myfile.txt and then rename to tmpfilename
 		 *
-		 *	@param	string	$zip_file				Full path & filename of ZIP file to extract from.
-		 *	@param	string	$destination_directory	Full directory path to extract to
-		 *	@param	array	$items					Mapping of what to extract and to what
+		 * Another example is for directory extraction:
+		 *     array( "dir/*" => "dir/*" )
+		 *     Whereby the directory dir and all it's content (recursively) is extracted to $destination/dir
+		 * Note: the * is required otherwise you just get an empty directory
 		 *
-		 *	@return	bool							true on success (all extractions successful), false otherwise
+		 * @param string $zip_file               Full path & filename of ZIP file to extract from.
+		 * @param string $destination_directory  Optional. Full directory path to extract to
+		 * @param array  $items                  Optional. Mapping of what to extract and to what
+		 *
+		 * @return bool true on success (all extractions successful), false otherwise
 		 */
 		public function extract( $zip_file, $destination_directory = '', $items = array() ) {
 
@@ -1600,7 +1595,6 @@ if ( !class_exists( "pluginbuddy_zipbuddy" ) ) {
 			}
 
 			if ( !( file_exists( $destination_directory ) && is_dir( $destination_directory ) && is_writable( $destination_directory ) ) ) {
-
 				pb_backupbuddy::status( 'details', sprintf( __('Unable to extract from backup file (%1$s to %2$s): %2$s does not exist, is not a directory or is not writeable','it-l10n-backupbuddy' ), $zip_file, $destination_directory ) );
 
 				return false;

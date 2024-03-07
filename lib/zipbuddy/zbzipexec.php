@@ -1720,7 +1720,6 @@ if ( !class_exists( "pluginbuddy_zbzipexec" ) ) {
 							// For now let's just print the error code and drop through
 							$error_string = $exit_code;
 							pb_backupbuddy::status( 'details', sprintf( __('exec (unzip) failed to open/process file to extract contents (%1$s from %2$s to %3$s%4$s) - Error Info: %5$s.','it-l10n-backupbuddy' ), $what, $zip_file, $destination_directory, $where, $error_string ) );
-
 							// Return an error code and a description - this needs to be handled more generically
 							//$result = array( 1, "Unable to get archive contents" );
 							// Currently as we are returning an array as a valid result we just return false on failure
@@ -1908,16 +1907,23 @@ if ( !class_exists( "pluginbuddy_zbzipexec" ) ) {
 				// Add the trailing slash if required
 				$command = $this->slashify( $zippath ) . 'unzip';
 
-				// We'll try and get a *nix style directory listing output and process it
-				// Note: we'll ignore stderr output for now as it might interfere
-				// Note: the file date given is the stored local time (not UTC which may be stored as well)
-
-				// Output format should be like:
-				// -rwxr-xr-x  2.3 unx     2729 tx    1099 defN 20120220.231956 file/path/name.ext
+				/*
+				 * We'll try and get a *nix style directory listing output and process it
+				 * Note: we'll ignore stderr output for now as it might interfere
+				 * Note: the file date given is the stored local time (not UTC which may be stored as well)
+				 *
+				 * Options/Modifiers:
+				 * -Z  Display file information
+				 * --h Display summary of unzip cmd options
+				 * --t Test archive files
+				 * -lT List archive files without extracting them
+				 *
+				 * Output format should be like:
+				 * -rwxr-xr-x  2.3 unx     2729 tx    1099 defN 20120220.231956 file/path/name.ext
+				 */
 				$command .= " -Z --h --t -lT '{$zip_file}'";
 
 				$command = ( self::OS_TYPE_WIN === $this->get_os_type() ) ? str_replace( '\'', '"', $command ) : $command;
-
 				@exec( $command, $output, $exit_code);
 
 				// Note: we don't open the file and then do stuff but it's all done in one action

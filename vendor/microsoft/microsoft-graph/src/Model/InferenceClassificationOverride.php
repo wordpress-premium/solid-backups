@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,16 +18,15 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class InferenceClassificationOverride extends Entity
 {
     /**
     * Gets the classifyAs
-    * Specifies how incoming messages from a specific sender should always be classified as. The possible values are: focused, other.
+    * Specifies how incoming messages from a specific sender should always be classified as. Possible values are: focused, other.
     *
     * @return InferenceClassificationType The classifyAs
     */
@@ -47,7 +45,7 @@ class InferenceClassificationOverride extends Entity
     
     /**
     * Sets the classifyAs
-    * Specifies how incoming messages from a specific sender should always be classified as. The possible values are: focused, other.
+    * Specifies how incoming messages from a specific sender should always be classified as. Possible values are: focused, other.
     *
     * @param InferenceClassificationType $val The classifyAs
     *

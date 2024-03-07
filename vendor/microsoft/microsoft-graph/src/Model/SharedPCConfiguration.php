@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,10 +18,9 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class SharedPCConfiguration extends DeviceConfiguration
 {
@@ -61,7 +59,7 @@ class SharedPCConfiguration extends DeviceConfiguration
     
     /**
     * Gets the allowedAccounts
-    * Indicates which type of accounts are allowed to use on a shared PC. Possible values are: guest, domain.
+    * Indicates which type of accounts are allowed to use on a shared PC. Possible values are: notConfigured, guest, domain.
     *
     * @return SharedPCAllowedAccountType The allowedAccounts
     */
@@ -80,7 +78,7 @@ class SharedPCConfiguration extends DeviceConfiguration
     
     /**
     * Sets the allowedAccounts
-    * Indicates which type of accounts are allowed to use on a shared PC. Possible values are: guest, domain.
+    * Indicates which type of accounts are allowed to use on a shared PC. Possible values are: notConfigured, guest, domain.
     *
     * @param SharedPCAllowedAccountType $val The allowedAccounts
     *

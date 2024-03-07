@@ -1,6 +1,6 @@
 <?php
 /**
- * ImportBuddy Backup Importer Script
+ * Importer Backup Importer Script
  *
  * ATTENTION: IF YOU ARE READING THIS WHILE TRYING TO LOAD IMPORTBUDDY TO RESTORE YOUR SITE:
  * Your server is not properly handling PHP files. Contact your hosting provider to fix this.
@@ -10,10 +10,10 @@
  */
 
 /**
- * <!-- ImportBuddy Restore & Migration Tool - iThemes.com
+ * <!-- Importer Restore & Migration Tool - SolidWP.com
  *
  * @version #VERSION#
- * @author iThemes.com
+ * @author SolidWP.com
  * @developer Dustin Bolton
  * @created Feb 11, 2010
  *
@@ -26,14 +26,14 @@
 
 define( 'PB_PASSWORD', '#PASSWORD#' ); // Update this portion with the hashed password to override a forgotten password.
 
-$php_minimum         = '5.1'; // User's PHP must be equal or newer to this version.
+$php_minimum         = '7.2'; // User's PHP must be equal or newer to this version.
 $ignore_not_writable = false; // Set to true to ignore is_writable() returning false on this directory. Useful for servers lying about the writable status of the directory.
 
 // Uncomment the following line when 500 Internal Server Error occurs.
 // error_reporting( E_ALL );
 
 if ( version_compare( PHP_VERSION, $php_minimum ) < 0 ) {
-	die( 'ERROR #9013. See <a href="https://ithemeshelp.zendesk.com/hc/en-us/articles/211132377-Error-Codes-#9013">this page for details</a>. Sorry! PHP version ' . $php_minimum . ' or newer is required for BackupBuddy to properly run. You are running PHP version ' . PHP_VERSION . '.' );
+	die( 'ERROR #9013. See <a href="https://go.solidwp.com/error-codes">this page for details</a>. Sorry! PHP version ' . $php_minimum . ' or newer is required for Solid Backups to properly run. You are running PHP version ' . PHP_VERSION . '.' );
 }
 
 global $importbuddy_file;
@@ -97,7 +97,7 @@ if ( ! file_exists( ABSPATH . 'importbuddy' ) || ( ( count( $_GET ) == 0 ) && ( 
 
 	// Make sure this file is complete and contains all the packed data to the end before proceeding.
 	if ( false === strpos( $importbuddy_contents, '###PACKDATA' . ',END' ) ) { // Concat here so we don't false positive on this line when searching.
-		die( 'ERROR: It appears your `' . __FILE__ . '` file is incomplete.  It may have not finished downloading or uploading completely.  Please try re-downloading the script from within BackupBuddy in WordPress (do not just copy the file from the plugin directory) and re-uploading it.' );
+		die( 'ERROR: It appears your `' . __FILE__ . '` file is incomplete.  It may have not finished downloading or uploading completely.  Please try re-downloading the script from within Solid Backups in WordPress (do not just copy the file from the plugin directory) and re-uploading it.' );
 	}
 
 	// Make sure no leading whitespace. Some servers introduce this to the beginning, breaking authentication due to output before auth headers being sent.
@@ -113,7 +113,7 @@ if ( ! file_exists( ABSPATH . 'importbuddy' ) || ( ( count( $_GET ) == 0 ) && ( 
 	$importbuddy_contents = '';
 
 	$unpack_importbuddy = true;
-	if ( file_exists( ABSPATH . 'importbuddy' ) ) { // ImportBuddy directory already exists. We may need to re-unpack it if this file has been updated since.
+	if ( file_exists( ABSPATH . 'importbuddy' ) ) { // Importer directory already exists. We may need to re-unpack it if this file has been updated since.
 		$signature = @file_get_contents( ABSPATH . 'importbuddy/_signature.php' );
 		$signature = trim( str_replace( '<?php die(); ?>', '', $signature ) );
 		if ( md5( PB_BB_VERSION . PB_PASSWORD ) != $signature ) { // Signature mismatch. We will need to delete and unpack again to update.
@@ -125,7 +125,7 @@ if ( ! file_exists( ABSPATH . 'importbuddy' ) || ( ( count( $_GET ) == 0 ) && ( 
 	}
 	if ( true === $unpack_importbuddy ) {
 		unpack_importbuddy( $ignore_not_writable );
-		@file_put_contents( ABSPATH . 'importbuddy/_signature.php', '<?php die(); ?>' . md5( PB_BB_VERSION . PB_PASSWORD ) ); // Create a hash of this ImportBuddy version & password. On accessing importbuddy.php's authentication page all importbuddy files will be freshly unpacked if the importbuddy.php version and/or password mismatches to allow users to just replace importbuddy.php to upgrade ImportBuddy or password.
+		@file_put_contents( ABSPATH . 'importbuddy/_signature.php', '<?php die(); ?>' . md5( PB_BB_VERSION . PB_PASSWORD ) ); // Create a hash of this Importer version & password. On accessing importbuddy.php's authentication page all importbuddy files will be freshly unpacked if the importbuddy.php version and/or password mismatches to allow users to just replace importbuddy.php to upgrade Importer or password.
 	}
 }
 
@@ -141,7 +141,7 @@ if ( isset( $_GET['api'] ) && '' != $_GET['api'] ) { // API ACCESS.
 	}
 } else { // NORMAL ACCESS.
 	if ( ! file_exists( ABSPATH . 'importbuddy/init.php' ) ) {
-		die( 'Error: Unable to find file `' . ABSPATH . 'importbuddy/init.php`. Make sure that you downloaded this script from within BackupBuddy. Copying importbuddy files from inside the plugin directory is not sufficient as many file additions are made on demand.' );
+		die( 'Error: Unable to find file `' . ABSPATH . 'importbuddy/init.php`. Make sure that you downloaded this script from within Solid Backups. Copying importbuddy files from inside the plugin directory is not sufficient as many file additions are made on demand.' );
 	} else {
 		require_once ABSPATH . 'importbuddy/init.php';
 	}

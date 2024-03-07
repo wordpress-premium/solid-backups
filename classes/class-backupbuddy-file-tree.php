@@ -604,7 +604,12 @@ class BackupBuddy_File_Tree {
 					$modified   = rtrim( pb_backupbuddy::$format->date( $local_time, 'M j, Y g:ia' ), 'm' );
 					$modified   = sprintf( '<span class="modified">%s</span>', $modified );
 				}
-				$size      = ! empty( $file_array['size'] ) ? $file_array['size'] : @filesize( $full_path );
+
+				$size = false;
+				if ( is_file( $full_path ) ) {
+					$size = ! empty( $file_array['size'] ) ? $file_array['size'] : @filesize( $full_path );
+				}
+
 				$size      = false !== $size ? pb_backupbuddy::$format->file_size( $size ) : 0;
 				$file_name = basename( $file_array['path'] );
 				$checkbox  = sprintf( '<input type="checkbox" value="%s" id="%s" name="backupbuddy_restore[]">', esc_attr( $full_path ), esc_attr( $id ) );

@@ -13,7 +13,7 @@ pb_backupbuddy::flush();
 
 // Final functions to run after DB migration is done. In function since this is called both in standard and at end of deployment.
 function finalActions( $restore ) {
-	
+
 	// Migrate htaccess.
 	if ( TRUE !== $restore->_state['migrateHtaccess'] ) {
 		pb_backupbuddy::status( 'details', 'Skipping migration of .htaccess file based on settings.' );
@@ -23,22 +23,22 @@ function finalActions( $restore ) {
 
 	// Rename .htaccess.bb_temp back to .htaccess.
 	$restore->renameHtaccessTempBack();
-	
-	// Remove any temporary .maintenance file created by ImportBuddy.
+
+	// Remove any temporary .maintenance file created by the Importer.
 	$restore->maintenanceOff( $onlyOurCreatedFile = true );
-	
-	// Remove any temporary index.htm file created by ImportBuddy.
+
+	// Remove any temporary index.htm file created by the Importer.
 	$restore->scrubIndexFiles();
-	
+
 	$restore->_state['blogPublicStatus'] = $restore->getBlogPublicSetting();
-	
+
 	// TODO: Make these thnings be able to output stuff into the cleanupSettings.htm template. Add functions?
 	// Update wpconfig if needed.
 	$wpconfig_result = $restore->migrateWpConfig();
 	if ( $wpconfig_result !== true ) {
 		pb_backupbuddy::alert( 'Error: Unable to update wp-config.php file. Verify write permissions for the wp-config.php file then refresh this page. You may manually update your wp-config.php file by changing it to the following:<textarea readonly="readonly" style="width: 80%;">' . $wpconfig_result . '</textarea>' );
 	}
-	
+
 	// Scan for 'trouble' such as a remaining .maintenance file, index.htm, index.html, missing wp-config.php, missing .htaccess, etc etc.
 	$problems = $restore->troubleScan();
 	if ( count( $problems ) > 0 ) {
@@ -50,19 +50,19 @@ function finalActions( $restore ) {
 		$trouble_text = '<ul>' . $trouble_text . '</ul>';
 		pb_backupbuddy::status( 'warning', 'One or more potential issues detected that may require your attention: ' . $trouble_text );
 	}
-	
+
 	pb_backupbuddy::status( 'details', 'Finished final actions function.' );
 
 	it_bub_importbuddy_do_action( 'finished_final_actions' );
-	
+
 } // End finalActions().
 
 
 if ( 'true' != pb_backupbuddy::_GET( 'deploy' ) ) { // deployment mode pre-loads state data in a file instead of passing via post.
 	// Parse submitted restoreData restore state from previous step.
 	$restoreData = pb_backupbuddy::_POST( 'restoreData' );
-	
-	
+
+
 	// Decode submitted data, reporting details on failure.
 	$decodeFailReason = '';
 	if ( false === ( $restoreData = base64_decode( $restoreData ) ) ) { // false if failed
@@ -85,8 +85,8 @@ if ( 'true' != pb_backupbuddy::_GET( 'deploy' ) ) { // deployment mode pre-loads
 		pb_backupbuddy::status( 'error', $message );
 		die();
 	}
-	
-	
+
+
 } else { // Deployment
 	if ( isset( pb_backupbuddy::$options['default_state_overrides'] ) && ( count( pb_backupbuddy::$options['default_state_overrides'] ) > 0 ) ) { // Default state overrides exist. Apply them.
 		$restoreData = pb_backupbuddy::$options['default_state_overrides'];
@@ -121,18 +121,18 @@ function parse_options( $restoreData ) {
 		$restoreData['homeurl'] = $restoreData['siteurl'];
 	}
 	$restoreData['maxExecutionTime'] = pb_backupbuddy::_POST( 'max_execution_time' );
-	
+
 	return $restoreData;
 }
 
 
 // If deployment and no tables imported then skip migration.
-pb_backupbuddy::status( 'details', 'SQL files imported: ' . count( $restore->_state['databaseSettings']['sqlFiles'] ) . '; Deploy?: ' . pb_backupbuddy::_GET( 'deploy' ) );
+pb_backupbuddy::status( 'details', 'SQL files imported: ' . count( $restore->_state['databaseSettings']['sqlFiles'] ) . '; Deploy?: ' . esc_attr( pb_backupbuddy::_GET( 'deploy' ) ) );
 if ( 'true' == pb_backupbuddy::_GET( 'deploy' ) ) {
 	if ( 0 == count( $restore->_state['databaseSettings']['sqlFiles'] ) ) {
 		pb_backupbuddy::status( 'details', 'Deploy mode and no SQL files imported so skipping database migration step.' );
 		$restore->_state['databaseSettings']['migrateDatabase'] = false;
-		
+
 		finalActions( $restore );
 		$nextStepNum = 6;
 		echo '<!-- AUTOPROCEED TO STEP ' . $nextStepNum . ' -->';
@@ -148,20 +148,20 @@ if ( TRUE !== $restore->_state['databaseSettings']['migrateDatabase'] ) {
 	$migrateResults = true;
 } else {
 	pb_backupbuddy::status( 'details', 'Starting database migration procedures.' );
-	
-	// Connect ImportBuddy to the database.
+
+	// Connect the Importer to the database.
 	$restore->connectDatabase();
-	
+
 	$overridePrefix = '';
 	if ( 'true' == pb_backupbuddy::_GET( 'deploy' ) ) {
 		$overridePrefix = $restore->_state['databaseSettings']['tempPrefix'];
 	}
-	
+
 	require_once( 'importbuddy/classes/_migrate_database.php' );
 	$migrate = new backupbuddy_migrateDB( 'standalone', $restore->_state, $networkPrefix = '', $overridePrefix );
 	$migrateResults = $migrate->migrate();
-	
-	
+
+
 	if ( 'true' == pb_backupbuddy::_GET( 'deploy' ) ) {
 		if ( is_array( $migrateResults ) ) { // Return to same step for continuing chunking.
 			$nextStepNum = 5;
@@ -169,16 +169,16 @@ if ( TRUE !== $restore->_state['databaseSettings']['migrateDatabase'] ) {
 			//error_log( 'STATE: ' . print_r( $restore->_state, true ) );
 			// Don't attempt to swap out backupbuddy settings from options table if options table wasn't pulled.
 			if ( isset( $restore->_state['dat']['tables_sizes'] ) && ( ! isset( $restore->_state['dat']['tables_sizes'][ $restore->_state['dat']['db_prefix'] . 'options' ] ) ) ) {
-				pb_backupbuddy::status( 'details', 'Options table was not backed up. Skipping swap out of BackupBuddy settings.' );
+				pb_backupbuddy::status( 'details', 'Options table was not backed up. Skipping swap out of Solid Backups settings.' );
 			} else {
-				pb_backupbuddy::status( 'details', 'Options table was backed up. Swapping out of BackupBuddy settings.' );
+				pb_backupbuddy::status( 'details', 'Options table was backed up. Swapping out of Solid Backups settings.' );
 				if ( true !== $restore->swapDatabaseBBSettings() ) {
-					pb_backupbuddy::status( 'error', 'Error #3292373: Unable to swap out BackupBuddy settings. This may not be a fatal error.' );
+					pb_backupbuddy::status( 'error', 'Error #3292373: Unable to swap out Solid Backups settings. This may not be a fatal error.' );
 				} else {
-					pb_backupbuddy::status( 'details', 'Finished swapping BackupBuddy settings.' );
+					pb_backupbuddy::status( 'details', 'Finished swapping Solid Backups settings.' );
 				}
 			}
-			
+
 			// Swap out new and old database prefixes.
 			if ( true !== $restore->swapDatabases() ) {
 				pb_backupbuddy::status( 'error', 'Error #84378: Unable to swap out temporary database prefixes.' );
@@ -187,14 +187,14 @@ if ( TRUE !== $restore->_state['databaseSettings']['migrateDatabase'] ) {
 			} else {
 				pb_backupbuddy::status( 'details', 'Finished swapping database based on temporary and live prefixes.' );
 			}
-			
+
 			finalActions( $restore );
 			$nextStepNum = 6;
 		}
 		echo '<!-- AUTOPROCEED TO STEP ' . $nextStepNum . ' -->';
-		
+
 	} else { // Standard import (not deploy)
-		
+
 		if ( TRUE === $migrateResults ) { // Completed successfully.
 			pb_backupbuddy::status( 'details', 'Database migration completed.' );
 			echo "<script>bb_action( 'databaseMigrationSuccess' );</script>";
@@ -217,13 +217,13 @@ if ( TRUE !== $restore->_state['databaseSettings']['migrateDatabase'] ) {
 			pb_backupbuddy::status( 'details', 'Database migration failed. Result: `' . $migrateResults . '`.' );
 			echo "<script>bb_action( 'databaseMigrationFailed' );</script>";
 		}
-		
+
 	}
 }
 
 
 if ( 'true' == pb_backupbuddy::_GET( 'deploy' ) ) { // Deployment
-	
+
 	// Write default state overrides.
 	global $importbuddy_file;
 	$importFileSerial = backupbuddy_core::get_serial_from_file( $importbuddy_file );
@@ -239,28 +239,28 @@ if ( 'true' == pb_backupbuddy::_GET( 'deploy' ) ) { // Deployment
 		pb_backupbuddy::status( 'details', 'Wrote to state file.' );
 	}
 	fclose( $file_handle );
-	
+
 	if ( 6 == $nextStepNum ) {
 		pb_backupbuddy::status( 'message', 'Moving to cleanup step next...' );
 	} else {
 		pb_backupbuddy::status( 'details', 'Chunking database migration so about to run step `' . $nextStepNum . '`.' );
 	}
 	?>
-	<form method="post" action="?ajax=<?php echo $nextStepNum; ?>&v=<?php echo pb_backupbuddy::_GET( 'v' ); ?>&deploy=true&direction=<?php echo pb_backupbuddy::_GET( 'direction' ); ?>&display_mode=embed" id="deploy-autoProceed">
+	<form method="post" action="?ajax=<?php echo $nextStepNum; ?>&v=<?php esc_attr_e( pb_backupbuddy::_GET( 'v' ) ); ?>&deploy=true&direction=<?php esc_attr_e( pb_backupbuddy::_GET( 'direction' ) ); ?>&display_mode=embed" id="deploy-autoProceed">
 		<input type="hidden" name="restoreData" value="<?php echo base64_encode( urlencode( json_encode( $restore->_state ) ) ); ?>">
 		<input type="submit" name="my-submit" value="Next Step" style="visibility: hidden;">
 	</form>
 	<script>setTimeout( function(){ jQuery( '#deploy-autoProceed' ).submit(); }, 3000 );</script>
 	<?php
 	return;
-	
+
 } else { // Standard import
-	
+
 	// Success (or migrate was skipped).
 	if ( true === $migrateResults ) {
-		
+
 		finalActions( $restore );
-		
+
 		pb_backupbuddy::status( 'details', 'Finishing step 5.' );
 		echo "<script>
 		setTimeout( function(){
@@ -268,7 +268,7 @@ if ( 'true' == pb_backupbuddy::_GET( 'deploy' ) ) { // Deployment
 			bb_showStep( 'cleanupSettings', " . json_encode( $restore->_state ) . " );
 		}, 2000 );
 		</script>";
-		
+
 	}
 
 }

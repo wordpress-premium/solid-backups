@@ -21,8 +21,10 @@ class pb_backupbuddy_destination_gdrive {
 	const TIME_WIGGLE_ROOM = 5;
 
 	public static $destination_info = array(
-		'name'        => 'Google Drive',
-		'description' => 'Send files to Google Drive. <a href="https://drive.google.com" target="_blank">Learn more here.</a>',
+		// Hide this destination from being added by user. Deprecated May 2023.
+		'deprecated'  => true,
+		'name'        => 'Google Drive (v1)',
+		'description' => 'Send files to Google Drive. <a href="https://go.solidwp.com/google-drive-link-" target="_blank">Learn more here.</a>',
 		'category'    => 'legacy', // best, normal, legacy.
 	);
 
@@ -32,29 +34,29 @@ class pb_backupbuddy_destination_gdrive {
 	 * @var array
 	 */
 	public static $default_settings = array(
-		'type'                  => 'gdrive',    // MUST MATCH your destination slug.
-		'title'                 => '',          // Required destination field.
+		'type'                  => 'gdrive', // MUST MATCH your destination slug.
+		'title'                 => '', // Required destination field.
 		'client_id'             => '',
 		'client_secret'         => '',
-		'tokens'                => '',          // Empty string if not yet authed. base64 encoded json string of tokens once authed. Google stores tokens in a json encoded string.
+		'tokens'                => '', // Empty string if not yet authed. base64 encoded json string of tokens once authed. Google stores tokens in a json encoded string.
 		'folderID'              => '',
 		'folderTitle'           => '', // Friend title of the folder at the time of creation.
-		'service_account_file'  => '',     // If specified then load this file as a Gooel Service Account instead of normal api key pair. See https://developers.google.com/api-client-library/php/auth/service-accounts
-		'service_account_email' => '',     // Account ID/name
+		'service_account_file'  => '', // If specified then load this file as a Gooel Service Account instead of normal api key pair. See https://developers.google.com/api-client-library/php/auth/service-accounts
+		'service_account_email' => '', // Account ID/name
 
-		'db_archive_limit'      => '10',        // Maximum number of db backups for this site in this directory for this account. No limit if zero 0.
-		'full_archive_limit'    => '4',     // Maximum number of full backups for this site in this directory for this account. No limit if zero 0.
-		'files_archive_limit'   => '4',     // Maximum number of files only backups for this site in this directory for this account. No limit if zero 0.
+		'db_archive_limit'      => '10', // Maximum number of db backups for this site in this directory for this account. No limit if zero 0.
+		'full_archive_limit'    => '4', // Maximum number of full backups for this site in this directory for this account. No limit if zero 0.
+		'files_archive_limit'   => '4', // Maximum number of files only backups for this site in this directory for this account. No limit if zero 0.
 
-		'max_time'              => '',  // Default max time in seconds to allow a send to run for. Set to 0 for no time limit. Aka no chunking.
-		'max_burst'             => '25',    // Max size in mb of each burst within the same page load.
+		'max_time'              => '', // Default max time in seconds to allow a send to run for. Set to 0 for no time limit. Aka no chunking.
+		'max_burst'             => '25', // Max size in mb of each burst within the same page load.
 		'disable_gzip'          => 0, // Setting to 1 will disable gzip compression
-		'disabled'              => '0',     // When 1, disable this destination.
+		'disabled'              => '0', // When 1, disable this destination.
 
-		'_chunks_sent'          => 0,           // Internal chunk counting.
-		'_chunks_total'         => 0,           // Internal chunk counting.
+		'_chunks_sent'          => 0, // Internal chunk counting.
+		'_chunks_total'         => 0, // Internal chunk counting.
 		'_media_resumeUri'      => '',
-		'_media_progress'       => '',          // fseek to here
+		'_media_progress'       => '', // fseek to here
 	);
 
 	private static $_isConnectedClientID = false;
@@ -420,10 +422,7 @@ class pb_backupbuddy_destination_gdrive {
 							pb_backupbuddy::status( 'error', 'Next Site chunk step cron event FAILED to be scheduled.' );
 						}
 
-						if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-							update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-							spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-						}
+						backupbuddy_core::maybe_spawn_cron();
 
 						return array( $prevPointer, 'Sent part ' . $settings['_chunks_sent'] . ' of ~' . $settings['_chunks_total'] . ' parts.' ); // filepointer location, elapsed time during the import
 					} else { // End if.

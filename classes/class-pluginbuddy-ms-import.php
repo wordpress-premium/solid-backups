@@ -193,7 +193,7 @@ class pluginbuddy_ms_import {
 		require_once pb_backupbuddy::plugin_path() . '/classes/import.php';
 		$import = new pb_backupbuddy_import();
 
-		return backupbuddy_core::get_dat_file_array( $dat_file );
+		return backupbuddy_data_file()->get_dat_file_array( $dat_file );
 	}
 
 	/**
@@ -264,14 +264,14 @@ class pluginbuddy_ms_import {
 	}
 
 	/**
-	 * Given a BackupBuddy ZIP file, extracts the random ZIP ID from the filename. This random string determines
-	 * where BackupBuddy will find the temporary directory in the backup's wp-uploads directory. IE a zip ID of
+	 * Given a Solid Backups ZIP file, extracts the random ZIP ID from the filename. This random string determines
+	 * where Solid Backups will find the temporary directory in the backup's wp-uploads directory. IE a zip ID of
 	 * 3poje9j34 will mean the temporary directory is wp-uploads/temp_3poje9j34/. backupbuddy_dat.php is in this
 	 * directory as well as the SQL dump.
 	 *
-	 * Currently handles old BackupBuddy ZIP file format. Remove this backward compatibility at some point.
+	 * Currently handles old Solid Backups ZIP file format. Remove this backward compatibility at some point.
 	 *
-	 * @param string $file  BackupBuddy ZIP filename.
+	 * @param string $file  Solid Backups ZIP filename.
 	 *
 	 * @return string  ZIP ID characters.
 	 */

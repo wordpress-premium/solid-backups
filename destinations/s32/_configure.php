@@ -49,7 +49,7 @@ $settings_form->add_setting(
 		'title' => __( 'AWS access key', 'it-l10n-backupbuddy' ),
 		'tip'   => __( '[Example: BSEGHGSDEUOXSQOPGSBE] - Log in to your Amazon S3 AWS Account and navigate to Account: Access Credentials: Security Credentials.', 'it-l10n-backupbuddy' ),
 		'rules' => 'required|string[1-45]',
-		'after' => ' <a target="_new" href="https://ithemeshelp.zendesk.com/hc/en-us/articles/211129517-Amazon-S3">Help setting up S3</a>',
+		'after' => ' <a target="_new" href="https://go.solidwp.com/help-center-amazon-s3">Help setting up S3</a>',
 		'css'   => 'width: 250px;',
 	)
 );
@@ -262,7 +262,7 @@ $settings_form->add_setting(
 		'title'     => __( 'Encrypt connection', 'it-l10n-backupbuddy' ) . '*',
 		'tip'       => __( '[Default: enabled] - When enabled, all transfers will be encrypted with SSL encryption. Disabling this may aid in connection troubles but results in lessened security. Note: Once your files arrive on our server they are encrypted using AES256 encryption. They are automatically decrypted upon download as needed.', 'it-l10n-backupbuddy' ),
 		'css'       => '',
-		'after'     => '<span class="description"> ' . __( 'Enable connecting over SSL.', 'it-l10n-backupbuddy' ) . '<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Files are always encrypted with AES256 upon arrival at S3.</span>',
+		'after'     => '<span class="description"> ' . __( 'Enable connecting over SSL.', 'it-l10n-backupbuddy' ) . '<br>* Files are always encrypted with AES256 upon arrival at S3.</span>',
 		'rules'     => '',
 		'row_class' => 'advanced-toggle',
 	)

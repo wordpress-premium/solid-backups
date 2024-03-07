@@ -18,7 +18,7 @@ class pb_backupbuddy_destination_dropbox3 {
 	 * @var array
 	 */
 	public static $destination_info = array(
-		'name'        => 'Dropbox (v3)',
+		'name'        => 'Dropbox v3',
 		'description' => 'Dropbox.com support for servers running PHP v5.3 or newer. Supports multipart chunked uploads for larger file support, improved memory handling, and reliability.',
 		'category'    => 'best', // best, normal, legacy.
 	);
@@ -36,6 +36,8 @@ class pb_backupbuddy_destination_dropbox3 {
 		'oauth_code'              => '', // Dropbox oAuth access code.
 		'oauth_state'             => '', // Session state.
 		'oauth_token'             => '', // oAuth token.
+		'oauth_token_expires'     => 0,
+		'refresh_token'           => '', // oAuth refresh token.
 
 		'dropbox_folder_id'       => false, // Remote Dropbox directory ID to store into.
 		'dropbox_folder_path'     => '', // Remote Dropbox directory path to store into.
@@ -237,9 +239,12 @@ class pb_backupbuddy_destination_dropbox3 {
 			)
 		);
 
+		// If token is refreshed, self::settings will be updated with new token before proceeding.
+		self::maybe_refresh_token();
+
 		if ( ! empty( self::$settings['oauth_token'] ) ) {
 			try {
-				self::$api = new dbx\Client( self::$settings['oauth_token'], 'BackupBuddy v' . pb_backupbuddy::settings( 'version' ) );
+				self::$api = new dbx\Client( self::$settings['oauth_token'], 'Solid Backups v' . pb_backupbuddy::settings( 'version' ) );
 			} catch ( \Exception $e ) {
 				self::error( 'Dropbox Error: ' . $e->getMessage() );
 				return false;
@@ -263,8 +268,9 @@ class pb_backupbuddy_destination_dropbox3 {
 
 		$url = self::$client->getAuthorizationUrl(
 			array(
-				'redirect_uri' => self::get_config( 'DROPBOX_REDIRECT_URI' ),
-				'state'        => backupbuddy_get_oauth_source_url( 'dropbox' ),
+				'redirect_uri'      => self::get_config( 'DROPBOX_REDIRECT_URI' ),
+				'state'             => backupbuddy_get_oauth_source_url( 'dropbox' ),
+				'token_access_type' => 'offline',
 			)
 		);
 
@@ -358,6 +364,13 @@ class pb_backupbuddy_destination_dropbox3 {
 			return false;
 		}
 
+		// This will log its own error if it fails.
+		$token = self::maybe_refresh_token();
+		if ( false !== $token ) {
+			// We got our token.
+			return true;
+		}
+
 		try {
 			// Obtain the token using the code received by the Dropbox API.
 			$token = self::$client->getAccessToken(
@@ -366,16 +379,29 @@ class pb_backupbuddy_destination_dropbox3 {
 					'code' => self::$settings['oauth_code'],
 				)
 			);
+
 		} catch ( Exception $e ) {
-			self::error( __( 'Error retrieving Dropbox authorization code: ', 'it-l10n-backupbuddy' ) . $e->getMessage() );
+			self::error(
+				sprintf(
+					__( 'Error retrieving Dropbox authorization code. Message: `%s`', 'it-l10n-backupbuddy' ),
+					$e->getMessage()
+				)
+			);
 			return false;
 		}
 
 		// Persist the Dropbox client's state for future API requests.
 		try {
-			self::$settings['oauth_token'] = $token->getToken();
+			self::$settings['oauth_token']         = $token->getToken();
+			self::$settings['refresh_token']       = $token->getRefreshToken();
+			self::$settings['oauth_token_expires'] = $token->getExpires();
 		} catch ( \Exception $e ) {
-			self::error( __( 'Error retrieving Dropbox authentication token: ', 'it-l10n-backupbuddy' ) . $e->getMessage() );
+			self::error(
+				sprintf(
+					__( 'Error retrieving Dropbox authentication token: `%s`', 'it-l10n-backupbuddy' ),
+					$e->getMessage()
+				)
+			);
 			return false;
 		}
 
@@ -383,6 +409,85 @@ class pb_backupbuddy_destination_dropbox3 {
 
 		return true;
 	} // connect.
+
+	/**
+	 * Refresh the Token if enough time has passed.
+	 *
+	 * Note that false does not necessarily mean an error. It simply may not be time to refresh.
+	 *
+	 * @return bool  Token, if it was refreshed, else false.
+	 */
+	private static function maybe_refresh_token() {
+
+		// WIthout a refresh token, we can't refresh.
+		if ( empty( self::$settings['refresh_token'] ) ) {
+			return false;
+		}
+
+		// if token expires more than 10 minutes from now, don't refresh.
+		$ten_minutes_from_now = time() + ( 60 * 10 ); // Ten minutes from now.
+		$expiry               = self::$settings['oauth_token_expires'];
+
+		// If no expiry found, continue on. Else, check to see if token expires in the next 10 minutes.
+		if ( ! empty( $expiry ) && ( $ten_minutes_from_now < $expiry ) ) {
+			return false;
+		}
+
+		$config = self::get_config();
+		if ( ! $config ) {
+			self::error( __( 'Could not retrieve Dropbox Credentials when attempting to refresh the token.', 'it-l10n-backupbuddy' ) );
+			return false;
+		}
+
+		// New client without redirectUri.
+		self::$client = new Stevenmaguire\OAuth2\Client\Provider\Dropbox(
+			array(
+				'clientId'     => $config['DROPBOX_API_KEY'],
+				'clientSecret' => $config['DROPBOX_API_SECRET'],
+			)
+		);
+
+		if ( ! self::$client ) {
+			self::error( __( 'Could not fetch a new Client when attempting to refresh the token.', 'it-l10n-backupbuddy' ) );
+			return false;
+		}
+
+		try {
+			// This must be located before we update the token data.
+			$destination_id = self::get_destination_id_by_oauth_expiration();
+
+			$token = self::$client->getAccessToken(
+				'refresh_token',
+				array(
+					'refresh_token' => self::$settings['refresh_token'],
+				)
+			);
+
+			self::$settings['oauth_token']         = $token->getToken();
+			self::$settings['oauth_token_expires'] = $token->getExpires();
+			$refresh_token                         = $token->getRefreshToken();
+			self::$settings['refresh_token']       =  ! empty( $refresh_token ) ? $refresh_token : self::$settings['refresh_token'];
+
+			/*
+			 * If we have located the destination ID, save the settings.
+			 * If not, this will at least temporarily update the settings in the class property.
+			 */
+			if ( false !== $destination_id ) {
+				// Update the Settings.
+				pb_backupbuddy::$options['remote_destinations'][ $destination_id ] = self::$settings;
+				pb_backupbuddy::save();
+			}
+
+			// Update the state.
+			self::set_state( self::$client->getState() );
+			return true;
+		} catch ( \Exception $e ) {
+			self::error( __( 'Error refreshing the Dropbox authentication token: ', 'it-l10n-backupbuddy' ) . $e->getMessage() );
+			return false;
+		}
+
+		return false;
+	}
 
 	/**
 	 * Redirect user to Dropbox Login.
@@ -405,6 +510,23 @@ class pb_backupbuddy_destination_dropbox3 {
 		header( 'HTTP/1.1 302 Found', true, 302 );
 		header( "Location: $url" );
 		exit();
+	}
+
+	/**
+	 * Locate the proper Destination ID using a matching expiration date.
+	 *
+	 * @return int|false  Destination ID or false if not found.
+	 */
+	protected static function get_destination_id_by_oauth_expiration() {
+		$destinations  = pb_backupbuddy::$options['remote_destinations'];
+		$token         = self::$settings['oauth_token'];
+		foreach( $destinations as $id => $settings ) {
+			if ( ( 'dropbox3' ===  $settings['type']  ) && ( $token === $settings['oauth_token'] ) ) {
+				return $id;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -865,7 +987,7 @@ class pb_backupbuddy_destination_dropbox3 {
 			}
 
 			// Multipart send completed. Send finished signal to Dropbox to seal the deal.
-			if ( true === feof( $f ) ) {
+			if ( ! $f || true === feof( $f ) ) {
 
 				pb_backupbuddy::status( 'details', 'At end of file. Finishing transfer and notifying Dropbox of file transfer completion.' );
 
@@ -913,10 +1035,7 @@ class pb_backupbuddy_destination_dropbox3 {
 					self::error( 'Next Dropbox chunk step cron event FAILED to be scheduled.' );
 				}
 
-				if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-					update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-					spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-				}
+				backupbuddy_core::maybe_spawn_cron();
 
 				return array( $session_settings['_chunk_upload_id'], 'Sent ' . $session_settings['_chunk_sent_count'] . ' of ' . $session_settings['_chunk_total_count'] . ' parts.' );
 			}
@@ -997,10 +1116,7 @@ class pb_backupbuddy_destination_dropbox3 {
 					pb_backupbuddy::status( 'details', 'Success scheduling next cron chunk.' );
 				}
 
-				if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-					update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-					spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-				}
+				backupbuddy_core::maybe_spawn_cron();
 
 				pb_backupbuddy::status( 'details', 'Dropbox (v3) scheduled send of next part(s). Done for this cycle.' );
 
@@ -1307,7 +1423,7 @@ class pb_backupbuddy_destination_dropbox3 {
 
 		$f = @fopen( $local_file, 'w+' );
 		if ( false === $f ) {
-			self::error( 'Error #54894985: Unable to open local file for writing `' . $local_file . '`.' );
+			self::error( 'Error #54894985: Unable to open local file for writing `' . esc_attr( $local_file ) . '`.' );
 			return false;
 		}
 

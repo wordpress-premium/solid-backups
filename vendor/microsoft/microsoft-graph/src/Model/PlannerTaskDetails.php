@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,13 +18,45 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class PlannerTaskDetails extends Entity
 {
+    /**
+    * Gets the checklist
+    * The collection of checklist items on the task.
+    *
+    * @return PlannerChecklistItems The checklist
+    */
+    public function getChecklist()
+    {
+        if (array_key_exists("checklist", $this->_propDict)) {
+            if (is_a($this->_propDict["checklist"], "Microsoft\Graph\Model\PlannerChecklistItems")) {
+                return $this->_propDict["checklist"];
+            } else {
+                $this->_propDict["checklist"] = new PlannerChecklistItems($this->_propDict["checklist"]);
+                return $this->_propDict["checklist"];
+            }
+        }
+        return null;
+    }
+    
+    /**
+    * Sets the checklist
+    * The collection of checklist items on the task.
+    *
+    * @param PlannerChecklistItems $val The checklist
+    *
+    * @return PlannerTaskDetails
+    */
+    public function setChecklist($val)
+    {
+        $this->_propDict["checklist"] = $val;
+        return $this;
+    }
+    
     /**
     * Gets the description
     * Description of the task
@@ -57,7 +88,7 @@ class PlannerTaskDetails extends Entity
     
     /**
     * Gets the previewType
-    * This sets the type of preview that shows up on the task. The possible values are: automatic, noPreview, checklist, description, reference. When set to automatic the displayed preview is chosen by the app viewing the task.
+    * This sets the type of preview that shows up on the task. Possible values are: automatic, noPreview, checklist, description, reference. When set to automatic the displayed preview is chosen by the app viewing the task.
     *
     * @return PlannerPreviewType The previewType
     */
@@ -76,7 +107,7 @@ class PlannerTaskDetails extends Entity
     
     /**
     * Sets the previewType
-    * This sets the type of preview that shows up on the task. The possible values are: automatic, noPreview, checklist, description, reference. When set to automatic the displayed preview is chosen by the app viewing the task.
+    * This sets the type of preview that shows up on the task. Possible values are: automatic, noPreview, checklist, description, reference. When set to automatic the displayed preview is chosen by the app viewing the task.
     *
     * @param PlannerPreviewType $val The previewType
     *
@@ -118,39 +149,6 @@ class PlannerTaskDetails extends Entity
     public function setReferences($val)
     {
         $this->_propDict["references"] = $val;
-        return $this;
-    }
-    
-    /**
-    * Gets the checklist
-    * The collection of checklist items on the task.
-    *
-    * @return PlannerChecklistItems The checklist
-    */
-    public function getChecklist()
-    {
-        if (array_key_exists("checklist", $this->_propDict)) {
-            if (is_a($this->_propDict["checklist"], "Microsoft\Graph\Model\PlannerChecklistItems")) {
-                return $this->_propDict["checklist"];
-            } else {
-                $this->_propDict["checklist"] = new PlannerChecklistItems($this->_propDict["checklist"]);
-                return $this->_propDict["checklist"];
-            }
-        }
-        return null;
-    }
-    
-    /**
-    * Sets the checklist
-    * The collection of checklist items on the task.
-    *
-    * @param PlannerChecklistItems $val The checklist
-    *
-    * @return PlannerTaskDetails
-    */
-    public function setChecklist($val)
-    {
-        $this->_propDict["checklist"] = $val;
         return $this;
     }
     

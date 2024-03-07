@@ -32,9 +32,6 @@ wp_print_styles( 'thickbox' );
 	}
 </style>
 
-
-
-
 <?php
 $deployment = backupbuddy_remote_api::key_to_array( $destination['api_key'] );
 
@@ -44,83 +41,13 @@ require_once( pb_backupbuddy::plugin_path() . '/classes/deploy.php' );
 $deploy = new backupbuddy_deploy( $destination, '', $destination_id );
 ?>
 
-
-<style>
-	.deploy-push-text, .deploy-pull-text {
-		padding: 7px;
-		
-		text-align: center;
-		display: inline-block;
-		line-height: 1.3em;
-		padding-right: 30px;
-		padding-left: 30px;
-		
-		-webkit-border-radius: 3px;
-		-moz-border-radius: 3px;
-		border-radius: 3px;
-	}
-	.deploy-pull-text {
-		border-left: 2px solid #d4d1d1;
-		border-radius: 0;
-	}
-	.deploy-push-text-sub, .deploy-pull-text-sub {
-		font-size: 0.55em;
-		font-style: italic;
-	}
-	.deploy-status {
-		display: inline-block;
-		font-size: 1.4em;
-		padding: 14px;
-		color: #FFF;
-		text-align: center;
-		opacity: 0.5;
-		
-		-webkit-border-radius: 3px;
-		-moz-border-radius: 3px;
-		border-radius: 3px;
-	}
-	.deploy-status-up {
-		background: #0074a2;
-	}
-	.deploy-status-down {
-		background: #FF0000;
-	}
-	.deploy-pushpull-wrap {
-		font-size: 1.4em !important;
-		white-space: nowrap;
-	}
-	.deploy-sites-table td {
-		padding: 30px;
-		vertical-align: middle;
-	}
-	.deploy-type-selected {
-		font-weight: bold;
-		background: #efefef;
-	}
-	.tdhead {
-		font-weight: bold;
-	}
-	.deploy-unmatched-plugin {
-		color: red;
-	}
-	.deploy-unmatched-plugin-version {
-		color: blue;
-	}
-	.deploy-files-list-box {
-		display: block;
-		width: 100%;
-		height: 200px;
-	}
-</style>
-
-
 <script>
 	jQuery(document).ready(function() {
 		jQuery( '#deploy_profile_settings' ).click( function(e){
 			e.preventDefault();
-			tb_show( 'BackupBuddy', '<?php echo pb_backupbuddy::ajax_url( 'profile_settings' ); ?>&profile=' + jQuery( '#deploy_profile_selected' ).val() + '&callback_data=&TB_iframe=1&width=640&height=455', null );
+			tb_show( 'Solid Backups', '<?php echo pb_backupbuddy::ajax_url( 'profile_settings' ); ?>&profile=' + jQuery( '#deploy_profile_selected' ).val() + '&callback_data=&TB_iframe=1&width=640&height=455', null );
 		});
-		
+
 		/*
 		jQuery( '#pb_backupbuddy_deploy_form' ).submit( function(e){
 			e.preventDefault();
@@ -170,26 +97,58 @@ if ( false === $status ) {
 		<?php if ( true === $siteUp ) { ?>
 			<td class="deploy-pushpull-wrap">
 				<?php if ( isset( $destination['disable_push'] ) && ( '1' == $destination['disable_push'] ) ) { ?>
-					<s><a href="javascript:void(0);" class="deploy-push-text" onClick="alert( 'This option is disabled in this destination\'s settings.' );">Push to<br><span class="deploy-push-text-sub">faster</span></a></s>
+					<s><a href="#" id="deploy-push-text-disabled" class="deploy-push-text">Push to<br><span class="deploy-push-text-sub">faster</span></a></s>
 				<?php } else { ?>
-					<a href="javascript:void(0);" class="deploy-push-text" onClick="jQuery( '.deploy-type-selected' ).removeClass( 'deploy-type-selected' ); jQuery(this).addClass( 'deploy-type-selected' ); jQuery('#deploy-pull-wrap').hide(); jQuery('#deploy-push-wrap').slideDown(); jQuery('#backupbuddy_deploy_direction').attr('data-direction','push' ); jQuery( '.database_contents_shortcuts-prefix' ).click(); jQuery( '.plugins_shortcuts-none' ).click();">Push to<br><span class="deploy-push-text-sub">faster</span></a>
+					<a href="#" id="deploy-push-text" class="deploy-push-text deploy-type-selected">Push to<br><span class="deploy-push-text-sub">faster</span></a>
 				<?php } ?>
+				<div class="deploy-pushpull-divider"></div>
 				<?php if ( isset( $destination['disable_pull'] ) && ( '1' == $destination['disable_pull'] ) ) { ?>
-					<s><a href="javascript:void(0);" class="deploy-pull-text" onClick="alert( 'This option is disabled in this destination\'s settings.' );">Pull from<br><span class="deploy-pull-text-sub">slower</span></a></s>
+					<s><a href="#" id="deploy-pull-text-disabled" class="deploy-pull-text" >Pull from<br><span class="deploy-pull-text-sub">slower</span></a></s>
 				<?php } else { ?>
-					<a href="javascript:void(0);" class="deploy-pull-text" onClick="jQuery( '.deploy-type-selected' ).removeClass( 'deploy-type-selected' ); jQuery(this).addClass( 'deploy-type-selected' ); jQuery('#deploy-push-wrap').hide(); jQuery('#deploy-pull-wrap').slideDown(); jQuery('#backupbuddy_deploy_direction').attr('data-direction','pull' ); jQuery( '.database_contents_shortcuts-prefix' ).click(); jQuery( '.plugins_shortcuts-none' ).click();">Pull from<br><span class="deploy-push-text-sub">slower</span></a>
+					<a href="#" id="deploy-pull-text" class="deploy-pull-text">Pull from<br><span class="deploy-push-text-sub">slower</span></a>
 				<?php } ?>
 			</td>
 		<?php } ?>
 	</tr>
 </table>
 
-
+<script>
+	(function($) {
+		$(document).ready(function() {
+		$( '#deploy-push-text' ).click( function(e) {
+			e.preventDefault();
+			$( '.deploy-type-selected' ).removeClass( 'deploy-type-selected' );
+			$(this).addClass( 'deploy-type-selected' );
+			$('#deploy-pull-wrap').hide();
+			$('#deploy-push-wrap').slideDown();
+			$('#backupbuddy_deploy_direction').attr('data-direction','push' );
+			$( '.database_contents_shortcuts-prefix' ).click();
+			$( '.plugins_shortcuts-none' ).click();
+			backupbuddy_destinations_advanced_toggle();
+		});
+		$( '#deploy-push-text-disabled' ).click( function(e) {
+			alert( 'This option is disabled in this destination\'s settings.' );
+		});
+		$( '#deploy-pull-text' ).click( function(e) {
+			e.preventDefault();
+			$( '.deploy-type-selected' ).removeClass( 'deploy-type-selected' );
+			$(this).addClass( 'deploy-type-selected' );
+			$('#deploy-push-wrap').hide();
+			$('#deploy-pull-wrap').slideDown();
+			$('#backupbuddy_deploy_direction').attr('data-direction','pull' );
+			$( '.database_contents_shortcuts-prefix' ).click();
+			backupbuddy_destinations_advanced_toggle();
+		});
+		$( '#deploy-pull-text-disabled' ).click( function(e) {
+			e.preventDefault();
+			alert( 'This option is disabled in this destination\'s settings.' );
+		});
+		});
+	})(jQuery);
+</script>
 
 
 <?php
-
-
 
 $deployData = $deploy->getState();
 $deployDataJson = json_encode( $deployData );
@@ -217,14 +176,14 @@ if ( $localInfo['backupbuddyVersion'] != $deployData['remoteInfo']['backupbuddyV
 	$wrapAfter = '</span>';
 }
 
-$activePluginsA = $wrapBefore . 'BackupBuddy v' . $localInfo['backupbuddyVersion'] . $wrapAfter . '<span style="position: relative; top: -0.5em; font-size: 0.7em;">&Dagger;</span>'; // Start with BB. Is only in the visual list. Will not be deployed.
+$activePluginsA = $wrapBefore . 'Solid Backups v' . $localInfo['backupbuddyVersion'] . $wrapAfter . '<span style="position: relative; top: -0.5em; font-size: 0.7em;">&Dagger;</span>'; // Start with BB. Is only in the visual list. Will not be deployed.
 $i = 0; $x = count( $localInfo['activePlugins'] );
 foreach( (array)$localInfo['activePlugins'] as $index => $localPlugin ) {
 	if ( 0 == $i ) {
 		$activePluginsA .= ', ';
 	}
 	$i++;
-	
+
 	$wrapBefore = '';
 	$wrapAfter = '';
 	if ( ! isset( $deployData['remoteInfo']['activePlugins'][ $index ] ) ) { // Plugin is not on remote site.
@@ -238,12 +197,12 @@ foreach( (array)$localInfo['activePlugins'] as $index => $localPlugin ) {
 			$wrapAfter = '</span>';
 		}
 	}
-	
+
 	$activePluginsA .= $wrapBefore . $localPlugin['name'] . ' v' . $localPlugin['version'] . $wrapAfter;
 	if ( $x > $i ) {
 		$activePluginsA .= ', ';
 	}
-	
+
 	/*
 	if ( false !== strpos( $localPlugin['name'], 'BackupBuddy' ) ) {
 		unset( $localInfo['activePlugins'][ $index ] );
@@ -256,14 +215,14 @@ if ( $localInfo['backupbuddyVersion'] != $deployData['remoteInfo']['backupbuddyV
 	$wrapBefore = '<span class="deploy-unmatched-plugin-version">';
 	$wrapAfter = '</span>';
 }
-$activePluginsB = $wrapBefore . 'BackupBuddy v' . $deployData['remoteInfo']['backupbuddyVersion'] . $wrapAfter . '<span style="position: relative; top: -0.5em; font-size: 0.7em;">&Dagger;</span>'; // Start with BB. Is only in the visual list. Will not be deployed.
+$activePluginsB = $wrapBefore . 'Solid Backups v' . $deployData['remoteInfo']['backupbuddyVersion'] . $wrapAfter . '<span style="position: relative; top: -0.5em; font-size: 0.7em;">&Dagger;</span>'; // Start with BB. Is only in the visual list. Will not be deployed.
 $i = 0; $x = count( $deployData['remoteInfo']['activePlugins'] );
 foreach( (array)$deployData['remoteInfo']['activePlugins'] as $index => $remotePlugin ) {
 	if ( 0 == $i ) {
 		$activePluginsB .= ', ';
 	}
 	$i++;
-	
+
 	$wrapBefore = '';
 	$wrapAfter = '';
 	if ( ! isset( $localInfo['activePlugins'][ $index ] ) ) { // Plugin is not on local site.
@@ -277,12 +236,12 @@ foreach( (array)$deployData['remoteInfo']['activePlugins'] as $index => $remoteP
 			$wrapAfter = '</span>';
 		}
 	}
-	
+
 	$activePluginsB .= $wrapBefore . $remotePlugin['name'] . ' v' . $remotePlugin['version'] . $wrapAfter;
 	if ( $x > $i ) {
 		$activePluginsB .= ', ';
 	}
-	
+
 	/*
 	if ( false !== strpos( $localPlugin['name'], 'BackupBuddy' ) ) {
 		unset( $localInfo['activePlugins'][ $index ] );
@@ -298,7 +257,7 @@ foreach( (array)$deployData['remoteInfo']['activePlugins'] as $index => $remoteP
 
 
 
-<div id="deploy-push-wrap" style="display: none;">
+<div id="deploy-push-wrap">
 	<?php require_once( '_push.php' ); ?>
 </div>
 
@@ -312,7 +271,7 @@ foreach( (array)$deployData['remoteInfo']['activePlugins'] as $index => $remoteP
 
 <script>
 		jQuery(document).ready(function() {
-			
+
 			jQuery( '.deploy-show-files' ).click( function(){
 				if ( jQuery('.deploy-files-list-box:visible').length > 0 ) {
 					jQuery('.deploy-files-list-box:visible').remove();
@@ -321,33 +280,33 @@ foreach( (array)$deployData['remoteInfo']['activePlugins'] as $index => $remoteP
 				jQuery(this).after( jQuery('#bb_deploy_files').html() );
 				jQuery(this).next( '.deploy-files-list-box' ).val( window.deployData[ jQuery(this).attr('rel') ].join( "\n" ) );
 			});
-			
+
 			/* Begin database contents selecting */
 			jQuery( '.database_contents_shortcuts-all' ).click( function(e){
 				e.preventDefault();
 				jQuery( '.database_contents_select' ).find( 'input' ).prop( 'checked', true );
 				bb_count_selected_tables();
 			});
-			
+
 			jQuery( '.database_contents_shortcuts-none' ).click( function(e){
 				e.preventDefault();
 				jQuery( '.database_contents_select' ).find( 'input' ).prop( 'checked', false );
 				bb_count_selected_tables();
 			});
-			
+
 			jQuery( '.database_contents_select input' ).click( function(){
 				bb_count_selected_tables();
 			});
-			
+
 			jQuery( '.database_contents_shortcuts-prefix' ).click( function(e){
 				e.preventDefault();
-				
+
 				if ( 'push' == jQuery('#backupbuddy_deploy_direction').attr( 'data-direction' ) ) {
 					prefix = jQuery( '#backupbuddy_deploy_prefixA' ).attr( 'data-prefix' );
 				} else {
 					prefix = jQuery( '#backupbuddy_deploy_prefixB' ).attr( 'data-prefix' );
 				}
-				
+
 				jQuery( '.database_contents_select' ).find( 'input' ).each( function(index){
 					if ( jQuery(this).val().indexOf( prefix ) == 0 ) {
 						jQuery(this).prop( 'checked', true );
@@ -355,45 +314,45 @@ foreach( (array)$deployData['remoteInfo']['activePlugins'] as $index => $remoteP
 						jQuery(this).prop( 'checked', false );
 					}
 				});
-				
+
 				bb_count_selected_tables();
 			});
 			/* End database contents selecting. */
-			
-			
-			
+
+
+
 			/* Begin plugins selecting. */
 			jQuery( '.plugins_shortcuts-all' ).click( function(e){
 				e.preventDefault();
 				jQuery( '.plugins_select' ).find( 'input' ).prop( 'checked', true );
 				bb_count_selected_plugins();
 			});
-			
+
 			jQuery( '.plugins_shortcuts-none' ).click( function(e){
 				e.preventDefault();
 				jQuery( '.plugins_select' ).find( 'input' ).prop( 'checked', false );
 				bb_count_selected_plugins();
 			});
-			
+
 			jQuery( '.plugins_select input' ).click( function(){
 				bb_count_selected_plugins();
 			});
 			/* End plugins selecting. */
-			
-			
-			
+
+
+
 		});
 
 		function bb_count_selected_tables() {
 			tableCount = jQuery( '.database_contents_select:visible' ).find( 'input:checked' ).length;
 			jQuery( '.database_contents_select_count' ).text( tableCount );
 		}
-		
+
 		function bb_count_selected_plugins() {
 			pluginCount = jQuery( '.plugins_select:visible' ).find( 'input:checked' ).length;
 			jQuery( '.plugins_select_count' ).text( pluginCount );
 		}
-		
+
 		bb_count_selected_tables();
 		bb_count_selected_plugins();
 	</script>

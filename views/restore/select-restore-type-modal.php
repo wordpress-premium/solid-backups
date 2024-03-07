@@ -15,6 +15,7 @@
 				<span class="label">
 					<strong><?php esc_html_e( 'Entire Backup', 'it-l10n-backupbuddy' ); ?></strong>
 					<em><?php esc_html_e( 'Restore this entire backup.' ); ?></em>
+					<span class="full-restore-options-icon"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span>
 				</span>
 			</label>
 			<label>
@@ -22,6 +23,7 @@
 				<span class="label">
 					<strong><?php esc_html_e( 'Database Only', 'it-l10n-backupbuddy' ); ?></strong>
 					<em><?php esc_html_e( 'Restore only the database from this backup.' ); ?></em>
+					<span class="full-restore-options-icon"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span>
 				</span>
 			</label>
 			<label>
@@ -29,6 +31,7 @@
 				<span class="label">
 					<strong><?php esc_html_e( 'Files Only', 'it-l10n-backupbuddy' ); ?></strong>
 					<em><?php esc_html_e( 'Restore only the files from this backup.' ); ?></em>
+					<span class="full-restore-options-icon"><?php pb_backupbuddy::$ui->render_icon( 'check' ); ?></span>
 				</span>
 			</label>
 		</li>

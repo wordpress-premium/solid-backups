@@ -192,7 +192,7 @@ if ( ! isset( $options['type'] ) || ( isset( $options['type'] ) && ( ( 'db' == $
 		$pass = true;
 	}
 	$tests[] = array(
-		'test'		=>	'BackupBuddy data file',
+		'test'		=>	'Solid Backups data file',
 		'pass'		=>	$pass,
 	);
 }
@@ -242,7 +242,7 @@ if ( isset( $options['type'] ) && ( ( 'files' == $options['type'] ) || ( 'themes
 			}
 		}
 
-		pb_backupbuddy::status( 'details', 'BackupBuddy v5.0+ format database detected.' );
+		pb_backupbuddy::status( 'details', 'Solid Backups v5.0+ format database detected.' );
 		if ( 'db' == $backup_type ) { // DB.
 			pb_backupbuddy::status( 'details', 'Database-only type backup.' );
 			if ( pb_backupbuddy::$classes['zipbuddy']->file_exists( $file, 'db_1.sql' ) === true ) { // Commandline based.

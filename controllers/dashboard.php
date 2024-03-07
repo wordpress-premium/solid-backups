@@ -85,7 +85,7 @@ class pb_backupbuddy_dashboard extends pb_backupbuddy_dashboardcore {
 		// Format timestamp.
 		if ( isset( $get_overview['lastBackupStats']['finish'] ) ) {
 			$time      = pb_backupbuddy::$format->localize_time( $get_overview['lastBackupStats']['finish'] );
-			$time_nice = date( 'M j - g:i A', $time );
+			$time_nice = date( 'M j - g:i A', (int) $time );
 		} else {
 			$time_nice = 'Unknown';
 		}

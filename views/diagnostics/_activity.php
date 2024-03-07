@@ -21,7 +21,7 @@ foreach ( $notifications as $notification ) {
 	}
 
 	$additional_data = '<i>None</i>';
-	if ( count( $notification['data'] ) > 0 ) {
+	if ( ! empty( $notification['data'] ) && is_array( $notification['data'] ) ) {
 		$additional_data = '<textarea class="backupbuddy-recent-activity-details" wrap="off">';
 		foreach ( $notification['data'] as $this_key => $this_data ) {
 			if ( is_array( $this_data ) ) {

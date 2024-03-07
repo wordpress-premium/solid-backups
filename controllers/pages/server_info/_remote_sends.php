@@ -53,7 +53,7 @@ foreach ( $remote_sends as $send_id => $remote_send ) {
 		$finish_time = '<span class="description">Unknown</span> (' . $remote_send['finish_time'] . ')';
 	}
 
-	// Handle showing sent ImportBuddy (if sent).
+	// Handle showing sent Importer (if sent).
 	if ( isset( $remote_send['send_importbuddy'] ) && true === $remote_send['send_importbuddy'] ) {
 		$send_importbuddy = '<br><span class="description" style="margin-left: 10px;">+ importbuddy.php</span>';
 	} else {
@@ -122,7 +122,7 @@ foreach ( $remote_sends as $send_id => $remote_send ) {
 
 	// Determine destination.
 	$destination_type = '';
-	if ( ! empty( $remote_send['destination'] ) && isset( pb_backupbuddy::$options['remote_destinations'][ $remote_send['destination'] ] ) ) { // Valid destination.
+	if ( isset( $remote_send['destination'] ) && isset( pb_backupbuddy::$options['remote_destinations'][ $remote_send['destination'] ] ) ) { // Valid destination.
 		$destination      = pb_backupbuddy::$options['remote_destinations'][ $remote_send['destination'] ]['title'] . ' (' . pb_backupbuddy::$options['remote_destinations'][ $remote_send['destination'] ]['type'] . ')';
 		$destination_type = pb_backupbuddy::$options['remote_destinations'][ $remote_send['destination'] ]['type'];
 	} else { // Invalid destination - been deleted since send?

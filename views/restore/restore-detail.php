@@ -14,13 +14,38 @@ if ( ! in_array( $restore['status'], backupbuddy_restore()->get_completed_status
 ?>
 <div class="restore-detail">
 	<div class="restore-stats">
-		<h4>Restore Stats</h4>
+		<h4><?php esc_html_e( 'Restore Stats', 'it-l10n-backupbuddy' ); ?></h4>
 
-		<div>Restore Zip: <?php echo esc_html( $restore['backup_file'] ); ?></div>
-		<div>Restore Type: <?php echo esc_html( $restore['type'] ); ?></div>
-		<div>What to Restore: <?php echo esc_html( $restore['what'] ); ?></div>
-		<div>Restore Profile: <?php echo esc_html( $restore['profile'] ); ?></div>
-		<div>Restore Path: <?php echo esc_html( $restore['restore_path'] ); ?></div>
+		<div><?php echo esc_html(
+			sprintf(
+				__( 'Restore Zip: <%s', 'it-l10n-backupbuddy' ),
+				$restore['backup_file']
+				)
+			); ?></div>
+		<div><?php echo esc_html(
+			sprintf(
+				__( 'Restore Type: %s', 'it-l10n-backupbuddy' ),
+				$restore['type']
+				)
+			); ?></div>
+		<div><?php echo esc_html(
+			sprintf(
+				__( 'What to Restore: %s', 'it-l10n-backupbuddy' ),
+				$restore['what']
+				)
+			); ?></div>
+		<div><?php echo esc_html(
+			sprintf(
+				__( 'Restore Profile: %s', 'it-l10n-backupbuddy' ),
+				$restore['profile']
+				)
+			); ?></div>
+		<div><?php echo esc_html(
+			sprintf(
+				__( 'Restore Path: %s', 'it-l10n-backupbuddy' ),
+				$restore['restore_path']
+				)
+			); ?></div>
 		<?php
 		if ( ! empty( $restore['destination_id'] ) ) :
 			if ( ! empty( pb_backupbuddy::$options['remote_destinations'][ $restore['destination_id'] ] ) ) :
@@ -48,9 +73,9 @@ if ( ! in_array( $restore['status'], backupbuddy_restore()->get_completed_status
 			<hr style="max-width: 90%;margin:5px 0;">
 			<div>
 				<?php
-				echo 'Files: ';
+				esc_html_e( 'Files: ', 'it-l10n-backupbuddy' );
 				if ( '*' === $restore['files'] ) {
-					echo esc_html__( 'Full backup restore, All files/folders.', 'it-l10n-backupbuddy' );
+					esc_html_e( 'Full backup restore, All files/folders.', 'it-l10n-backupbuddy' );
 				} elseif ( is_array( $restore['files'] ) ) {
 					echo '<ul class="restore-file-list">';
 						echo '<li>' . implode( '</li><li>', $restore['files'] ) . '</li>';
@@ -60,11 +85,7 @@ if ( ! in_array( $restore['status'], backupbuddy_restore()->get_completed_status
 			</div>
 			<?php
 			if ( ! empty( $restore['extract_files'] ) ) {
-				if ( is_array( $restore['extract_files'] ) ) {
-					$count = count( $restore['extract_files'] );
-				} else {
-					$count = $restore['extract_files'];
-				}
+				$count = is_array( $restore['extract_files'] ) ? count( $restore['extract_files'] ) : $restore['extract_files'];
 				$label = _n( 'Files', 'Files', $count, 'it-l10n-backupbuddy' );
 				printf( '<div>Extracted Files: <label for="%s-extracted-files">%s %s</label>', esc_attr( $restore['id'] ), esc_html( number_format( $count ) ), esc_html( $label ) );
 				if ( is_array( $restore['extract_files'] ) ) {
@@ -75,23 +96,13 @@ if ( ! in_array( $restore['status'], backupbuddy_restore()->get_completed_status
 				}
 				echo '</div>';
 			}
-			if ( ! empty( $restore['copied'] ) ) {
-				$count = count( $restore['copied'] );
+			if ( ! empty( $restore['moved'] ) ) {
+				$count = count( $restore['moved'] );
 				$label = _n( 'Files', 'Files', $count, 'it-l10n-backupbuddy' );
-				printf( '<div>Copied Files: <label for="%s-copied-files">%s %s</label>', esc_attr( $restore['id'] ), esc_html( $count ), esc_html( $label ) );
+				printf( '<div>Restored Files: <label class="restored-files" for="%s-copied-files">%s %s</label>', esc_attr( $restore['id'] ), esc_html( $count ), esc_html( $label ) );
 				printf( '<input type="checkbox" id="%s-copied-files" class="toggler">', esc_attr( $restore['id'] ) );
 				echo '<pre style="white-space: pre-wrap;">';
-				print_r( $restore['copied'] );
-				echo '</pre>';
-				echo '</div>';
-			}
-			if ( ! empty( $restore['skipped'] ) ) {
-				$count = count( $restore['skipped'] );
-				$label = _n( 'Files', 'Files', $count, 'it-l10n-backupbuddy' );
-				printf( '<div>Skipped Files (Identical): <label for="%s-skipped-files">%s %s</label>', esc_attr( $restore['id'] ), esc_html( number_format( $count ) ), esc_html( $label ) );
-				printf( '<input type="checkbox" id="%s-skipped-files" class="toggler">', esc_attr( $restore['id'] ) );
-				echo '<pre style="white-space: pre-wrap;">';
-				print_r( $restore['skipped'] );
+				print_r( $restore['moved'] );
 				echo '</pre>';
 				echo '</div>';
 			}
@@ -226,6 +237,10 @@ if ( ! in_array( $restore['status'], backupbuddy_restore()->get_completed_status
 	</div>
 	<div class="restore-log">
 		<h4>Restore Log</h4>
-		<div class="log-entry"><?php echo implode( '</div><div class="log-entry">', $restore['log'] ); ?></div>
+		<div class="log-entry">
+			<?php if ( ! empty( $restore['log'] ) ) : ?>
+				<?php echo implode( '</div><div class="log-entry">', $restore['log'] ); ?>
+			<?php endif; ?>
+		</div>
 	</div>
 </div>

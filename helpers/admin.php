@@ -6,9 +6,9 @@
  */
 
 /**
- * Checks if current page is BackupBuddy Page.
+ * Checks if current page is Solid Backups Page.
  *
- * @return bool  If is BackupBuddy Admin page.
+ * @return bool  If is Solid Backups Admin page.
  */
 function backupbuddy_is_admin_page() {
 	$screen = get_current_screen();

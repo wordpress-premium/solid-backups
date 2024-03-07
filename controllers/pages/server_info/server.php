@@ -94,17 +94,19 @@ jQuery(function( $ ) {
 <table class="widefat striped">
 	<thead>
 		<tr class="thead">
-			<th style="width: 15px;">&nbsp;</th>
+
 			<th><?php esc_html_e( 'Server Configuration', 'it-l10n-backupbuddy' ); ?></th>
+			<th style="width: 15px;">&nbsp;</th>
 			<th><?php esc_html_e( 'Suggestion', 'it-l10n-backupbuddy' ); ?></th>
 			<th><?php esc_html_e( 'Value', 'it-l10n-backupbuddy' ); ?></th>
 			<th style="width: 60px;"><?php esc_html_e( 'Status', 'it-l10n-backupbuddy' ); ?></th>
 		</tr>
 	</thead>
 	<tfoot>
-		<tr class="thead">
-			<th style="width: 15px;">&nbsp;</th>
+		<tr class="tfoot">
+
 			<th><?php esc_html_e( 'Server Configuration', 'it-l10n-backupbuddy' ); ?></th>
+			<th style="width: 15px;">&nbsp;</th>
 			<th><?php esc_html_e( 'Suggestion', 'it-l10n-backupbuddy' ); ?></th>
 			<th><?php esc_html_e( 'Value', 'it-l10n-backupbuddy' ); ?></th>
 			<th style="width: 60px;"><?php esc_html_e( 'Status', 'it-l10n-backupbuddy' ); ?></th>
@@ -113,19 +115,22 @@ jQuery(function( $ ) {
 	<tbody>
 		<?php foreach ( $tests as $parent_class_test ) { ?>
 			<tr class="entry-row">
-				<td><?php echo pb_backupbuddy::tip( $parent_class_test['tip'], '', false ); ?></td>
-				<td><?php echo $parent_class_test['title']; ?></td>
+
+				<td class="diagnostics-table-headings"><?php echo $parent_class_test['title']; ?></td>
+				<td class="td-tip-only"><?php echo pb_backupbuddy::tip( $parent_class_test['tip'], '', false ); ?></td>
 				<td><?php echo $parent_class_test['suggestion']; ?></td>
 				<td><?php echo $parent_class_test['value']; ?></td>
-				<td>
-					<?php if ( 'OK' == $parent_class_test['status'] ) { ?>
-						<span class="pb_label pb_label-success"><?php esc_html_e( 'Pass', 'it-l10n-backupbuddy' ); ?></span>
-					<?php } elseif ( 'FAIL' == $parent_class_test['status'] ) { ?>
-						<span class="pb_label pb_label-important"><?php esc_html_e( 'Fail', 'it-l10n-backupbuddy' ); ?></span>
-					<?php } elseif ( 'WARNING' == $parent_class_test['status'] ) { ?>
-						<span class="pb_label pb_label-warning"><?php esc_html_e( 'Warning', 'it-l10n-backupbuddy' ); ?></span>
-					<?php } ?>
-				</td>
+				<?php if ( isset( $parent_class_test['status'] ) ) {?>
+					<td>
+						<?php if ( 'OK' == $parent_class_test['status'] ) { ?>
+							<span class="pb_label pb_label-success"><?php esc_html_e( 'Pass', 'it-l10n-backupbuddy' ); ?></span>
+						<?php } elseif ( 'FAIL' == $parent_class_test['status'] ) { ?>
+							<span class="pb_label pb_label-important"><?php esc_html_e( 'Fail', 'it-l10n-backupbuddy' ); ?></span>
+						<?php } elseif ( 'WARNING' == $parent_class_test['status'] ) { ?>
+							<span class="pb_label pb_label-warning"><?php esc_html_e( 'Warning', 'it-l10n-backupbuddy' ); ?></span>
+						<?php } ?>
+					</td>
+				<?php } ?>
 			</tr>
 		<?php } ?>
 	</tbody>
@@ -134,10 +139,10 @@ jQuery(function( $ ) {
 <center>
 	<?php
 	if ( ! defined( 'PB_IMPORTBUDDY' ) ) {
-		echo '<a href="#TB_inline?width=640&#038;height=600&#038;inlineId=pb_serverinfotext_modal" class="button button-secondary button-tertiary thickbox" title="Server Information Results">Display Server Configuration in Text Format</a> &nbsp;&nbsp;&nbsp; ';
-		echo '<a href="' . pb_backupbuddy::ajax_url( 'pinfo' ) . '&#038;TB_iframe=1&#038;width=640&#038;height=600" class="thickbox button secondary-button" title="' . esc_html__( 'Display Extended PHP Settings via phpinfo()', 'it-l10n-backupbuddy' ) . '">' . esc_html__( 'Display Extended PHP Settings via phpinfo()', 'it-l10n-backupbuddy' ) . '</a>';
+		echo '<a href="#TB_inline?width=640&#038;height=600&#038;inlineId=pb_serverinfotext_modal" class="button button-secondary thickbox" title="Server Information Results">Display Server Configuration in Text Format</a> &nbsp;&nbsp;&nbsp; ';
+		echo '<a href="' . pb_backupbuddy::ajax_url( 'pinfo' ) . '&#038;TB_iframe=1&#038;width=640&#038;height=600" class="thickbox button button-secondary secondary-button" title="' . esc_html__( 'Display Extended PHP Settings via phpinfo()', 'it-l10n-backupbuddy' ) . '">' . esc_html__( 'Display Extended PHP Settings via phpinfo()', 'it-l10n-backupbuddy' ) . '</a>';
 	} else {
-		echo '<a id="serverinfotext" class="button button-secondary button-tertiary button-primary thickbox toggle" title="Server Information Results">Display Results in Text Format</a> &nbsp;&nbsp;&nbsp; ';
+		echo '<a id="serverinfotext" class="button thickbox toggle" title="Server Information Results">Display Results in Text Format</a> &nbsp;&nbsp;&nbsp; ';
 	}
 	?>
 </center>
@@ -151,12 +156,13 @@ $textarea_width = ! defined( 'PB_IMPORTBUDDY' ) ? '100%' : '95%';
 	<?php if ( ! defined( 'PB_IMPORTBUDDY' ) ) : ?>
 		<h3><?php esc_html_e( 'Server Information Results', 'it-l10n-backupbuddy' ); ?></h3>
 	<?php endif; ?>
-	<textarea style="width: <?php echo esc_attr( $textarea_width ); ?>; height: 300px;" wrap="off">
-		<?php
-		foreach ( $tests as $test ) :
-			echo '[' . esc_html( $test['status'] ) . ']     ' . esc_html( $test['title'] ) . '   =   ' . esc_html( strip_tags( $test['value'] ) ) . "\n";
-		endforeach;
-		unset( $tests );
-		?>
-	</textarea>
+<textarea style="width: <?php echo esc_attr( $textarea_width ); ?>;" readonly="readonly" wrap="off">
+<?php
+foreach ( $tests as $test ) :
+// This alignment is required.
+echo '[' . esc_html( $test['status'] ) . ']     ' . esc_html( $test['title'] ) . '   =   ' . esc_html( strip_tags( $test['value'] ) ) . "\n";
+endforeach;
+unset( $tests );
+?>
+</textarea>
 </div>

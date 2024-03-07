@@ -47,10 +47,7 @@ class pb_backupbuddy_destination_local {
 	 *
 	 * @return array  Array of normalized settings.
 	 */
-	public static function _formatSettings( $settings ) {
-		// Apply defaults.
-		$settings = array_merge( self::$default_settings, $settings );
-
+	public static function _formatSettings( array $settings ): array {
 		$settings['path'] = rtrim( $settings['path'], '/' ) . '/'; // Force trailing slash.
 
 		return $settings;
@@ -444,9 +441,17 @@ class pb_backupbuddy_destination_local {
 	 * @param string $file      Filename to download.
 	 */
 	public static function force_download( $settings = false, $file = '' ) {
+		$settings = $settings ? array_merge( self:: $default_settings, $settings) : self::$default_settings;
 		$settings  = self::_formatSettings( $settings );
-		$file_path = $settings['path'] . $file;
-
+		$file_path = $settings['path'] . basename( $file );
+		
+		if ( 'zip' !== pathinfo( $file, PATHINFO_EXTENSION ) ) {
+			$err = __( 'Invalid file type.', 'it-l10n-backupbuddy' );
+			pb_backupbuddy::status( 'error', $err );
+			echo $err;
+			exit();
+		}
+		
 		if ( ! file_exists( $file_path ) ) {
 			$err = __( 'Missing Local File for download.', 'it-l10n-backupbuddy' );
 			pb_backupbuddy::status( 'error', $err );

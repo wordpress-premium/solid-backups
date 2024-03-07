@@ -7,10 +7,9 @@
 *
 * @category  Library
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   GIT: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 namespace Microsoft\Graph\Model;
 
@@ -19,10 +18,9 @@ namespace Microsoft\Graph\Model;
 *
 * @category  Model
 * @package   Microsoft.Graph
-* @copyright © Microsoft Corporation. All rights reserved.
+* @copyright (c) Microsoft Corporation. All rights reserved.
 * @license   https://opensource.org/licenses/MIT MIT License
-* @version   Release: 1.4.0
-* @link      https://graph.microsoft.io/
+* @link      https://graph.microsoft.com
 */
 class OnenoteSection extends OnenoteEntityHierarchyModel
 {
@@ -117,6 +115,36 @@ class OnenoteSection extends OnenoteEntityHierarchyModel
         return $this;
     }
     
+
+     /** 
+     * Gets the pages
+    * The collection of pages in the section.  Read-only. Nullable.
+     *
+     * @return array The pages
+     */
+    public function getPages()
+    {
+        if (array_key_exists("pages", $this->_propDict)) {
+           return $this->_propDict["pages"];
+        } else {
+            return null;
+        }
+    }
+    
+    /** 
+    * Sets the pages
+    * The collection of pages in the section.  Read-only. Nullable.
+    *
+    * @param OnenotePage $val The pages
+    *
+    * @return OnenoteSection
+    */
+    public function setPages($val)
+    {
+		$this->_propDict["pages"] = $val;
+        return $this;
+    }
+    
     /**
     * Gets the parentNotebook
     * The notebook that contains the section.  Read-only.
@@ -180,36 +208,6 @@ class OnenoteSection extends OnenoteEntityHierarchyModel
     public function setParentSectionGroup($val)
     {
         $this->_propDict["parentSectionGroup"] = $val;
-        return $this;
-    }
-    
-
-     /** 
-     * Gets the pages
-    * The collection of pages in the section.  Read-only. Nullable.
-     *
-     * @return array The pages
-     */
-    public function getPages()
-    {
-        if (array_key_exists("pages", $this->_propDict)) {
-           return $this->_propDict["pages"];
-        } else {
-            return null;
-        }
-    }
-    
-    /** 
-    * Sets the pages
-    * The collection of pages in the section.  Read-only. Nullable.
-    *
-    * @param OnenotePage $val The pages
-    *
-    * @return OnenoteSection
-    */
-    public function setPages($val)
-    {
-		$this->_propDict["pages"] = $val;
         return $this;
     }
     

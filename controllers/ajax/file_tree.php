@@ -56,7 +56,11 @@ if ( pb_backupbuddy::_GET( 'dat_viewer' ) ) {
 
 // Just make sure we have a sensible files listing.
 if ( ! is_array( $files ) ) {
-	die( 'Error #548484.  Unable to retrieve file listing from backup file `' . htmlentities( $zip_file ) . '`.' );
+	$error_message = 'Error #548484.  Unable to retrieve file listing from backup file `' . htmlentities( $zip_file ) . '`.';
+	if ( backupbuddy_data_file()::creation_is_disabled() ) {
+		$error_message .= ' .dat file creation is disabled in Advanced Settings.';
+	}
+	die( $error_message );
 }
 
 if ( pb_backupbuddy::_GET( 'dat_viewer' ) ) {
@@ -217,11 +221,11 @@ if ( count( $files ) > 0 ) {
 			} else {
 				echo '<a href="#" rel="' . htmlentities( $root . $file[0] ) . '">';
 			}
-			echo htmlentities( $file[0] );
+			echo '<span class="filename">' . htmlentities( $file[0] ) . '</span>';
 
 			if ( true === $viewable ) {
-				echo '<span class="viewlink_place"><img src="' . pb_backupbuddy::plugin_url() . '/images/eyecon.png"></span>';
-				echo '<span class="viewlink"><img src="' . pb_backupbuddy::plugin_url() . '/images/eyecon.png"> View</span>';
+				echo '<span class="viewlink_place"><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/eyecon.png"></span>';
+				echo '<span class="viewlink"><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/eyecon.png"> View</span>';
 			}
 
 			echo '<span class="pb_backupbuddy_fileinfo">';

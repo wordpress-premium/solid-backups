@@ -1,6 +1,6 @@
 <?php
 /**
- * BackupBuddy Privacy Policy
+ * Solid Backups Privacy Policy
  *
  * @package BackupBuddy
  * @since 8.2.5.5

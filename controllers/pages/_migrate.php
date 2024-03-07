@@ -37,8 +37,8 @@ $auto_run = false;
 			dataType:	'json',
 			data:		{
 							step: 'step' + pb_step,
-							destination: '<?php echo pb_backupbuddy::_GET( 'destination' ); ?>',
-							backup_file: '<?php echo pb_backupbuddy::_GET( 'callback_data' ); ?>',
+							destination: '<?php echo esc_js( pb_backupbuddy::_GET( 'destination' ) ); ?>',
+							backup_file: '<?php echo esc_js( pb_backupbuddy::_GET( 'callback_data' ) ); ?>',
 							url: jQuery('#pb_backupbuddy_url').val(),
 						},
 			error:		function( jqXHR, textStatus, errorThrown ) {
@@ -236,7 +236,7 @@ if ( 'local' == $destination['type'] ) {
 		</div>
 
 		<div id="pb_backupbuddy_statusmsg" style="display: inline-block; float: left; padding-top: 3px; width: 70%;"><?php esc_html_e( 'Status: Your destination URL has been entered above. Click Begin Migration when ready.', 'it-l10n-backupbuddy' ); ?></div>
-		<span id="pb_backupbuddy_loading" style="display: none; margin-left: 10px; float: left;"><img src="<?php echo pb_backupbuddy::plugin_url(); ?>/images/loading.gif" <?php echo 'alt="', esc_html__( 'Loading...', 'it-l10n-backupbuddy' ), '" title="', esc_html__( 'Loading...', 'it-l10n-backupbuddy' ), '"'; ?> width="16" height="16" style="vertical-align: -3px;" /></span>
+		<span id="pb_backupbuddy_loading" style="display: none;"></span>
 		<br style="clear: both;">
 	</form>
 

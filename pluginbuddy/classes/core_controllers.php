@@ -154,9 +154,9 @@ class pb_backupbuddy_pagescore {
 		if ( file_exists( $page_file ) ) { // Load from /controllers/pages/PAGE.php if it exists.
 
 			// Display page.
-			pb_backupbuddy::load_style( 'admin.css' );
+			wp_enqueue_style( 'backupbuddy-core' );
 			pb_backupbuddy::load_script( 'jquery-ui-tooltip', false );
-			pb_backupbuddy::load_style( 'jQuery-ui-1.11.2.css', true );
+			pb_backupbuddy::load_style( 'pluginbuddy.css' );
 			echo '<div class="wrap">';
 			require_once $page_file;
 			echo '</div>';

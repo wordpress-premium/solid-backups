@@ -288,7 +288,7 @@ class backupbuddy_migrateDB {
 		pb_backupbuddy::status( 'details', 'Checking for any Stash Live destinations needing disconnected.' );
 		global $wpdb;
 
-		// Get BackupBuddy options.
+		// Get Solid Backups options.
 		$finalPrefix = backupbuddy_core::dbEscape( $this->finalPrefix );
 		$result      = $wpdb->get_var( "SELECT option_value FROM `{$finalPrefix}options` WHERE option_name='pb_backupbuddy' LIMIT 1" );
 		if ( false === $result ) {
@@ -411,8 +411,8 @@ class backupbuddy_migrateDB {
 		// HOMEURL.
 		if ( $this->restoreData['homeurl'] != $this->restoreData['dat']['siteurl'] ) { // Old and new homeurl differ so needs updating.
 
-			if ( empty( $this->restoreData['dat']['homeurl'] ) ) { // old BackupBuddy versions did not store the previous homeurl. Hang onto this for backwards compatibility for a while.
-				pb_backupbuddy::status( 'error', 'Your current backup does not include a home URL. Home URLs will NOT be updated; site URL will be updated though.  Make a new backup with the latest BackupBuddy before migrating if you wish to fully update home URL configuration.' );
+			if ( empty( $this->restoreData['dat']['homeurl'] ) ) { // old Solid Backups versions did not store the previous homeurl. Hang onto this for backwards compatibility for a while.
+				pb_backupbuddy::status( 'error', 'Your current backup does not include a home URL. Home URLs will NOT be updated; site URL will be updated though.  Make a new backup with the latest Solid Backups before migrating if you wish to fully update home URL configuration.' );
 			} else {
 				$this->oldURLs = array( $old_url, $old_url_alt, $this->restoreData['dat']['homeurl'] );
 				$this->newURLs = array( $this->restoreData['siteurl'], $this->restoreData['siteurl'], $this->restoreData['homeurl'] );

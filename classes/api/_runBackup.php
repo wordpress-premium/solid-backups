@@ -68,7 +68,7 @@ if ( $newBackup->start_backup_process(
 	$backupSerial,											// if passed then this serial is used for the backup insteasd of generating one.
 	array()													// Multisite export only: array of plugins to export.
   ) !== true ) {
-	return 'Error #435832: Backup failed. See BackupBuddy log for details.';
+	return 'Error #435832: Backup failed. See Solid Backups log for details.';
 }
 
 return array( 'success' => true, 'serial' => $backupSerial );

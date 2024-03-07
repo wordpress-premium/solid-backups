@@ -14,7 +14,7 @@ if ( ! defined( 'BACKUPBUDDY_API_ENABLE' ) || true != BACKUPBUDDY_API_ENABLE ) {
 		json_encode(
 			array(
 				'success' => false,
-				'message' => 'Error #32332993: BackupBuddy API is not enabled in the wp-config.php.',
+				'message' => 'Error #32332993: Solid Backups API is not enabled in the wp-config.php.',
 			)
 		)
 	);

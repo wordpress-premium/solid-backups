@@ -15,7 +15,7 @@ backupbuddy_core::verifyAjaxAccess();
 
 pb_backupbuddy::$ui->ajax_header();
 pb_backupbuddy::load_script( 'jquery' );
-echo '<div id="pb_backupbuddy_working" style="width: 100px; margin-bottom: 30px;"><br><center><img src="' . pb_backupbuddy::plugin_url() . '/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
+echo '<div id="pb_backupbuddy_working" style="width: 100px; margin-bottom: 30px;"><br><center><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/working.gif" title="Working... Please wait as this may take a moment..."></center></div>';
 ?>
 
 <script>

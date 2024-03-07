@@ -371,7 +371,7 @@ class pb_backupbuddy_filesystem {
 			} elseif ( 'mtime' == $mode ) {
 				$time = @filemtime( $filename );
 			} else {
-				error_log( 'BackupBuddy Error #2334984489383: Invalid glob_by_date mode: `' . $mode . '`.' );
+				error_log( 'Solid Backups Error #2334984489383: Invalid glob_by_date mode: `' . $mode . '`.' );
 				return false;
 			}
 			if ( false === $time ) { // File missing or no longer accessible?
@@ -381,10 +381,11 @@ class pb_backupbuddy_filesystem {
 					$time = time();
 				}
 			}
+			$time = intval( $time );
 			while ( isset( $file_array[ $time ] ) ) { // Avoid collisions.
-				$time = $time + 0.1;
+				$time = $time + 1;
 			}
-			$file_array[ $time ] = $filename; // or just $filename.
+			$file_array[ (int) $time ] = $filename; // or just $filename.
 		}
 		krsort( $file_array );
 		return $file_array;

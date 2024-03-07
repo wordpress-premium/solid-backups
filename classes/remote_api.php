@@ -150,7 +150,7 @@ class backupbuddy_remote_api {
 		$body['files'] = $files;
 
 		if ( ! is_array( $moreParams ) ) {
-			error_log( 'BackupBuddy Error #4893783447 remote_api.php; $moreParams must be passed as array.' );
+			error_log( 'Solid Backups Error #4893783447 remote_api.php; $moreParams must be passed as array.' );
 		}
 		$body = serialize( array_merge( $body, $moreParams ) );
 
@@ -202,7 +202,7 @@ class backupbuddy_remote_api {
 			}
 
 			if ( false === ( $return = @unserialize( $response['body'] ) ) ) {
-				$error = "Error #8001: Unable to decode Deployment response. Things to check: 1) Verify both sites are running the latest BackupBuddy version (v8.1.1.1 introduced non-backward-compatible changes). 2) Check the remote site API URL is correct: " . $remoteAPI['siteurl'] . ". 3) If you changed the remote site API key you must update it into this site. 4) Make sure the remote site has the API enabled in its wp-config.php by adding define( 'BACKUPBUDDY_API_ENABLE', true ); somewhere ABOVE the line `That's all, stop editing!`. Verb: `" . $verb . "`. Troubleshooting: `<textarea style='width: 100%; height: 500px;' wrap='off'>" . htmlentities( print_r( $response, true ) ) . "</textarea>`.";
+				$error = "Error #8001: Unable to decode Deployment response. Things to check: 1) Verify both sites are running the latest Solid Backups version (v8.1.1.1 introduced non-backward-compatible changes). 2) Check the remote site API URL is correct: " . $remoteAPI['siteurl'] . ". 3) If you changed the remote site API key you must update it into this site. 4) Make sure the remote site has the API enabled in its wp-config.php by adding define( 'BACKUPBUDDY_API_ENABLE', true ); somewhere ABOVE the line `That's all, stop editing!`. Verb: `" . $verb . "`. Troubleshooting: `<textarea style='width: 100%; height: 500px;' wrap='off'>" . htmlentities( print_r( $response, true ) ) . "</textarea>`.";
 
 				/*
 				pb_backupbuddy::add_status_serial( 'remote_api' ); // Also log all incoming remote API calls.
@@ -334,10 +334,7 @@ class backupbuddy_remote_api {
 			define('WP_CRON_LOCK_TIMEOUT', 60);  // In seconds
 		}
 
-		if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-			update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-			spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-		}
+		backupbuddy_core::maybe_spawn_cron();
 	} // end _verb_getBackupStatus().
 
 
@@ -471,7 +468,7 @@ class backupbuddy_remote_api {
 		} else {
 			$error = 'Error #84934984. You must specify a sendfile type: Unknown file type `' . htmlentities( $type ) . '`.';
 			pb_backupbuddy::status( 'error', $error );
-			error_log( 'BackupBuddy API error: ' . $error );
+			error_log( 'Solid Backups API error: ' . $error );
 			self::_reply( array( 'success' => false, 'error' => $message ) );
 		}
 		//error_log( 'rootDir: ' . $rootDir );
@@ -828,7 +825,7 @@ class backupbuddy_remote_api {
 						pb_backupbuddy::status( 'error', 'Deployment incoming call: Payload corrupt/undecodable.' );
 
 						self::$_incomingPayload = '';
-						$message = 'BackupBuddy Error #3893383: Valid key but incoming payload unserializable. Corrupt?';
+						$message = 'Solid Backups Error #3893383: Valid key but incoming payload unserializable. Corrupt?';
 						pb_backupbuddy::status( 'error', $message );
 						error_log( $message );
 						return false;

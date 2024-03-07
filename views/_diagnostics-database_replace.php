@@ -33,7 +33,7 @@ if ( '1' == pb_backupbuddy::_GET( 'database_replace' ) ) {
 					return;
 				}
 
-				// Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php
+				// Used in Solid Backups _backup-perform.php and Importer_header.php
 				json.date = new Date();
 				json.date = new Date(  ( json.time * 1000 ) + json.date.getTimezoneOffset() * 60000 );
 				var seconds = json.date.getSeconds();
@@ -52,7 +52,7 @@ if ( '1' == pb_backupbuddy::_GET( 'database_replace' ) ) {
 			// left hour pad with zeros.
 			function backupbuddy_hourpad(n) { return ("0" + n).slice(-2); }
 
-			// Used in BackupBuddy _backup-perform.php and ImportBuddy _header.php and _rollback.php
+			// Used in Solid Backups _backup-perform.php and Importer_header.php and _rollback.php
 			function backupbuddy_log( json ) {
 
 				message = '';
@@ -70,7 +70,7 @@ if ( '1' == pb_backupbuddy::_GET( 'database_replace' ) ) {
 		</script>
 	<?php
 
-	echo pb_backupbuddy::status_box( 'Mass replacing in database with Diagnostics from BackupBuddy v' . pb_backupbuddy::settings( 'version' ) . '...' );
+	echo pb_backupbuddy::status_box( 'Mass replacing in database with Diagnostics from Solid Backups v' . pb_backupbuddy::settings( 'version' ) . '...' );
 	// Instantiate database replacement class.
 	require_once pb_backupbuddy::plugin_path() . '/lib/dbreplace/dbreplace.php';
 	$dbreplace = new pluginbuddy_dbreplace( '', 1, 60 * 60 * 24 );
@@ -79,7 +79,7 @@ if ( '1' == pb_backupbuddy::_GET( 'database_replace' ) ) {
 	$needle = backupbuddy_core::dbEscape( pb_backupbuddy::_POST( 'needle' ) );
 	if ( '' == $needle ) {
 		echo '<b>Error #4456582. Missing needle. You must enter text to search for.';
-		echo '<br><a href="' . pb_backupbuddy::page_url() . '&tab=database#database_replace" class="button secondary-button">&larr; ' . esc_html__( 'back', 'it-l10n-backupbuddy' ) . '</a>';
+		echo '<br><a href="' . esc_attr( pb_backupbuddy::page_url() ) . '&tab=database#database_replace" class="button button-secondary secondary-button">&larr; ' . esc_html__( 'back', 'it-l10n-backupbuddy' ) . '</a>';
 		return;
 	}
 	$replacement = backupbuddy_core::dbEscape( pb_backupbuddy::_POST( 'replacement' ) );
@@ -132,7 +132,7 @@ if ( '1' == pb_backupbuddy::_GET( 'database_replace' ) ) {
 		die( 'Error #4456893489349834. Unknown method.' );
 	}
 
-	echo '<br><a href="' . pb_backupbuddy::page_url() . '&tab=database#database_replace" class="button secondary-button">&larr; ' . esc_html__( 'back', 'it-l10n-backupbuddy' ) . '</a>';
+	echo '<br><a href="' . esc_attr( pb_backupbuddy::page_url() ) . '&tab=database#database_replace" class="button button-secondary secondary-button">&larr; ' . esc_html__( 'back', 'it-l10n-backupbuddy' ) . '</a>';
 
 	$pb_backupbuddy_js_status = false;
 	return;

@@ -4,30 +4,31 @@ use \Dropbox as dbx;
 class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 
 	public static $destination_info = array(
-		'name'			=>		'Dropbox (v2)',
-		'description'	=>		'Legacy Dropbox destination. Support will discontinued in the future. Use Dropbox (v3) for Dropbox Destination support.',
-		'category'		=>		'legacy', // best, normal, legacy
+		'deprecated'  => false,
+		'name'        => 'Dropbox v2',
+		'description' => 'Legacy Dropbox destination. Support will discontinued in the future. Use Dropbox v3 for Dropbox Destination support.',
+		'category'    => 'legacy', // best, normal, legacy
 	);
 
 	// Default settings. Should be public static for auto-merging.
 	public static $default_settings = array(
-		// Default settings.
-		'type'						=>		'dropbox2',				// Required destination slug.
-		'title'						=>		'',						// Required destination field.
-		'access_token'				=>		'',						// oAuth2 access token.
-		'directory'					=>		'backupbuddy',			// Remote Dropbox directory to store into.
-		'archive_limit'				=>		0,						// Max number of archives allowed in destination directory.
-		'max_chunk_size'			=>		'80',					// Maximum chunk size in MB. Anything larger will be chunked up into pieces this size (or less for last piece). This allows larger files to be sent than would otherwise be possible. Minimum of 5mb allowed by S3.
-		'disable_file_management'	=>		'0',		// When 1, _manage.php will not load which renders remote file management DISABLED.
+		'type'                    => 'dropbox2', // Required destination slug.
+		'title'                   => '', // Required destination field.
+		'access_token'            => '', // oAuth2 access token.
+		'directory'               => 'backupbuddy', // Remote Dropbox directory to store into.
+		'archive_limit'           => 0, // Max number of archives allowed in destination directory.
+		'max_chunk_size'          => '80', // Maximum chunk size in MB. Anything larger will be chunked up into pieces this size (or less for last piece). This allows larger files to be sent than would otherwise be possible. Minimum of 5mb allowed by S3.
+		'disable_file_management' => '0', // When 1, _manage.php will not load which renders remote file management DISABLED.
+
 		// Instance variables for transfer-specific settings such as multipart/chunking.
-		'_chunk_upload_id'			=>		'',						// Instance var. Internal use only for continuing a chunked upload.
-		'_chunk_offset'				=>		'',						// Instance var. Internal use only for continuing a chunked upload.
-		'_chunk_maxsize'			=>		'',						// Instance var. Internal use only for continuing a chunked upload.
-		'_chunk_next_offset'		=>		0,						// Instance var. Internal use only for continuing a chunked upload. - Next chunk byte offset to seek to for sending.
-		'_chunk_sent_count'			=>		0,						// Instance var. Internal use only for continuing a chunked upload. - Number of chunks sent.
-		'_chunk_total_count'		=>		0,						// Instance var. Internal use only for continuing a chunked upload. - Total number of chunks that will be sent..
-		'_chunk_transfer_speeds'	=>		array(),				// Instance var. Internal use only for continuing a chunked upload. - Array of time spent actually transferring. Used for calculating send speeds and such.
-		'disabled'					=>		'0',		// When 1, disable this destination.
+		'_chunk_upload_id'        => '', // Instance var. Internal use only for continuing a chunked upload.
+		'_chunk_offset'           => '', // Instance var. Internal use only for continuing a chunked upload.
+		'_chunk_maxsize'          => '', // Instance var. Internal use only for continuing a chunked upload.
+		'_chunk_next_offset'      => 0, // Instance var. Internal use only for continuing a chunked upload. - Next chunk byte offset to seek to for sending.
+		'_chunk_sent_count'       => 0, // Instance var. Internal use only for continuing a chunked upload. - Number of chunks sent.
+		'_chunk_total_count'      => 0, // Instance var. Internal use only for continuing a chunked upload. - Total number of chunks that will be sent..
+		'_chunk_transfer_speeds'  => array(), // Instance var. Internal use only for continuing a chunked upload. - Array of time spent actually transferring. Used for calculating send speeds and such.
+		'disabled'                => '0',     // When 1, disable this destination.
 	);
 
 	public static $appInfo;
@@ -250,10 +251,7 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 					pb_backupbuddy::status( 'error', 'Next Dropbox chunk step cron event FAILED to be scheduled.' );
 				}
 
-				if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-					update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-					spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-				}
+				backupbuddy_core::maybe_spawn_cron();
 
 				return array( $chunked_destination_settings['_chunk_upload_id'], 'Sent ' . $chunked_destination_settings['_chunk_sent_count'] . ' of ' . $chunked_destination_settings['_chunk_total_count'] . ' parts.' );
 			}
@@ -330,10 +328,7 @@ class pb_backupbuddy_destination_dropbox2 { // Ends with destination slug.
 					pb_backupbuddy::status( 'details', 'Success scheduling next cron chunk.' );
 				}
 
-				if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-					update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-					spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-				}
+				backupbuddy_core::maybe_spawn_cron();
 
 				pb_backupbuddy::status( 'details', 'Dropbox (PHP 5.3+) scheduled send of next part(s). Done for this cycle.' );
 

@@ -170,7 +170,7 @@ if ( 'true' == pb_backupbuddy::_GET( 'deploy' ) ) {
 	}
 	fclose( $file_handle );
 	?>
-	<form method="post" action="?ajax=<?php echo $nextStepNum; ?>&v=<?php echo pb_backupbuddy::_GET( 'v' ); ?>&deploy=true&direction=<?php echo pb_backupbuddy::_GET( 'direction' ); ?>&display_mode=embed" id="deploy-autoProceed">
+	<form method="post" action="?ajax=<?php echo $nextStepNum; ?>&v=<?php esc_attr_e( pb_backupbuddy::_GET( 'v' ) ); ?>&deploy=true&direction=<?php esc_attr_e( pb_backupbuddy::_GET( 'direction' ) ); ?>&display_mode=embed" id="deploy-autoProceed">
 		<!-- input type="hidden" name="restoreData" value="<?php //echo base64_encode( urlencode( json_encode( $restore->_state ) ) ); ?>" -->
 		<input type="submit" name="my-submit" value="Next Step" style="visibility: hidden;">
 	</form>

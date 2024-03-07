@@ -42,7 +42,7 @@ function upload() {
 				return false;
 			}
 		} else {
-			pb_backupbuddy::alert( 'Only properly named BackupBuddy zip archives with a zip extension may be uploaded.', true );
+			pb_backupbuddy::alert( 'Only properly named Solid Backups zip archives with a zip extension may be uploaded.', true );
 			return false;
 		}
 	}
@@ -64,7 +64,7 @@ function upload() {
 		$request = new RequestCore( $link );
 		$request->set_write_file( $destination_file );
 
-		echo '<div id="pb_importbuddy_working" style="padding: 20px;">Downloading backup from Stash to `' . $destination_file . '`...<br><br><img src="' . pb_backupbuddy::plugin_url() . '/images/loading_large.gif" title="Working... Please wait as this may take a moment..."><br><br></div>';
+		echo '<div id="pb_importbuddy_working" style="padding: 20px;">Downloading backup from Stash to `' . $destination_file . '`...<br><br><img src="' . pb_backupbuddy::plugin_url() . '/assets/dist/images/loading_large.gif" title="Working... Please wait as this may take a moment..."><br><br></div>';
 		pb_backupbuddy::flush();
 
 		$response = $request->send_request( false );
@@ -171,4 +171,4 @@ function preflightScan() {
 pb_backupbuddy::load_view( 'home', $data );
 
 // LOG IMPORTBUDDY VERSION INFORMATION.
-pb_backupbuddy::status( 'details', 'Running ImportBuddy v' . pb_backupbuddy::$options['bb_version'] . '.' );
+pb_backupbuddy::status( 'details', 'Running the Importer v' . pb_backupbuddy::$options['bb_version'] . '.' );

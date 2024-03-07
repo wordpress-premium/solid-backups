@@ -2,7 +2,7 @@
 /**
  * Backups Listing
  *
- * Part of BackupBuddy Backups class.
+ * Part of Solid Backups Backups class.
  *
  * Incoming vars:
  *     $backups
@@ -11,6 +11,12 @@
  * @package BackupBuddy
  */
 
+$admin_body_classes = apply_filters( 'backupbuddy_admin_iframe_body_classes', '' );
+// HTML necessary for styles to load properly.
+?>
+<div class="backupbuddy-admin-page <?php echo esc_attr( $admin_body_classes ); ?>">
+	<div class="wrap">
+<?php
 pb_backupbuddy::$ui->list_table(
 	$backups,
 	array_merge(
@@ -33,3 +39,7 @@ pb_backupbuddy::$ui->list_table(
 );
 
 $this->pagination();
+?>
+	</div>
+</div>
+<?php

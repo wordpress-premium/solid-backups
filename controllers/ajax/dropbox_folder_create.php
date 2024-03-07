@@ -14,7 +14,7 @@ $response    = array(
 	'id'      => '',
 	'name'    => '',
 );
-$folder_path = pb_backupbuddy::_POST( 'folder_path' ); // BackupBuddy destination ID number for remote destinations array.
+$folder_path = pb_backupbuddy::_POST( 'folder_path' ); // Solid Backups destination ID number for remote destinations array.
 $folder_path = '/' . ltrim( $folder_path, '/' );
 
 $settings = array(

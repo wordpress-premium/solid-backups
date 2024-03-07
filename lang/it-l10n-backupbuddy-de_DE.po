@@ -653,7 +653,7 @@ msgstr "Tip"
 
 #: controllers/ajax/_destination_picker.php:310
 msgid ""
-"If you encounter difficulty try the ImportBuddy tool. Verify the destination "
+"If you encounter difficulty try the Importer tool. Verify the destination "
 "URL by entering the \"Migration URL\", and clicking \"Test Settings\" before "
 "proceeding."
 msgstr ""
@@ -1118,7 +1118,7 @@ msgstr "Allgemein"
 #: controllers/help/settings.php:9
 msgid ""
 "This section contains the basic settings for BackupBuddy. At a minimum you "
-"should configure the ImportBuddy password and notification emails so you "
+"should configure the Importer password and notification emails so you "
 "will be notified if backups fail."
 msgstr ""
 "Dieser Abschnitt beinhaltet die grundlegenden Einstellungen für BackupBuddy. "
@@ -5578,7 +5578,7 @@ msgstr "empfohlen"
 
 #: views/migrate-home.php:29
 msgid ""
-"To download, enter a password to lock the ImportBuddy script from "
+"To download, enter a password to lock the Importer script from "
 "unauthorized access. You will be prompted for this password when you go to "
 "importbuddy.php in your browser. Since you have not defined a default "
 "password yet this will be used as your default and can be changed later from "
@@ -5593,12 +5593,12 @@ msgstr ""
 #: views/migrate-home.php:41
 msgid ""
 "To download, either enter a new password for just this download OR LEAVE "
-"BLANK to use your default ImportBuddy password (set on the Settings page) to "
-"lock the ImportBuddy script from unauthorized access."
+"BLANK to use your default Importer password (set on the Settings page) to "
+"lock the Importer script from unauthorized access."
 msgstr ""
 "Um herunter zu laden entweder ein neues Passwort für genau diesen Download "
-"eingeben ODER LEER LASSEN um Dein ImportBuddy Standard-Passwort (auf der "
-"Einstellungs-Seite eingestellt) zu benutzen um das ImportBuddy Script vor "
+"eingeben ODER LEER LASSEN um Dein Importer Standard-Passwort (auf der "
+"Einstellungs-Seite eingestellt) zu benutzen um das Importer Script vor "
 "unbefugtem  Zugriff zu schützen."
 
 #: views/migrate-home.php:104
@@ -5761,8 +5761,8 @@ msgstr ""
 "WordPress heruntergeladen werden können"
 
 #: views/settings/_advanced.php:51
-msgid "Include ImportBuddy in full backup archive"
-msgstr "ImportBuddy im fertigen Backup-Archiv einschließen"
+msgid "Include Importer in full backup archive"
+msgstr "Importer im fertigen Backup-Archiv einschließen"
 
 #: views/settings/_advanced.php:54
 msgid "Located in backup"
@@ -6489,7 +6489,7 @@ msgid "General"
 msgstr "Allgemein"
 
 #: views/settings/_general.php:58
-msgid "ImportBuddy password"
+msgid "Importer password"
 msgstr "Import-Passwort (optional)"
 
 #: views/settings/_general.php:59
@@ -7599,7 +7599,7 @@ msgstr "http://ithemes.com/"
 #~ "test was performed by outputting / logging the script time elapsed once "
 #~ "per second until PHP timed out and thus the time reported stopped. This "
 #~ "gives a fairly accurate number compared to the reported number which is "
-#~ "most often overriden at the server with a limit. If the page stays blank "
+#~ "most often overridden at the server with a limit. If the page stays blank "
 #~ "for a while then eventually loads then your server does not support live "
 #~ "flushing of the updated time to your browser so you will not see updates "
 #~ "until the test completes. "
@@ -7834,7 +7834,7 @@ msgstr "http://ithemes.com/"
 #~ msgstr "Debug-Informationen"
 
 #~ msgid ""
-#~ "Please set an ImportBuddy password on the BackupBuddy Settings page to "
+#~ "Please set an Importer password on the BackupBuddy Settings page to "
 #~ "download this script. This is required to prevent unauthorized access to "
 #~ "the script when in use."
 #~ msgstr ""

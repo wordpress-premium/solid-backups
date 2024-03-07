@@ -7,19 +7,23 @@
 
 backupbuddy_core::verifyAjaxAccess();
 
-pb_backupbuddy::$ui->ajax_header();
+pb_backupbuddy::$ui->ajax_header( true, true, 'backupbuddy-admin-iframe-white diagnostics-iframe');
+
+?>
+<div class="diagnostics-iframe-inner">
+	<?php
 
 $serial   = pb_backupbuddy::_GET( 'serial' );
 $log_file = backupbuddy_core::getLogDirectory() . 'status-' . $serial . '_sum_' . pb_backupbuddy::$options['log_serial'] . '.txt';
 
 if ( ! file_exists( $log_file ) ) {
-	die( 'Error #858733: Log file `' . $log_file . '` not found or access denied.' );
+	die( 'Error #858733: Log file `' . esc_html( $log_file ) . '` not found or access denied.' );
 }
 
 $lines = file_get_contents( $log_file );
 $lines = explode( "\n", $lines );
 ?>
-<textarea readonly="readonly" id="backupbuddy_messages" wrap="off" style="width: 100%; min-height: 400px; height: 500px; height: 80%; background: #FFF;">
+<textarea readonly="readonly" id="backupbuddy_messages" classwrap="off" style="min-height: 400px; height: 500px; height: 80%;">
 <?php
 foreach ( (array) $lines as $rawline ) {
 	$line = json_decode( $rawline, true );
@@ -38,14 +42,16 @@ foreach ( (array) $lines as $rawline ) {
 	}
 }
 ?>
-</textarea><br><br>
-<small>Log file: <?php echo $log_file; ?></small>
-<br>
+</textarea>
+<p>
+<small>Log file: <?php esc_html_e( $log_file ); ?></small>
+</p>
+<p>
 <?php
 echo '<small>Last modified: ' . pb_backupbuddy::$format->date( filemtime( $log_file ) ) . ' (' . pb_backupbuddy::$format->time_ago( filemtime( $log_file ) ) . ' ago)';
 ?>
-<br><br>
-
+</p>
+</div>
 <?php
 pb_backupbuddy::$ui->ajax_footer();
 die();

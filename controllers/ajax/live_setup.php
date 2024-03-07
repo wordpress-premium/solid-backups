@@ -26,12 +26,12 @@ $archive_periods = array(
 );
 
 if ( '' == pb_backupbuddy::_POST( 'live_username' ) || '' == pb_backupbuddy::_POST( 'live_password' ) ) { // A field is blank.
-	$errors[] = 'You must enter your iThemes username & password to log in to BackupBuddy Stash Live.';
+	$errors[] = 'You must enter your SolidWP username & password to log in to Solid Backups Stash Live.';
 } else { // Username and password provided.
 
 	require_once pb_backupbuddy::plugin_path() . '/lib/stash/stash-api.php';
-	require_once pb_backupbuddy::plugin_path() . '/destinations/stash2/class.itx_helper2.php';
-	require_once pb_backupbuddy::plugin_path() . '/destinations/stash2/init.php';
+	require_once pb_backupbuddy::plugin_path() . '/destinations/stash3/class.itx_helper2.php';
+	require_once pb_backupbuddy::plugin_path() . '/destinations/stash3/init.php';
 	require_once pb_backupbuddy::plugin_path() . '/destinations/live/init.php';
 
 	global $wp_version;
@@ -51,7 +51,7 @@ if ( '' == pb_backupbuddy::_POST( 'live_username' ) || '' == pb_backupbuddy::_PO
 			if ( isset( $response['token'] ) ) {
 				$itxapi_token = $response['token'];
 			} else {
-				$errors[] = 'Error #2308832: Unexpected server response. Token missing. Check your BackupBuddy Stash Live login and try again. Detailed response: `' . print_r( $response, true ) . '`.';
+				$errors[] = 'Error #2308832: Unexpected server response. Token missing. Check your Solid Backups Stash Live login and try again. Detailed response: `' . print_r( $response, true ) . '`.';
 			}
 		}
 	}
@@ -66,7 +66,7 @@ if ( '' == pb_backupbuddy::_POST( 'live_username' ) || '' == pb_backupbuddy::_PO
 		pb_backupbuddy::$options['remote_destinations'][ $next_dest_key ]                    = pb_backupbuddy_destination_live::$default_settings;
 		pb_backupbuddy::$options['remote_destinations'][ $next_dest_key ]['itxapi_username'] = pb_backupbuddy::_POST( 'live_username' );
 		pb_backupbuddy::$options['remote_destinations'][ $next_dest_key ]['itxapi_token']    = $itxapi_token;
-		pb_backupbuddy::$options['remote_destinations'][ $next_dest_key ]['title']           = 'My BackupBuddy Stash Live';
+		pb_backupbuddy::$options['remote_destinations'][ $next_dest_key ]['title']           = 'My Solid Backups Stash Live';
 
 		// Notification email.
 		pb_backupbuddy::$options['remote_destinations'][ $next_dest_key ]['email'] = pb_backupbuddy::_POST( 'email' );
@@ -90,20 +90,7 @@ if ( '' == pb_backupbuddy::_POST( 'live_username' ) || '' == pb_backupbuddy::_PO
 
 		// Send new settings for archive limiting to Stash API.
 		backupbuddy_live::send_trim_settings();
-
-		// Set first run of BackupBuddy Stash Live so it begins immediately.
-		$cron_args       = array();
-		$schedule_result = backupbuddy_core::schedule_single_event( time(), 'live_periodic', $cron_args );
-		if ( true === $schedule_result ) {
-			pb_backupbuddy::status( 'details', 'Next Live Periodic chunk step cron event scheduled.' );
-		} else {
-			pb_backupbuddy::status( 'error', 'Next Live Periodic chunk step cron event FAILED to be scheduled.' );
-		}
-		if ( '1' != pb_backupbuddy::$options['skip_spawn_cron_call'] ) {
-			pb_backupbuddy::status( 'details', 'Spawning cron now.' );
-			update_option( '_transient_doing_cron', 0 ); // Prevent cron-blocking for next item.
-			spawn_cron( time() + 150 ); // Adds > 60 seconds to get around once per minute cron running limit.
-		}
+		backupbuddy_live_periodic::schedule_next_event();
 	}
 } // end if user and pass set.
 

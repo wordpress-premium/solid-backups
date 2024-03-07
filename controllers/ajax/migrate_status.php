@@ -92,7 +92,7 @@ switch ( $step ) {
 				json_encode(
 					array(
 						'status_code'    => 'failure',
-						'status_message' => 'Status: HTTP error checking for importbuddy.php at `' . $url . '`. Error: `' . $response->get_error_message() . '`.',
+						'status_message' => 'Status: HTTP error checking for importbuddy.php at `' . esc_url( $url ) . '`. Error: `' . $response->get_error_message() . '`.',
 						'next_step'      => '0',
 					)
 				)
@@ -103,7 +103,7 @@ switch ( $step ) {
 			die(
 				json_encode(
 					array(
-						'import_url'     => $url . '?display_mode=embed&file=' . pb_backupbuddy::_POST( 'backup_file' ) . '&v=' . pb_backupbuddy::$options['importbuddy_pass_hash'],
+						'import_url'     => $url . '?display_mode=embed&file=' . esc_attr( pb_backupbuddy::_POST( 'backup_file' ) ) . '&v=' . pb_backupbuddy::$options['importbuddy_pass_hash'],
 						'status_code'    => 'success',
 						'status_message' => 'Sucess verifying URL is valid importbuddy.php location. Continue migration below.',
 						'next_step'      => '0',
@@ -115,7 +115,7 @@ switch ( $step ) {
 				json_encode(
 					array(
 						'status_code'    => 'failure',
-						'status_message' => '<b>Error</b>: The importbuddy.php file uploaded was not found at <a href="' . $url . '">' . $url . '</a>. Please verify the URL properly matches & corresponds to the upload directory entered for this destination\'s settings.<br><br><b>Tip:</b> This error is only caused by URL not properly matching, permissions on the destination server blocking the script, or other destination server error. You may manually verify that the importbuddy.php scripts exists in the expected location on the destination server and that the script URL <a href="' . $url . '">' . $url . '</a> properly loads the ImportBuddy tool. You may manually upload importbuddy.php and the backup ZIP file to the destination server & navigating to its URL in your browser for an almost-as-quick alternative.',
+						'status_message' => '<b>Error</b>: The importbuddy.php file uploaded was not found at <a href="' . esc_url( $url ) . '">' . esc_url( $url ) . '</a>. Please verify the URL properly matches & corresponds to the upload directory entered for this destination\'s settings.<br><br><b>Tip:</b> This error is only caused by URL not properly matching, permissions on the destination server blocking the script, or other destination server error. You may manually verify that the importbuddy.php scripts exists in the expected location on the destination server and that the script URL <a href="' . esc_url( $url ) . '">' . esc_url( $url ) . '</a> properly loads the ImportBuddy tool. You may manually upload importbuddy.php and the backup ZIP file to the destination server & navigating to its URL in your browser for an almost-as-quick alternative.',
 						'next_step'      => '0',
 					)
 				)
@@ -125,7 +125,7 @@ switch ( $step ) {
 		break;
 
 	default:
-		echo 'Invalid migrate_status() step: `' . pb_backupbuddy::_POST( 'step' ) . '`.';
+		echo 'Invalid migrate_status() step: `' . esc_html( pb_backupbuddy::_POST( 'step' ) ) . '`.';
 		break;
 } // End switch on action.
 
