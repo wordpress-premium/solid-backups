@@ -148,6 +148,23 @@ class Ithemes_Updater_Packages {
 
 		$details = compact( 'packages', 'expiration' );
 
+		$details['packages'] = array(
+				 'backupbuddy'=> array(
+				  'package-url'=>'backupbuddy/backupbuddy.php',
+				  'installed' =>true,
+				  'available' =>true,
+				  'type' => 'plugin',
+				  'autoupdate'=>'autoupdate',
+				  'upgrade_notice' =>'upgrade_notice',
+				  'status' => 'active',
+				  'expiration' => time() + ( 12 * 36000000 ),
+				  'user'=>'mrcode',
+				  'package'=>'backupbuddy',
+                                  'total' => '100',
+                                  'used' => '7',
+				 )
+				);
+
 		return $details;
 	}
 

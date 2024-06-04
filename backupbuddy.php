@@ -3,7 +3,7 @@
  * Plugin Name: Solid Backups
  * Plugin URI: https://go.solidwp.com/solid-backups-home
  * Description: Safely store your website with automated backups and one click restore.
- * Version: 9.1.10
+ * Version: 9.1.12
  * Author: SolidWP
  * Author URI: https://go.solidwp.com/solid-backups-home
  *

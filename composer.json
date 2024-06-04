@@ -1,18 +1,1 @@
-{
-    "name": "wordpress-premium/backupbuddy",
-    "description": "The original 3-in-1 WordPress backup plugin for quick and easy WordPress backups! Restore and move WordPress to a new server or domain, too.",
-    "type": "wordpress-plugin",
-    "version": "9.1.10",
-    "author": "Brian DiChiara",
-    "config": {
-        "platform": {
-            "php": "7.1"
-        }
-    },
-    "require": {
-        "krizalys/onedrive-php-sdk": "^2.6",
-        "stevenmaguire/oauth2-dropbox": "^3.0",
-        "google/apiclient": "^2.4",
-        "monolog/monolog": "1.25.3"
-    }
-}
+{"config":{"platform":{"php":"7.1"}},"description":"The original 3-in-1 WordPress backup plugin for quick and easy WordPress backups! Restore and move WordPress to a new server or domain, too.","license":"proprietary","name":"wordpress-premium\/backupbuddy","require":{"google\/apiclient":"^2.4","krizalys\/onedrive-php-sdk":"^2.6","monolog\/monolog":"^1.25.3","stevenmaguire\/oauth2-dropbox":"^3.0"},"type":"wordpress-plugin"}

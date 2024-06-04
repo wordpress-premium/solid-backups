@@ -1466,27 +1466,28 @@ class backupbuddy_core {
 		// PACK IMPORTBUDDY.
 		$_packdata = array( // NO TRAILING OR PRECEEDING SLASHES!
 
-			'_importbuddy/importbuddy'               => 'importbuddy',
-			'classes/_migrate_database.php'          => $ib_dir . 'classes/_migrate_database.php',
-			'classes/core.php'                       => $ib_dir . 'classes/core.php',
-			'classes/import.php'                     => $ib_dir . 'classes/import.php',
-			'classes/restore.php'                    => $ib_dir . 'classes/restore.php',
-			'classes/_restoreFiles.php'              => $ib_dir . 'classes/_restoreFiles.php',
-			'classes/remote_api.php'                 => $ib_dir . 'classes/remote_api.php',
+			'_importbuddy/importbuddy'                    => 'importbuddy',
+			'classes/_migrate_database.php'               => $ib_dir . 'classes/_migrate_database.php',
+			'classes/class-backupbuddy-data-file.php'     => $ib_dir . 'classes/class-backupbuddy-data-file.php',
+			'classes/core.php'                            => $ib_dir . 'classes/core.php',
+			'classes/import.php'                          => $ib_dir . 'classes/import.php',
+			'classes/restore.php'                         => $ib_dir . 'classes/restore.php',
+			'classes/_restoreFiles.php'                   => $ib_dir . 'classes/_restoreFiles.php',
+			'classes/remote_api.php'                      => $ib_dir . 'classes/remote_api.php',
 
-			'lib/dbreplace'                          => $ib_dir . 'lib/dbreplace',
-			'lib/dbimport'                           => $ib_dir . 'lib/dbimport',
-			'lib/commandbuddy'                       => $ib_dir . 'lib/commandbuddy',
-			'lib/pclzip'                             => $ib_dir . 'lib/pclzip',
-			'lib/zipbuddy'                           => $ib_dir . 'lib/zipbuddy',
-			'lib/mysqlbuddy'                         => $ib_dir . 'lib/mysqlbuddy',
-			'lib/textreplacebuddy'                   => $ib_dir . 'lib/textreplacebuddy',
-			'lib/cpanel'                             => $ib_dir . 'lib/cpanel',
+			'lib/dbreplace'                               => $ib_dir . 'lib/dbreplace',
+			'lib/dbimport'                                => $ib_dir . 'lib/dbimport',
+			'lib/commandbuddy'                            => $ib_dir . 'lib/commandbuddy',
+			'lib/pclzip'                                  => $ib_dir . 'lib/pclzip',
+			'lib/zipbuddy'                                => $ib_dir . 'lib/zipbuddy',
+			'lib/mysqlbuddy'                              => $ib_dir . 'lib/mysqlbuddy',
+			'lib/textreplacebuddy'                        => $ib_dir . 'lib/textreplacebuddy',
+			'lib/cpanel'                                  => $ib_dir . 'lib/cpanel',
 
-			'pluginbuddy'                            => $ib_dir . 'pluginbuddy',
+			'pluginbuddy'                                 => $ib_dir . 'pluginbuddy',
 
-			'controllers/pages/server_info'          => $ib_dir . 'controllers/pages/server_info',
-			'controllers/pages/diagnostics.php'      => $ib_dir . 'controllers/pages/diagnostics.php',
+			'controllers/pages/server_info'               => $ib_dir . 'controllers/pages/server_info',
+			'controllers/pages/diagnostics.php'           => $ib_dir . 'controllers/pages/diagnostics.php',
 
 			// Stash
 			// 'destinations/stash3/init.php'             => $ib_dir . 'lib/stash3/init.php',

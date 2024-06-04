@@ -3,7 +3,7 @@
         'name' => 'solid_bckups/solid_backups',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => '6eaed99a2d2e41805ba1a5e80020da91583f4c44',
+        'reference' => 'd508dbb432be76b8aec79d9613e55b7a0641b3ab',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -232,7 +232,7 @@
         'solid_bckups/solid_backups' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => '6eaed99a2d2e41805ba1a5e80020da91583f4c44',
+            'reference' => 'd508dbb432be76b8aec79d9613e55b7a0641b3ab',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

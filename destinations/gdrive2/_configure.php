@@ -158,6 +158,15 @@ if ( 'add' === $mode ) {
 					?>
 				</p>
 
+				<p class="gdrive2-initial-actions"><?php
+				echo wp_kses_post(
+					sprintf(
+						// translators: %s is a link to the Google API Services User Data Policy.
+						__( 'Solid Backup\'s use and transfer to any other app of information received from Google APIs will adhere to <a href="%s" target="_blank">Google API Services User Data Policy</a>, including the Limited Use requirements.', 'it-l10n-backupbuddy' ),
+						'https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes'
+					)
+				); ?></p>
+
 				<p class="gdrive2-initial-actions"><?php esc_html_e( 'Looking for Service Account File authentication?' ); ?> <a href="<?php echo esc_attr( pb_backupbuddy::ajax_url( 'destination_picker' ) ) . '&add=gdrive2&account=service&callback_data=' . esc_attr( pb_backupbuddy::_GET( 'callback_data' ) ); ?>"><?php esc_html_e( 'Click Here', 'it-l10n-backupbuddy' ); ?></a></p>
 
 				<p class="gdrive2-auth-code hidden">
@@ -166,6 +175,7 @@ if ( 'add' === $mode ) {
 						<span class="field"><input type="text" name="auth_code" class="large" /></span>
 					</label>
 				</p>
+
 				<footer class="form-footer hidden">
 					<input type="submit" class="button button-primary" value="Link Account">
 				</footer>

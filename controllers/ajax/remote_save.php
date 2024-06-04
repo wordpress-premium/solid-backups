@@ -44,6 +44,13 @@ if ( isset( $save_result['errors'] ) ) {
 			$response['success'] = true;
 			$response['status']  = 'added';
 			$response['new_tab'] = 'destination-' . $save_result['data']['type'] . '-' . $destination_id;
+			Solid_Backups_Telemetry::trackEvent(
+				'add_new_destination',
+				[
+					'destination_title' => $new_destination['title'],
+					'destination_type' => $new_destination['type'],
+				]
+			);
 		} elseif ( ! isset( pb_backupbuddy::$options['remote_destinations'][ $destination_id ] ) ) { // EDITING NONEXISTANT.
 			$response['error'] = 'Error #54859. Invalid destination ID `' . esc_html( $destination_id ) . '`.';
 		} else { // EDITING EXISTING -- Save!
@@ -59,6 +66,13 @@ if ( isset( $save_result['errors'] ) ) {
 			$edited_destination['title'] = $save_result['data']['title'];
 			$edited_destination['type']  = $save_result['data']['type'];
 			backupbuddy_core::addNotification( 'destination_updated', 'Remote destination updated', 'An existing remote destination "' . $edited_destination['title'] . '" has been updated.', $edited_destination );
+			Solid_Backups_Telemetry::trackEvent(
+				'edit_remote_destination',
+				[
+					'destination_title' => $edited_destination['title'],
+					'destination_type' => $edited_destination['type'],
+				]
+			);
 		}
 	} else {
 		$response['status'] = 'Error saving settings. ' . implode( "\n", $save_result['errors'] );

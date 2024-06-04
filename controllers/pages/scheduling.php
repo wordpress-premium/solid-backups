@@ -383,6 +383,14 @@ if ( ! empty( $submitted_schedule ) && count( $submitted_schedule['errors'] ) ==
 				$schedule_form->clear_values();
 				$schedule_form->set_value( 'on_off', $enabled ? '1' : '0' );
 				pb_backupbuddy::alert( 'Added new schedule `' . htmlentities( $submitted_schedule['data']['title'] ) . '`.', false, '', '', '', array( 'class' => 'below-h2' ) );
+				Solid_Backups_Telemetry::trackEvent(
+					'add_new_schedule',
+					[
+						'schedule_interval' => $submitted_schedule['data']['interval'],
+						'schedule_profile'  => $submitted_schedule['data']['profile'],
+						'schedule_title'    => $submitted_schedule['data']['title']
+					]
+				);
 			}
 		}
 	} else { // EDIT SCHEDULE. Form handles saving; just need to update timestamp.
@@ -416,6 +424,14 @@ if ( ! empty( $submitted_schedule ) && count( $submitted_schedule['errors'] ) ==
 
 		$edited_schedule = $submitted_schedule['data'];
 		backupbuddy_core::addNotification( 'schedule_updated', 'Backup schedule updated', 'An existing schedule "' . $edited_schedule['title'] . '" has been updated.', $edited_schedule );
+		Solid_Backups_Telemetry::trackEvent(
+			'edit_schedule',
+			[
+				'schedule_interval' => $submitted_schedule['data']['interval'],
+				'schedule_profile'  => $submitted_schedule['data']['profile'],
+				'schedule_title'    => $submitted_schedule['data']['title']
+			]
+		);
 	}
 } elseif ( ! empty( $submitted_schedule['errors'] ) && count( $submitted_schedule['errors'] ) > 0 ) {
 	foreach ( $submitted_schedule['errors'] as $error ) {

@@ -280,7 +280,9 @@ class backupbuddy_restore {
 			$datFile = $this->_state['datLocation'];
 		}
 
-		if ( false === ( $datData = backupbuddy_data_file()->get_dat_file_array( $datFile ) ) ) {
+		require( pb_backupbuddy::plugin_path() . '/classes/class-backupbuddy-data-file.php' );
+
+		if ( false === ( $datData = ( new BackupBuddy_Data_File )->get_dat_file_array( $datFile ) ) ) {
 			$this->_error( 'Error #4839484: Unable to retrieve DAT file. The backup may have failed opening due to lack of memory, permissions issues, or other reason. Use the Importer to restore or check the Advanced Log above for details.' );
 			return false;
 		}

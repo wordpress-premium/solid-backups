@@ -102,6 +102,10 @@ if ( ! function_exists( 'pb_backupbuddy_get_loadavg' ) ) {
 		if ( substr( PHP_OS, 0, 3 ) == 'WIN' ) { // WINDOWS.
 			ob_start();
 			$status = null;
+			if ( ! backupbuddy_core::is_func_allowed('passthru') ) {
+				printf( __( 'The %s function is not allowed on your system.', 'it-l10n-backupbuddy' ), '<code>passthru()</code>' );
+				die;
+			}
 			@passthru( 'typeperf -sc 1 "\processor(_total)\% processor time"', $status );
 			$content = ob_get_contents();
 			ob_end_clean();

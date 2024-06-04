@@ -2206,3 +2206,9 @@
 	Enhancement: Hiding the Quick Start menu after the form is submitted.
 	Bug Fix: Fixing rules delimiter on Exclusions field in settings.
 	Bug Fix: Updating broken links for Stash storage.
+9.1.11 - 2024-03-11 - Jared Hill, John Regan
+	Bug Fix: Fix in function reference for Standalone ImportBuddy.
+9.1.12 - 2024-04-29	- Jared Hill, John Regan
+	Bug Fix: Added additional items to StellarWP Telemetry data tracking
+	Bug Fix: Added graceful handling of passthru function fatal error
+	Enhancement: Added Google Drive API legal text and link

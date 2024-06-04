@@ -1199,6 +1199,14 @@ class pb_backupbuddy_backup {
 
 			pb_backupbuddy::status( 'details', 'Completed step function `' . $step['function'] . '`.' );
 
+			Solid_Backups_Telemetry::trackEvent(
+				'backup_complete',
+				[
+					'backup_type' => $this->_backup['type'],
+					'backup_trigger' => $this->_backup['trigger'],
+				]
+			);
+
 			return true;
 		}
 
