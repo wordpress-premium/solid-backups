@@ -137,7 +137,7 @@ class Ithemes_Updater_Updates {
 			}
 
 
-			$update = $data['wp_update_data'];
+			$update = isset( $data['wp_update_data'] ) && is_array( $data['wp_update_data'] ) ? $data['wp_update_data'] : array();
 
 			if ( 'plugin' == $data['type'] ) {
 				$update['slug']   = dirname( $path );
