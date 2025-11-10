@@ -2,7 +2,7 @@
 
 ![GitLab Release](https://img.shields.io/gitlab/v/release/wordpress-premium%2Fsolid-backups) ![GitHub followers](https://img.shields.io/github/followers/wordpress-premium?style=flat&color=lightblue) ![GitHub Repo stars](https://img.shields.io/github/stars/wordpress-premium/solid-backups?style=flat&color=orange) ![GitHub forks](https://img.shields.io/github/forks/wordpress-premium/solid-backups?style=flat) ![GitHub last commit](https://img.shields.io/github/last-commit/wordpress-premium/solid-backups)
 
-**[Solid Backups](https://solidwp.com/)** is a powerful backup and restore plugin for WordPress designed to help website owners and digital marketers protect their online presence with reliable backup solutions and easy restoration capabilities.
+**[Solid Backups](https://solidwp.com/)** (legacy) is a powerful backup and restore plugin for WordPress designed to help website owners and digital marketers protect their online presence with reliable backup solutions and easy restoration capabilities.
 
 > [!CAUTION]
 >
