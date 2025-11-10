@@ -24,9 +24,17 @@ Version History
 
 
 class Ithemes_Updater_Server {
-	private static $secure_server_url   = 'https://api.ithemes.com/updater';
-	private static $insecure_server_url = 'http://api.ithemes.com/updater';
 	private static $password_iterations = 8;
+
+	public static function get_api_url() {
+		$api_url = 'https://api.ithemes.com/';
+
+		if ( defined( 'SOLIDWP_API_URL' ) ) {
+			$api_url = SOLIDWP_API_URL;
+		}
+
+		return apply_filters( 'solidwp_updater_api_url', $api_url );
+	}
 
 	public static function activate_package( $username, $password, $packages ) {
 		$query = array(
@@ -235,26 +243,16 @@ class Ithemes_Updater_Server {
 			self::disable_ssl_ca_patch();
 		}
 
-		$response = wp_remote_post( self::$secure_server_url . $request, $remote_post_args );
+		$response = wp_remote_post( self::get_api_url() . 'updater' . $request, $remote_post_args );
 
 		// If the request failed, try again with the CA patch enabled.
 		if ( ! self::is_valid_response( $response ) ) {
 			self::enable_ssl_ca_patch();
-			$response = wp_remote_post( self::$secure_server_url . $request, $remote_post_args );
+			$response = wp_remote_post( self::get_api_url() . 'updater' . $request, $remote_post_args );
 
 			if ( ! is_wp_error( $response ) ) {
 				$options['use_ca_patch'] = true;
 			}
-		}
-
-		// If the request failed again, try again without SSL.
-		if (
-			( ! self::is_valid_response( $response ) )
-			&& ( defined( 'ITHEMES_ALLOW_HTTP_FALLBACK' ) && ITHEMES_ALLOW_HTTP_FALLBACK )
-		) {
-			$response = wp_remote_post( self::$insecure_server_url . $request, $remote_post_args );
-
-			$options['use_ssl'] = false;
 		}
 
 		if ( ! $options['use_ca_patch'] ) {

@@ -5,8 +5,10 @@
  * @package BackupBuddy
  */
 
-use Krizalys\Onedrive\Onedrive,
-	Krizalys\Onedrive\Constant\AccessTokenStatus;
+use Solid_Backups\Strauss\Krizalys\Onedrive\File;
+use Solid_Backups\Strauss\Krizalys\Onedrive\Folder;
+use Solid_Backups\Strauss\Krizalys\Onedrive\Onedrive,
+	Solid_Backups\Strauss\Krizalys\Onedrive\Constant\AccessTokenStatus;
 
 /**
  * OneDrive main destination class.
@@ -1082,9 +1084,9 @@ class pb_backupbuddy_destination_onedrive {
 		}
 
 		foreach ( $items as $item ) {
-			if ( is_a( $item, '\Krizalys\Onedrive\Folder' ) ) {
+			if ( $item instanceof Folder ) {
 				$folders[] = $item;
-			} elseif ( is_a( $item, '\Krizalys\Onedrive\File' ) ) {
+			} elseif ( $item instanceof File ) {
 				continue;
 			} else {
 				// isFolder does not throw any Exceptions.

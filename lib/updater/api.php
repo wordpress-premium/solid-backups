@@ -93,13 +93,10 @@ class Ithemes_Updater_API {
 	 * @return array|WP_Error
 	 */
 	public static function get_package_changelog( $package, $cur_version = false ) {
-		$url = add_query_arg( 'package', rawurlencode( $package ), '//api.ithemes.com/product/changelog' );
+		require_once $GLOBALS['ithemes_updater_path'] . '/server.php';
+		$url = add_query_arg( 'package', rawurlencode( $package ), Ithemes_Updater_Server::get_api_url() . 'product/changelog' );
 
-		$response = wp_remote_get( 'https:' . $url );
-
-		if ( is_wp_error( $response ) && ( 'connect() timed out!' !== $response->get_error_message() ) && defined( 'ITHEMES_ALLOW_HTTP_FALLBACK' ) && ITHEMES_ALLOW_HTTP_FALLBACK ) {
-			$response = wp_remote_get( 'http:' . $url );
-		}
+		$response = wp_remote_get( $url );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;

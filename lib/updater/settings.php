@@ -58,8 +58,13 @@ class Ithemes_Updater_Settings {
 	public function __construct() {
 		$GLOBALS['ithemes-updater-settings'] = $this;
 
-		add_action( 'init', array( $this, 'init' ) );
-		add_action( 'shutdown', array( $this, 'shutdown' ), -10 );
+		if ( did_action( 'init' ) ) {
+			$this->init();
+		} else {
+			add_action( 'init', array( $this, 'init' ) );
+		}
+
+		add_action( 'shutdown', array( $this, 'shutdown' ), - 10 );
 	}
 
 	public function init() {
@@ -102,7 +107,7 @@ class Ithemes_Updater_Settings {
 				$this->flush( 'unset forced minor version update' );
 				$flushed = true;
 			}
-		} else if ( isset( $this->options['force_minor_version_update'] ) && ( $this->options['force_minor_version_update'] < time() ) ) {
+		} elseif ( isset( $this->options['force_minor_version_update'] ) && ( $this->options['force_minor_version_update'] < time() ) ) {
 			unset( $this->options['force_minor_version_update'] );
 			$this->update_options( $this->options );
 		}
@@ -111,11 +116,11 @@ class Ithemes_Updater_Settings {
 		if ( ! $flushed ) {
 			if ( ! empty( $_GET['ithemes-updater-force-refresh'] ) && current_user_can( 'manage_options' ) ) {
 				$this->flush( 'forced' );
-			} else if ( empty( $this->options['expiration'] ) || ( $this->options['expiration'] <= time() ) ) {
+			} elseif ( empty( $this->options['expiration'] ) || ( $this->options['expiration'] <= time() ) ) {
 				$this->flush( 'expired' );
-			} else if ( $this->is_expired( $this->options['timestamp'] ) ) {
+			} elseif ( $this->is_expired( $this->options['timestamp'] ) ) {
 				$this->flush( 'got stale' );
-			} else if ( ! empty( $this->new_packages ) ) {
+			} elseif ( ! empty( $this->new_packages ) ) {
 				$this->update_packages();
 				$this->flush( 'new packages' );
 			}
@@ -185,8 +190,8 @@ class Ithemes_Updater_Settings {
 	public function get_option( $var ) {
 		$this->init();
 
-		if ( isset( $this->options[$var] ) ) {
-			return $this->options[$var];
+		if ( isset( $this->options[ $var ] ) ) {
+			return $this->options[ $var ];
 		}
 
 		return null;
@@ -195,7 +200,7 @@ class Ithemes_Updater_Settings {
 	public function update_options( $updates ) {
 		$this->init();
 
-		$this->options = array_merge( $this->options, $updates );
+		$this->options          = array_merge( $this->options, $updates );
 		$this->options_modified = true;
 	}
 
@@ -208,8 +213,8 @@ class Ithemes_Updater_Settings {
 
 		if ( false === $package ) {
 			return $details;
-		} else if ( isset( $details[$package] ) ) {
-			return $details[$package];
+		} elseif ( isset( $details[ $package ] ) ) {
+			return $details[ $package ];
 		} else {
 			return false;
 		}
@@ -223,11 +228,11 @@ class Ithemes_Updater_Settings {
 			$statuses = array();
 
 			foreach ( $details as $package => $data ) {
-				$statuses[$package] = $data['license_status'];
+				$statuses[ $package ] = $data['license_status'];
 			}
 
 			return $statuses;
-		} else if ( is_array( $details ) ) {
+		} elseif ( is_array( $details ) ) {
 			return $details['license_status'];
 		} else {
 			return false;
@@ -261,7 +266,7 @@ class Ithemes_Updater_Settings {
 		}
 
 		if ( isset( $this->options['update_plugins'] ) && is_array( $this->options['update_plugins'] ) ) {
-			$update_plugins->response = array_merge( $update_plugins->response, $this->options['update_plugins'] );
+			$update_plugins->response  = array_merge( $update_plugins->response, $this->options['update_plugins'] );
 			$update_plugins->no_update = array_merge( $update_plugins->no_update, $this->options['update_plugins_no_update'] );
 		}
 
@@ -287,7 +292,7 @@ class Ithemes_Updater_Settings {
 		}
 
 		if ( isset( $this->options['update_themes'] ) && is_array( $this->options['update_themes'] ) ) {
-			$update_themes->response = array_merge( $update_themes->response, $this->options['update_themes'] );
+			$update_themes->response  = array_merge( $update_themes->response, $this->options['update_themes'] );
 			$update_themes->no_update = array_merge( $update_themes->no_update, $this->options['update_themes_no_update'] );
 		}
 
@@ -295,7 +300,7 @@ class Ithemes_Updater_Settings {
 	}
 
 	public function register( $slug, $file ) {
-		$this->packages[$slug][] = $file;
+		$this->packages[ $slug ][] = $file;
 	}
 
 	private function is_expired( $timestamp ) {
@@ -303,7 +308,7 @@ class Ithemes_Updater_Settings {
 
 		if ( $multiplier < 1 ) {
 			$multiplier = 1;
-		} else if ( $multiplier > 10 ) {
+		} elseif ( $multiplier > 10 ) {
 			$multiplier = 10;
 		}
 
@@ -343,44 +348,43 @@ class Ithemes_Updater_Settings {
 	}
 
 
-/*
-	public function get_hostname_history() {
-		$this->get_canonical_hostname();
+	/*
+		public function get_hostname_history() {
+			$this->get_canonical_hostname();
 
-		return $this->options['hostname_details']['history'];
-	}
-
-	public function get_canonical_hostname() {
-		if ( ! is_array( $this->options ) ) {
-			$this->load();
+			return $this->options['hostname_details']['history'];
 		}
 
-		$hostname = $this->get_hostname();
+		public function get_canonical_hostname() {
+			if ( ! is_array( $this->options ) ) {
+				$this->load();
+			}
 
-		if ( ! isset( $this->options['hostname_details'] ) || ! is_array( $this->options['hostname_details'] ) ) {
-			$this->options['hostname_details'] = array();
+			$hostname = $this->get_hostname();
+
+			if ( ! isset( $this->options['hostname_details'] ) || ! is_array( $this->options['hostname_details'] ) ) {
+				$this->options['hostname_details'] = array();
+				$this->options_modified = true;
+			}
+
+			if ( empty( $this->options['hostname_details']['canonical'] ) ) {
+				$this->options['hostname_details']['canonical'] = $hostname;
+				$this->options_modified = true;
+			}
+
+			if ( empty( $this->options['hostname_details']['history'] ) || ! is_array( $this->options['hostname_details']['history'] ) || ( time() - max( $this->options['hostname_details']['history'] ) > 600 ) ) {
+				$this->options['hostname_details']['history'][$hostname] = time();
+				$this->options_modified = true;
+			}
+
+			return $this->options['hostname_details']['canonical'];
+		}
+
+		public function update_canonical_hostname( $hostname ) {
+			$this->options['hostname_details']['canonical'] = $this->get_hostname( $hostname );
 			$this->options_modified = true;
 		}
-
-		if ( empty( $this->options['hostname_details']['canonical'] ) ) {
-			$this->options['hostname_details']['canonical'] = $hostname;
-			$this->options_modified = true;
-		}
-
-		if ( empty( $this->options['hostname_details']['history'] ) || ! is_array( $this->options['hostname_details']['history'] ) || ( time() - max( $this->options['hostname_details']['history'] ) > 600 ) ) {
-			$this->options['hostname_details']['history'][$hostname] = time();
-			$this->options_modified = true;
-		}
-
-		return $this->options['hostname_details']['canonical'];
-	}
-
-	public function update_canonical_hostname( $hostname ) {
-		$this->options['hostname_details']['canonical'] = $this->get_hostname( $hostname );
-		$this->options_modified = true;
-	}
-*/
-
+	*/
 
 
 	public function update_site_url_history() {
@@ -388,15 +392,14 @@ class Ithemes_Updater_Settings {
 
 		if ( ! isset( $this->options['site_url_history'] ) || ! is_array( $this->options['site_url_history'] ) ) {
 			$this->options['site_url_history'] = array();
-			$this->options_modified = true;
+			$this->options_modified            = true;
 		}
 
 		if ( empty( $this->options['site_url_history'] ) || ! is_array( $this->options['site_url_history'] ) || ( time() - max( $this->options['site_url_history'] ) > 600 ) ) {
-			$this->options['site_url_history'][$site_url] = time();
-			$this->options_modified = true;
+			$this->options['site_url_history'][ $site_url ] = time();
+			$this->options_modified                         = true;
 		}
 	}
-
 
 
 	public function get_site_url( $url = false ) {
@@ -434,7 +437,7 @@ class Ithemes_Updater_Settings {
 		$url = preg_replace( '|^https?://|', '', $url );
 
 		$this->options['site_url'] = $url;
-		$this->options_modified = true;
+		$this->options_modified    = true;
 	}
 
 	public function get_licensed_site_url() {

@@ -33,6 +33,7 @@ class pb_backupbuddy_destination_gdrive2 {
 		'name'        => 'Google Drive',
 		'description' => 'Send files to Google Drive using OAuth2. <a href="https://go.solidwp.com/google-drive-link-" target="_blank">Learn more here.</a>',
 		'category'    => 'best', // best, normal, legacy.
+		'deprecated'  => true,
 	);
 
 	/**

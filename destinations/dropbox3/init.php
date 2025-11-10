@@ -231,7 +231,7 @@ class pb_backupbuddy_destination_dropbox3 {
 			$args['state'] = self::get_state();
 		}
 
-		self::$client = new Stevenmaguire\OAuth2\Client\Provider\Dropbox(
+		self::$client = new \Solid_Backups\Strauss\Stevenmaguire\OAuth2\Client\Provider\Dropbox(
 			array(
 				'clientId'     => $config['DROPBOX_API_KEY'],
 				'clientSecret' => $config['DROPBOX_API_SECRET'],
@@ -440,7 +440,7 @@ class pb_backupbuddy_destination_dropbox3 {
 		}
 
 		// New client without redirectUri.
-		self::$client = new Stevenmaguire\OAuth2\Client\Provider\Dropbox(
+		self::$client = new \Solid_Backups\Strauss\Stevenmaguire\OAuth2\Client\Provider\Dropbox(
 			array(
 				'clientId'     => $config['DROPBOX_API_KEY'],
 				'clientSecret' => $config['DROPBOX_API_SECRET'],

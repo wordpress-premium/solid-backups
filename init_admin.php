@@ -185,53 +185,56 @@ pb_backupbuddy::add_filter( 'plugin_row_meta', 10, 2 );
 
 /********** PAGES (admin) */
 
+add_action( 'init', 'pb_backupbuddy_add_pages' );
 
-$icon = '';
+function pb_backupbuddy_add_pages() {
+	$icon = '';
 
-if ( is_multisite() && backupbuddy_core::is_network_activated() && ! defined( 'PB_DEMO_MODE' ) ) { // Multisite installation.
-	if ( defined( 'PB_BACKUPBUDDY_MULTISITE_EXPERIMENT' ) && ( PB_BACKUPBUDDY_MULTISITE_EXPERIMENT == true ) ) { // comparing with bool but loose so string is acceptable.
+	if ( is_multisite() && backupbuddy_core::is_network_activated() && ! defined( 'PB_DEMO_MODE' ) ) { // Multisite installation.
+		if ( defined( 'PB_BACKUPBUDDY_MULTISITE_EXPERIMENT' ) && ( PB_BACKUPBUDDY_MULTISITE_EXPERIMENT == true ) ) { // comparing with bool but loose so string is acceptable.
 
-		if ( is_network_admin() ) { // Network Admin pages.
-			pb_backupbuddy::add_page( '', 'backup', __('Backups', 'it-l10n-backupbuddy'), 'manage_network', 'dashicons-database' );
-			if ( '1' !== pb_backupbuddy::$options['hide_live'] && ( true !== apply_filters( 'itbub_hide_stash_live', false ) ) ) {
-				pb_backupbuddy::add_page( 'backup', 'live', __( 'Stash Live', 'it-l10n-backupbuddy' ), 'manage_network' );
+			if ( is_network_admin() ) { // Network Admin pages.
+				pb_backupbuddy::add_page( '', 'backup', __( 'Backups', 'it-l10n-backupbuddy' ), 'manage_network', 'dashicons-database' );
+				if ( '1' !== pb_backupbuddy::$options['hide_live'] && ( true !== apply_filters( 'itbub_hide_stash_live', false ) ) ) {
+					pb_backupbuddy::add_page( 'backup', 'live', __( 'Stash Live', 'it-l10n-backupbuddy' ), 'manage_network' );
+				}
+				pb_backupbuddy::add_page( 'backup', 'destinations', __( 'Destinations', 'it-l10n-backupbuddy' ), 'manage_network' );
+				pb_backupbuddy::add_page( 'backup', 'multisite_import', __( 'MS Import (beta)', 'it-l10n-backupbuddy' ), 'manage_network' );
+				pb_backupbuddy::add_page( 'backup', 'scheduling', __( 'Schedules', 'it-l10n-backupbuddy' ), 'manage_network' );
+				pb_backupbuddy::add_page( 'backup', 'diagnostics', __( 'Diagnostics', 'it-l10n-backupbuddy' ), 'manage_network' );
+				pb_backupbuddy::add_page( 'backup', 'settings', __( 'Settings', 'it-l10n-backupbuddy' ), 'manage_network' );
+			} else { // Subsite pages.
+				$export_note = '';
+
+				$options          = get_site_option( 'pb_' . pb_backupbuddy::settings( 'slug' ) );
+				$multisite_export = $options['multisite_export'];
+				unset( $options );
+
+				if ( $multisite_export == '1' ) { // Settings enable admins to export. Set capability to admin and higher only.
+					$capability   = pb_backupbuddy::$options['role_access'];
+					$export_title = '<span title="Note: Enabled for both subsite Admins and Network Superadmins based on Solid Backups settings">' . __( 'MS Export (experimental)', 'it-l10n-backupbuddy' ) . '</span>';
+				} else { // Settings do NOT allow admins to export; set capability for superadmins only.
+					$capability   = 'manage_network';
+					$export_title = '<span title="Note: Enabled for Network Superadmins only based on Solid Backups settings">' . __( 'MS Export SA (experimental)', 'it-l10n-backupbuddy' ) . '</span>';
+				}
+
+				// pb_backupbuddy::add_page( '', 'getting_started', array( pb_backupbuddy::settings( 'name' ), 'Getting Started' . $export_note ), $capability );
+				pb_backupbuddy::add_page( '', 'multisite_export', array( pb_backupbuddy::settings( 'name' ), $export_title ), $capability, $icon );
 			}
-			pb_backupbuddy::add_page( 'backup', 'destinations', __( 'Destinations', 'it-l10n-backupbuddy' ), 'manage_network' );
-			pb_backupbuddy::add_page( 'backup', 'multisite_import', __( 'MS Import (beta)', 'it-l10n-backupbuddy' ), 'manage_network' );
-			pb_backupbuddy::add_page( 'backup', 'scheduling', __( 'Schedules', 'it-l10n-backupbuddy' ), 'manage_network' );
-			pb_backupbuddy::add_page( 'backup', 'diagnostics', __( 'Diagnostics', 'it-l10n-backupbuddy' ), 'manage_network' );
-			pb_backupbuddy::add_page( 'backup', 'settings', __( 'Settings', 'it-l10n-backupbuddy' ), 'manage_network' );
-		} else { // Subsite pages.
-			$export_note = '';
-
-			$options          = get_site_option( 'pb_' . pb_backupbuddy::settings( 'slug' ) );
-			$multisite_export = $options['multisite_export'];
-			unset( $options );
-
-			if ( $multisite_export == '1' ) { // Settings enable admins to export. Set capability to admin and higher only.
-				$capability   = pb_backupbuddy::$options['role_access'];
-				$export_title = '<span title="Note: Enabled for both subsite Admins and Network Superadmins based on Solid Backups settings">' . __( 'MS Export (experimental)', 'it-l10n-backupbuddy' ) . '</span>';
-			} else { // Settings do NOT allow admins to export; set capability for superadmins only.
-				$capability   = 'manage_network';
-				$export_title = '<span title="Note: Enabled for Network Superadmins only based on Solid Backups settings">' . __( 'MS Export SA (experimental)', 'it-l10n-backupbuddy' ) . '</span>';
-			}
-
-			// pb_backupbuddy::add_page( '', 'getting_started', array( pb_backupbuddy::settings( 'name' ), 'Getting Started' . $export_note ), $capability );
-			pb_backupbuddy::add_page( '', 'multisite_export', array( pb_backupbuddy::settings( 'name' ), $export_title ), $capability, $icon );
+		} else { // PB_BACKUPBUDDY_MULTISITE_EXPERIMENT not in wp-config / set to TRUE.
+			pb_backupbuddy::status( 'error', 'Multisite detected but PB_BACKUPBUDDY_MULTISITE_EXPERIMENT definition not found in wp-config.php / not defined to boolean TRUE.' );
 		}
-	} else { // PB_BACKUPBUDDY_MULTISITE_EXPERIMENT not in wp-config / set to TRUE.
-		pb_backupbuddy::status( 'error', 'Multisite detected but PB_BACKUPBUDDY_MULTISITE_EXPERIMENT definition not found in wp-config.php / not defined to boolean TRUE.' );
-	}
-} else { // Standalone site.
+	} else { // Standalone site.
 
-	pb_backupbuddy::add_page( '', 'backup',  __('Backups', 'it-l10n-backupbuddy'), pb_backupbuddy::$options['role_access'], 'dashicons-database' );
-	if ( '1' !== pb_backupbuddy::$options['hide_live'] && ( true !== apply_filters( 'itbub_hide_stash_live', false ) ) ) {
-		pb_backupbuddy::add_page( 'backup', 'live', __( 'Stash Live', 'it-l10n-backupbuddy' ), pb_backupbuddy::$options['role_access'] );
+		pb_backupbuddy::add_page( '', 'backup', __( 'Backups', 'it-l10n-backupbuddy' ), pb_backupbuddy::$options['role_access'], 'dashicons-database' );
+		if ( '1' !== pb_backupbuddy::$options['hide_live'] && ( true !== apply_filters( 'itbub_hide_stash_live', false ) ) ) {
+			pb_backupbuddy::add_page( 'backup', 'live', __( 'Stash Live', 'it-l10n-backupbuddy' ), pb_backupbuddy::$options['role_access'] );
+		}
+		pb_backupbuddy::add_page( 'backup', 'destinations', __( 'Destinations', 'it-l10n-backupbuddy' ), pb_backupbuddy::$options['role_access'] );
+		pb_backupbuddy::add_page( 'backup', 'scheduling', __( 'Schedules', 'it-l10n-backupbuddy' ), pb_backupbuddy::$options['role_access'] );
+		pb_backupbuddy::add_page( 'backup', 'diagnostics', __( 'Diagnostics', 'it-l10n-backupbuddy' ), pb_backupbuddy::$options['role_access'] );
+		pb_backupbuddy::add_page( 'backup', 'settings', __( 'Settings', 'it-l10n-backupbuddy' ), pb_backupbuddy::$options['role_access'] );
 	}
-	pb_backupbuddy::add_page( 'backup', 'destinations', __( 'Destinations', 'it-l10n-backupbuddy' ), pb_backupbuddy::$options['role_access'] );
-	pb_backupbuddy::add_page( 'backup', 'scheduling', __( 'Schedules', 'it-l10n-backupbuddy' ), pb_backupbuddy::$options['role_access'] );
-	pb_backupbuddy::add_page( 'backup', 'diagnostics', __( 'Diagnostics', 'it-l10n-backupbuddy' ), pb_backupbuddy::$options['role_access'] );
-	pb_backupbuddy::add_page( 'backup', 'settings', __( 'Settings', 'it-l10n-backupbuddy' ), pb_backupbuddy::$options['role_access'] );
 }
 
 
@@ -369,6 +372,7 @@ function backupbuddy_global_admin_scripts() {
 	wp_register_style( 'backupbuddy-core', pb_backupbuddy::plugin_url() . '/assets/dist/css/solid-backups.css', array(), pb_backupbuddy::settings( 'version' ) );
 	wp_register_style( 'solid-jit-icicle', pb_backupbuddy::plugin_url() . '/assets/dist/css/jit-icicle.css', array(), pb_backupbuddy::settings( 'version' ) );
 	wp_register_style( 'solid-jquery-smoothness', pb_backupbuddy::plugin_url() . '/assets/dist/css/vendor-styles/jquery-smoothness.css', array(), pb_backupbuddy::settings( 'version' ) );
+	wp_register_style('backups-gdrive-admin-notice', pb_backupbuddy::plugin_url() . '/assets/dist/css/gdrive-sunset-admin-notice.css');
 
 	if ( ! backupbuddy_is_admin_page() ) {
 		return;

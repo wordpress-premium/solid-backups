@@ -106,14 +106,16 @@ class Ithemes_Updater_Settings_Page {
 		$settings = array();
 
 		foreach ( $settings_defaults as $var => $val ) {
-			if ( isset( $_POST[$var] ) )
+			if ( isset( $_POST[$var] ) ) {
 				$settings[$var] = $_POST[$var];
-			else
+			} else {
 				$settings[$var] = $val;
+			}
 		}
 
-		if ( $settings['quick_releases'] )
+		if ( $settings['quick_releases'] ) {
 			$settings['quick_releases'] = true;
+		}
 
 		$GLOBALS['ithemes-updater-settings']->update_options( $settings );
 
@@ -126,17 +128,19 @@ class Ithemes_Updater_Settings_Page {
 	private function license_packages( $data ) {
 		check_admin_referer( 'license_packages', 'ithemes_updater_nonce' );
 
-		if ( empty( $data['username'] ) && empty( $data['password'] ) )
+		if ( empty( $data['username'] ) && empty( $data['password'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership username and password in order to license products.', 'it-l10n-backupbuddy' );
-		else if ( empty( $data['username'] ) )
+		} else if ( empty( $data['username'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership username in order to license products.', 'it-l10n-backupbuddy' );
-		else if ( empty( $data['password'] ) )
+		} else if ( empty( $data['password'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership password in order to license products.', 'it-l10n-backupbuddy' );
-		else if ( empty( $data['packages'] ) )
+		} else if ( empty( $data['packages'] ) ) {
 			$this->errors[] = __( 'You must select at least one product to license. Ensure that you select the products that you wish to license in the listing below.', 'it-l10n-backupbuddy' );
+		}
 
-		if ( ! empty( $this->errors ) )
+		if ( ! empty( $this->errors ) ){
 			return;
+		}
 
 
 		$response = Ithemes_Updater_API::activate_package( $data['username'], $data['password'], $data['packages'] );
@@ -196,19 +200,22 @@ class Ithemes_Updater_Settings_Page {
 	private function license_patchstack_site( $data ) {
 		check_admin_referer( 'license_patchstack_site', 'ithemes_updater_nonce' );
 
-		if ( empty( $data['username'] ) && empty( $data['password'] ) )
+		if ( empty( $data['username'] ) && empty( $data['password'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership username and password in order to remove patchstack licenses.', 'it-l10n-backupbuddy' );
-		else if ( empty( $data['username'] ) )
+		} else if ( empty( $data['username'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership username in order to remove patchstack licenses.', 'it-l10n-backupbuddy' );
-		else if ( empty( $data['password'] ) )
+		} else if ( empty( $data['password'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership password in order to remove patchstack licenses.', 'it-l10n-backupbuddy' );
+		}
 
 		$keys = Ithemes_Updater_Keys::get();
-		if ( empty( $keys['ithemes-security-pro'] ) )
+		if ( empty( $keys['ithemes-security-pro'] ) ) {
 			$this->errors[] = __( 'Unable to locate API key for Solid Security Pro.', 'it-l10n-backupbuddy' );
+		}
 
-		if ( ! empty( $this->errors ) )
+		if ( ! empty( $this->errors ) ) {
 			return;
+		}
 
 		$response = Ithemes_Updater_API::consume_patchstack_quota( $data['username'], $data['password'], $keys['ithemes-security-pro'] );
 
@@ -221,37 +228,43 @@ class Ithemes_Updater_Settings_Page {
 		$success = array();
 		$fail = array();
 
-		$site = parse_url( $GLOBALS['ithemes-updater-settings']->get_licensed_site_url(), PHP_URL_HOST );
+		$site_url = ithemes_updater_get_licensed_site_url();
+		$site_url = preg_replace( '|^https?://|', '', $site_url );
+		$site_url = str_replace( 'www.', '', $site_url );
 
-		if ( in_array( $site, $response['response']['sites'] ) ) {
-			$success[] = $site;
+		if ( in_array( $site_url, $response['response']['sites'] ) ) {
+			$success[] = $site_url;
 		} else {
-			$fail[] = $site;
+			$fail[] = $site_url;
 		}
 
-		if ( ! empty( $success ) )
+		if ( ! empty( $success ) ) {
 			$this->messages[] = wp_sprintf( _n( 'Successfully added Patchstack license to %l.', 'Successfully removed Patchstack licenses from %l sites.', count( $success ), 'it-l10n-backupbuddy' ), $success );
+		}
 
 		if ( ! empty( $fail ) ) {
-			foreach ( $fail as $name => $reason )
-				$this->errors[] = sprintf( __( 'Unable to remove patchstack license from %1$s. Reason: %2$s', 'it-l10n-backupbuddy' ), $name, $reason );
+			foreach ( $fail as $name => $reason ) {
+				$this->errors[] = sprintf( __( 'Unable to add patchstack license to %1$s. Reason: %2$s', 'it-l10n-backupbuddy' ), $name, $reason );
+			}
 		}
 	}
 
 	private function unlicense_patchstack_sites( $data ) {
 		check_admin_referer( 'unlicense_patchstack_sites', 'ithemes_updater_nonce' );
 
-		if ( empty( $data['username'] ) && empty( $data['password'] ) )
+		if ( empty( $data['username'] ) && empty( $data['password'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership username and password in order to remove patchstack licenses.', 'it-l10n-backupbuddy' );
-		else if ( empty( $data['username'] ) )
+		} else if ( empty( $data['username'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership username in order to remove patchstack licenses.', 'it-l10n-backupbuddy' );
-		else if ( empty( $data['password'] ) )
+		} else if ( empty( $data['password'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership password in order to remove patchstack licenses.', 'it-l10n-backupbuddy' );
-		else if ( empty( $data['patchstack_sites'] ) )
+		} else if ( empty( $data['patchstack_sites'] ) ) {
 			$this->errors[] = __( 'You must select at least one license to remove. Ensure that you select the licenses that you wish to remove in the listing below.', 'it-l10n-backupbuddy' );
+		}
 
-		if ( ! empty( $this->errors ) )
+		if ( ! empty( $this->errors ) ) {
 			return;
+		}
 
 		$response = Ithemes_Updater_API::remove_patchstack_quota( $data['username'], $data['password'], $data['patchstack_sites'] );
 
@@ -272,12 +285,14 @@ class Ithemes_Updater_Settings_Page {
 			}
 		}
 
-		if ( ! empty( $success ) )
+		if ( ! empty( $success ) ) {
 			$this->messages[] = wp_sprintf( _n( 'Successfully removed Patchstack license from %l site.', 'Successfully removed Patchstack licenses from %l sites.', count( $success ), 'it-l10n-backupbuddy' ), $success );
+		}
 
 		if ( ! empty( $fail ) ) {
-			foreach ( $fail as $name => $reason )
-				$this->errors[] = sprintf( __( 'Unable to remove license from %1$s. Reason: %2$s', 'it-l10n-backupbuddy' ), $name, $reason );
+			foreach ( $fail as $name => $reason ) {
+				$this->errors[] = sprintf( __( 'Unable to remove patchstack license from %1$s. Reason: %2$s', 'it-l10n-backupbuddy' ), $name, $reason );
+			}
 		}
 
 	}
@@ -285,17 +300,19 @@ class Ithemes_Updater_Settings_Page {
 	private function unlicense_packages( $data ) {
 		check_admin_referer( 'unlicense_packages', 'ithemes_updater_nonce' );
 
-		if ( empty( $data['username'] ) && empty( $data['password'] ) )
+		if ( empty( $data['username'] ) && empty( $data['password'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership username and password in order to remove licenses.', 'it-l10n-backupbuddy' );
-		else if ( empty( $data['username'] ) )
+		} else if ( empty( $data['username'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership username in order to remove licenses.', 'it-l10n-backupbuddy' );
-		else if ( empty( $data['password'] ) )
+		} else if ( empty( $data['password'] ) ) {
 			$this->errors[] = __( 'You must supply a SolidWP membership password in order to remove licenses.', 'it-l10n-backupbuddy' );
-		else if ( empty( $data['packages'] ) )
+		} else if ( empty( $data['packages'] ) ) {
 			$this->errors[] = __( 'You must select at least one license to remove. Ensure that you select the licenses that you wish to remove in the listing below.', 'it-l10n-backupbuddy' );
+		}
 
-		if ( ! empty( $this->errors ) )
+		if ( ! empty( $this->errors ) )	{
 			return;
+		}
 
 		$response = Ithemes_Updater_API::deactivate_package( $data['username'], $data['password'], $data['packages'] );
 
@@ -317,26 +334,30 @@ class Ithemes_Updater_Settings_Page {
 		$fail = array();
 
 		foreach ( $response['packages'] as $package => $data ) {
-			if ( preg_match( '/ \|\|\| \d+$/', $package ) )
+			if ( preg_match( '/ \|\|\| \d+$/', $package ) ) {
 				continue;
+			}
 
 			$name = esc_html( Ithemes_Updater_Functions::get_package_name( $package ) );
 
-			if ( isset( $data['status'] ) && ( 'inactive' == $data['status'] ) )
+			if ( isset( $data['status'] ) && ( 'inactive' == $data['status'] ) ) {
 				$success[] = $name;
-			else if ( isset( $data['error'] ) && isset( $data['error']['message'] ) )
+			} else if ( isset( $data['error'] ) && isset( $data['error']['message'] ) ) {
 				$fail[$name] = esc_html( $data['error']['message'] );
-			else
+			} else {
 				$fail[$name] = __( 'Unknown server error.', 'it-l10n-backupbuddy' );
+			}
 		}
 
 
-		if ( ! empty( $success ) )
+		if ( ! empty( $success ) ) {
 			$this->messages[] = wp_sprintf( _n( 'Successfully removed license from %l.', 'Successfully removed licenses from %l.', count( $success ), 'it-l10n-backupbuddy' ), $success );
+		}
 
 		if ( ! empty( $fail ) ) {
-			foreach ( $fail as $name => $reason )
+			foreach ( $fail as $name => $reason ) {
 				$this->errors[] = sprintf( __( 'Unable to remove license from %1$s. Reason: %2$s', 'it-l10n-backupbuddy' ), $name, $reason );
+			}
 		}
 	}
 
@@ -377,9 +398,6 @@ class Ithemes_Updater_Settings_Page {
 		if ( ! empty( $_REQUEST['updated_url'] ) ) {
 			$this->messages[] = __( 'Successfully updated the Licensed URL.', 'it-l10n-backupbuddy' );
 		}
-
-		$this->show_notices();
-
 ?>
 	<div class="solidwp-licensing-page-header">
 		<img src="<?php echo esc_attr( $this->path_url . '/images/solid_wp_logo.svg' ); ?>" />
@@ -388,6 +406,8 @@ class Ithemes_Updater_Settings_Page {
 		<div class="solidwp-licensing-wrap">
 			<div class="solidwp-licensing-wrap-header">
 				<h2><?php _e( 'SolidWP Licensing', 'it-l10n-backupbuddy' ); ?></h2>
+
+				<?php $this->show_notices(); ?>
 			</div>
 
 		<?php
@@ -497,8 +517,9 @@ class Ithemes_Updater_Settings_Page {
 	}
 
 	private function list_licensed_products( $products, $post_data, $action ) {
-		if ( empty( $products ) )
+		if ( empty( $products ) ) {
 			return;
+		}
 
 		uksort( $products, 'strnatcasecmp' );
 
@@ -552,10 +573,11 @@ class Ithemes_Updater_Settings_Page {
 					<?php $count = 0; ?>
 					<?php foreach ( $products as $name => $data ) : ?>
 						<?php
-							if ( -1 == $data['total'] )
+							if ( -1 == $data['total'] ) {
 								$remaining = __( 'unlimited', 'it-l10n-backupbuddy' );
-							else
+							} else {
 								$remaining = $data['total'] - $data['used'];
+							}
 
 //							if ( 0 == $remaining )
 //								$remaining .= ' <a class="button-secondary upgrade">' . __( 'Upgrade', 'it-l10n-backupbuddy' ) . '</a>';
@@ -568,10 +590,11 @@ class Ithemes_Updater_Settings_Page {
 							$time_left = $data['expiration'] - $time;
 							$class = 'expiring';
 
-							if ( $time_left > ( 86400 * 30 ) )
+							if ( $time_left > ( 86400 * 30 ) ) {
 								$class = 'active';
-							else if ( $time_left <= 0 )
+							} else if ( $time_left <= 0 ) {
 								$class = 'expired';
+							}
 
 							if ( 'expired' == $data['status'] ) {
 								$class = 'expired';
@@ -640,36 +663,31 @@ class Ithemes_Updater_Settings_Page {
 		$patchstack_available = $patchstack['total'] - $patchstack['used'];
 
 ?>
+	<?php if ( ithemes_updater_site_has_patchstack() ): ?>
 	<form id="posts-filter" enctype="multipart/form-data" method="post" action="<?php echo esc_attr( $this->self_url ); ?>" autocomplete="off">
 		<?php wp_nonce_field( 'unlicense_patchstack_sites', 'ithemes_updater_nonce' ); ?>
 
-		<div class="ithemes-updater-products" id="ithemes-updater-licensed">
+		<div class="ithemes-updater-products border-bottom" id="ithemes-updater-licensed">
 			<div class="solidwp-table-header">
 				<div>
-					<h3 class="subtitle"><?php _e( 'Patchstack Enabled Sites', 'it-l10n-backupbuddy' ); ?></h3>
+					<h3 class="subtitle"><?php _e( 'Patchstack Enabled', 'it-l10n-backupbuddy' ); ?></h3>
 				</div>
 			</div>
 
 
 			<table class="ithemes-updater-listing widefat">
-				<thead>
-					<tr>
-						<th id="cb" class="manage-column column-cb check-column" scope="col">
-							<label class="screen-reader-text" for="cb-select-all-patchstack"><?php _e( 'Select All' ); ?></label>
-							<label>
-								<input id="cb-select-all-patchstack" type="checkbox" />
-							</label>
-						</th>
-						<th scope="col">
-							<label for="cb-select-all-patchstack"><?php printf( __( 'Site (%d Remaining Licenses)', 'it-l10n-backupbuddy' ), $patchstack_available ); ?></label>
-						</th>
-					</tr>
-				</thead>
 				<tbody>
+					<tr>
+						<td colspan="2">
+							<p><?php printf( __( 'You have %d Remaining Site Licenses', 'it-l10n-backupbuddy' ), $patchstack_available ); ?></p>
+							<p><strong><?php _e( 'This site is licensed with Patchstack.', 'it-l10n-backupbuddy' ); ?></strong></p>
+							<p><a href="https://my.solidwp.com/panel/patchstack.php"><?php _e( 'Click here to manage your Patchstack licenses.', 'it-l10n-backupbuddy' ); ?></a></p>
+						</td>
+					</tr>
 					<?php $count = 0; ?>
-					<?php foreach ( $patchstack['sites'] as $site ) : ?>
-						<?php
-
+					<?php foreach ( $patchstack['sites'] as $site ): ?>
+						<?php if ( ithemes_updater_site_has_patchstack( true, $site ) && $site !== '' ): ?>
+							<?php
 							$class = 'active';
 							if ( ++$count % 2 ) {
 								$class .= ' alt';
@@ -678,66 +696,75 @@ class Ithemes_Updater_Settings_Page {
 							$check_id = "cb-select-{$site}";
 
 							$checked = ( in_array( $site, $post_data['patchstack_sites'] ) ) ? ' checked' : '';
-						?>
-						<tr class="<?php echo $class; ?>">
-							<th class="check-column" scope="row">
-								<label class="screen-reader-text" for="<?php echo esc_attr( $check_id ); ?>"><?php printf( __( 'Select %s' ), esc_html( $site ) ); ?></label>
-								<label for="<?php echo esc_attr( $check_id ); ?>">
-									<input id="<?php echo esc_attr( $check_id ) ?>" name="patchstack_sites[]" value="<?php echo esc_attr( $site ); ?>" type="checkbox"<?php echo $checked; ?>>
-								</label>
-							</th>
-							<td>
-								<label for="<?php echo esc_attr( $check_id ); ?>"><?php echo esc_html( $site ); ?></label>
-							</td>
-						</tr>
+							?>
+							<tr class="<?php echo $class; ?>">
+								<th class="check-column" scope="row">
+									<label class="screen-reader-text" for="<?php echo esc_attr( $check_id ); ?>"><?php printf( __( 'Select %s' ), esc_html( $site ) ); ?></label>
+									<label for="<?php echo esc_attr( $check_id ); ?>">
+										<input id="<?php echo esc_attr( $check_id ) ?>" name="patchstack_sites[]" value="<?php echo esc_attr( $site ); ?>" type="checkbox"<?php echo $checked; ?>>
+									</label>
+								</th>
+								<td>
+									<label for="<?php echo esc_attr( $check_id ); ?>"><?php echo esc_html( $site ); ?></label>
+								</td>
+							</tr>
+						<?php endif; ?>
 					<?php endforeach; ?>
 				</tbody>
-				<?php if ( !empty( $patchstack['sites'] ) ) { ?>
+				<?php if ( !empty( $patchstack['sites'] ) ): ?>
 				<tfoot>
 					<tr>
 						<td colspan="2">
 							<input type="text" name="it-updater-username" placeholder="SolidWP Username" value="<?php echo esc_attr( $post_data['username'] ); ?>" autocomplete="off" />
 							<input type="password" name="it-updater-password" placeholder="Password" value="<?php echo esc_attr( $post_data['password'] ); ?>" />
-							<input class="button-primary" type="submit" name="submit" value="<?php _e( 'Remove Patchstack Licenses', 'it-l10n-backupbuddy' ); ?>" />
+							<input class="button-primary" type="submit" name="submit" value="<?php _e( 'Remove Patchstack License', 'it-l10n-backupbuddy' ); ?>" />
 							<input type="hidden" name="action" value="unlicense_patchstack_sites" />
 						</td>
 					</tr>
 				</tfoot>
-				<?php } ?>
+				<?php endif; ?>
 			</table>
 		</div>
 	</form>
-	<?php
-	$site = parse_url( $GLOBALS['ithemes-updater-settings']->get_licensed_site_url(), PHP_URL_HOST );
-	if ( !in_array( $site, $patchstack['sites'] ) && !empty( $patchstack_available ) ) {
-	?>
+	<?php else: ?>
 	<form id="posts-filter" enctype="multipart/form-data" method="post" action="<?php echo esc_attr( $this->self_url ); ?>" autocomplete="off">
 		<div class="ithemes-updater-products" id="ithemes-updater-licensed">
+			<div class="solidwp-table-header border-bottom">
+				<div>
+					<h3 class="subtitle"><?php _e( 'Enable Patchstack', 'it-l10n-backupbuddy' ); ?></h3>
+				</div>
+			</div>
 			<table class="ithemes-updater-listing widefat">
+				<tbody>
+					<tr><td>
+						<p class="unlicensed-patchstack-paragraph"><?php printf( __( 'You have <strong>%d Remaining Site Licenses</strong>', 'it-l10n-backupbuddy' ), $patchstack_available ); ?></p>
+						<p><?php _e( '<strong>This site is not licensed with Patchstack.</strong>', 'it-l10n-backupbuddy' ); ?></p>
+						<p><?php printf( __( 'License your site below using your SolidWP username and password or <a href="%s">click here to manage your Patchstack licenses.</a>', 'it-l10n-backupbuddy' ), 'https://my.solidwp.com/panel/patchstack.php' ); ?></p>
+					</td></tr>
+				</tbody>
 				<tfoot>
 					<tr>
 						<td>
-						<?php wp_nonce_field( 'license_patchstack_site', 'ithemes_updater_nonce' ); ?>
-						<input type="text" name="it-updater-username" placeholder="SolidWP Username" value="<?php echo esc_attr( $post_data['username'] ); ?>" autocomplete="off" />
-						<input type="password" name="it-updater-password" placeholder="Password" value="<?php echo esc_attr( $post_data['password'] ); ?>" />
-						<input class="button-secondary" type="submit" name="submit" value="<?php _e( 'License This Site', 'it-l10n-backupbuddy' ); ?>" />
-						<input type="hidden" name="action" value="license_patchstack_site" />
+							<?php wp_nonce_field( 'license_patchstack_site', 'ithemes_updater_nonce' ); ?>
+							<input type="text" name="it-updater-username" placeholder="SolidWP Username" value="<?php echo esc_attr( $post_data['username'] ); ?>" autocomplete="off" />
+							<input type="password" name="it-updater-password" placeholder="Password" value="<?php echo esc_attr( $post_data['password'] ); ?>" />
+							<input class="button-secondary" type="submit" name="submit" value="<?php _e( 'License This Site', 'it-l10n-backupbuddy' ); ?>" />
+							<input type="hidden" name="action" value="license_patchstack_site" />
 						</td>
 					</tr>
 				</tfoot>
 			</table>
 		</div>
 	</form>
-	<?php
-	}
-	?>
+	<?php endif; ?>
 <?php
 
 	}
 
 	private function list_unlicensed_products( $products, $post_data, $action ) {
-		if ( empty( $products ) )
+		if ( empty( $products ) ) {
 			return;
+		}
 
 		uksort( $products, 'strnatcasecmp' );
 
@@ -749,7 +776,7 @@ class Ithemes_Updater_Settings_Page {
 			);
 
 			foreach ( $products as $name => $data )
-				$post_data['packages'][] = $data['package'];
+				{$post_data['packages'][] = $data['package'];}
 		}
 
 ?>
@@ -772,7 +799,7 @@ class Ithemes_Updater_Settings_Page {
 						<th id="cb" class="manage-column column-cb check-column" scope="col">
 							<label class="screen-reader-text" for="cb-select-all-2"><?php _e( 'Select All' ); ?></label>
 							<label>
-								<input id="cb-select-all-2" type="checkbox"<?php if ( count( $post_data['packages'] ) == count( $products ) ) echo ' checked'; ?> />
+								<input id="cb-select-all-2" type="checkbox"<?php if ( count( $post_data['packages'] ) == count( $products ) ) {echo ' checked';} ?> />
 							</label>
 						</th>
 						<th scope="col">
@@ -787,9 +814,9 @@ class Ithemes_Updater_Settings_Page {
 							$check_id = "cb-select-{$data['package']}";
 
 							if ( 'license_packages' == $action )
-								$checked = ( in_array( $data['package'], $post_data['packages'] ) ) ? ' checked' : '';
+								{$checked = ( in_array( $data['package'], $post_data['packages'] ) ) ? ' checked' : '';}
 							else
-								$checked = ' checked';
+								{$checked = ' checked';}
 
 							if ( ++$count % 2 ) {
 								$class = 'alt';
@@ -829,8 +856,9 @@ class Ithemes_Updater_Settings_Page {
 	}
 
 	private function list_unrecognized_products( $products ) {
-		if ( empty( $products ) )
+		if ( empty( $products ) ) {
 			return;
+		}
 
 		uksort( $products, 'strnatcasecmp' );
 
@@ -855,10 +883,11 @@ class Ithemes_Updater_Settings_Page {
 				<?php $count = 0; ?>
 				<?php foreach ( $products as $name => $data ) : ?>
 					<?php
-						if ( ( isset( $data['status'] ) && 'error' == $data['status'] ) && ( ! empty( $data['error']['message'] ) ) )
+						if ( ( isset( $data['status'] ) && 'error' == $data['status'] ) && ( ! empty( $data['error']['message'] ) ) ) {
 							$response = esc_html( "{$data['error']['message']} ({$data['error']['code']})" );
-						else
+						} else {
 							$response = __( 'Unknown Error', 'it-l10n-backupbuddy' );
+						}
 
 						if ( ++$count % 2 ) {
 							$class = 'alt';
@@ -1039,14 +1068,14 @@ class Ithemes_Updater_Settings_Page {
 						<h3><?php _e( 'License Option', 'it-l10n-backupbuddy' ); ?></h3>
 						<p>
 							<label>
-								<input type="radio" name="relicense_option" value="relicense" <?php if ( 'relicense' === $data['relicense_option'] ) echo 'checked="checked"'; ?> />
+								<input type="radio" name="relicense_option" value="relicense" <?php if ( 'relicense' === $data['relicense_option'] ) {echo 'checked="checked"';} ?> />
 								<?php _e( 'Create new licenses for this site.', 'it-l10n-backupbuddy' ); ?>
 							</label>
 						</p>
 						<p class="description ithemes-updater-description-warning"><?php _e( 'Use this option if this site was cloned from another site and needs to have its own licenses.', 'it-l10n-backupbuddy' ); ?></p>
 						<p>
 							<label>
-								<input type="radio" name="relicense_option" value="update" <?php if ( 'update' === $data['relicense_option'] ) echo 'checked="checked"'; ?> />
+								<input type="radio" name="relicense_option" value="update" <?php if ( 'update' === $data['relicense_option'] ) {echo 'checked="checked"';} ?> />
 								<?php printf( __( 'Change the existing licenses to be for <code>%s</code>.', 'it-l10n-backupbuddy' ), esc_html( $data['site_url'] ) ); ?>
 							</label>
 						</p>
@@ -1179,20 +1208,22 @@ class Ithemes_Updater_Settings_Page {
 			$time_left = abs( $time_left );
 		}
 
-		if ( $time_left > ( 86400 * 30 ) )
+		if ( $time_left > ( 86400 * 30 ) ) {
 			$expiration = date( 'Y-m-d', $expiration_timestamp );
-		else {
-			if ( $time_left > 86400 )
+		} else {
+			if ( $time_left > 86400 ) {
 				$expiration = sprintf( _n( '%d day', '%d days', intval( $time_left / 86400 ), 'it-l10n-backupbuddy' ), intval( $time_left / 86400 ) );
-			else if ( $time_left > 3600 )
+			} else if ( $time_left > 3600 ) {
 				$expiration = sprintf( _n( '%d hour', '%d hours', intval( $time_left / 3600 ), 'it-l10n-backupbuddy' ), intval( $time_left / 3600 ) );
-			else if ( $time_left > 60 )
+			} else if ( $time_left > 60 ) {
 				$expiration = sprintf( _n( '%d minute', '%d minutes', intval( $time_left / 60 ), 'it-l10n-backupbuddy' ), intval( $time_left / 60 ) );
-			else
+			} else {
 				$expiration = sprintf( _n( '%d second', '%d seconds', $time_left, 'it-l10n-backupbuddy' ), intval( $time_left / 60 ) );
+			}
 
-			if ( $expired )
+			if ( $expired ) {
 				$expiration = sprintf( __( '%s ago', 'it-l10n-backupbuddy' ), $expiration );
+			}
 		}
 
 		return $expiration;

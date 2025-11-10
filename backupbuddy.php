@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: Solid Backups
+ * Plugin Name: Solid Backups – Legacy
  * Plugin URI: https://go.solidwp.com/solid-backups-home
  * Description: Safely store your website with automated backups and one click restore.
- * Version: 9.1.12
+ * Version: 9.1.15
  * Author: SolidWP
  * Author URI: https://go.solidwp.com/solid-backups-home
  *
@@ -85,7 +85,7 @@ $pluginbuddy_settings = array(
 		'email_notify_error_body'                 => "Solid Backups v{backupbuddy_version} encountered a server error on {current_datetime} for the site {home_url}. Error details:\r\n\r\n{message}",
 		'email_notify_error_banner'               => "An error occurred for site: ",
 		'email_return'                            => '',  // Return email address for emails sent. Defaults to admin email if none specified.
-		'built_email_logo'                        => plugin_dir_url( __FILE__ ) . 'assets/dist/images/solid_backups_email_logo.png',
+		'built_email_logo'                        => plugin_dir_url( __FILE__ ) . 'assets/dist/images/solid-backups-logo.png',
 
 		'remote_destinations'                     => array(),             // Array of remote destinations (S3, Rackspace, email, ftp, etc).
 		'remote_send_timeout_retries'             => '1',                 // Number of times to attempt to resend timed out remote destination. IMPORTANT: Currently only permits values or 1 or 0. 1 max tries.
@@ -351,6 +351,17 @@ function itbub_cron_test() {
 }
 
 add_action( 'itbub_cron_test', 'itbub_cron_test' );
+
+add_action( 'admin_notices', array( backupbuddy_core::class, 'google_drive_destination_removed_admin_notice' ) );
+add_action( 'wp_ajax_bub_gdrive_removed', array( backupbuddy_core::class, 'google_drive_destination_dismiss_admin_notice' ) );
+add_action( 'admin_init', array( backupbuddy_core::class, 'google_drive_cancel_schedules' ) );
+
+if ( is_admin() ) {
+	add_action( 'shutdown', function() {
+		backupbuddy_core::mail_google_drive_sunset();
+		backupbuddy_core::send_solidwp_username_to_api();
+	} );
+}
 
 /**
  * Updater & Licensing System - Aug 23, 2013.

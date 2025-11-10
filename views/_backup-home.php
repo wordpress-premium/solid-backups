@@ -63,6 +63,7 @@ wp_enqueue_script( 'thickbox' );
 wp_print_scripts( 'thickbox' );
 wp_print_styles( 'thickbox' );
 
+pb_backupbuddy::$ui->banner_next_gen();
 pb_backupbuddy::$ui->banner();
 pb_backupbuddy::$ui->title( __( 'Backups', 'it-l10n-backupbuddy' ), true, false );
 

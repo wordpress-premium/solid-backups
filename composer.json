@@ -1,1 +1,21 @@
-{"config":{"platform":{"php":"7.1"}},"description":"The original 3-in-1 WordPress backup plugin for quick and easy WordPress backups! Restore and move WordPress to a new server or domain, too.","license":"proprietary","name":"wordpress-premium\/backupbuddy","require":{"google\/apiclient":"^2.4","krizalys\/onedrive-php-sdk":"^2.6","monolog\/monolog":"^1.25.3","stevenmaguire\/oauth2-dropbox":"^3.0"},"type":"wordpress-plugin"}
+{
+  "name": "wordpress-premium/solid-backups",
+  "type": "wordpress-plugin",
+  "description": "Solid Backups - Reliable WordPress Backup and Restore Solution",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "SolidWP",
+      "email": "support@solidwp.com",
+      "homepage": "https://solidwp.com"
+    },
+    {
+      "name": "WordPress Premium",
+      "email": "info@wordpress-premium.net",
+      "homepage": "https://www.wordpress-premium.net"
+    }
+  ],
+  "require": {
+    "php": ">=7.0"
+  }
+}

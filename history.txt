@@ -2212,3 +2212,11 @@
 	Bug Fix: Added additional items to StellarWP Telemetry data tracking
 	Bug Fix: Added graceful handling of passthru function fatal error
 	Enhancement: Added Google Drive API legal text and link
+9.1.13 - 2024-07-01 - Jared Hill
+	Deprecated: Google Drive will no longer be available as of August 1, read more: https://go.solidwp.com/google-drive-deprecation
+9.1.14 - 2024-11-11 - Timothy Jacobs, John Regan
+	Important: The Google Drive destination is no longer supported. Any schedules with a Google Drive destination have had the destination removed. Read more: https://go.solidwp.com/google-drive-deprecation
+	Bug Fix: Prevent conflicts with plugins like W3 Total Cache which provide their own copy of Guzzle.
+	Tweak: Rename plugin to Solid Backups – Legacy. Learn more about Solid Backups – NextGen: https://go.solidwp.com/backups-ng-get-backups-nextgen
+9.1.15 - 2024-03-24 - Volodymyr Shelmuk
+    Bug Fix: Translation loading error.

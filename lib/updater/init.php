@@ -101,7 +101,7 @@ function ithemes_updater_is_licensed_site_url_confirmed() {
 	return $GLOBALS['ithemes-updater-settings']->is_licensed_site_url_confirmed();
 }
 
-function ithemes_updater_site_has_patchstack( $cache = true ) {
+function ithemes_updater_site_has_patchstack( $cache = true, $comparison_url = '' ) {
 	if ( ! class_exists( 'Ithemes_Updater_Keys' ) ) {
 		require( $GLOBALS['ithemes_updater_path'] . '/keys.php' );
 	}
@@ -123,6 +123,15 @@ function ithemes_updater_site_has_patchstack( $cache = true ) {
 	$quota = Ithemes_Updater_API::get_patchstack_quota( $key, $cache );
 	$site_url = ithemes_updater_get_licensed_site_url();
 	$site_url = preg_replace( '|^https?://|', '', $site_url );
+	$site_url = str_replace( 'www.', '', $site_url );
+	if ( $comparison_url ) {
+		$comparison_url = preg_replace( '|^https?://|', '', $comparison_url );
+		if ( $comparison_url === $site_url && in_array( $comparison_url, $quota['sites'], true ) ) {
+			return true;
+		}
+
+		return false;
+	}
 
 	return in_array( $site_url, $quota['sites'], true );
 }

@@ -158,7 +158,7 @@ class Ithemes_Updater_Packages {
 				  'upgrade_notice' =>'upgrade_notice',
 				  'status' => 'active',
 				  'expiration' => time() + ( 12 * 36000000 ),
-				  'user'=>'mrcode',
+				  'user'=>'GPL Times',
 				  'package'=>'backupbuddy',
                                   'total' => '100',
                                   'used' => '7',

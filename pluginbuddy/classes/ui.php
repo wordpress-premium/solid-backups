@@ -892,7 +892,7 @@ class pb_backupbuddy_ui {
 	/*	start_tabs()
 	 *
 	 *	Starts a tabbed interface.
- 	 *	@see end_tabs().
+	 *	@see end_tabs().
 	 *
 	 *	@param		string		$interface_tag		Tag/slug for this entire tabbed interface. Should be unique.
 	 *	@param		array		$tabs				Array containing an array of settings for this tabbed interface. Ex:  array( array( 'title'> 'my title', 'slug' => 'mytabs' ) );
@@ -1151,17 +1151,15 @@ class pb_backupbuddy_ui {
 	/**
 	 * Output banner code.
 	 *
-	 * This is used for the 2023 Black Friday/Cyber Monday promotion.
-	 *
-	 * Remove after Dec 3, 2023.
+	 * This is used for Black Friday/Cyber Monday promotions.
 	 */
 	public function banner() {
-		if ( ! empty( pb_backupbuddy::$options['disalerts']['2023-bfcm-banner'] ) ) {
+		if ( ! empty( pb_backupbuddy::$options['disalerts']['2024-bfcm-banner'] ) ) {
 			return;
 		}
 
-		$start_date = wp_date( 'U', strtotime( '2023-11-20' ) );
-		$end_date   = wp_date( 'U', strtotime( '2023-12-03' ) );
+		$start_date = wp_date( 'U', strtotime( '2024-11-26 00:00:00' ) );
+		$end_date   = wp_date( 'U', strtotime( '2024-12-08 23:59:59' ) );
 		$now        = wp_date( 'U' );
 
 		if ( $now < $start_date || $now > $end_date ) {
@@ -1170,11 +1168,11 @@ class pb_backupbuddy_ui {
 
 		$url = pb_backupbuddy::ajax_url( 'disalert' );
 		?>
-		<aside class="backupbuddy-sale-banner pb_backupbuddy_alert" rel="2023-bfcm-banner">
+		<aside class="backupbuddy-sale-banner pb_backupbuddy_alert" rel="2024-bfcm-banner">
 			<div class="backupbuddy-sale-banner--text-container">
 				<h3 class="backupbuddy-sale-banner--heading"><?php esc_html_e( 'Save 40% on SolidWP', 'it-l10n-backupbuddy' ); ?></h3>
 				<span class="backupbuddy-sale-banner--text"><?php esc_html_e( 'Purchase new products during the Black Friday Sale.', 'it-l10n-backupbuddy' ); ?></span>
-				<a href="https://go.solidwp.com/bfcm23-backups-get-solid-suite" class="backupbuddy-sale-banner--button"><?php esc_html_e( 'Get Solid Suite', 'it-l10n-backupbuddy' ); ?></a>
+				<a href="https://go.solidwp.com/bfcm24-solid-backups-legacy" class="backupbuddy-sale-banner--button"><?php esc_html_e( 'Get Solid Suite', 'it-l10n-backupbuddy' ); ?></a>
 			</div>
 
 			<button type="button" class="backupbuddy-sale-banner--dismiss pb_backupbuddy_disalert" aria-label="Dismiss" alt="<?php echo esc_url( $url ); ?>">
@@ -1209,6 +1207,53 @@ class pb_backupbuddy_ui {
 					</filter>
 				</defs>
 			</svg>
+		</aside>
+		<?php
+	}
+
+	/**
+	 * Output banner code.
+	 *
+	 * Promotes NextGen Backups.
+	 */
+	public function banner_next_gen() {
+		if ( ! empty( pb_backupbuddy::$options['disalerts']['next-gen-banner'] ) ) {
+			return;
+		}
+
+		$url = pb_backupbuddy::ajax_url( 'disalert' );
+		?>
+		<aside class="backupbuddy-ng-banner pb_backupbuddy_alert" rel="next-gen-banner">
+			<div class="backupbuddy-ng-banner-logo-text-wrapper">
+				<div class="backupbuddy-ng-banner-logo-container">
+					<div class="backupbuddy-ng-banner-logo-container-image">
+						<img src="<?php echo esc_url( pb_backupbuddy::plugin_url() . '/assets/dist/images/solid-backups-logo-nextgen.svg' ); ?>">
+					</div>
+					<p class="backupbuddy-ng-banner-logo-container-text"><?php esc_html_e( 'SolidWP’s newest backups solution', 'it-l10n-backupbuddy' ); ?></p>
+				</div>
+
+				<div class="backupbuddy-ng-banner-body-text-container">
+					<div>
+						<p><?php esc_html_e( 'A cloud-first solution for rocket fast backups and one-click restore.', 'it-l10n-backupbuddy' ); ?></p>
+						<ul>
+							<li><?php esc_html_e( 'Daily, incremental backups ', 'it-l10n-backupbuddy' ); ?></li>
+							<li><?php esc_html_e( 'Detailed activity timeline', 'it-l10n-backupbuddy' ); ?></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<div class="backupbuddy-ng-banner-button-container">
+				<a href="https://go.solidwp.com/backups-ng-get-backups-nextgen" class="backupbuddy-ng-banner-button-link button button-primary" alt="<?php echo esc_attr( 'Get Backups - NextGen', 'it-l10n-backupbuddy' ); ?>">
+					<?php esc_html_e( 'Get Backups - NextGen', 'it-l10n-backupbuddy' ); ?>
+				</a>
+
+				<button type="button" class="backupbuddy-ng-banner-dismiss pb_backupbuddy_disalert" aria-label="Dismiss" alt="<?php echo esc_url( $url ); ?>">
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+						<path fill-rule="evenodd" clip-rule="evenodd" d="m12 13.06 3.712 3.713 1.061-1.06L13.061 12l3.712-3.712-1.06-1.06L12 10.938 8.288 7.227l-1.061 1.06L10.94 12l-3.712 3.712 1.06 1.061L12 13.061z" fill="#fff"/>
+					</svg>
+				</button>
+			</div>
 		</aside>
 		<?php
 	}

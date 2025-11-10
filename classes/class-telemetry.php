@@ -70,7 +70,7 @@ class Solid_Backups_Telemetry {
 				esc_html__( 'Hi %s! At Solid, we\'re committed to delivering top-notch services, and your valuable insights play a crucial role in helping us achieve that goal. We\'re excited to invite you to participate in our opt-in program, designed to enhance your experience with Solid Backups and contribute to the continuous improvement of StellarWP products. By opting in, you allow our teams to access certain data related to your website data. This information will be used responsibly to gain insights into your preferences and patterns, enabling us to tailor our services and products to better meet your needs. Rest assured, we take data privacy seriously, and our usage of your information will adhere to the highest standards, respecting all relevant regulations and guidelines. Your trust means the world to us, and we are committed to maintaining the confidentiality and security of your data. To join this initiative and be part of shaping the future of Solid Backups and StellarWP, simply click “Allow & Continue” below.', 'it-l10n-backupbuddy' ),
 				$args['user_name']
 			);
-			$args['plugin_logo']        = plugin_dir_url( BACKUPBUDDY_PLUGIN_FILE ) . 'assets/dist/images/solid-backups-logo.svg';
+			$args['plugin_logo']        = plugin_dir_url( BACKUPBUDDY_PLUGIN_FILE ) . 'assets/dist/images/solid-backups-logo.png';
 			$args['plugin_logo_width']  = 250;
 			$args['plugin_logo_height'] = 40;
 			$args['permissions_url']    = 'https://go.solidwp.com/solid-backups-opt-in-usage-sharing';

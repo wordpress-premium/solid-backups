@@ -86,3 +86,11 @@
 	Security: Harden against XSS attacks. Thanks to Robin Wood (digi.ninja) for disclosing this issue.
 1.8.3 - 2023-11-14 - Timothy Jacobs, Lisa Canini
 	Enhancement: Add banner when running sunset products.
+1.8.4 - 2024-03-21 - Timothy Jacobs, Jared Hill
+	Tweak: Remove the list of sites with a Patchstack license. Instead, only show the license status of the current site, and the available licenses remaining.
+	Tweak: Remove the ability to fallback to a non-https connection to the SolidWP API.
+1.8.5 - 2024-04-22 - Timothy Jacobs
+	Bug Fix: Activating a Patchstack license on sites with a www. subdomain would not show the license as active.
+1.8.6 - ??? - Jared Hill
+	Bug Fix: Don't list "empty" patchstack sites.
+	Bug Fix: Resolve PHP warnings when using WP-CLI.

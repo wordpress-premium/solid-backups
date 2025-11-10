@@ -46,7 +46,7 @@
 
 .solidwp-licensing-wrap .solidwp-licensing-wrap-header h2 + .error,
 .solidwp-licensing-wrap .solidwp-licensing-wrap-header h2 + .updated {
-	margin-top: 2em;
+	margin: 2em 0 0;
 }
 
 .ithemes-updater-products {
@@ -72,8 +72,17 @@
 	color: #6817C5;
 }
 
-#ithemes-updater-settings .solidwp-table-header {
+#ithemes-updater-settings .solidwp-table-header, .border-bottom {
 	border-bottom: 1px solid #DDDDDD;
+}
+
+.solidwp-unlicensed-paragraphs {
+	padding: .5rem 1.5rem;
+	border-bottom: 1px solid #DDDDDD;
+}
+
+.solidwp-licensing-wrap .widefat.ithemes-updater-listing .patchstack-paragraph {
+	padding: 1rem 1.5rem;
 }
 
 .ithemes-updater-products .solidwp-table-header h3, #ithemes-updater-settings .solidwp-table-header h3 {

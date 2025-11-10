@@ -359,7 +359,8 @@ class backupbuddy_core {
 	 *
 	 * @param array  $profile      Profile array of data. Key 'excludes' can be array or newline-deliminated string.
 	 * @param bool   $trim_suffix  True (default) if trailing slash should be trimmed from directories.
-	 * @param string $serial       Optional serial of current backup. By default all subdirectories within the backupbuddy_temp dir are explicitly excluded. Specifying allows this serial subdirectory to not be excluded.
+	 * @param string $serial       Optional serial of current backup. By default all subdirectories within the backupbuddy_temp dir are explicitly excluded. Specifying allows this serial subdirectory
+	 *                             to not be excluded.
 	 *
 	 * @return array  Array of directories to exclude.
 	 */
@@ -630,6 +631,160 @@ class backupbuddy_core {
 			pb_backupbuddy::status( 'warning', 'No email addresses are set to receive error notifications on the Settings page AND get_option("admin_email") not set. Setting a notification email is suggested.' );
 		}
 
+	}
+
+	public static function mail_google_drive_sunset() {
+		if ( self::is_gdrive_enabled() && get_option( 'solid_backups_google_drive_sunset_email_sent' ) === false ) {
+			add_option( 'solid_backups_google_drive_sunset_email_sent', true );
+			$body = file_get_contents( dirname( dirname( __FILE__ ) ) . '/views/solid-backups-google-drive-sunset.html' );
+			$replacements = array(
+				'{site_url}'   => site_url(),
+				'{user_email}' => get_option( 'admin_email' ),
+			);
+
+			// Customize Subject and user customizable message.
+			foreach ( $replacements as $replace_key => $replacement ) {
+				$body = str_replace( $replace_key, $replacement, $body );
+			}
+
+			if ( empty( $body ) ) {
+				return;
+			}
+			$to_adddress = get_option( 'admin_email' );
+			$subject = sprintf(
+			/* translators %s: site url */
+				__( '[ACTION REQUIRED]: Google Drive support ending for %s', 'it-l10n-backupbuddy' ),
+				site_url()
+			);
+
+
+			$result = wp_mail( $to_adddress, $subject, $body, 'From: Solid Backups <' . $to_adddress . ">\r\n" . 'Content-Type: text/html;' . "\r\n" );
+			if ( false === $result ) {
+				pb_backupbuddy::status( 'error', 'Unable to send Google Drive Deprecation email with WordPress wp_mail(). Verify WordPress & Server settings.' );
+			}
+		}
+	}
+
+	public static function send_solidwp_username_to_api() {
+		if ( self::is_gdrive_enabled() && get_option( 'solid_backups_google_drive_sunset_api_sent' ) === false ) {
+			add_option( 'solid_backups_google_drive_sunset_api_sent', true );
+
+			if ( ! isset( $GLOBALS['ithemes_updater_path'] ) ) {
+				return ;
+			}
+			require_once( $GLOBALS['ithemes_updater_path'] . '/packages.php' );
+			$package_details = Ithemes_Updater_Packages::get_full_details();
+
+			if ( ! empty( $package_details['packages']['backupbuddy/backupbuddy.php']['user'] ) ) {
+				$user            = $package_details['packages']['backupbuddy/backupbuddy.php']['user'];
+				$solid_username  = $user;
+				$data            = json_encode(
+					[
+						'username'      => $solid_username,
+						'template_name' => 'solid-backups-google-drive-deprecated',
+					]
+				);
+				wp_remote_post(
+					'https://api.solidwp.com/email/send',
+					[
+						'body' => $data,
+					]
+				);
+			}
+		}
+	}
+
+	public static function google_drive_destination_removed_admin_notice() {
+		if ( ! current_user_can( pb_backupbuddy::$options['role_access'] ) ) {
+			return;
+		}
+
+		$removed = get_option( 'bub_gdrive_removed' );
+		if ( ! $removed ) {
+			return;
+		}
+
+		wp_add_inline_script(
+			'common',
+			<<<JS
+jQuery( document ).on( 'click', '.bub-gdrive-removed .notice-dismiss', function () {
+	jQuery.post( ajaxurl, {
+		action  : 'bub_gdrive_removed',
+		_wpnonce: jQuery( this ).parents( '[data-nonce]' ).data( 'nonce' ),
+	} );
+} );
+JS
+		);
+
+		$nonce = wp_create_nonce( 'bub_gdrive_removed' );
+		echo '<div class="notice notice-warning is-dismissible bub-gdrive-removed" data-nonce="' . esc_attr( $nonce ) . '">';
+		echo '<p>' . esc_html__( 'Solid Backups has removed support for Google Drive™ destinations.', 'it-l10n-backupbuddy' ) . '</p>';
+		echo '<p>' . wp_sprintf( esc_html__( 'The following destinations were removed: %l.', 'it-l10n-backupbuddy' ), $removed['destinations'] ) . '</p>';
+		echo '<p>' . wp_sprintf( esc_html__( 'The following schedules were modified: %l.', 'it-l10n-backupbuddy' ), $removed['schedules'] ) . '</p>';
+		echo '<p><a href="https://go.solidwp.com/notice-google-drive-support-ended" target="_blank">' . esc_html( __( 'Learn More', 'it-l10n-backupbuddy' ) ) . '</a></p>';
+		echo '</div>';
+	}
+
+	public static function google_drive_destination_dismiss_admin_notice() {
+		check_ajax_referer( 'bub_gdrive_removed' );
+		if ( ! current_user_can( pb_backupbuddy::$options['role_access'] ) ) {
+			wp_die();
+		}
+
+		delete_option( 'bub_gdrive_removed' );
+	}
+
+	/**
+	 * Cancel the Google Drive Scheduled Events
+	 *
+	 * @return void
+	 */
+	public static function google_drive_cancel_schedules() {
+		$save = false;
+
+		$gdrive_removed = wp_parse_args( get_option( 'bub_gdrive_removed', array() ), array(
+			'destinations' => array(),
+			'schedules' => array(),
+		) );
+
+		$gdrive_ids = array();
+
+		foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => $destination_data ) {
+			if ( $destination_data['type'] === 'gdrive' || $destination_data['type'] === 'gdrive2' ) {
+				$gdrive_ids[] = $destination_id;
+				$gdrive_removed['destinations'][] = $destination_data['title'];
+				unset( pb_backupbuddy::$options['remote_destinations'][ $destination_id ] );
+
+				$save = true;
+			}
+		}
+
+		// iterate over schedules
+		foreach ( pb_backupbuddy::$options['schedules'] as $schedule_id => $schedule_data ) {
+			// we could have more than one destination, which are delimited by '|'
+			$schedule_destinations = explode( '|', $schedule_data['remote_destinations'] );
+
+			if ( ! array_intersect( $schedule_destinations, $gdrive_ids ) ) {
+				continue;
+			}
+
+			$save                  = true;
+			$schedule_destinations = array_diff( $schedule_destinations, $gdrive_ids );
+
+			if ( $schedule_destinations ) {
+				pb_backupbuddy::$options['schedules'][ $schedule_id ]['remote_destinations'] = implode( '|', $schedule_destinations );
+			} else {
+				$gdrive_removed['schedules'][] = $schedule_data['title'];
+				require_once pb_backupbuddy::plugin_path() . '/classes/class-backupbuddy-schedules.php';
+				BackupBuddy_Schedules::unschedule_recurring_backup( $schedule_id );
+				unset( pb_backupbuddy::$options['schedules'][ $schedule_id ] );
+			}
+		}
+
+		if ( $save ) {
+			pb_backupbuddy::save();
+			update_option( 'bub_gdrive_removed', $gdrive_removed );
+		}
 	}
 
 	/**
@@ -3202,7 +3357,8 @@ class backupbuddy_core {
 	 *
 	 * @param string $file              Full filename path of backup to determine type of.
 	 * @param bool   $quiet             Suppress status logs.
-	 * @param bool   $skip_fileoptions  When false if the backup type cannot be detected via filename then try to open the fileoptions file to get more details. Set true for non-crucial cases for speed.
+	 * @param bool   $skip_fileoptions  When false if the backup type cannot be detected via filename then try to open the fileoptions file to get more details. Set true for non-crucial cases for
+	 *                                  speed.
 	 *
 	 * @return string  Type of backup (eg full, db). If unknown, empty string '' returned.
 	 */
@@ -4221,6 +4377,39 @@ class backupbuddy_core {
 		}
 
 		return $cache[ $func ] = true;
+	}
+
+	/**
+	 * Checks if Google Drive is enabled
+	 *
+	 * @return bool
+	 */
+	public static function is_gdrive_enabled() {
+		foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination ) {
+			if ( $destination['type'] === 'gdrive2' || $destination['type'] === 'gdrive' ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Returns ids for destinations of a specific type
+	 *
+	 * @param string $type
+	 *
+	 * @return array
+	 */
+	public static function get_destination_type_ids( string $type ) {
+		$destination_ids = [];
+		foreach ( pb_backupbuddy::$options['remote_destinations'] as $destination_id => $destination_data ) {
+			if ( $destination_data['type'] === $type ) {
+				$destination_ids[] = $destination_id;
+			}
+		}
+
+		return $destination_ids;
 	}
 
 }
