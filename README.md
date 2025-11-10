@@ -38,12 +38,13 @@ This is the **fully activated pro version ("nulled")** of the **Solid Backups**,
 
 ***
 
-### `9.1.15` - 2024-03-24
+### `v9.1.15` - 2024-03-24
 
 *Contributors: Volodymyr Shelmuk*
+
 *   **Bug Fix:** Corrected a translation loading error. Finally, the world can understand your software's mistakes in their native tongue.
 
-### `9.1.14` - 2024-11-11
+### `v9.1.14` - 2024-11-11
 
 *Contributors: Timothy Jacobs, John Regan*
 
